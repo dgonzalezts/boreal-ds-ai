@@ -1,0 +1,1703 @@
+Directory structure:
+└── dgonzalezts-colibri-icons/
+    ├── README.md
+    ├── CHANGELOG.md
+    ├── eslint.config.js
+    ├── index.html
+    ├── LICENSE
+    ├── package.json
+    ├── tsconfig.json
+    ├── vite.config.ts
+    ├── web-test-runner.config.js
+    ├── .npmignore
+    ├── .prettierignore
+    ├── .prettierrc
+    ├── src/
+    │   ├── index.ts
+    │   └── components/
+    │       ├── col-icon.test.ts
+    │       ├── col-icon.ts
+    │       └── index.ts
+    └── tools/
+        ├── index.ts
+        └── plugins/
+            ├── index.ts
+            ├── vite-icons-list-plugin.ts
+            └── vite-svg-loader-plugin.ts
+
+================================================
+FILE: README.md
+================================================
+# Colibri Icon Library
+
+A comprehensive icon system for the Telesign Design System, built with Lit components and optimized SVG loading.
+
+![Version](https://img.shields.io/npm/v/@telesign/colibri-icons)
+![License](https://img.shields.io/npm/l/@telesign/colibri-icons)
+![Downloads](https://img.shields.io/npm/dm/@telesign/colibri-icons)
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Advanced Usage](#advanced-usage)
+- [Component API](#component-api)
+- [Adding Icons](#adding-icons)
+- [Development](#development)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
+
+```bash
+npm install @telesign/colibri-icons
+```
+
+## Basic Usage
+
+### Register the Component
+
+```typescript
+import { ColIcon } from '@telesign/colibri-icons';
+
+// Register the custom element
+customElements.define('col-icon', ColIcon);
+```
+
+### Use in HTML
+
+```html
+<col-icon name="message" color="#000000" size="24px"></col-icon>
+```
+
+### Use in JavaScript/TypeScript
+
+```typescript
+import { html } from 'lit';
+
+html` <col-icon name="lock" color="currentColor" size="20px"></col-icon> `;
+```
+
+## Advanced Usage
+
+### Dynamic Color Inheritance
+
+The icon component can inherit colors from its parent:
+
+```html
+<div style="color: blue">
+  <col-icon name="user" color="currentColor"></col-icon>
+</div>
+```
+
+### Size Variations
+
+Supports both pixel and relative units:
+
+```html
+<!-- Pixel sizes -->
+<col-icon name="search" size="24px"></col-icon>
+
+<!-- Number (automatically converted to pixels) -->
+<col-icon name="menu" size="32"></col-icon>
+
+<!-- Relative units -->
+<col-icon name="settings" size="2rem"></col-icon>
+```
+
+### Icon Caching
+
+Icons are automatically cached for better performance:
+
+```typescript
+// First load - fetches from file system
+<col-icon name="user"></col-icon>
+
+// Subsequent loads - uses cached version
+<col-icon name="user"></col-icon>
+```
+
+## Component API
+
+### Properties
+
+| Property | Type             | Default          | Description          |
+| -------- | ---------------- | ---------------- | -------------------- |
+| `name`   | `string`         | `'lock'`         | Icon name to display |
+| `color`  | `string`         | `'currentColor'` | Icon color           |
+| `size`   | `string\|number` | `'24px'`         | Icon size            |
+
+### CSS Custom Properties
+
+The component can be styled using CSS:
+
+```css
+col-icon {
+  display: inline-block;
+  line-height: 0;
+}
+
+.icon-container {
+  width: 100%;
+  height: 100%;
+}
+```
+
+## Adding Icons
+
+### 1. Prepare SVG Files
+
+- Export SVG from design tools (e.g., Figma)
+- Ensure proper naming convention
+- Optimize SVG content
+
+### 2. Add to Project
+
+```bash
+# Add SVG file to icons directory
+src/
+  icons/
+    my-new-icon.svg
+```
+
+### 3. SVG Requirements
+
+- Monochromatic design
+- Clean, optimized markup
+- Proper viewBox attribute
+- No hardcoded colors (unless using `currentColor`)
+
+Example of a proper SVG:
+
+```svg
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 2L2 7l10 5 10-5-10-5z" fill="currentColor"/>
+</svg>
+```
+
+## Development
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Preview production build
+npm run preview
+```
+
+### Available Scripts
+
+```bash
+# Build package
+npm run build
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in headless mode (CI)
+npm run test:headless
+
+# Run tests with visual output
+npm run test:visual
+
+# Run tests in debug mode
+npm run test:debug
+
+# Run a specific test file
+npm test -- --files="src/components/col-icon.test.ts"
+
+# Run tests matching a pattern
+npm test -- --files="src/components/**/*.test.ts"
+```
+
+## Best Practices
+
+### 1. Icon Naming
+
+```typescript
+// Good
+name = 'user-profile';
+name = 'shopping-cart';
+
+// Avoid
+name = 'icon1';
+name = 'newicon';
+```
+
+### 2. Color Management
+
+```typescript
+// Good - Inherits from parent
+<col-icon color="currentColor"></col-icon>
+
+// Good - Specific color
+<col-icon color="#FF0000"></col-icon>
+
+// Avoid - Hardcoded colors in SVG
+<svg fill="#000000">...</svg>
+```
+
+### 3. Size Handling
+
+```typescript
+// Good - Clear sizing
+<col-icon size="24px"></col-icon>
+<col-icon size="2rem"></col-icon>
+
+// Avoid - Unclear units
+<col-icon size="24"></col-icon>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. Icon Not Loading
+
+```typescript
+// Check if icon exists in correct location
+// Ensure proper name matching
+<col-icon name="exact-file-name"></col-icon>
+```
+
+2. Color Not Applying
+
+```typescript
+// Ensure SVG doesn't have hardcoded colors
+// Use currentColor in SVG
+<col-icon color="blue"></col-icon>
+```
+
+3. Size Issues
+
+```typescript
+// Be explicit with units
+<col-icon size="24px"></col-icon>  // Good
+<col-icon size="24"></col-icon>    // May cause issues
+```
+
+## Performance Considerations
+
+1. Icon Caching
+
+- Icons are cached automatically
+- Cache is shared across instances
+- Cache is keyed by icon name and color
+
+2. SVG Optimization
+
+- SVGs are minified during build
+- Unnecessary attributes are removed
+- Inline styles are optimized
+
+3. Load Time
+
+- Icons are loaded on demand
+- Failed loads are handled gracefully
+- Cache prevents unnecessary reloads
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for a detailed list of changes and version history.
+
+## Contributing
+
+We welcome contributions to this icon library. Please feel free to submit pull requests with new icons or improvements.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## About Telesign
+
+[Telesign](https://www.telesign.com) helps the world's largest brands connect, protect, and engage with their customers through powerful communication channels.
+
+
+
+================================================
+FILE: CHANGELOG.md
+================================================
+# Changelog for @telesign/colibri-icons
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.10] - 2025-10-02
+
+### Changed
+
+- Migrated ESLint configuration to flat config format for ESLint v9 compatibility (EOA-6343)
+- Enhanced test coverage with improved console error handling and size property validation (EOA-6343)
+- Updated gitignore to include turbo directory for better development workflow
+
+### Fixed
+
+- Fixed ESLint configuration issues and removed unnecessary eslint-disable comments (EOA-6343)
+- Resolved remaining linting errors and improved code quality across the project
+
+## [0.3.9] - 2025-05-29
+
+### Changed
+
+- Icons list is now sorted alphabetically for better user experience
+- Migrated test runner for improved testing infrastructure
+- Increased test coverage for better code quality
+- Updated test documentation
+
+### Fixed
+
+- Fixed missing dev dependency issue
+
+### Removed
+
+- Removed release process documentation
+
+## [0.3.8] - 2025-05-16
+
+### Changed
+
+- Improved release process documentation with clearer version bump instructions
+- Simplified git tag creation process by leveraging npm version command
+- Updated git push tag command to correctly extract version in npm workspace/monorepo setups
+- Added semantic versioning reference link
+- Reordered release steps for better workflow and removed redundant commit step
+- Updated formatting in `index.html` for improved readability and consistency
+
+## [0.3.7] - 2025-04-30
+
+### Fixed
+
+- Fixed Vite entry point configuration for better module resolution
+
+## [0.3.6] - 2024-04-29
+
+### Added
+
+- Added MIT license file and license field in package.json
+- Added comprehensive release process documentation
+- Added detailed CHANGELOG.md following Keep a Changelog format
+- Updated README.md with badges and additional information
+
+## [0.3.5] - 2024-04-29
+
+### Changed
+
+- Updated package metadata for Telesign organization
+- Fixed repository URL to point to correct Bitbucket repository
+- Changed package name from `@tls-ds/colibri-icons` to `@telesign/colibri-icons`
+
+### Added
+
+- Added proper keywords for better npm discoverability
+- Added organizational contact information
+
+## [0.3.4] - 2024-04-29
+
+### Initial Release
+
+- First public release of icon library with 396 icons
+- Support for SVG icon components using Lit
+- Built-in icon caching for better performance
+- TypeScript type definitions
+
+
+
+================================================
+FILE: eslint.config.js
+================================================
+import eslint from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import typescript from '@typescript-eslint/parser';
+import lit from 'eslint-plugin-lit';
+import prettier from 'eslint-plugin-prettier';
+import globals from 'globals';
+
+export default [
+  eslint.configs.recommended,
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: typescript,
+      ecmaVersion: 2020,
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        HTMLStyleElement: 'readonly',
+        MediaQueryList: 'readonly',
+        MediaQueryListEvent: 'readonly',
+        CSSStyleSheet: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      lit: lit,
+      prettier: prettier,
+    },
+    rules: {
+      'prettier/prettier': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'lit/no-invalid-html': 'error',
+      'lit/no-duplicate-template-bindings': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        assert: 'readonly',
+        fixture: 'readonly',
+        html: 'readonly',
+        before: 'readonly',
+        after: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+];
+
+
+
+================================================
+FILE: index.html
+================================================
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Colibrí Icons</title>
+    <script type="module" src="./src/index.ts"></script>
+  </head>
+  <body>
+    <h1>Colibrí Icons</h1>
+  </body>
+</html>
+
+
+
+================================================
+FILE: LICENSE
+================================================
+MIT License
+
+Copyright (c) 2023 Telesign
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "@telesign/colibri-icons",
+  "version": "0.3.10",
+  "description": "Icon library for Telesign Design System - A collection of optimized SVG icons as web components",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "watch:pkg": "vite build --watch",
+    "build": "vite build",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,css,html}\"",
+    "prepublishOnly": "npm run build",
+    "test": "web-test-runner",
+    "test:watch": "web-test-runner --watch",
+    "test:coverage": "web-test-runner --coverage",
+    "test:headless": "TEST_HEADLESS=true web-test-runner",
+    "test:visual": "TEST_HEADLESS=false web-test-runner",
+    "test:debug": "TEST_DEBUG=true web-test-runner"
+  },
+  "author": {
+    "name": "Telesign",
+    "email": "portals.team@telesign.com"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*",
+    "./icons-list": {
+      "import": "./dist/icons-list/index.js",
+      "types": "./dist/icons-list/index.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.27.1",
+    "@open-wc/testing": "^4.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.15.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "@web/dev-server-esbuild": "^1.0.4",
+    "@web/dev-server-rollup": "^0.6.4",
+    "@web/test-runner": "^0.20.2",
+    "@web/test-runner-playwright": "^0.11.0",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-lit": "^2.1.1",
+    "eslint-plugin-prettier": "^5.4.0",
+    "glob": "^11.0.0",
+    "lit": "^3.3.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.c11.telesign.com/scm/dev/colibri-icons.git"
+  },
+  "keywords": [
+    "icons",
+    "design-system",
+    "web-components",
+    "svg",
+    "telesign",
+    "lit"
+  ],
+  "bugs": {
+    "email": "portals.team@telesign.com"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  }
+}
+
+
+
+================================================
+FILE: tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "dom", "dom.iterable", "esnext"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+    },
+    "types": [
+      "node",
+      "mocha"
+    ],
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+
+
+
+================================================
+FILE: vite.config.ts
+================================================
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import dts from 'vite-plugin-dts';
+import { svgLoaderPlugin, iconsListPlugin } from './tools/plugins';
+
+export default defineConfig({
+  build: {
+    lib: {
+      entry: resolve(__dirname, './src/index.ts'),
+      formats: ['es'],
+      fileName: () => 'index.js',
+    },
+    rollupOptions: {
+      external: [/^lit/],
+      output: {
+        globals: {
+          lit: 'Lit',
+        },
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: chunkInfo => {
+          return `${chunkInfo.name.replace('src/', '')}.js`;
+        },
+      },
+    },
+    sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      ecma: 2020,
+      module: true,
+      compress: {
+        passes: 2,
+        dead_code: true,
+        drop_console: true,
+        drop_debugger: true,
+      },
+      mangle: {
+        properties: false,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      '@components': resolve(__dirname, './src/components'),
+    },
+  },
+  server: {
+    port: 3000,
+    open: true,
+    cors: true,
+    hmr: {
+      overlay: true,
+    },
+  },
+  preview: {
+    port: 4000,
+    open: true,
+  },
+  plugins: [
+    svgLoaderPlugin(),
+    iconsListPlugin(),
+    dts({
+      insertTypesEntry: true,
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    }),
+  ],
+});
+
+
+
+================================================
+FILE: web-test-runner.config.js
+================================================
+import { playwrightLauncher } from '@web/test-runner-playwright';
+import { esbuildPlugin } from '@web/dev-server-esbuild';
+
+const isHeadless = process.env.TEST_HEADLESS === 'true' || process.env.CI === 'true';
+const isDebug = process.env.TEST_DEBUG === 'true';
+const browser = process.env.TEST_BROWSER || 'chrome';
+
+const baseLaunchOptions = {
+  headless: isHeadless,
+  devtools: !isHeadless || isDebug,
+  slowMo: isHeadless ? 0 : 100,
+};
+
+const browserConfigs = {
+  chrome: {
+    ...baseLaunchOptions,
+    channel: 'chrome',
+    args: isHeadless ? ['--no-sandbox', '--disable-dev-shm-usage'] : [],
+  },
+  chromium: {
+    ...baseLaunchOptions,
+    args: isHeadless ? ['--no-sandbox', '--disable-dev-shm-usage'] : [],
+  },
+  webkit: {
+    ...baseLaunchOptions,
+  },
+};
+
+export default {
+  files: 'src/**/*.test.ts',
+  nodeResolve: true,
+
+  browsers: [
+    playwrightLauncher({
+      product: browser === 'chrome' ? 'chromium' : browser,
+      launchOptions: browserConfigs[browser],
+    }),
+  ],
+
+  plugins: [
+    // ESBuild plugin for TypeScript compilation
+    esbuildPlugin({
+      ts: true,
+      target: 'es2020',
+      tsconfig: './tsconfig.json',
+    }),
+  ],
+
+  coverage: !isDebug,
+  coverageConfig: {
+    include: ['src/**/*.ts'],
+    exclude: ['src/**/*.test.ts', 'src/**/*.stories.ts'],
+    threshold: {
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
+  },
+
+  testFramework: {
+    config: {
+      timeout: isDebug ? 30000 : 10000,
+    },
+  },
+
+  ...(isDebug && {
+    open: true,
+    manual: true,
+    preserveSymlinks: true,
+  }),
+
+  logLevel: isDebug ? 'debug' : 'warn',
+};
+
+
+
+================================================
+FILE: .npmignore
+================================================
+*
+!dist/
+!dist/**/*
+!README.md
+
+
+================================================
+FILE: .prettierignore
+================================================
+dist
+node_modules
+coverage
+
+
+================================================
+FILE: .prettierrc
+================================================
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf"
+}
+
+
+================================================
+FILE: src/index.ts
+================================================
+export * from './components';
+
+
+
+================================================
+FILE: src/components/col-icon.test.ts
+================================================
+import { html, fixture, expect, elementUpdated } from '@open-wc/testing';
+import { ColIcon } from './col-icon';
+
+// Define the component if not already defined
+if (!customElements.get('col-icon')) {
+  customElements.define('col-icon', ColIcon);
+}
+
+describe('ColIcon component with mocked SVGs', () => {
+  let originalLoadIcon: typeof ColIcon.prototype.loadIcon;
+  let originalConsoleError: typeof console.error;
+  let consoleErrorSpy: any;
+
+  beforeEach(() => {
+    // Clear the icon cache before each test
+    (ColIcon as any).iconCache.clear();
+
+    // Store the original loadIcon method
+    originalLoadIcon = ColIcon.prototype.loadIcon;
+
+    // Mock console.error globally to suppress intentional error logs
+    originalConsoleError = console.error;
+    consoleErrorSpy = () => {
+      // Silently capture errors during tests
+    };
+    console.error = consoleErrorSpy;
+
+    // Mock the loadIcon method to return our test SVGs
+    ColIcon.prototype.loadIcon = async function (name: string) {
+      const mockSvgs: Record<string, string> = {
+        arrow:
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
+        home: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+        'no-fill':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'with-fill':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="blue" d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'with-stroke':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="red" d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'with-both':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="blue" stroke="red" d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'with-currentColor':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'with-dimensions':
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        invalid: 'not a valid svg',
+        exported:
+          'export default \'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>\'',
+        'data-uri':
+          'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>',
+        'no-default': '',
+        'empty-svg': '',
+      };
+
+      const cacheKey = `${name}-${this.color}`;
+
+      // Check cache first
+      if ((this.constructor as any).iconCache.has(cacheKey)) {
+        return (this.constructor as any).iconCache.get(cacheKey) || '';
+      }
+
+      // Simulate the loading behavior
+      if (!(name in mockSvgs)) {
+        console.error(
+          `Error loading icon ${name}:`,
+          new Error(`Cannot find module '../icons/${name}.svg'`)
+        );
+        return '';
+      }
+
+      const svgContent = mockSvgs[name];
+
+      if (!svgContent) {
+        console.error(`Error loading icon ${name}:`, new Error('Invalid SVG content'));
+        return '';
+      }
+
+      // Use the component's cleanSvgContent method
+      const cleanedSvg = (this as any).cleanSvgContent(svgContent);
+
+      if (!cleanedSvg) {
+        console.error(`Error loading icon ${name}:`, new Error('Invalid SVG content'));
+        return '';
+      }
+
+      // Cache the result
+      (this.constructor as any).iconCache.set(cacheKey, cleanedSvg);
+      return cleanedSvg;
+    };
+  });
+
+  afterEach(() => {
+    // Restore the original loadIcon method
+    ColIcon.prototype.loadIcon = originalLoadIcon;
+    // Restore console.error
+    console.error = originalConsoleError;
+    // Clear the icon cache
+    (ColIcon as any).iconCache.clear();
+  });
+
+  it('should render arrow icon', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow"></col-icon>`);
+
+    expect(element).to.exist;
+    expect(element.name).to.equal('arrow');
+
+    await elementUpdated(element);
+
+    const iconContainer = element.shadowRoot?.querySelector('.icon-container');
+    expect(iconContainer).to.exist;
+
+    // Check that the element has the correct size using computed styles
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.width).to.equal('24px');
+    expect(computedStyle.height).to.equal('24px');
+  });
+
+  it('should apply custom color to arrow icon', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="arrow" color="#FF0000"></col-icon>`
+    );
+
+    expect(element.color).to.equal('#FF0000');
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('#FF0000');
+  });
+
+  it('should apply custom size to home icon', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="home" size="48px"></col-icon>`);
+
+    expect(element.size).to.equal('48px');
+
+    await elementUpdated(element);
+
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.width).to.equal('48px');
+    expect(computedStyle.height).to.equal('48px');
+  });
+
+  it('should handle non-existent icon gracefully', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="non-existent-icon"></col-icon>`);
+
+    expect(element).to.exist;
+
+    await elementUpdated(element);
+
+    const iconContainer = element.shadowRoot?.querySelector('.icon-container');
+    expect(iconContainer).to.exist;
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.not.exist;
+  });
+
+  it('should update when properties change', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow" color="blue"></col-icon>`);
+
+    expect(element.name).to.equal('arrow');
+    expect(element.color).to.equal('blue');
+
+    await elementUpdated(element);
+
+    // Change properties
+    element.name = 'home';
+    element.color = 'red';
+
+    await elementUpdated(element);
+
+    expect(element.name).to.equal('home');
+    expect(element.color).to.equal('red');
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('red');
+  });
+
+  it('should handle numeric size values', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow" size="32"></col-icon>`);
+
+    expect(element.size).to.equal('32');
+
+    await elementUpdated(element);
+
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.width).to.equal('32px');
+    expect(computedStyle.height).to.equal('32px');
+  });
+
+  it('should handle SVG with no fill or stroke attributes', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="no-fill" color="green"></col-icon>`
+    );
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('fill="green"');
+  });
+
+  it('should replace fill attributes with custom color', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="with-fill" color="red"></col-icon>`
+    );
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('fill="red"');
+    expect(svg?.outerHTML).to.not.include('fill="blue"');
+  });
+
+  it('should replace stroke attributes with custom color', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="with-stroke" color="green"></col-icon>`
+    );
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('stroke="green"');
+    expect(svg?.outerHTML).to.not.include('stroke="red"');
+  });
+
+  it('should replace both fill and stroke attributes with custom color', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="with-both" color="purple"></col-icon>`
+    );
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('fill="purple"');
+    expect(svg?.outerHTML).to.include('stroke="purple"');
+  });
+
+  it('should replace currentColor with custom color', async () => {
+    const element = await fixture<ColIcon>(
+      html`<col-icon name="with-currentColor" color="orange"></col-icon>`
+    );
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('fill="orange"');
+    expect(svg?.outerHTML).to.include('stroke="orange"');
+    expect(svg?.outerHTML).to.not.include('currentColor');
+  });
+
+  it('should handle SVG with width and height attributes', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="with-dimensions"></col-icon>`);
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('width="24"');
+    expect(svg?.outerHTML).to.include('height="24"');
+  });
+
+  it('should handle exported SVG content format', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="exported"></col-icon>`);
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+  });
+
+  it('should handle data URI SVG format', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="data-uri"></col-icon>`);
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+  });
+
+  it('should handle invalid SVG content', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="invalid"></col-icon>`);
+
+    await elementUpdated(element);
+
+    const svg = element.shadowRoot?.querySelector('.icon-container svg');
+    expect(svg).to.not.exist;
+  });
+
+  it('should update icon when color changes', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow" color="blue"></col-icon>`);
+
+    await elementUpdated(element);
+
+    let svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('blue');
+
+    element.color = 'yellow';
+    await elementUpdated(element);
+
+    svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.exist;
+    expect(svg?.outerHTML).to.include('yellow');
+    expect(svg?.outerHTML).to.not.include('blue');
+  });
+
+  it('should use cached icon when loading the same icon twice', async () => {
+    // First element loads the icon
+    const element1 = await fixture<ColIcon>(
+      html`<col-icon name="arrow" color="purple"></col-icon>`
+    );
+    await elementUpdated(element1);
+
+    // Check that the icon was cached
+    const cacheKey = 'arrow-purple';
+    expect((ColIcon as any).iconCache.has(cacheKey)).to.be.true;
+
+    // Second element should use the cached icon
+    const element2 = await fixture<ColIcon>(
+      html`<col-icon name="arrow" color="purple"></col-icon>`
+    );
+    await elementUpdated(element2);
+
+    // Both should have the same SVG content
+    const svg1 = element1.shadowRoot?.querySelector('svg');
+    const svg2 = element2.shadowRoot?.querySelector('svg');
+    expect(svg1?.outerHTML).to.equal(svg2?.outerHTML);
+  });
+
+  it('should handle error when loading non-existent icon module', async () => {
+    // Track console.error calls
+    let errorCalled = false;
+    let errorMessage = '';
+
+    console.error = (msg: string) => {
+      errorCalled = true;
+      errorMessage = msg;
+    };
+
+    const element = await fixture<ColIcon>(html`<col-icon name="does-not-exist"></col-icon>`);
+    await elementUpdated(element);
+
+    // Should have logged an error
+    expect(errorCalled).to.be.true;
+    expect(errorMessage).to.include('Error loading icon does-not-exist:');
+
+    // Should have no SVG content
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.not.exist;
+  });
+
+  it('should handle module without default export', async () => {
+    let errorCalled = false;
+    let errorMessage = '';
+
+    console.error = (msg: string) => {
+      errorCalled = true;
+      errorMessage = msg;
+    };
+
+    const element = await fixture<ColIcon>(html`<col-icon name="no-default"></col-icon>`);
+    await elementUpdated(element);
+
+    expect(errorCalled).to.be.true;
+    expect(errorMessage).to.include('Error loading icon no-default:');
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.not.exist;
+  });
+
+  it('should handle empty SVG content', async () => {
+    let errorCalled = false;
+    let errorMessage = '';
+
+    console.error = (msg: string) => {
+      errorCalled = true;
+      errorMessage = msg;
+    };
+
+    const element = await fixture<ColIcon>(html`<col-icon name="empty-svg"></col-icon>`);
+    await elementUpdated(element);
+
+    expect(errorCalled).to.be.true;
+    expect(errorMessage).to.include('Error loading icon empty-svg:');
+
+    const svg = element.shadowRoot?.querySelector('svg');
+    expect(svg).to.not.exist;
+  });
+
+  it('should cover cleanSvgContent edge cases', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="test"></col-icon>`);
+
+    // Test cleanSvgContent with various inputs to increase coverage
+    const cleanSvgContent = (element as any).cleanSvgContent.bind(element);
+
+    // Test with malformed SVG that should return empty
+    const result1 = cleanSvgContent('malformed content without svg tag');
+    expect(result1).to.equal('');
+
+    // Test with SVG that already has width/height
+    const svgWithDimensions = '<svg width="100" height="100"><path d="M0 0"/></svg>';
+    const result2 = cleanSvgContent(svgWithDimensions);
+    expect(result2).to.include('width="100"');
+    expect(result2).to.include('height="100"');
+
+    // Test error handling in cleanSvgContent with invalid input
+    const result3 = cleanSvgContent('');
+    expect(result3).to.equal('');
+  });
+
+  it('should test cache functionality with real loadIcon', async () => {
+    // Create an element with the original loadIcon
+    const element = await fixture<ColIcon>(html`<col-icon name="test" color="blue"></col-icon>`);
+
+    // Manually set a value in the cache
+    const cacheKey = 'cached-icon-blue';
+    const cachedSvg = '<svg><circle r="10"/></svg>';
+    (ColIcon as any).iconCache.set(cacheKey, cachedSvg);
+
+    // Use the original loadIcon to test cache hit
+    element.loadIcon = originalLoadIcon.bind(element);
+    const result = await element.loadIcon('cached-icon');
+
+    expect(result).to.equal(cachedSvg);
+  });
+
+  it('should handle numeric size property (type: number)', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow"></col-icon>`);
+
+    // Set size as actual number type
+    element.size = 64;
+
+    await elementUpdated(element);
+
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.width).to.equal('64px');
+    expect(computedStyle.height).to.equal('64px');
+  });
+
+  it('should handle undefined/falsy size values', async () => {
+    const element = await fixture<ColIcon>(html`<col-icon name="arrow"></col-icon>`);
+
+    // Set size to empty string
+    element.size = '';
+
+    await elementUpdated(element);
+
+    const computedStyle = window.getComputedStyle(element);
+    expect(computedStyle.width).to.equal('24px');
+    expect(computedStyle.height).to.equal('24px');
+  });
+});
+
+
+
+================================================
+FILE: src/components/col-icon.ts
+================================================
+import { html, LitElement } from 'lit';
+import { property, state } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+
+export class ColIcon extends LitElement {
+  static readonly tagName = 'icon';
+  @property({ type: String })
+  color: string = 'currentColor';
+  @property({ type: String })
+  name: string = 'lock';
+  @property({ type: String })
+  size: string | number = '24px';
+
+  @state()
+  private svgContent: string = '';
+  private static iconCache = new Map<string, string>();
+
+  private cleanSvgContent(content: string): string {
+    try {
+      let cleaned = content
+        .replace(/export default /g, '')
+        .replace(/^["']|["']$/g, '')
+        .replace(/^data:image\/svg\+xml,/, '')
+        .trim();
+
+      if (!cleaned.includes('<svg')) {
+        return '';
+      }
+
+      if (!cleaned.includes('width=') && !cleaned.includes('height=')) {
+        cleaned = cleaned.replace('<svg', '<svg width="100%" height="100%"');
+      }
+
+      // Set the icon color
+      if (!cleaned.match('fill') && !cleaned.match('stroke')) {
+        cleaned = cleaned.replace('<svg', `<svg fill="${this.color}"`);
+      } else {
+        cleaned = cleaned.replace(/fill="([^none][\w]+)"/g, `fill="${this.color}"`);
+        cleaned = cleaned.replace(/stroke="([^none][\w]+)"/g, `stroke="${this.color}"`);
+        cleaned = cleaned.replace(/currentColor/g, this.color);
+      }
+      return cleaned;
+    } catch (error) {
+      console.error('Error cleaning SVG:', error);
+      return '';
+    }
+  }
+
+  async loadIcon(name: string): Promise<string> {
+    const cacheKey = `${name}-${this.color}`;
+    try {
+      if (ColIcon.iconCache.has(cacheKey)) {
+        return ColIcon.iconCache.get(cacheKey) || '';
+      }
+
+      const module = await import(`../icons/${name}.svg`);
+
+      if (!module.default) {
+        throw new Error('No SVG content loaded');
+      }
+
+      const cleanedSvg = this.cleanSvgContent(module.default);
+
+      if (!cleanedSvg) {
+        throw new Error('Invalid SVG content');
+      }
+
+      ColIcon.iconCache.set(cacheKey, cleanedSvg);
+      return cleanedSvg;
+    } catch (error) {
+      console.error(`Error loading icon ${name}:`, error);
+      return '';
+    }
+  }
+
+  async updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('name') || changedProperties.has('color')) {
+      this.svgContent = await this.loadIcon(this.name);
+    }
+  }
+
+  render() {
+    // Ensure size is always valid, with a default fallback
+    const sizeValue =
+      typeof this.size === 'number'
+        ? `${this.size}px`
+        : typeof this.size === 'string' && this.size
+          ? /^\d+$/.test(this.size)
+            ? `${this.size}px`
+            : this.size
+          : '24px';
+
+    return html`
+      <style>
+        :host {
+          display: inline-block;
+          width: ${sizeValue};
+          height: ${sizeValue};
+          line-height: 0;
+        }
+        .icon-container {
+          width: 100%;
+          height: 100%;
+        }
+        .icon-container > svg {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+        .icon-container > svg > path {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div class="icon-container">${this.svgContent ? unsafeHTML(this.svgContent) : ''}</div>
+    `;
+  }
+}
+
+
+
+================================================
+FILE: src/components/index.ts
+================================================
+export * from './col-icon';
+
+
+
+================================================
+FILE: tools/index.ts
+================================================
+export * from './plugins';
+
+
+
+================================================
+FILE: tools/plugins/index.ts
+================================================
+export { default as svgLoaderPlugin } from './vite-svg-loader-plugin';
+export { default as iconsListPlugin } from './vite-icons-list-plugin';
+
+
+
+================================================
+FILE: tools/plugins/vite-icons-list-plugin.ts
+================================================
+import { Plugin, ResolvedConfig } from 'vite';
+import { resolve } from 'path';
+import * as fs from 'fs';
+import { globSync } from 'glob';
+
+/**
+ * Configuration options for the Icons List Generator plugin
+ */
+export interface IconsListPluginOptions {
+  /**
+   * Source directory for icon files (relative to project root)
+   * @default 'src/icons'
+   */
+  iconsDir?: string;
+
+  /**
+   * Output directory for generated files (relative to output directory)
+   * @default 'icons-list'
+   */
+  outputDir?: string;
+
+  /**
+   * Whether to update package.json with exports entry
+   * @default true
+   */
+  updatePackageJson?: boolean;
+
+  /**
+   * Export path to use in package.json
+   * @default './icons-list'
+   */
+  exportPath?: string;
+}
+
+/**
+ * Vite plugin for generating a list of available icons during build.
+ * This plugin scans the icons directory and creates:
+ * 1. A JavaScript file with an array of all icon names
+ * 2. A TypeScript declaration file with proper typing
+ * 3. Updates package.json to enable direct imports (optional)
+ */
+export default function iconsListPlugin(options: IconsListPluginOptions = {}): Plugin {
+  const config: Required<IconsListPluginOptions> = {
+    iconsDir: options.iconsDir || 'src/icons',
+    outputDir: options.outputDir || 'icons-list',
+    updatePackageJson: options.updatePackageJson !== false,
+    exportPath: options.exportPath || './icons-list',
+  };
+
+  let resolvedConfig: ResolvedConfig;
+
+  return {
+    name: 'generate-icons-list',
+    apply: 'build',
+
+    configResolved(viteConfig) {
+      resolvedConfig = viteConfig;
+    },
+
+    closeBundle() {
+      const rootDir = resolvedConfig.root;
+      const iconsDir = resolve(rootDir, config.iconsDir);
+
+      if (!fs.existsSync(iconsDir)) {
+        console.warn(`Icons directory '${iconsDir}' does not exist.`);
+        return;
+      }
+
+      // Find all SVG files in the icons directory
+      const svgFiles = globSync('**/*.svg', { cwd: iconsDir });
+
+      // Extract icon names from filenames and sort them alphabetically
+      const iconNames = svgFiles
+        .map(file => {
+          const filename = file.split('/').pop() || '';
+          return filename.replace('.svg', '');
+        })
+        .sort();
+
+      // Generate JavaScript content with the list of icons
+      const iconsFileContent = `export const icons = ${JSON.stringify(iconNames, null, 2)};`;
+
+      // Generate TypeScript declaration with proper typing
+      const iconType = iconNames.map(name => `'${name}'`).join(' | ');
+      const typesFileContent = `export declare const icons: Array<${iconType}>;\nexport type IconName = ${iconType};\n`;
+
+      // Create output directory in dist
+      const distDir = resolve(rootDir, resolvedConfig.build.outDir || 'dist');
+      if (!fs.existsSync(distDir)) {
+        fs.mkdirSync(distDir, { recursive: true });
+      }
+
+      // Create icons-list directory
+      const iconsListDir = resolve(distDir, config.outputDir);
+      if (!fs.existsSync(iconsListDir)) {
+        fs.mkdirSync(iconsListDir, { recursive: true });
+      }
+
+      // Write files
+      fs.writeFileSync(resolve(iconsListDir, 'index.js'), iconsFileContent);
+      fs.writeFileSync(resolve(iconsListDir, 'index.d.ts'), typesFileContent);
+
+      console.log(`Generated icons list with ${iconNames.length} icons`);
+
+      // Update package.json if enabled
+      if (config.updatePackageJson) {
+        updatePackageJsonExports(rootDir, config.exportPath, config.outputDir);
+      }
+    },
+  };
+}
+
+/**
+ * Updates the package.json file to add the icons-list export path
+ */
+function updatePackageJsonExports(rootDir: string, exportPath: string, outputDir: string): void {
+  const packageJsonPath = resolve(rootDir, 'package.json');
+
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      // Read the original file content to preserve trailing newline
+      const originalContent = fs.readFileSync(packageJsonPath, 'utf-8');
+      const endsWithNewline = originalContent.endsWith('\n');
+
+      const pkg = JSON.parse(originalContent);
+
+      if (!pkg.exports) {
+        pkg.exports = {};
+      }
+
+      pkg.exports[exportPath] = {
+        import: `./dist/${outputDir}/index.js`,
+        types: `./dist/${outputDir}/index.d.ts`,
+      };
+
+      // Stringify with pretty formatting (2 spaces)
+      let newContent = JSON.stringify(pkg, null, 2);
+
+      // Ensure we preserve the trailing newline if it existed in the original file
+      if (endsWithNewline && !newContent.endsWith('\n')) {
+        newContent += '\n';
+      }
+
+      fs.writeFileSync(packageJsonPath, newContent);
+      console.log(`Updated package.json with exports entry for '${exportPath}'`);
+    } catch (error) {
+      console.error('Error updating package.json:', error);
+    }
+  } else {
+    console.warn('package.json not found at', packageJsonPath);
+  }
+}
+
+
+
+================================================
+FILE: tools/plugins/vite-svg-loader-plugin.ts
+================================================
+import { Plugin } from 'vite';
+import * as fs from 'fs';
+
+/**
+ * Configuration options for the SVG Loader plugin
+ */
+export interface SvgLoaderPluginOptions {
+  /**
+   * Whether to minify SVG content by removing whitespace and newlines
+   * @default true
+   */
+  minify?: boolean;
+
+  /**
+   * Custom transform function to apply to SVG content
+   * @param svgContent The raw SVG content as a string
+   * @returns The transformed SVG content
+   */
+  transform?: (svgContent: string) => string;
+}
+
+/**
+ * Default SVG transformation that cleans and minifies SVG content
+ */
+function defaultSvgTransform(svgContent: string): string {
+  return svgContent
+    .trim()
+    .replace(/>\s+</g, '><')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/[\n\r]/g, '');
+}
+
+/**
+ * Vite plugin for loading SVG files as strings.
+ * This plugin preprocesses SVG files to optimize them and make them available as importable modules.
+ */
+export default function svgLoaderPlugin(options: SvgLoaderPluginOptions = {}): Plugin {
+  const minify = options.minify !== false;
+  const transform =
+    options.transform || (minify ? defaultSvgTransform : (content: string) => content);
+
+  return {
+    name: 'svg-loader',
+    enforce: 'pre',
+
+    load(id) {
+      if (id.endsWith('.svg')) {
+        try {
+          const svgContent = fs.readFileSync(id, 'utf-8');
+          const transformedSvg = transform(svgContent);
+
+          return `export default ${JSON.stringify(transformedSvg)}`;
+        } catch (error) {
+          console.error(`Error processing SVG file ${id}:`, error);
+          return null;
+        }
+      }
+      return null;
+    },
+  };
+}
+
+

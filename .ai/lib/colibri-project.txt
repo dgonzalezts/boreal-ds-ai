@@ -1,0 +1,878 @@
+Directory structure:
+└── dgonzalezts-colibri-project/
+    ├── README.md
+    ├── eslint.config.js
+    ├── package.json
+    ├── turbo.json
+    ├── .editorconfig
+    ├── .node-version
+    ├── .prettierignore
+    └── .prettierrc
+
+================================================
+FILE: README.md
+================================================
+# Colibri Design System
+
+A monorepo for the Colibri Design System components and documentation.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Node.js Version Management](#nodejs-version-management)
+- [Installation](#installation)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+- [Next Steps](#next-steps)
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- Node.js
+- Git
+- npm
+
+## Node.js Version Management
+
+This project uses Node.js version 22.14.0 (specified in `.node-version`). To manage Node.js versions:
+
+### 1. Install nvm (Node Version Manager)
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+```
+
+### 2. Restart Your Terminal
+
+```bash
+source ~/.bashrc  # or source ~/.zshrc, ~/.profile, or ~/.bash_profile
+```
+
+### 3. Install and Use Node.js Version
+
+```bash
+# Install the required Node.js version (from .node-version)
+nvm install 22.14.0
+
+# Use the installed version
+nvm use 22.14.0
+```
+
+### 4. Verify Setup
+
+```bash
+# Check current Node.js version
+node --version  # Should show v22.14.0
+
+# Check nvm installation
+nvm --version
+```
+
+### 5. Manual Version Switching
+
+If you need to manually switch Node.js versions:
+
+```bash
+nvm use 22.14.0
+```
+
+### Troubleshooting nvm Installation
+
+If you encounter issues:
+
+1. **For macOS users with Apple Silicon chips:**
+
+   - Install Rosetta if not already installed:
+     ```bash
+     softwareupdate --install-rosetta
+     ```
+   - Open a shell running with Rosetta:
+     ```bash
+     arch -x86_64 zsh
+     ```
+   - Install the required Node.js version:
+     ```bash
+     nvm install v22.14.0 --shared-zlib
+     ```
+
+2. **For WSL users:**
+   If you encounter DNS resolution issues during installation:
+
+   ```bash
+   sudo rm /etc/resolv.conf
+   sudo bash -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+   sudo bash -c 'echo "[network]" > /etc/wsl.conf'
+   sudo bash -c 'echo "generateResolvConf = false" >> /etc/wsl.conf'
+   sudo chattr +i /etc/resolv.conf
+   ```
+
+3. **Common issues:**
+   - If installation fails, clear the nvm cache:
+     ```bash
+     nvm cache clear
+     ```
+   - If you get "nvm: command not found", ensure nvm is properly sourced in your shell profile
+   - If you get permission errors, ensure your user has write access to the nvm directory
+
+## Installation
+
+### 1. Clone the Repository
+
+First, clone the repository with its submodules:
+
+```bash
+# Clone the main repository
+git clone ssh://git@bitbucket.c11.telesign.com:7999/dev/colibri-project.git
+
+# Navigate to the project directory
+cd colibri-project
+
+# Initialize and update submodules
+git submodule init
+git submodule update
+```
+
+### 2. Submodules Structure
+
+The monorepo includes the following submodules:
+
+- `packages/colibri` - Core library
+- `packages/colibri-icons` - Icon package
+- `apps/colibri-docs` - Documentation site
+- `examples/react-ts` - React TypeScript example
+- `examples/vue-ts` - Vue TypeScript example
+
+### 3. Install Dependencies
+
+Install all dependencies across the workspaces:
+
+```bash
+npm install
+```
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build packages
+npm run build:packages
+
+# Build documentation
+npm run build:docs
+```
+
+## Project Structure
+
+```
+colibri-project/
+├── apps/
+│   └── colibri-docs/     # Documentation site
+├── examples/
+│   ├── react-ts/         # React TypeScript example
+│   └── vue-ts/           # Vue TypeScript example
+├── packages/
+│   ├── colibri/          # Core library (main design system)
+│   └── colibri-icons/    # Icon package
+├── package.json          # Root package.json
+└── turbo.json            # Turborepo configuration
+```
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development servers for all projects
+- `npm run dev:react` - Start development server for React example
+- `npm run dev:vue` - Start development server for Vue example
+- `npm run dev:docs` - Start development server for documentation
+- `npm run watch:docs` - **Recommended**: Storybook + live package & CSS updates
+- `npm run watch:react` - React example + live package updates
+- `npm run watch:vue` - Vue example + live package updates
+- `npm run watch:pkg` - Build packages in watch mode
+- `npm run watch:css` - Generate CSS from design tokens in watch mode
+- `npm run build` - Build all projects
+- `npm run build:packages` - Build only packages
+- `npm run build:docs` - Build only documentation
+- `npm run build:ds` - Build only design system package
+- `npm run lint` - Run linting on all projects
+- `npm run lint:fix` - Fix linting issues
+- `npm run format` - Format code with Prettier
+
+### Common Scenarios
+
+**"I'm doing full cross-platform development"**
+
+```bash
+npm run dev  # React + Vue + Storybook + all packages (comprehensive development)
+```
+
+**"I'm developing a new component"**
+
+```bash
+# Phase 1: Component logic + testing
+cd packages/colibri && npm run dev
+
+# Phase 2: Storybook documentation
+npm run dev:docs      # Using pre-built packages (faster startup)
+npm run watch:docs    # Using live packages and CSS token updates
+```
+
+**"I'm updating design tokens/themes"**
+
+```bash
+npm run watch:docs  # See changes in Storybook
+# OR
+npm run watch:css   # CSS generation only
+```
+
+**"I want isolated development"**
+
+```bash
+cd packages/colibri && npm run dev     # Direct package dev server
+npm run watch:react  # React example with live package updates
+npm run watch:vue    # Vue example with live package updates
+```
+
+**"I want full development experience"**
+
+```bash
+npm run watch:docs # See components, icons and CSS tokens changes in Storybook
+```
+
+### Understanding Script Types
+
+- **`npm run dev`**: Comprehensive cross-platform development (all packages + examples + Storybook)
+- **`dev:*` scripts**: Start single environments with pre-built packages (no live updates)
+- **`watch:*` scripts**: Start environments WITH live package rebuilding (recommended for development)
+
+The `watch:*` scripts coordinate multiple processes:
+
+- `watch:pkg` - Rebuilds packages when source files change
+- `watch:css` - Regenerates CSS when design tokens change
+- Dev server - Provides hot reload for the specific environment
+
+### CSS Generation
+
+The design system generates CSS from design tokens:
+
+- **Source**: `packages/colibri/src/styles/tokens/` and `themes/`
+- **Generated**: `global.css`, `styles.css`, `theme-telesign.css`, `theme-massive.css`, `theme-bics.css`
+- **Component Styles**: CSS-in-JS (automatically included with components)
+
+### Turborepo Configuration
+
+The project uses Turborepo for efficient monorepo management:
+
+- **Dependency-aware builds**: Packages build in correct order
+- **Development coordination**: Watch scripts work together seamlessly
+- **Optimized caching**: Production builds cached, development builds fresh
+
+### Development Workflow
+
+#### Local Development Setup
+
+1. **Initial Setup**
+
+   - Clone all required submodules:
+     ```bash
+     git submodule update --init --recursive
+     ```
+   - Install dependencies in all workspaces:
+     ```bash
+     npm install
+     ```
+   - Build all packages initially:
+     ```bash
+     npm run build:packages
+     ```
+
+2. **Development Server**
+   - For full-stack development:
+     ```bash
+     npm run dev
+     ```
+   - For React example only:
+     ```bash
+     npm run dev:react
+     ```
+
+#### Working with Packages
+
+1. **Submodule Management**
+
+   Since our packages are Git submodules, follow these steps for proper reference management:
+
+   - Update all submodules at the root of the monorepo
+     ```bash
+     git submodule update --remote
+     ```
+   - Make changes in a submodule inside a feature branch
+     ```bash
+     cd [submodule-directory]
+     git checkout -b feature/new-feature
+     ```
+
+2. **Code Quality**
+
+   Before committing changes, ensure code quality:
+
+   - Format your code
+     ```bash
+     npm run format
+     ```
+   - Run linting
+     ```bash
+     npm run lint
+     ```
+   - Fix automatic linting issues
+     ```bash
+     npm run lint:fix
+     ```
+   - Push changes
+     ```bash
+     git commit -am "feat: add new feature"
+     git push origin feature/new-feature
+     ```
+   - Create a pull request for your branch
+     - Make sure its compared/based off of `release/current`
+   - Once the PR is approved, you can merge your changes into `release/current` **and push** them **in the submodule directory**.
+
+3. **Submodule Reference Updates**
+
+   Now, we need to update the main repo so that its aware of the latest changes in its submodules.
+
+   - Create a feature branch in the monorepo (main repo) from `release/current`
+     ```bash
+     git checkout release/current
+     git checkout -b feature/update-submodule-reference
+     ```
+   - Go to the submodule directory
+     ```bash
+     cd [submodule-directory]
+     ```
+   - Checkout `release/current` branch and pull the latest changes, to ensure you're getting that latest merge you pushed above
+     ```bash
+     git checkout release/current
+     git pull origin release/current --rebase
+     ```
+   - Go back to the root of the monorepo (main repo)
+     ```bash
+     cd ../
+     ```
+   - Update the submodule reference by performing the following steps:
+     ```bash
+     git add [submodule-directory]
+     git commit -m "chore: update submodule reference to include [feature description]"
+     ```
+   - Push changes
+
+     ```bash
+     git push origin feature/update-submodule-reference
+     ```
+
+   - Create a pull request on Bitbucket first, and merge your feature branch into `release/current`.
+   - Once merged, team members should update their local repositories:
+     ```bash
+     git checkout release/current
+     git pull origin release/current --rebase
+     git submodule update --init --recursive
+     ```
+
+4. **Verification**
+   Verify the submodule reference is correct:
+
+   - Check that the submodule is pointing to the correct commit
+     ```bash
+     git submodule status
+     ```
+   - The output should look similar to the following (exact hashes and paths will depend on your installed packages):
+     ```bash
+        f73463dfbe23582ce86c320e75238e20c8d80978 apps/colibri-docs (heads/release/current)
+        b9a92598a6eebe18112987c08233a964c5eed4a4 examples/react-ts (heads/main)
+        9629995cf7252ad8dddd45d74fbec9f082366eb0 examples/vue-ts (heads/main)
+        725c7b7ea1870919144017714f2b08966f0679e9 packages/colibri (v0.1.1-22-g725c7b7)
+        5f76eae3931c3adfe61cc60dacd9401a09e567a1 packages/colibri-icons (v0.3.7-5-g5f76eae)
+     ```
+   - Let's break each line down to understand it:
+     - the first part `f73463dfbe23582ce86c320e75238e20c8d80978` is the latest commit id on `release/current` (or at least it should be)
+     - the next part `apps/colibri-docs` is the submodule name/location
+     - the last part `(heads/release/current)` is the branch its pointing to
+       - NOTE: for our public packages, you should instead see `(v0.1.1-22-g725c7b7)` which is the version number trailed by `-gCOMMIT_HASH`
+       - in the example above for `packages/colibri` you can see:
+         - commit id = `725c7b7ea1870919144017714f2b08966f0679e9`
+         - the last part of the version tag = `g725c7b7`
+         - it matches the first 7 characters of the commit id
+
+   > **Note:** While it's technically possible to point the monorepo to a feature branch commit, it's not recommended as it can lead to instability and maintenance challenges. Always prefer merging to `release/current` first and then updating the reference.
+
+5. **Package-Specific Development**
+
+   a. **Core Library (`packages/colibri`)**
+
+   - Changes in the core library will automatically trigger rebuilds in dependent packages
+   - Test your changes using the React example
+
+   b. **Icon Package (`packages/colibri-icons`)**
+
+   - When adding new icons:
+     1. Place SVG files in the appropriate directory
+     2. Run the icon generation script
+     3. Build the package
+     4. Update documentation if needed
+
+   c. **Documentation (`apps/colibri-docs`)**
+
+   - Run documentation locally:
+     ```bash
+     cd apps/colibri-docs
+     npm run dev
+     ```
+   - Preview production build:
+     ```bash
+     npm run build:docs
+     npm run preview
+     ```
+
+6. **Testing Changes**
+   - Test in the React example project
+   - Verify changes in the documentation
+   - Check cross-package compatibility
+
+#### Package Dependencies
+
+1. **Adding New Dependencies**
+
+   - To a specific package:
+     ```bash
+     cd packages/[package-name]
+     npm install [dependency-name]
+     ```
+   - To the root project:
+     ```bash
+     npm install -W [dependency-name]
+     ```
+
+2. **Updating Dependencies**
+   - Update all packages:
+     ```bash
+     npm update
+     ```
+   - Update specific package:
+     ```bash
+     npm update [package-name]
+     ```
+
+#### Package Build and Submodule Behavior
+
+1. **Submodule Build Behavior**
+
+   - When running builds (e.g., `npm run build` or `turbo build`), the system uses the exact code at the specific commit each submodule is pointing to
+   - This ensures reproducible builds as the code state is deterministic
+   - Example structure:
+     ```
+     colibri-project/ (main repo)
+       └── packages/
+           ├── colibri/ (submodule pointing to commit abc123)
+           └── colibri-icons/ (submodule pointing to commit def456)
+     ```
+   - When building, the system will:
+     - Build `colibri` package using exactly the code at commit `abc123`
+     - Build `colibri-icons` package using exactly the code at commit `def456`
+   - To ensure consistent builds across the team:
+     ```bash
+     # Update all submodules to their referenced commits
+     git submodule update
+     ```
+
+2. **Best Practices for Submodule Management**
+
+   - Always merge feature branches to release/current in submodules before updating references
+   - Keep submodule references pointing to stable commits (preferably on release/current branch)
+   - Run `git submodule update` after pulling changes to ensure correct commit references
+   - Use specific build filters when working with individual packages:
+     ```bash
+     npm run build:packages  # Build only packages
+     npm run build:docs     # Build only documentation
+     npm run build:ds       # Build only design system
+     ```
+
+3. **Branch Management**
+
+   - Keep your branches up to date with the latest changes:
+
+     ```bash
+     # Fetch latest changes from remote
+     git fetch origin
+
+     # Rebase your current branch on top of release/current
+     git rebase origin/release/current
+
+     # Update all submodules (including nested ones)
+     git submodule update --recursive
+     ```
+
+   - Note: The `--recursive` flag is important when you have nested submodules (submodules within submodules)
+
+#### CI/CD Integration
+
+1. **Before Creating a Pull Request**
+
+   - Ensure all builds pass:
+     ```bash
+     npm run build
+     ```
+   - Check documentation updates:
+     ```bash
+     npm run build:docs
+     ```
+
+2. **Release Process**
+   - Update package versions
+   - Generate changelogs
+   - Create release tags
+   - Push updates to all submodules
+
+## Troubleshooting
+
+### Submodule Issues
+
+If you encounter issues with submodules:
+
+1. Ensure all submodules are properly initialized:
+
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+2. If a submodule is out of date:
+
+   ```bash
+   git submodule update --remote
+   ```
+
+3. For general build issues, try cleaning the project:
+   ```bash
+   npm clean
+   rm -rf node_modules
+   npm install
+   ```
+
+## Next Steps
+
+After installation, you can:
+
+1. Explore the example React application in `examples/react-ts`
+2. Check out the documentation site in `apps/colibri-docs`
+3. Start developing with the core library in `packages/colibri`
+
+For more detailed information about each package, refer to their individual README files.
+
+
+
+================================================
+FILE: eslint.config.js
+================================================
+import globals from 'globals';
+import tsParser from '@typescript-eslint/parser';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import prettier from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
+import lit from 'eslint-plugin-lit';
+import * as wdio from 'eslint-plugin-wdio';
+import js from '@eslint/js';
+
+export default [
+  js.configs.recommended,
+
+  {
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
+
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.es2021,
+      },
+      parser: tsParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+
+    plugins: {
+      '@typescript-eslint': typescriptEslint,
+      prettier,
+      lit,
+    },
+
+    rules: {
+      // Merge recommended configs inline
+      ...typescriptEslint.configs.recommended.rules,
+      ...lit.configs.recommended.rules,
+      ...prettierConfig.rules,
+
+      // General ESLint rules
+      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      'no-unused-vars': 'off',
+
+      // TypeScript rules
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+        },
+      ],
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+
+      // Lit specific rules
+      'lit/no-invalid-html': 'error',
+      'lit/no-duplicate-template-bindings': 'error',
+      'lit/no-template-bind-expressions': 'off',
+
+      // Prettier integration
+      'prettier/prettier': [
+        'error',
+        {},
+        {
+          usePrettierrc: true,
+        },
+      ],
+    },
+
+    settings: {
+      'import/resolver': {
+        typescript: {},
+      },
+    },
+  },
+
+  // WebDriverIO test files configuration
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts', '**/*.e2e.ts', '**/wdio.conf.ts'],
+
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+        ...globals.jasmine,
+      },
+    },
+
+    plugins: {
+      wdio,
+    },
+
+    rules: {
+      ...wdio.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-unused-expressions': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'lit/no-invalid-html': 'off',
+      'wdio/no-pause': 'warn',
+    },
+  },
+
+  // Config files configuration
+  {
+    files: ['**/*.config.js', '**/*.config.ts', 'scripts/*.js'],
+
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
+      'no-console': 'off',
+    },
+  },
+];
+
+
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "colibri",
+  "version": "1.0.0",
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "examples/**",
+    "packages/**",
+    "apps/**"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:react": "turbo dev --filter=react-ts",
+    "dev:vue": "turbo dev --filter=vue-ts",
+    "dev:docs": "turbo dev --filter=@telesign/colibri-docs",
+    "watch:pkg": "turbo watch:pkg",
+    "watch:css": "turbo watch:css",
+    "watch:docs": "concurrently \"npm run watch:pkg\" \"npm run watch:css\" \"npm run dev:docs\"",
+    "watch:react": "concurrently \"npm run watch:pkg\" \"npm run watch:css\" \"npm run dev:react\"",
+    "watch:vue": "concurrently \"npm run watch:pkg\" \"npm run watch:css\" \"npm run dev:vue\"",
+    "build": "turbo build",
+    "build:packages": "turbo build --filter='./packages/*'",
+    "build:docs": "turbo build --filter=@telesign/colibri-docs",
+    "build:ds": "turbo build --filter=@telesign/colibri",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "turbo run format"
+  },
+  "author": "Telesign",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.36.0",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.36.0",
+    "eslint-plugin-wdio": "^9.9.1",
+    "globals": "^16.4.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  }
+}
+
+
+
+================================================
+FILE: turbo.json
+================================================
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": false
+    },
+    "build:packages": {
+      "cache": false,
+      "persistent": false
+    },
+    "build:docs": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": false
+    },
+    "build:css": {
+      "cache": false,
+      "persistent": false
+    },
+    "build:storybook": {
+      "cache": false,
+      "persistent": false
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "watch:pkg": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "watch:css": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "cache": true,
+      "persistent": false
+    },
+    "lint:fix": {
+      "cache": false,
+      "persistent": false
+    },
+    "format": {
+      "cache": false,
+      "persistent": false
+    }
+  }
+}
+
+
+
+================================================
+FILE: .editorconfig
+================================================
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+
+# JSON files - ensure consistent with prettier settings
+[*.json]
+indent_style = space
+indent_size = 2
+
+# JavaScript/TypeScript files
+[*.{js,jsx,ts,tsx,vue}]
+indent_style = space
+indent_size = 2
+
+
+
+================================================
+FILE: .node-version
+================================================
+22.14.0
+
+
+================================================
+FILE: .prettierignore
+================================================
+dist
+node_modules
+coverage
+.storybook
+
+
+
+================================================
+FILE: .prettierrc
+================================================
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf"
+}
+
