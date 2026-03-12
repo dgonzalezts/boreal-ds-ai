@@ -14,8 +14,7 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                                   | Description                                                                                                                    |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [generator-extension-strategy.md](generator-extension-strategy.md)     | Extend the Plop generator to scaffold Stencil components in `boreal-web-components` and stories in `boreal-docs` cross-package |
-| [storybook-chromatic-deployment.md](storybook-chromatic-deployment.md) | Publish the Storybook to Chromatic for team access without a local dev environment                                             |
+| [generator-extension-strategy.md](generator-extension-strategy.md) | Extend the Plop generator to scaffold Stencil components in `boreal-web-components` and stories in `boreal-docs` cross-package |
 
 ---
 
@@ -40,4 +39,5 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 | [plop-implementation-plan.md](plop-implementation-plan.md)           | Plop.js generator for scaffolding `.stories.ts` + `.mdx` files in `apps/boreal-docs`              |
 | [root-level-hooks-migration.md](root-level-hooks-migration.md)       | Move git hooks from `packages/boreal-web-components/.husky/` to the monorepo root                 |
 | [shared-storybook-components.md](shared-storybook-components.md)     | Shared React `docs/` and Lit `story/` components used in MDX and story files                      |
-| [storybook-plan.md](storybook-plan.md)                               | Baseline Storybook architecture — stories, MDX, theme-aware previews, token integration           |
+| [storybook-chromatic-deployment.md](storybook-chromatic-deployment.md) | Publish the Storybook to Chromatic for team access without a local dev environment               |
+| [storybook-plan.md](storybook-plan.md)                                 | Baseline Storybook architecture — stories, MDX, theme-aware previews, token integration          |

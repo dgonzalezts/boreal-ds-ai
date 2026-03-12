@@ -46,6 +46,12 @@ This directory contains non-obvious, durable facts about the codebase, environme
 |---|---|
 | `storybook-vite-quirks.md` | Vite glob export limitation workaround and esm-es5 warning suppression in Storybook config. |
 
+### Chromatic Deployment
+
+| File | What it covers |
+|---|---|
+| `chromatic-deployment.md` | pnpm does not load `.env` files — use `dotenv-cli`; two-actor model (dotenv-cli vs Chromatic CLI); `--storybook-build-dir` vs `--build-script-name`; Turborepo output caching requirement for `storybook-static/**`; token storage pattern; why Chromatic quickstart bypasses the dependency chain. |
+
 ### release-it + pnpm Publish
 
 | File | What it covers |
@@ -81,3 +87,4 @@ This directory contains non-obvious, durable facts about the codebase, environme
 - 2026-03-06 — New topic file added: `nodejs-signal-handler-patterns.md`. Covers `spawnSync` as the correct approach for SIGINT/SIGTERM cleanup (async handlers do not complete during teardown), `process.once()` dual-signal registration, and `pnpm install` as the only recovery step after a SIGKILL force-kill. Source: EOA-10230 `scripts-boreal/bin/publish.js` fix.
 - 2026-03-10 — Two new topic files added. `stencil-dist-copy-namespace-behavior.md`: Stencil places `dist` copy entries under `dist/<namespace>/`; `postbuild.js` promotes them to the export-map-expected paths; stale `dist/` masks missing files. `scripts-boreal-pack-pipeline.md`: `publish.js` packs only; builds are guaranteed by Turborepo `dependsOn`; per-framework suffix convention for all pack/validate scripts; `validate:all` and updated `release:all` sequence. Source: EOA-10230 deployment and publishing session.
 - 2026-03-10 — New topic file added: `release-it-pnpm-publish.md`. Covers: `publishCommand` being silently ignored by release-it 19.2.4 (the correct fields are `publishPackageManager` and `publishArgs`); pnpm workspace protocol replacement happening at tarball creation time only; `workspace:*` exact-pin rationale for alpha; `dependencies` vs `peerDependencies` for internal packages; full publish flow sequence diagram. Source: first alpha release session.
+- 2026-03-11 — New topic file added: `chromatic-deployment.md`. Covers: pnpm does not auto-load `.env` files (use `dotenv-cli`); two-actor model separating dotenv-cli from the Chromatic CLI; `--storybook-build-dir` vs `--build-script-name` and why Turborepo must own the build step; `storybook-static/**` must be declared in Turborepo build outputs to survive cache hits; token storage pattern (`.env` gitignored, `.env.example` committed); why Chromatic's quickstart pattern bypasses the dependency chain. Source: EOA-10749 Chromatic deployment session.

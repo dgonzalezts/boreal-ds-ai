@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Storybook Deployment — Chromatic
@@ -110,10 +110,10 @@ Add to `"scripts"`:
 Add to `"scripts"`:
 
 ```json
-"deploy:docs": "turbo run build --filter=@telesign/boreal-docs... && pnpm --filter @telesign/boreal-docs run chromatic"
+"deploy:docs": "turbo run build --filter=@telesign/boreal-docs... && dotenv -- pnpm --filter @telesign/boreal-docs run chromatic"
 ```
 
-The `...` suffix on the Turborepo filter means "this package and all its upstream dependencies." Turborepo executes the build in correct dependency order: `style-guidelines → web-components → boreal-docs`. The Chromatic upload runs after the build chain completes.
+The `...` suffix on the Turborepo filter means "this package and all its upstream dependencies." Turborepo executes the build in correct dependency order: `style-guidelines → web-components → boreal-docs`. `dotenv --` loads `.env` from the repo root and injects all variables before the Chromatic upload step. The Chromatic upload runs after the build chain completes.
 
 ---
 
@@ -164,10 +164,10 @@ pnpm turbo run build --filter=@telesign/boreal-docs...
 CHROMATIC_PROJECT_TOKEN=<your-token> pnpm --filter @telesign/boreal-docs run chromatic
 ```
 
-Or using the root shortcut (Task 4):
+Or using the root shortcut (Task 4), with the token stored in `.env` at the repo root:
 
 ```bash
-CHROMATIC_PROJECT_TOKEN=<your-token> pnpm deploy:docs
+pnpm deploy:docs
 ```
 
 Chromatic outputs:
