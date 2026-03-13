@@ -30,6 +30,7 @@ CHECKLIST_SECTIONS = {
     ],
     "A — Stencil (boreal-web-components)": [
         ("prop-jsdoc", "Every @Prop() has `readonly` and an adjacent JSDoc block"),
+        ("prop-mutable-form-attr", "Native form attrs (`disabled`, `checked`, `value`) use `@State()` mirror, not `mutable: true`"),
         ("prop-validation", "`validatePropValue` + `componentWillLoad()` + `@Watch()` for enum-like props"),
         ("event-naming", "Custom events use the `bds{Component}{Action}` prefix pattern"),
         ("no-native-events", "Event names do not reuse native DOM events"),
@@ -71,6 +72,7 @@ SECTION_LETTER_MAP = {
 RULE_TO_CHECKLIST: Dict[str, str] = {
     "prop-missing-jsdoc": "prop-jsdoc",
     "prop-not-readonly": "prop-jsdoc",
+    "prop-mutable-form-attr": "prop-mutable-form-attr",
     "event-native-collision": "no-native-events",
     "class-jsdoc-internal": "cem-integrity",
     "class-jsdoc-invalid-tags": "cem-integrity",

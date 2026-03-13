@@ -29,6 +29,9 @@ This reference captures recurring review failures in the Boreal DS monorepo, wit
 - **Calling `internals` from outside the component**: Stencil proxy blocks it; requires `@Method()` wrappers.
 - **Using native constraint attrs on inner `<input>`**: Causes double validation events and focus errors.
 - **Skipping `updateValidity()` after reset/restore**: Leaves validity state stale.
+- **`mutable: true` on `disabled`**: Stencil warns and creates two writers on the same reflected attribute (the component and the browser via `formDisabledCallback`). Use `@State() private isDisabled` as the internal working copy instead.
+- **`@Prop()` declarations in a mixin factory**: Stencil's compiler does not pick up `@Prop()` decorators from mixin base classes. Props must be declared directly on the component class — the mixin ends up with an ignored duplicate copy requiring a comment to explain why.
+- **No-op constructor in a mixin factory to silence ESLint**: `constructor(...args: any[]) { super(...args); }` does nothing — it is identical to the implicit call. The `any` originates from Stencil's own `MixedInCtor` type. The correct fix is a scoped override in `eslint.config.ts` for `**/mixins/**/*.ts`, not `eslint-disable` comments on a dead constructor.
 
 ---
 

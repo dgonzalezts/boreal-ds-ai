@@ -32,6 +32,8 @@ RE_JSDOC_BEFORE_PROP = re.compile(r"/\*\*[\s\S]*?\*/\s*$")
 RE_PROP_NOT_READONLY = re.compile(r"@Prop\([^)]*\)\s+(?!readonly\s)(\w+)")
 # Matches mutable prop with broad `as any` cast
 RE_MUTABLE_ANY_CAST = re.compile(r"this\.\w+\s*=\s*.*as\s+any")
+# Matches @Prop({ ..., mutable: true, ... }) on a native form attribute
+RE_MUTABLE_FORM_ATTR = re.compile(r"@Prop\([^)]*mutable\s*:\s*true[^)]*\)\s+(?:readonly\s+)?(disabled|checked|value)\b")
 # Matches: @Event() name  or @Event({ ... }) name
 RE_EVENT_DECL = re.compile(r"@Event\([^)]*\)\s+(\w+)")
 # Matches @Event() without explicit bubbles/composed/cancelable options
@@ -160,10 +162,22 @@ def _check_prop_readonly(rel: str, lines: List[str]) -> List[Finding]:
                 findings.append(Finding(
                     rule="prop-not-readonly",
                     severity="error",
-                    message=f"@Prop() '{m.group(2)}' must be declared `readonly` (or explicitly `mutable: true`).",
+                    message=f"@Prop() '{m.group(2)}' must be declared `readonly`.",
                     file=rel,
                     line=i + 1,
                 ))
+        if RE_MUTABLE_FORM_ATTR.search(line):
+            findings.append(Finding(
+                rule="prop-mutable-form-attr",
+                severity="warning",
+                message=(
+                    "Native form attribute prop should not use `mutable: true`. "
+                    "Use a `@State() private is<Prop>` mirror instead and write to it "
+                    "in `formDisabledCallback` / `@Watch`. See coding_standards.md."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
     return findings
 
 
@@ -174,7 +188,10 @@ def _check_mutable_any_cast(rel: str, lines: List[str]) -> List[Finding]:
             findings.append(Finding(
                 rule="mutable-prop-any-cast",
                 severity="warning",
-                message="Mutable prop assignment uses `as any` cast; use a narrow type cast instead.",
+                message=(
+                    "Prop assignment uses `as any` cast. For FACE components, "
+                    "prefer a `@State()` mirror over mutating a prop directly."
+                ),
                 file=rel,
                 line=i + 1,
             ))

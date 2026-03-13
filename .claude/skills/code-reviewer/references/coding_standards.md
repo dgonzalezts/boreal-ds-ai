@@ -65,7 +65,7 @@ This reference summarizes Boreal DS standards reviewers should enforce across th
 ## TypeScript and General Code Quality
 
 - Avoid `any` unless explicitly justified.
-- Use narrow casts for internal mutation of `mutable` props.
+- Do not use `mutable: true` on native form attributes (`disabled`, `checked`, `value`). Use a `@State()` mirror instead — `@Prop() readonly disabled` + `@State() private isDisabled` — and write to the state in `formDisabledCallback` and `@Watch`.
 - Prefer `instanceof Element` over `nodeType` checks for type narrowing.
 - Keep side effects explicit and avoid hidden async work inside render paths.
 

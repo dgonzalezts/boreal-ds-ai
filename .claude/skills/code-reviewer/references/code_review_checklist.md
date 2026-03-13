@@ -51,7 +51,8 @@ Apply the sections below only when the change touches the corresponding package.
 
 - [ ] **Props are readonly + documented**: Every `@Prop()` has `readonly` and an adjacent JSDoc block.
 - [ ] **Prop validation pattern**: `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` is used for enum-like props.
-- [ ] **Mutable props**: When `mutable: true` is used, internal assignment uses a narrow cast, not `as any`.
+- [ ] **Mutable props**: `mutable: true` is not used on native form attributes (`disabled`, `checked`, `value`). A `@State()` mirror is used instead.
+- [ ] **FACE disabled pattern**: `formDisabledCallback` writes to `@State() private isDisabled`, not to a mutable `@Prop()`.
 - [ ] **No class-level `@internal`**: Component classes do not use `@internal` in JSDoc.
 - [ ] **No ignored JSDoc tags**: Avoid `@element` and `@method` at class level; use method-level JSDoc instead.
 - [ ] **Use `@file`**: Module JSDoc uses `@file` (not `@fileoverview`).
