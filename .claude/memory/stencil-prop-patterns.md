@@ -11,23 +11,39 @@ Required for every `@Prop()`:
 
 This applies to props declared inside mixin factories as well as on component class bodies.
 
-## `mutable: true` and `readonly` Are Not in Conflict
+## `mutable: true` on `disabled` Produces a Stencil Compiler Warning — Use `@State()` Mirror Instead
 
-`readonly` (TypeScript) prevents external consumers from writing the prop. `mutable: true` (Stencil decorator option) allows the component itself to mutate the prop internally — Stencil's compiler strips the TypeScript `readonly` modifier for its own internal mutation tracking.
+Stencil emits `@Prop() "disabled" should not be mutable` when `mutable: true` is applied to `disabled`. The warning exists because `disabled` is a native reflected HTML attribute with browser-managed semantics (controlled externally via `formDisabledCallback`). Marking it `mutable: true` creates two writers on the same reflected attribute — the component and the browser — which can race.
 
-A prop can correctly carry both:
+The correct pattern for any prop whose value is also written by a browser lifecycle callback (e.g. `formDisabledCallback`) is a `@State()` mirror:
 
 ```typescript
-/** Whether the field is disabled. Set externally or by a disabled fieldset ancestor. */
-@Prop({ reflect: true, mutable: true }) readonly disabled: boolean = false;
+/** Whether the component is disabled. Reflects the disabled attribute. */
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+@State() private isDisabled: boolean = false;
+
+@Watch('disabled')
+onDisabledChange(next: boolean): void {
+  this.isDisabled = next;
+}
+
+componentWillLoad(): void {
+  this.isDisabled = this.disabled;
+}
+
+formDisabledCallback(disabled: boolean): void {
+  this.isDisabled = disabled;
+}
 ```
 
-When a mutable prop must be assigned inside a lifecycle callback (e.g. `formDisabledCallback`), use a narrow cast rather than `as any`:
+Render and toggle logic reads `this.isDisabled`. `@Prop()` remains `readonly` and externally owned. `@State()` is the internal working copy — it can be written by both `@Watch` and `formDisabledCallback` without a cast or compiler warning.
+
+`readonly` and `mutable: true` are orthogonal: `readonly` prevents external consumers from setting the prop after initialization; `mutable: true` allows the component to write the prop internally. For `disabled` specifically, the `@State()` mirror approach is preferred over `mutable: true` because it avoids the warning and removes the risk of racing with the browser's FACE lifecycle.
+
+If `mutable: true` is genuinely needed on a non-FACE prop (a prop only the component itself writes), use a narrow cast rather than `as any`:
 
 ```typescript
-formDisabledCallback(disabled: boolean): void {
-  (this as { disabled: boolean }).disabled = disabled;
-}
+(this as { someInternalProp: string }).someInternalProp = nextValue;
 ```
 
 In `custom-elements.json`, `mutable: true` causes Stencil to omit `"readonly": true` from the manifest entry. This is correct and intentional — it signals to consumers that the prop may change at runtime.

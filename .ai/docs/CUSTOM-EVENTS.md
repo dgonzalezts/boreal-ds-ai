@@ -21,7 +21,7 @@ Stencil generates a typed manifest (`components.d.ts`) from the `@Event()` decla
 emitEvent('change', this.el, { value: this.value }, event);
 
 // @Event() — registered in components.d.ts, fully typed, compiler-aware
-@Event({ bubbles: true, composed: true, cancelable: true })
+@Event()
 bdsInputChange!: EventEmitter<{ value: string; event: InputEvent }>;
 ```
 
@@ -57,7 +57,7 @@ A common motivation for `emitEvent` was the ability to pass custom data in the `
 ### Simple payload
 
 ```ts
-@Event({ bubbles: true, composed: true, cancelable: true })
+@Event()
 bdsButtonClick!: EventEmitter<{ event: MouseEvent }>;
 
 // Emit
@@ -72,7 +72,7 @@ element.addEventListener('bdsButtonClick', (e: CustomEvent<{ event: MouseEvent }
 ### Rich payload with multiple custom props
 
 ```ts
-@Event({ bubbles: true, composed: true, cancelable: true })
+@Event()
 bdsSelectChange!: EventEmitter<{
   value: string;
   label: string;
@@ -112,17 +112,16 @@ The `onBdsSelectChange` prop — with its full `detail` type — is generated au
 
 ---
 
-## Controlling Propagation
+## Propagation Behavior
 
-`@Event()` options control event behavior explicitly. All three must always be declared — never rely on undocumented defaults.
+Boreal DS uses bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable`. This is the same convention used by BEEQ and Aqua DS (see ADR `.ai/decisions/0003-event-options-convention.md`).
 
-| Option | Value | Reason |
-|---|---|---|
-| `bubbles` | `true` | Events must reach parent elements and framework roots |
-| `composed` | `true` | Future-proofs against Shadow DOM migration; currently a no-op in light DOM |
-| `cancelable` | `true` or `false` | `true` when consumers need to call `.preventDefault()` to opt out of a default action |
+**Why bare `@Event()` is safe here:**
+- Consumers attach listeners **directly to the component element** — bubbling to ancestor containers is not required.
+- `composed` is irrelevant because Boreal uses light DOM (`shadow: false`).
+- For toggle events (checkbox, radio), `cancelable: false` is correct — the state mutation has already occurred before the event fires.
 
-When `cancelable: true`, the component can check whether the consumer opted out:
+If a specific event needs `cancelable: true` (e.g. a submit that consumers should be able to prevent), document the reason explicitly. The component can check `defaultPrevented`:
 
 ```ts
 private handleClick = (event: MouseEvent) => {
@@ -161,7 +160,7 @@ This convention follows the established pattern of Ionic (`ionClick`, `ionChange
 
 ```ts
 // ✅ Correct — typed, compiler-aware, framework-compatible
-@Event({ bubbles: true, composed: true, cancelable: true })
+@Event()
 bdsInputChange!: EventEmitter<{ value: string; event: InputEvent; isValid: boolean }>;
 
 this.bdsInputChange.emit({ value: this.value, event, isValid: this.checkValidity() });

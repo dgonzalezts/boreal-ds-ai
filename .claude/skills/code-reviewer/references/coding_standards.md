@@ -2,102 +2,79 @@
 
 ## Overview
 
-This reference guide provides comprehensive information for code reviewer.
+This reference summarizes Boreal DS standards reviewers should enforce across the monorepo, with Stencil web components as the primary constraint set.
 
-## Patterns and Practices
+---
 
-### Pattern 1: Best Practice Implementation
+## Stencil Component Standards
 
-**Description:**
-Detailed explanation of the pattern.
+### Props and JSDoc
 
-**When to Use:**
-- Scenario 1
-- Scenario 2
-- Scenario 3
+- Every `@Prop()` must be `readonly` and have a JSDoc block directly above it.
+- Use `@file` for module-level JSDoc. Do not use `@fileoverview`.
+- Do not place `@internal`, `@element`, or `@method` in a component class JSDoc.
+- Use method-level JSDoc for `@Method()` declarations.
 
-**Implementation:**
-```typescript
-// Example code implementation
-export class Example {
-  // Implementation details
-}
-```
+### Events
 
-**Benefits:**
-- Benefit 1
-- Benefit 2
-- Benefit 3
+- Use prefixed camelCase event names: `bds{Component}{Action}`.
+- Use bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable` options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
+- Avoid native DOM event names (`click`, `change`, `input`).
 
-**Trade-offs:**
-- Consider 1
-- Consider 2
-- Consider 3
+### FACE (Form-Associated Custom Elements)
 
-### Pattern 2: Advanced Technique
+- `@AttachInternals()` must be on the component class body, never inside a mixin.
+- Wrap `checkValidity()` and `reportValidity()` with `@Method()` so tests and consumers can call them.
+- The custom element owns validity via `ElementInternals.setValidity()`; inner inputs do not carry native constraint attrs.
+- `formResetCallback` and `formStateRestoreCallback` must call `updateValidity()` after restoring state.
 
-**Description:**
-Another important pattern for code reviewer.
+### Rendering and Testing
 
-**Implementation:**
-```typescript
-// Advanced example
-async function advancedExample() {
-  // Code here
-}
-```
+- Stencil renders asynchronously. Tests must `waitForChanges()` before reading reflected DOM state.
+- `formDisabledCallback` is triggered by `<fieldset disabled>`, not `form.disabled`.
+- Components use light DOM only. Avoid Shadow DOM assumptions in styles or events.
 
-## Guidelines
+### Prop Validation
 
-### Code Organization
-- Clear structure
-- Logical separation
-- Consistent naming
-- Proper documentation
+- Use the shared `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` pattern for enum-like props.
 
-### Performance Considerations
-- Optimization strategies
-- Bottleneck identification
-- Monitoring approaches
-- Scaling techniques
+---
 
-### Security Best Practices
-- Input validation
-- Authentication
-- Authorization
-- Data protection
+## Monorepo Build and Release Standards
 
-## Common Patterns
+### Build and Packaging
 
-### Pattern A
-Implementation details and examples.
+- Web-components `dist` copy outputs land in `dist/<namespace>/`; `postbuild` must promote to `dist/css` and `dist/scss`.
+- Always validate export maps against clean `dist/` builds.
+- Packaging scripts in `scripts-boreal` must rely on Turbo `dependsOn` for build guarantees.
+- Per-framework scripts must use explicit suffixes (`:react`, `:vue`, `:angular`).
 
-### Pattern B
-Implementation details and examples.
+### Publishing
 
-### Pattern C
-Implementation details and examples.
+- release-it must use `publishPackageManager: "pnpm"` plus `publishArgs`, not `publishCommand`.
+- Internal packages stay in `dependencies`, not `peerDependencies`, during alpha.
 
-## Anti-Patterns to Avoid
+### Docs and Storybook
 
-### Anti-Pattern 1
-What not to do and why.
+- Chromatic deploys use `dotenv --` and `--storybook-build-dir=storybook-static`.
+- `storybook-static/**` must be declared in `turbo.json` outputs.
+- Storybook Vite aliasing must keep `@telesign/boreal-web-components/css/*` working.
 
-### Anti-Pattern 2
-What not to do and why.
+---
 
-## Tools and Resources
+## TypeScript and General Code Quality
 
-### Recommended Tools
-- Tool 1: Purpose
-- Tool 2: Purpose
-- Tool 3: Purpose
+- Avoid `any` unless explicitly justified.
+- Use narrow casts for internal mutation of `mutable` props.
+- Prefer `instanceof Element` over `nodeType` checks for type narrowing.
+- Keep side effects explicit and avoid hidden async work inside render paths.
 
-### Further Reading
-- Resource 1
-- Resource 2
-- Resource 3
+---
 
-## Conclusion
+## Reviewer Checklist Shortcuts
 
-Key takeaways for using this reference guide effectively.
+- JSDoc present on every `@Prop()`, and no class-level `@internal`.
+- Event names prefixed; bare `@Event()` is the convention.
+- FACE behavior uses `@AttachInternals()` and `@Method()` wrappers.
+- Tests wait for render ticks.
+- Build artifacts align with export maps after a clean build.

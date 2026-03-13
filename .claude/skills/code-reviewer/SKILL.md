@@ -1,209 +1,92 @@
 ---
 name: code-reviewer
-description: Comprehensive code review skill for TypeScript, JavaScript, Python, Swift, Kotlin, Go. Includes automated code analysis, best practice checking, security scanning, and review checklist generation. Use when reviewing pull requests, providing code feedback, identifying issues, or ensuring code quality standards.
+description: Boreal DS code review toolkit. Runs automated static analysis against Stencil/TypeScript components, maps findings to the project checklist, and saves a Markdown report to .ai/reviews/. Use when reviewing pull requests or preparing changes for peer review.
 ---
 
 # Code Reviewer
 
-Complete toolkit for code reviewer with modern tools and best practices.
+Automated review toolkit for the Boreal DS monorepo. Works by inspecting the git diff of the current worktree against `main`, scanning changed TypeScript/TSX files for Boreal DS rule violations, and writing a structured review report.
 
-## Quick Start
+## Typical Workflow
 
-### Main Capabilities
+```
+1. Create (or switch to) the worktree for the branch you want to review
+2. Run one command from the worktree root:
 
-This skill provides three core capabilities through automated scripts:
+   python3 .claude/skills/code-reviewer/scripts/review_report_generator.py .
 
-```bash
-# Script 1: Pr Analyzer
-python scripts/pr_analyzer.py [options]
-
-# Script 2: Code Quality Checker
-python scripts/code_quality_checker.py [options]
-
-# Script 3: Review Report Generator
-python scripts/review_report_generator.py [options]
+3. Open the generated report in .ai/reviews/
 ```
 
-## Core Capabilities
+The script auto-derives the output filename from today's date, the current HEAD SHA, and the branch name — matching the `YYYY-MM-DD-commit-<sha>-<branch>-review.md` convention.
 
-### 1. Pr Analyzer
+## Worktree Compatibility
 
-Automated tool for pr analyzer tasks.
+All three scripts accept a `repo_path` argument and run `git` commands with `cwd=repo_path`. This means they read the git context (branch, SHA, diff) of the worktree they are pointed at, regardless of what is checked out elsewhere. No branch-switching is needed — just point at the worktree root.
 
-**Features:**
-- Automated scaffolding
-- Best practices built-in
-- Configurable templates
-- Quality checks
+## Scripts
 
-**Usage:**
+### `review_report_generator.py` — Full pipeline (start here)
+
+Orchestrates the two scripts below, renders a Markdown checklist report, and saves it to `.ai/reviews/`.
+
 ```bash
-python scripts/pr_analyzer.py <project-path> [options]
+# Standard run — auto-saves to .ai/reviews/
+python3 .claude/skills/code-reviewer/scripts/review_report_generator.py .
+
+# Diff against a branch other than main
+python3 .claude/skills/code-reviewer/scripts/review_report_generator.py . --base release/current
+
+# Save to a custom path instead
+python3 .claude/skills/code-reviewer/scripts/review_report_generator.py . --output path/to/report.md
+
+# Print report only, do not write to disk
+python3 .claude/skills/code-reviewer/scripts/review_report_generator.py . --no-save
 ```
 
-### 2. Code Quality Checker
+### `pr_analyzer.py` — PR scope and hygiene
 
-Comprehensive analysis and optimization tool.
+Inspects `git diff <base>...HEAD` to detect which packages are touched, which checklist sections (A–E) apply, and whether tests, stories, or a changeset are missing.
 
-**Features:**
-- Deep analysis
-- Performance metrics
-- Recommendations
-- Automated fixes
-
-**Usage:**
 ```bash
-python scripts/code_quality_checker.py <target-path> [--verbose]
+python3 .claude/skills/code-reviewer/scripts/pr_analyzer.py .
+python3 .claude/skills/code-reviewer/scripts/pr_analyzer.py . --base release/current --verbose
 ```
 
-### 3. Review Report Generator
+### `code_quality_checker.py` — Static analysis
 
-Advanced tooling for specialized tasks.
+Scans `.tsx`/`.ts` files for violations of Boreal DS coding standards. When run via `review_report_generator.py` it scans only the changed files; when run directly it scans any path.
 
-**Features:**
-- Expert-level automation
-- Custom configurations
-- Integration ready
-- Production-grade output
-
-**Usage:**
 ```bash
-python scripts/review_report_generator.py [arguments] [options]
+# Scan a single component
+python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/boreal-web-components/src/components/forms/bds-checkbox/
+
+# Scan the whole web-components package
+python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/boreal-web-components/
 ```
+
+## Rules Enforced
+
+| Rule | Severity | What it checks |
+|---|---|---|
+| `prop-missing-jsdoc` | error | `@Prop()` without a JSDoc block directly above |
+| `prop-not-readonly` | error | `@Prop()` missing `readonly` (and not `mutable: true`) |
+| `event-native-collision` | error | `@Event()` name that matches a native DOM event |
+| `fileoverview-tag` | error | `@fileoverview` used instead of `@file` |
+| `face-missing-attach-internals` | error | `formAssociated: true` without `@AttachInternals()` on the class |
+| `face-native-constraint-on-input` | error | Inner `<input>` carrying native constraint attributes |
+| `class-jsdoc-internal` | error | `@internal` in a component class JSDoc |
+| `mutable-prop-any-cast` | warning | Mutable prop assigned with `as any` |
+| `nodetype-check` | warning | `.nodeType` used instead of `instanceof Element` |
+| `unsafe-any` | warning | Broad `any` usage in types or casts |
+| `class-jsdoc-invalid-tags` | warning | `@element` or `@method` in class-level JSDoc |
+| `face-reset-no-validity` | warning | `formResetCallback` without `updateValidity()`/`setValidity()` |
+| `face-restore-no-validity` | warning | `formStateRestoreCallback` without validity re-sync |
+| `spec-form-disabled-wrong` | error | Test uses `form.disabled` instead of `<fieldset disabled>` |
+| `spec-missing-wait-for-changes` | warning | DOM assertion after prop set with no `waitForChanges()` |
 
 ## Reference Documentation
 
-### Code Review Checklist
-
-Comprehensive guide available in `references/code_review_checklist.md`:
-
-- Detailed patterns and practices
-- Code examples
-- Best practices
-- Anti-patterns to avoid
-- Real-world scenarios
-
-### Coding Standards
-
-Complete workflow documentation in `references/coding_standards.md`:
-
-- Step-by-step processes
-- Optimization strategies
-- Tool integrations
-- Performance tuning
-- Troubleshooting guide
-
-### Common Antipatterns
-
-Technical reference guide in `references/common_antipatterns.md`:
-
-- Technology stack details
-- Configuration examples
-- Integration patterns
-- Security considerations
-- Scalability guidelines
-
-## Tech Stack
-
-**Languages:** TypeScript, JavaScript, Python, Go, Swift, Kotlin
-**Frontend:** React, Next.js, React Native, Flutter
-**Backend:** Node.js, Express, GraphQL, REST APIs
-**Database:** PostgreSQL, Prisma, NeonDB, Supabase
-**DevOps:** Docker, Kubernetes, Terraform, GitHub Actions, CircleCI
-**Cloud:** AWS, GCP, Azure
-
-## Development Workflow
-
-### 1. Setup and Configuration
-
-```bash
-# Install dependencies
-npm install
-# or
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-```
-
-### 2. Run Quality Checks
-
-```bash
-# Use the analyzer script
-python scripts/code_quality_checker.py .
-
-# Review recommendations
-# Apply fixes
-```
-
-### 3. Implement Best Practices
-
-Follow the patterns and practices documented in:
-- `references/code_review_checklist.md`
-- `references/coding_standards.md`
-- `references/common_antipatterns.md`
-
-## Best Practices Summary
-
-### Code Quality
-- Follow established patterns
-- Write comprehensive tests
-- Document decisions
-- Review regularly
-
-### Performance
-- Measure before optimizing
-- Use appropriate caching
-- Optimize critical paths
-- Monitor in production
-
-### Security
-- Validate all inputs
-- Use parameterized queries
-- Implement proper authentication
-- Keep dependencies updated
-
-### Maintainability
-- Write clear code
-- Use consistent naming
-- Add helpful comments
-- Keep it simple
-
-## Common Commands
-
-```bash
-# Development
-npm run dev
-npm run build
-npm run test
-npm run lint
-
-# Analysis
-python scripts/code_quality_checker.py .
-python scripts/review_report_generator.py --analyze
-
-# Deployment
-docker build -t app:latest .
-docker-compose up -d
-kubectl apply -f k8s/
-```
-
-## Troubleshooting
-
-### Common Issues
-
-Check the comprehensive troubleshooting section in `references/common_antipatterns.md`.
-
-### Getting Help
-
-- Review reference documentation
-- Check script output messages
-- Consult tech stack documentation
-- Review error logs
-
-## Resources
-
-- Pattern Reference: `references/code_review_checklist.md`
-- Workflow Guide: `references/coding_standards.md`
-- Technical Guide: `references/common_antipatterns.md`
-- Tool Scripts: `scripts/` directory
+- `references/code_review_checklist.md` — full Boreal DS review checklist (sections 0–E)
+- `references/coding_standards.md` — coding standards summary
+- `references/common_antipatterns.md` — recurring failure patterns with explanations

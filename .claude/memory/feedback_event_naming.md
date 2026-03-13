@@ -35,7 +35,7 @@ Prefixed names produce unambiguous, non-colliding framework bindings:
 ## Canonical Pattern
 
 ```ts
-@Event({ bubbles: true, composed: true, cancelable: false })
+@Event()
 bdsButtonClick!: EventEmitter<{ event: MouseEvent }>;
 ```
 

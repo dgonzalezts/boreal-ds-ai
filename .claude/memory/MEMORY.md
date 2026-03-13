@@ -14,12 +14,13 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | `stencil-face-element-proxy-limits.md` | Stencil's element proxy blocks native FACE prototype members (`checkValidity`, `reportValidity`, `validity`). All external access must go through `@Method()` wrappers. |
 | `stencil-face-constraint-validation-pattern.md` | How to avoid doubled validation events. The custom element owns validity; the inner `<input>` carries no native constraint attributes. `IFormValidator` / `customValidators` pattern. `formResetCallback` must call `updateValidity()`. |
 | `stencil-async-rendering-gotchas.md` | Stencil batches DOM updates asynchronously — reflected DOM reads in the same tick as a `@Prop()` set return stale values. `formDisabledCallback` trigger conditions. `HTMLButtonElement.prototype.checkValidity` naming collision in `onclick` scope. |
+| `stencil-face-test-mocks.md` | Shared `mocks.ts` location for FACE test doubles. `mockElementInternals()` and `suppressElementInternalsErrors()` pattern. Why `?.` optional chain cannot prevent mock-doc `console.error` on `ElementInternals` property access. Required boilerplate for every FACE spec file. |
 
 ### Stencil.js — Props, Interfaces, and 2-Way Binding
 
 | File | What it covers |
 |---|---|
-| `stencil-prop-patterns.md` | `stencil/props-must-be-readonly` and `stencil/required-jsdoc` are enforced as errors. `readonly` + `mutable: true` coexist intentionally — use narrow cast for internal mutation. `instanceof Element` triggers TypeScript narrowing; `nodeType` does not. JSDoc feeds `custom-elements.json`. |
+| `stencil-prop-patterns.md` | `stencil/props-must-be-readonly` and `stencil/required-jsdoc` are enforced as errors. `disabled` must use a `@State()` mirror — `mutable: true` on `disabled` causes a Stencil compiler warning and races with the browser's FACE lifecycle. `readonly` + `mutable: true` coexist for non-FACE props only. `instanceof Element` triggers TypeScript narrowing; `nodeType` does not. JSDoc feeds `custom-elements.json`. |
 | `stencil-form-control-interfaces.md` | `IFormControl<T>` composite interface pattern. 2-way binding responsibility split (component vs mixin vs output target). `componentModels` config fields and `eventAttr` gotcha. `IFormAssociatedCallbacks` JSDoc as canonical template. |
 
 ### Node.js Scripts and Process Management
@@ -27,6 +28,12 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | File | What it covers |
 |---|---|
 | `nodejs-signal-handler-patterns.md` | `spawnSync` is the correct tool for SIGINT/SIGTERM cleanup handlers — async handlers do not complete during teardown. `process.once()` registration. `pnpm install` as the only recovery step after a SIGKILL force-kill. |
+
+### Stencil — Light DOM CSS Patterns
+
+| File | What it covers |
+|---|---|
+| `stencil-light-dom-host-vs-class.md` | When to use `:host` vs a root BEM class in light DOM components. Form controls require `:host` because `[disabled]` and `:focus-visible` must cascade from the host element. Layout/feedback components use a root class. `:host` compilation in light DOM and state-dependent inner style patterns. |
 
 ### Stencil — Build Output and Distribution
 
@@ -88,3 +95,6 @@ This directory contains non-obvious, durable facts about the codebase, environme
 - 2026-03-10 — Two new topic files added. `stencil-dist-copy-namespace-behavior.md`: Stencil places `dist` copy entries under `dist/<namespace>/`; `postbuild.js` promotes them to the export-map-expected paths; stale `dist/` masks missing files. `scripts-boreal-pack-pipeline.md`: `publish.js` packs only; builds are guaranteed by Turborepo `dependsOn`; per-framework suffix convention for all pack/validate scripts; `validate:all` and updated `release:all` sequence. Source: EOA-10230 deployment and publishing session.
 - 2026-03-10 — New topic file added: `release-it-pnpm-publish.md`. Covers: `publishCommand` being silently ignored by release-it 19.2.4 (the correct fields are `publishPackageManager` and `publishArgs`); pnpm workspace protocol replacement happening at tarball creation time only; `workspace:*` exact-pin rationale for alpha; `dependencies` vs `peerDependencies` for internal packages; full publish flow sequence diagram. Source: first alpha release session.
 - 2026-03-11 — New topic file added: `chromatic-deployment.md`. Covers: pnpm does not auto-load `.env` files (use `dotenv-cli`); two-actor model separating dotenv-cli from the Chromatic CLI; `--storybook-build-dir` vs `--build-script-name` and why Turborepo must own the build step; `storybook-static/**` must be declared in Turborepo build outputs to survive cache hits; token storage pattern (`.env` gitignored, `.env.example` committed); why Chromatic's quickstart pattern bypasses the dependency chain. Source: EOA-10749 Chromatic deployment session.
+- 2026-03-13 — `stencil-prop-patterns.md` updated: `mutable: true` on `disabled` produces a Stencil compiler warning and can race with the browser's FACE lifecycle. Correct pattern is a `@State()` mirror (`isDisabled`) written by both `@Watch('disabled')` and `formDisabledCallback`. `mutable: true` with narrow cast remains valid for non-FACE props. Source: EOA-10056 bds-checkbox code review.
+- 2026-03-13 — New topic file added: `stencil-face-test-mocks.md`. Covers: shared `mocks.ts` location for FACE test doubles; `mockElementInternals()` and `suppressElementInternalsErrors()` exports; why optional-chain guards cannot prevent mock-doc `console.error` on `ElementInternals` property access; required boilerplate for every FACE spec file. Source: EOA-10056 bds-checkbox code review.
+- 2026-03-13 — New topic file added: `stencil-light-dom-host-vs-class.md`. Covers: when to use `:host` vs a root BEM class in light DOM Stencil components; form controls require `:host` because `[disabled]` reflects on the host and `:focus-visible` must cascade outward; `:host` compilation in light DOM; state-dependent inner style pattern. Source: EOA-10056 bds-checkbox code review.

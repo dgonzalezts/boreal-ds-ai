@@ -201,6 +201,10 @@ export class BdsButton {
 
 **All properties must be optional** — every `@Prop()` has a sensible default so the component works with zero configuration.
 
+**Event naming convention:** All `@Event()` names must follow the pattern `bds{Component}{Action}` — for example `bdsCheckboxChange`, `bdsTextFieldInput`, `bdsButtonClick`. Generic names like `bdsChange` are forbidden: they semantically collide when a consumer listens to change events from multiple Boreal DS form controls simultaneously. The single exception is `valueChange`, which must remain generic because it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
+
+**Light DOM component root selector:** Use `:host` as the root CSS selector for all form controls and interactive components (buttons, tabs). Use a BEM root class on an inner `<div>` for layout and feedback components (banner, card, modal). The deciding factor is whether the component has browser-managed states reflected as attributes or pseudo-classes on the host element itself. Form controls require `:host` because `[disabled]` is a reflected attribute and `:focus-visible` / `:hover` must cascade outward from the element — selectors like `bds-checkbox[disabled] .bds-checkbox__box` and `bds-checkbox:focus-visible .bds-checkbox__box` cannot be written without `:host` as the root. In Stencil light DOM, `:host([disabled])` compiles to `bds-checkbox[disabled] { ... }` and is globally scoped to the tag name.
+
 To decide whether a prop needs `reflect: true`, apply this rule: use `reflect: true` only when:
 
 1. The prop value is referenced in a CSS `:host([prop])` attribute selector in the component SCSS
@@ -232,6 +236,28 @@ componentWillLoad() {
   this.internalOpen = this.open;
 }
 ```
+
+**`disabled` on FACE components must never use `@Prop({ mutable: true })`**. Stencil warns `@Prop() "disabled" should not be mutable` because `disabled` is a native reflected attribute with browser-managed semantics controlled via `formDisabledCallback`. Marking it `mutable: true` creates two writers on the same reflected attribute (the component and the browser), which can race. The correct pattern is a `@State()` mirror:
+
+```tsx
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+@State() private isDisabled: boolean = false;
+
+@Watch('disabled')
+onDisabledChange(next: boolean): void {
+  this.isDisabled = next;
+}
+
+componentWillLoad(): void {
+  this.isDisabled = this.disabled;
+}
+
+formDisabledCallback(disabled: boolean): void {
+  this.isDisabled = disabled;
+}
+```
+
+All render and toggle logic reads `this.isDisabled`. `@Prop()` stays `readonly` and externally owned.
 
 ### Service Layer Architecture
 
@@ -282,6 +308,8 @@ Form-associated components (inputs, checkboxes, selects) must:
 - Mirror the native `disabled` and `required` attributes via `@Prop({ reflect: true })`
 
 For managing internal validation state, use `@State()` with a watch pattern that triggers only after the first user interaction (avoid showing errors on initial render).
+
+**FACE mixin props rule:** `@Prop()` decorators declared inside a mixin factory are not picked up by the Stencil compiler. Props for `name`, `disabled`, and `required` must be declared directly on the component class — not in the mixin. Mixins should carry **behavior only**: lifecycle callbacks (`formDisabledCallback`, `formResetCallback`, `formStateRestoreCallback`) and their method implementations. The `IFormControl<T>` interface still provides value by enforcing the shared contract across all FACE components via the `implements` clause.
 
 ### Slot-Based Composition Patterns
 
@@ -371,6 +399,29 @@ describe("bds-button", () => {
 
 **Coverage requirements**: ≥ 90% statement coverage. Run `pnpm --filter @telesign/boreal-web-components run test:spec` and check the coverage report in `coverage/`.
 
+### FACE Component Test Setup
+
+Every spec file for a component that uses `formAssociatedMixin` or declares `@AttachInternals()` must include this boilerplate:
+
+```typescript
+import { mockElementInternals, suppressElementInternalsErrors } from '@/utils/__test__';
+
+let teardown: () => void;
+
+beforeAll(() => {
+  mockElementInternals();
+  teardown = suppressElementInternalsErrors();
+});
+
+afterAll(() => {
+  teardown();
+});
+```
+
+`mockElementInternals()` polyfills `HTMLElement.prototype.attachInternals` for `newSpecPage`. `suppressElementInternalsErrors()` silences `console.error` output that Stencil's mock-doc generates on every `ElementInternals` property access — optional-chain guards (`setFormValue?.()`) cannot prevent this because the getter fires on the property read itself, before the call decision.
+
+Both utilities live in `packages/boreal-web-components/src/utils/__test__/mocks.ts`. Do not inline them in individual spec files and do not mix them into `helpers.ts`. The distinction is: `helpers.ts` holds assertion utilities and DOM query helpers; `mocks.ts` holds test doubles that replace real browser or runtime APIs.
+
 ### Test Organisation
 
 - One `describe` block per component file
@@ -400,6 +451,19 @@ ESLint 9.x flat config (`eslint.config.ts`) with `typescript-eslint` and `eslint
 - `@typescript-eslint/explicit-function-return-type` — required for exported functions
 - No inline comments explaining what code does; use JSDoc on exported API surfaces only
 - Prettier handles all formatting concerns; ESLint handles correctness rules only
+
+**Mixin factory `any` suppression:** Mixin factories use `new (...args: any[]) => {}` as the base constructor type, which originates from Stencil's own `MixedInCtor` type. This can cause `@typescript-eslint/no-unsafe-argument` to fire on the implicit `super()` call. Do not add a no-op constructor to silence this — a constructor that only calls `super(...args)` does nothing that JavaScript does not already do automatically, and it requires two `eslint-disable` comments to suppress the errors it introduces. The correct fix is a scoped suppression in `eslint.config.ts`:
+
+```js
+{
+  files: ['**/mixins/**/*.ts'],
+  rules: {
+    '@typescript-eslint/no-unsafe-argument': 'off',
+  },
+}
+```
+
+This is honest — the `any` originates from library types, not project code — and it does not pollute the mixin source file.
 
 ### Environment Configuration
 
@@ -514,4 +578,5 @@ When a component prop name, type, or event signature changes:
 - **Additive change** (new optional prop, new event): `feat` commit → minor bump
 - **Non-breaking rename** (keep the old prop with `@deprecated` JSDoc, add the new prop): `feat` commit → minor bump; remove the deprecated prop in the next major cycle
 - **Breaking removal or type narrowing**: `feat!` or `BREAKING CHANGE` footer → major bump; document the migration path in the MDX doc under a "Migration" section
+- **Event rename** (e.g. `bdsChange` → `bdsCheckboxChange`): this is always a breaking change. Consumers listening to the old event name will silently receive nothing. Requires a `feat!` commit, major bump, and a migration note.
 - Framework wrappers (`boreal-react`, `boreal-vue`) inherit the same API automatically via output targets — always verify wrappers after an API change by running `pnpm build` and checking the generated wrapper types in `packages/boreal-react/lib/components/`

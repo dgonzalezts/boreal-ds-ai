@@ -2,102 +2,63 @@
 
 ## Overview
 
-This reference guide provides comprehensive information for code reviewer.
+This reference captures recurring review failures in the Boreal DS monorepo, with emphasis on Stencil web components and the release pipeline.
 
-## Patterns and Practices
+---
 
-### Pattern 1: Best Practice Implementation
+## Stencil and CEM Antipatterns
 
-**Description:**
-Detailed explanation of the pattern.
+- **Missing JSDoc on `@Prop()`**: Violates `stencil/required-jsdoc` and degrades `custom-elements.json`.
+- **Non-`readonly` props**: Violates `stencil/props-must-be-readonly`.
+- **Class-level `@internal`**: Removes the entire component from the CEM and breaks wrapper generation.
+- **Using `@element` or `@method` in class JSDoc**: Ignored by the CEM analyzer, gives a false sense of documentation.
+- **Using `@fileoverview`**: Fails lint rules; use `@file` instead.
 
-**When to Use:**
-- Scenario 1
-- Scenario 2
-- Scenario 3
+---
 
-**Implementation:**
-```typescript
-// Example code implementation
-export class Example {
-  // Implementation details
-}
-```
+## Events and API Antipatterns
 
-**Benefits:**
-- Benefit 1
-- Benefit 2
-- Benefit 3
+- **Native event names (`click`, `change`, `input`)**: Collides with native events and framework bindings.
+- **Undocumented `@Event()` fields**: Event payload types should be explicit for CEM consumers.
 
-**Trade-offs:**
-- Consider 1
-- Consider 2
-- Consider 3
+---
 
-### Pattern 2: Advanced Technique
+## FACE (Form-Associated) Antipatterns
 
-**Description:**
-Another important pattern for code reviewer.
+- **`@AttachInternals()` inside a mixin**: Compiles but yields `undefined` at runtime.
+- **Calling `internals` from outside the component**: Stencil proxy blocks it; requires `@Method()` wrappers.
+- **Using native constraint attrs on inner `<input>`**: Causes double validation events and focus errors.
+- **Skipping `updateValidity()` after reset/restore**: Leaves validity state stale.
 
-**Implementation:**
-```typescript
-// Advanced example
-async function advancedExample() {
-  // Code here
-}
-```
+---
 
-## Guidelines
+## Rendering and Testing Antipatterns
 
-### Code Organization
-- Clear structure
-- Logical separation
-- Consistent naming
-- Proper documentation
+- **Reading reflected DOM state immediately after setting props**: Stencil updates asynchronously; tests need `waitForChanges()`.
+- **Using `form.disabled` in tests**: No effect; only `<fieldset disabled>` triggers `formDisabledCallback`.
+- **Assuming Shadow DOM**: Boreal uses light DOM; parts and composed events are not a substitute.
 
-### Performance Considerations
-- Optimization strategies
-- Bottleneck identification
-- Monitoring approaches
-- Scaling techniques
+---
 
-### Security Best Practices
-- Input validation
-- Authentication
-- Authorization
-- Data protection
+## Build and Release Antipatterns
 
-## Common Patterns
+- **Disabling `postbuild` for web-components**: Breaks `dist/css` and `dist/scss` export paths.
+- **Testing dist without cleaning**: Stale `dist/` masks missing files.
+- **Using `publishCommand` in release-it**: Silently ignored, falls back to `npm publish`.
+- **Moving internal deps to `peerDependencies`**: Forces consumers to install manually and breaks alpha flow.
+- **Bypassing Turbo build graph in packaging scripts**: Produces incomplete artifacts.
 
-### Pattern A
-Implementation details and examples.
+---
 
-### Pattern B
-Implementation details and examples.
+## Docs and Storybook Antipatterns
 
-### Pattern C
-Implementation details and examples.
+- **Chromatic CLI builds Storybook directly**: Bypasses Turbo dependency order.
+- **Missing `storybook-static/**` outputs in Turbo\*\*: Cache hits omit the directory and uploads fail.
+- **No `dotenv --` for Chromatic**: `CHROMATIC_PROJECT_TOKEN` not loaded.
 
-## Anti-Patterns to Avoid
+---
 
-### Anti-Pattern 1
-What not to do and why.
+## TypeScript and Safety Antipatterns
 
-### Anti-Pattern 2
-What not to do and why.
-
-## Tools and Resources
-
-### Recommended Tools
-- Tool 1: Purpose
-- Tool 2: Purpose
-- Tool 3: Purpose
-
-### Further Reading
-- Resource 1
-- Resource 2
-- Resource 3
-
-## Conclusion
-
-Key takeaways for using this reference guide effectively.
+- **Broad `any` or unsafe casts**: Hides contract issues and breaks editor tooling.
+- **`nodeType` element checks**: Do not narrow types; prefer `instanceof Element`.

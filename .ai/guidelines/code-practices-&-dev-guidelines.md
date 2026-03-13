@@ -1449,7 +1449,8 @@ this.dispatchEvent(
 **Using @Event Decorator (Stencil):**
 
 ```typescript
-// Stencil @Event automatically sets bubbles: true, composed: true
+// Boreal DS uses bare @Event() — bubbles, composed, cancelable all default to false
+// Consumers attach listeners directly to the component element; bubbling is not required
 @Event() myChange: EventEmitter<string>;
 
 // Emitting is simple
@@ -1457,8 +1458,8 @@ this.myChange.emit('new-value');
 
 // Equivalent to:
 this.dispatchEvent(new CustomEvent('myChange', {
-  bubbles: true,
-  composed: true,
+  bubbles: false,
+  composed: false,
   detail: 'new-value'
 }));
 ```
