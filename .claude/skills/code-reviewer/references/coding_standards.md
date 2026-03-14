@@ -8,6 +8,28 @@ This reference summarizes Boreal DS standards reviewers should enforce across th
 
 ## Stencil Component Standards
 
+### Import Order
+
+Imports in Stencil component files must follow this order:
+
+1. **Framework** — `@stencil/core` and any third-party `node_modules`
+2. **Internal aliases** (`@/...`) — ordered by abstraction layer, most abstract first:
+   - `@/services` — pure logic, no DOM dependency
+   - `@/mixins` — compose services into Stencil behaviour
+   - `@/utils` — constants and helpers
+3. **Local/relative** (`./` or `../`) — component-specific types, interfaces, assets
+
+Dependencies flow downward — each group only imports from groups above it.
+
+### Barrel Exports and Tree-Shaking
+
+Internal barrels (`@/services`, `@/mixins`, `@/utils`) are resolved at compile time and are safe for internal use. To protect the published package's tree-shakability:
+
+- Only barrel-export what belongs to the contract of that layer. Do not re-export every internal utility for convenience.
+- Prefer named re-exports (`export { X } from './X'`) over wildcard re-exports (`export * from './X'`).
+- Never use `export *` from a module that has side effects — Rollup may retain the entire module.
+- Components never barrel-export each other. Stencil's lazy-loading splits each component into its own chunk; cross-component barrel imports defeat this.
+
 ### Props and JSDoc
 
 - Every `@Prop()` must be `readonly` and have a JSDoc block directly above it.

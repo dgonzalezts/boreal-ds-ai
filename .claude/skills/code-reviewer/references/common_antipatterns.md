@@ -6,6 +6,16 @@ This reference captures recurring review failures in the Boreal DS monorepo, wit
 
 ---
 
+## Import and Barrel Antipatterns
+
+- **Wrong import order**: Framework imports must come first, then internal aliases (`@/services`, `@/mixins`, `@/utils`) ordered by abstraction layer, then local/relative imports.
+- **Wildcard re-exports in barrels**: `export * from './X'` hides module edges from the bundler and can prevent tree-shaking. Prefer named re-exports.
+- **Over-exporting from `@/services`**: Re-exporting unrelated utilities through a service barrel obscures coupling. Only export what belongs to the layer's contract.
+- **Cross-component barrel imports**: Importing one component from another's barrel defeats Stencil's per-component lazy-loading chunks.
+- **`export *` from side-effectful modules**: Rollup treats the re-export as a side-effect boundary and may retain the entire module in the bundle.
+
+---
+
 ## Stencil and CEM Antipatterns
 
 - **Missing JSDoc on `@Prop()`**: Violates `stencil/required-jsdoc` and degrades `custom-elements.json`.

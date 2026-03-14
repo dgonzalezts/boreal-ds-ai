@@ -142,6 +142,38 @@ boreal-ds/
 | Docs component (React)  | `PascalCase` folder + file   | `Callout/Callout.tsx`                |
 | Story component (Lit)   | `PascalCase` folder + file   | `CodeBlock/CodeBlock.ts`             |
 
+### Import Order
+
+Imports in Stencil component files must follow this order:
+
+1. **Framework** — `@stencil/core` and any third-party `node_modules`
+2. **Internal aliases** (`@/...`) — ordered by abstraction layer, most abstract first:
+   - `@/services` — pure logic, no DOM dependency
+   - `@/mixins` — compose services into Stencil behaviour
+   - `@/utils` — constants and helpers
+3. **Local/relative** (`./` or `../`) — component-specific types, interfaces, assets
+
+```tsx
+import { Component, Host, Prop, h } from '@stencil/core';
+import { PositioningResult, FloatingTooltipProp, AnchoredHooks } from '@/services';
+import { anchoredMixin } from '@/mixins';
+import { ANCHORED_TOOLTIP } from '@/utils';
+import { ITooltip } from './types/ITooltip';
+```
+
+The underlying principle: **dependencies flow downward**. Each group only imports from groups above it. Import order mirrors that dependency direction.
+
+### Barrel Exports and Tree-Shaking
+
+Internal barrel files (`@/services`, `@/mixins`, `@/utils`) are resolved at compile time by Stencil/Rollup and are safe for internal use. However, keep these rules to protect the published package's tree-shakability:
+
+- **Only barrel-export what belongs to the contract** of that layer. Do not re-export every internal utility through `@/services` just for convenience — hidden re-exports obscure coupling and can prevent dead code elimination.
+- **Never use `export *` from a module that has side effects.** Rollup treats `export *` as a potential side-effect boundary and may retain the entire module in the bundle.
+- **Prefer named re-exports** (`export { X } from './X'`) over wildcard re-exports (`export * from './X'`) in barrel files. Named exports give bundlers explicit edges to follow during tree-shaking.
+- **Components never barrel-export each other.** The Stencil lazy-loading architecture splits each component into its own chunk automatically — cross-component barrel imports defeat this.
+
+These rules apply to internal (`@/`) barrels only. The published package entry point (`dist/index.js`) is managed by Stencil's output targets and must not be edited manually.
+
 ### Component Conventions
 
 Every Stencil component must follow this structure:

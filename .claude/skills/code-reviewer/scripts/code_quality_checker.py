@@ -62,6 +62,12 @@ RE_CLASS_JSDOC_ELEMENT_METHOD = re.compile(
 )
 # Matches event name in @Event declaration that collides with native events
 RE_EVENT_NAME_EXTRACT = re.compile(r"@Event\([^)]*\)\s+(\w+)!")
+# Matches wildcard barrel re-export: export * from '...'
+RE_BARREL_WILDCARD = re.compile(r"^export\s+\*\s+from\s+['\"]", re.MULTILINE)
+# Matches import from @/ aliases — used to validate order
+RE_IMPORT_ALIAS = re.compile(r"^import\s+.*from\s+['\"](@/[^'\"]+)['\"]", re.MULTILINE)
+# Internal alias order: services < mixins < utils (by index)
+ALIAS_ORDER = ["@/services", "@/mixins", "@/utils"]
 
 
 class Finding:
@@ -113,6 +119,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
 
     if not is_stencil and not is_spec:
         findings += _check_typescript_safety(rel, lines)
+        findings += _check_barrel_wildcards(rel, source)
         return findings
 
     if is_spec:
@@ -132,6 +139,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_nodetype(rel, lines)
     findings += _check_typescript_safety(rel, lines)
     findings += _check_face_patterns(rel, source, code_only)
+    findings += _check_import_order(rel, source.splitlines())
 
     return findings
 
@@ -359,6 +367,98 @@ def _check_spec_file(rel: str, lines: List[str], source: str) -> List[Finding]:
                 file=rel,
                 line=idx + 2,
             ))
+
+    return findings
+
+
+def _check_barrel_wildcards(rel: str, source: str) -> List[Finding]:
+    findings = []
+    for i, line in enumerate(source.splitlines()):
+        if RE_BARREL_WILDCARD.match(line.strip()):
+            findings.append(Finding(
+                rule="barrel-wildcard-export",
+                severity="warning",
+                message=(
+                    "`export * from '...'` hides module edges from the bundler and can prevent tree-shaking. "
+                    "Use named re-exports: `export { X } from './X'`."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+    return findings
+
+
+def _check_import_order(rel: str, lines: List[str]) -> List[Finding]:
+    """Verify framework → @/services → @/mixins → @/utils → local import order."""
+    findings = []
+
+    FRAMEWORK = 0
+    ALIAS = 1
+    LOCAL = 2
+
+    def _group(line: str) -> Optional[int]:
+        m = re.search(r'from\s+[\'"]([^\'"]+)[\'"]', line)
+        if not m:
+            return None
+        path = m.group(1)
+        if path.startswith("."):
+            return LOCAL
+        if path.startswith("@/"):
+            return ALIAS
+        return FRAMEWORK
+
+    def _alias_rank(line: str) -> int:
+        m = RE_IMPORT_ALIAS.match(line)
+        if not m:
+            return -1
+        alias = m.group(1)
+        for rank, prefix in enumerate(ALIAS_ORDER):
+            if alias.startswith(prefix):
+                return rank
+        return len(ALIAS_ORDER)
+
+    prev_group = FRAMEWORK
+    prev_alias_rank = -1
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("import "):
+            if stripped and not stripped.startswith("//") and not stripped.startswith("*"):
+                break
+            continue
+
+        group = _group(stripped)
+        if group is None:
+            continue
+
+        if group < prev_group:
+            findings.append(Finding(
+                rule="import-order",
+                severity="warning",
+                message=(
+                    "Import order violation: framework imports must come first, "
+                    "then internal aliases (@/services → @/mixins → @/utils), then local/relative imports."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+        elif group == ALIAS:
+            rank = _alias_rank(stripped)
+            if rank != -1 and rank < prev_alias_rank:
+                findings.append(Finding(
+                    rule="import-order",
+                    severity="warning",
+                    message=(
+                        "Internal alias import order violation: "
+                        "expected @/services → @/mixins → @/utils."
+                    ),
+                    file=rel,
+                    line=i + 1,
+                ))
+            if rank != -1:
+                prev_alias_rank = max(prev_alias_rank, rank)
+
+        prev_group = max(prev_group, group)
 
     return findings
 

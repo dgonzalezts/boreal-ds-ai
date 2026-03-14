@@ -84,6 +84,8 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 | `face-restore-no-validity` | warning | `formStateRestoreCallback` without validity re-sync |
 | `spec-form-disabled-wrong` | error | Test uses `form.disabled` instead of `<fieldset disabled>` |
 | `spec-missing-wait-for-changes` | warning | DOM assertion after prop set with no `waitForChanges()` |
+| `import-order` | warning | Import order violates: framework → `@/services` → `@/mixins` → `@/utils` → local |
+| `barrel-wildcard-export` | warning | `export * from '...'` in a barrel file; use named re-exports instead |
 
 ## Reference Documentation
 

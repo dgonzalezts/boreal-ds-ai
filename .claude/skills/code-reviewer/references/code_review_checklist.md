@@ -47,6 +47,13 @@ Apply the sections below only when the change touches the corresponding package.
 
 ### A) `packages/boreal-web-components` (Stencil)
 
+#### Import Order and Barrel Hygiene
+
+- [ ] **Import order**: Framework → `@/services` → `@/mixins` → `@/utils` → local/relative.
+- [ ] **Named barrel re-exports**: Barrel files use `export { X } from './X'`, not `export * from './X'`.
+- [ ] **No over-exporting**: `@/services` (and other internal barrels) only re-export symbols that belong to that layer's contract.
+- [ ] **No cross-component barrels**: No component imports another component through a shared barrel.
+
 #### Component and Prop Discipline
 
 - [ ] **Props are readonly + documented**: Every `@Prop()` has `readonly` and an adjacent JSDoc block.
