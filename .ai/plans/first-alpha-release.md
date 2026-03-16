@@ -1,14 +1,12 @@
 ---
-status: done
+status: in progress
 ---
 
 # First Alpha Release — Boreal DS
 
 **Branch required:** `release/current`
-**Packages:** `@telesign/boreal-style-guidelines`, `@telesign/boreal-web-components`, `@telesign/boreal-react`
+**Packages:** `@telesign/boreal-style-guidelines`, `@telesign/boreal-web-components`, `@telesign/boreal-react`, `@telesign/boreal-vue`
 **npm dist-tag:** `alpha` (configured in all `.release-it.json` files)
-
-> `@telesign/boreal-vue` is deferred from this release — no validation playground equivalent to `react-testapp` exists yet.
 
 ---
 
@@ -21,7 +19,7 @@ status: done
 | `"tag": "alpha"` in `npm` block | npm dist-tag (`--tag alpha` on publish) | `.release-it.json`                              |
 | `"preRelease": "alpha"` in root | Version number suffix (`-alpha.N`)      | `.release-it.json` (added during first release) |
 
-Both are now in `.release-it.json` for all packages. **No CLI flags are required for subsequent alpha releases** — `pnpm release:styles`, `pnpm release:wc`, `pnpm release:react` work from the workspace root without extra arguments.
+Both are now in `.release-it.json` for all packages. **No CLI flags are required for subsequent alpha releases** — `pnpm release:styles`, `pnpm release:wc`, `pnpm release:react`, `pnpm release:vue` work from the workspace root without extra arguments.
 
 ### What the version number means
 
@@ -242,7 +240,50 @@ npm dist-tag ls @telesign/boreal-react
 
 ---
 
-### Step 9 — Commit `.release-it.json` changes
+### Step 9 — Run `validate:pack:vue` (pre-publish gate)
+
+Packs real `.tgz` artifacts, installs into `vue-testapp`, runs a production Vite build. **If this fails, stop — do not proceed to Step 10.**
+
+```bash
+pnpm validate:pack:vue
+```
+
+Expected: `✅ Pipeline completed successfully — artifact validation passed`
+
+---
+
+### Step 10 — Release `@telesign/boreal-vue`
+
+```bash
+cd packages/boreal-vue
+eval "$(fnm env)" && npx release-it --increment=minor
+```
+
+The same `publishPackageManager: "pnpm"` mechanism applies — pnpm replaces `"workspace:*"` in the tarball's `package.json` with the exact published version of `@telesign/boreal-web-components` at tarball creation time.
+
+Verify:
+
+```bash
+npm dist-tag ls @telesign/boreal-vue
+# → alpha: 0.1.0-alpha.0
+# → latest: 0.1.0-alpha.0  (unavoidable on first publish — see Key Concepts)
+```
+
+---
+
+### Step 11 — Post-release verification for `@telesign/boreal-vue`
+
+From a directory outside the monorepo:
+
+```bash
+mkdir /tmp/vue-alpha-test && cd /tmp/vue-alpha-test
+npm install @telesign/boreal-vue@alpha
+# → must install without error; confirm BdsBanner and BdsTypography are importable
+```
+
+---
+
+### Step 12 — Commit `.release-it.json` changes
 
 After all packages are released, restore and commit the config changes made during this session:
 
@@ -261,17 +302,18 @@ git push origin release/current
 
 ## Final Verification
 
-### Step 10 — All three packages on npm
+### Step 13 — All four packages on npm
 
 ```bash
 npm view @telesign/boreal-style-guidelines dist-tags
 npm view @telesign/boreal-web-components dist-tags
 npm view @telesign/boreal-react dist-tags
+npm view @telesign/boreal-vue dist-tags
 ```
 
 All must show `alpha: 0.1.0-alpha.0`. `latest` will also appear pointing to the same version — this is expected and acceptable for first publishes.
 
-### Step 11 — Consumer install smoke test
+### Step 14 — Consumer install smoke test
 
 From a directory outside the monorepo:
 
@@ -281,13 +323,14 @@ npm install @telesign/boreal-web-components@alpha
 # → must install without error
 ```
 
-### Step 12 — Notify internal test client
+### Step 15 — Notify internal test client
 
 Share the new alpha version and these install commands:
 
 ```bash
 npm install @telesign/boreal-web-components@alpha
 npm install @telesign/boreal-react@alpha
+npm install @telesign/boreal-vue@alpha
 npm install @telesign/boreal-style-guidelines@alpha
 ```
 
@@ -301,8 +344,8 @@ Once all packages have a `0.1.0-alpha.0` tag, the workflow simplifies to:
 # From workspace root — no extra flags needed
 pnpm release:styles
 pnpm release:wc
-pnpm validate:pack
-pnpm release:react
+pnpm validate:pack:react && pnpm release:react
+pnpm validate:pack:vue && pnpm release:vue
 ```
 
 release-it reads `"preRelease": "alpha"` from `.release-it.json` and auto-calculates the version increment from commits since the last tag.

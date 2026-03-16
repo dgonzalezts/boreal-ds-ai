@@ -23,12 +23,12 @@ Layer mapping after the EOA-10230 refactor:
 | Layer | Script names |
 |---|---|
 | `turbo.json` | `validate:pack:react`, `validate:pack:vue`, `validate:pack:angular` |
-| `scripts-boreal/package.json` | `validate:pack:react`, `dev:pack:react` (vue/angular already carried suffixes) |
-| Root `package.json` | `dev:pack:react`, `validate:pack:react`, `validate:pack:vue`, `validate:pack:angular` |
+| `scripts-boreal/package.json` | `validate:pack:react`, `dev:pack:react`, `validate:pack:vue`, `dev:pack:vue` (angular already carried suffixes) |
+| Root `package.json` | `dev:pack:react`, `dev:pack:vue`, `validate:pack:react`, `validate:pack:vue`, `validate:pack:angular` |
 
 ## Aggregator Scripts
 
-`validate:all` in root `package.json` sequences all per-framework validations. At time of writing it runs only `:react` because the Vue and Angular demo apps are not yet complete. Extend it by appending `&& pnpm run validate:pack:vue` (and `:angular`) once those apps exist.
+`validate:all` in root `package.json` sequences all per-framework validations. It currently runs `:react` and `:vue` — Angular is excluded until `examples/app-angular` is implemented. Extend it by appending `&& pnpm run validate:pack:angular` once that app exists.
 
 `release:all` was updated to use `validate:all` instead of the former `validate:pack`. The full sequence is:
 
