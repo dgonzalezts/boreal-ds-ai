@@ -363,7 +363,7 @@ Custom events should follow a consistent naming pattern:
 
 ```typescript
 // Cancelable event (before action)
-const openingEvent = new CustomEvent('my-opening', {
+const openingEvent = new CustomEvent("my-opening", {
   bubbles: true,
   composed: true,
   cancelable: true,
@@ -374,10 +374,10 @@ if (this.dispatchEvent(openingEvent)) {
 
   // Non-cancelable event (after action)
   this.dispatchEvent(
-    new CustomEvent('my-open', {
+    new CustomEvent("my-open", {
       bubbles: true,
       composed: true,
-    })
+    }),
   );
 }
 ```
@@ -551,12 +551,12 @@ Within each section (except lifecycle methods), members should be ordered alphab
 Use clear section comments to separate major sections:
 
 ```typescript
-@Component({ tag: 'my-component' })
+@Component({ tag: "my-component" })
 export class MyComponent {
   // =========================================================================
   // 1. Static members
   // =========================================================================
-  static tagName = 'my-component';
+  static tagName = "my-component";
 
   // =========================================================================
   // 2. Private non-reactive members
@@ -577,12 +577,12 @@ export class MyComponent {
   // 5. Public reactive properties
   // =========================================================================
   @Prop() disabled = false;
-  @Prop() value = '';
+  @Prop() value = "";
 
   // =========================================================================
   // 6. Property watchers
   // =========================================================================
-  @Watch('value')
+  @Watch("value")
   handleValueChange(newValue: string) {
     // ...
   }
@@ -606,7 +606,7 @@ export class MyComponent {
   // =========================================================================
   // 10. Event listeners
   // =========================================================================
-  @Listen('click')
+  @Listen("click")
   onHostClick() {
     // ...
   }
@@ -840,11 +840,11 @@ Component generators ensure CEM-compliant boilerplate from the start, reduce man
 
 **Recommended Tools:**
 
-| Tool | Template Engine | Customization | Setup | Maintenance | Best For |
-| --- | --- | --- | --- | --- | --- |
-| **Plop.js** (Recommended) | Handlebars | High (custom helpers) | ~5h | Active (2025) | CEM-compliant templates, custom workflows |
-| **Hygen** (Alternative) | EJS | Medium (32 built-in helpers) | ~3.5h | Last update 2 years ago | Simpler setup, standard transformations |
-| **Stencil CLI** (Reference) | N/A | None | 0 min | Active | Basic scaffolding only |
+| Tool                        | Template Engine | Customization                | Setup | Maintenance             | Best For                                  |
+| --------------------------- | --------------- | ---------------------------- | ----- | ----------------------- | ----------------------------------------- |
+| **Plop.js** (Recommended)   | Handlebars      | High (custom helpers)        | ~5h   | Active (2025)           | CEM-compliant templates, custom workflows |
+| **Hygen** (Alternative)     | EJS             | Medium (32 built-in helpers) | ~3.5h | Last update 2 years ago | Simpler setup, standard transformations   |
+| **Stencil CLI** (Reference) | N/A             | None                         | 0 min | Active                  | Basic scaffolding only                    |
 
 **Plop.js Setup (Recommended):**
 
@@ -858,18 +858,22 @@ npm install --save-dev plop
 
 ```javascript
 export default function (plop) {
-  plop.setGenerator('component', {
-    description: 'Create a new Stencil component with CEM documentation',
-    prompts: [{
-      type: 'input',
-      name: 'name',
-      message: 'Component name (e.g., my-button):',
-    }],
-    actions: [{
-      type: 'add',
-      path: 'src/components/{{kebabCase name}}/{{kebabCase name}}.tsx',
-      templateFile: 'plop-templates/component.hbs',
-    }],
+  plop.setGenerator("component", {
+    description: "Create a new Stencil component with CEM documentation",
+    prompts: [
+      {
+        type: "input",
+        name: "name",
+        message: "Component name (e.g., my-button):",
+      },
+    ],
+    actions: [
+      {
+        type: "add",
+        path: "src/components/{{kebabCase name}}/{{kebabCase name}}.tsx",
+        templateFile: "plop-templates/component.hbs",
+      },
+    ],
   });
 }
 ```
@@ -936,8 +940,8 @@ The Custom Elements Manifest (CEM) analyzer extracts component metadata from JSD
  * @fires buttonFocus - Fired when button receives focus
  */
 @Component({
-  tag: 'example-button',
-  styleUrl: 'example-button.scss',
+  tag: "example-button",
+  styleUrl: "example-button.scss",
   shadow: true,
 })
 export class ExampleButton {
@@ -945,7 +949,8 @@ export class ExampleButton {
    * Visual style variant of the button
    * @default 'primary'
    */
-  @Prop({ reflect: true }) variant: 'primary' | 'secondary' | 'danger' = 'primary';
+  @Prop({ reflect: true }) variant: "primary" | "secondary" | "danger" =
+    "primary";
 
   /**
    * Disables the button and prevents interaction
@@ -974,15 +979,15 @@ export class ExampleButton {
 
 **CEM JSDoc Best Practices:**
 
-| Tag         | Usage                                               | Example                                                      |
-| ----------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| `@element`  | Document component tag name (required)              | `@element my-button`                                         |
-| `@slot`     | Document all slots including default                | `@slot - Default content`<br/>`@slot header - Header area`   |
-| `@csspart`  | Document all exportable shadow parts                | `@csspart button - The native button element`                |
-| `@cssprop`  | Document all CSS custom properties with description | `@cssprop --button-color - Text color of the button`         |
+| Tag         | Usage                                               | Example                                                       |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------------- |
+| `@element`  | Document component tag name (required)              | `@element my-button`                                          |
+| `@slot`     | Document all slots including default                | `@slot - Default content`<br/>`@slot header - Header area`    |
+| `@csspart`  | Document all exportable shadow parts                | `@csspart button - The native button element`                 |
+| `@cssprop`  | Document all CSS custom properties with description | `@cssprop --button-color - Text color of the button`          |
 | `@fires`    | Document custom events with event detail structure  | `@fires myChange - Fired on change. Detail: { value: string}` |
-| `@default`  | Document default values for props                   | `@default 'primary'`                                         |
-| `@internal` | Mark internal/private implementation details        | `@internal`                                                  |
+| `@default`  | Document default values for props                   | `@default 'primary'`                                          |
+| `@internal` | Mark internal/private implementation details        | `@internal`                                                   |
 
 **See Also:** Section 5.6 for complete CEM setup, configuration, and integration with Storybook and IDEs.
 
@@ -1090,29 +1095,30 @@ Validate property values to ensure they meet expected constraints and provide he
 **Validation Patterns:**
 
 ```typescript
-import { Prop, Watch } from '@stencil/core';
+import { Prop, Watch } from "@stencil/core";
 
 export class MyComponent {
   // Enum validation
-  @Prop({ reflect: true }) variant: 'primary' | 'secondary' | 'tertiary' = 'primary';
+  @Prop({ reflect: true }) variant: "primary" | "secondary" | "tertiary" =
+    "primary";
 
-  @Watch('variant')
+  @Watch("variant")
   validateVariant(newValue: string) {
-    const validVariants = ['primary', 'secondary', 'tertiary'];
+    const validVariants = ["primary", "secondary", "tertiary"];
     if (!validVariants.includes(newValue)) {
       console.warn(
         `[my-component] Invalid variant: "${newValue}". ` +
-          `Valid options: ${validVariants.join(', ')}. ` +
-          `Falling back to "primary".`
+          `Valid options: ${validVariants.join(", ")}. ` +
+          `Falling back to "primary".`,
       );
-      this.variant = 'primary';
+      this.variant = "primary";
     }
   }
 
   // Range validation
   @Prop() maxLength: number = 100;
 
-  @Watch('maxLength')
+  @Watch("maxLength")
   validateMaxLength(newValue: number) {
     if (newValue < 0) {
       console.warn(`[my-component] maxLength cannot be negative. Using 0.`);
@@ -1196,15 +1202,15 @@ handleValueChange(newValue: number) {
 **Watch Pattern:**
 
 ```typescript
-import { Prop, Watch } from '@stencil/core';
+import { Prop, Watch } from "@stencil/core";
 
 export class MyComponent {
   @Prop() disabled: boolean = false;
 
-  @Watch('disabled')
+  @Watch("disabled")
   handleDisabledChange(newValue: boolean, oldValue: boolean) {
     // Update accessibility attributes
-    this.el.setAttribute('aria-disabled', String(newValue));
+    this.el.setAttribute("aria-disabled", String(newValue));
 
     // Clear focus if disabled
     if (newValue && !oldValue) {
@@ -1212,9 +1218,9 @@ export class MyComponent {
     }
   }
 
-  @Prop() value: string = '';
+  @Prop() value: string = "";
 
-  @Watch('value')
+  @Watch("value")
   handleValueChange(newValue: string, oldValue: string) {
     // Emit change event
     this.myChange.emit({ value: newValue, previousValue: oldValue });
@@ -1321,7 +1327,7 @@ Events should only be emitted in response to **user interactions**, not programm
 **Implementation:**
 
 ```typescript
-import { Event, EventEmitter, Method } from '@stencil/core';
+import { Event, EventEmitter, Method } from "@stencil/core";
 
 export class MyComponent {
   @Event() myChange: EventEmitter<string>;
@@ -1335,7 +1341,7 @@ export class MyComponent {
   // ❌ BAD - Don't emit on property change
   @Prop() value: string;
 
-  @Watch('value')
+  @Watch("value")
   handleValueChange(newValue: string) {
     // ❌ Don't do this
     // this.myChange.emit(newValue);
@@ -1431,18 +1437,18 @@ All custom events should bubble through the DOM and compose across shadow DOM bo
 ```typescript
 // ✅ CORRECT - Always bubble and compose
 this.dispatchEvent(
-  new CustomEvent('my-change', {
+  new CustomEvent("my-change", {
     bubbles: true, // Event bubbles up through DOM
     composed: true, // Event crosses shadow DOM boundaries
     detail: { value: this.value },
-  })
+  }),
 );
 
 // ❌ INCORRECT - Event won't bubble or compose
 this.dispatchEvent(
-  new CustomEvent('my-change', {
+  new CustomEvent("my-change", {
     detail: { value: this.value },
-  })
+  }),
 );
 ```
 
@@ -1480,7 +1486,7 @@ Cancelable events allow parent components to prevent default behavior. Use the `
 **Cancelable Event Implementation:**
 
 ```typescript
-import { Event, EventEmitter } from '@stencil/core';
+import { Event, EventEmitter } from "@stencil/core";
 
 export class MyComponent {
   @State() private isOpen = false;
@@ -1497,7 +1503,7 @@ export class MyComponent {
 
     // Check if event was prevented
     if (event.defaultPrevented) {
-      console.log('Opening was prevented by parent');
+      console.log("Opening was prevented by parent");
       return; // Don't proceed
     }
 
@@ -1516,18 +1522,18 @@ export class MyComponent {
 <my-component id="modal"></my-component>
 
 <script>
-  const modal = document.getElementById('modal');
+  const modal = document.getElementById("modal");
 
   // Prevent opening
-  modal.addEventListener('myOpening', event => {
+  modal.addEventListener("myOpening", (event) => {
     if (someCondition) {
       event.preventDefault(); // Cancel the opening
     }
   });
 
   // React to opening (cannot prevent)
-  modal.addEventListener('myOpen', () => {
-    console.log('Modal opened');
+  modal.addEventListener("myOpen", () => {
+    console.log("Modal opened");
   });
 </script>
 ```
@@ -1693,54 +1699,54 @@ This configuration should be placed at the root of the monorepo and serves as th
 
 ```javascript
 // @ts-check
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import stencil from '@stencil/eslint-plugin';
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+import stencil from "@stencil/eslint-plugin";
 
 export default [
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...stencil.configs.flat.recommended,
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: "./tsconfig.json",
       },
     },
     rules: {
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'off',
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
 
       // Stencil-specific rules
-      '@stencil/async-methods': 'error',
-      '@stencil/decorators-context': 'error',
-      '@stencil/element-type': 'error',
-      '@stencil/no-unused-watch': 'error',
-      '@stencil/methods-must-be-public': 'error',
-      '@stencil/props-must-be-readonly': 'error',
-      '@stencil/required-jsdoc': 'error',
-      '@stencil/strict-mutable': 'error',
+      "@stencil/async-methods": "error",
+      "@stencil/decorators-context": "error",
+      "@stencil/element-type": "error",
+      "@stencil/no-unused-watch": "error",
+      "@stencil/methods-must-be-public": "error",
+      "@stencil/props-must-be-readonly": "error",
+      "@stencil/required-jsdoc": "error",
+      "@stencil/strict-mutable": "error",
     },
   },
   {
     // Test files - relaxed rules
-    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
   {
     // Type definition files
-    files: ['**/*.d.ts'],
+    files: ["**/*.d.ts"],
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 ];
@@ -1752,15 +1758,15 @@ Individual packages can extend the base configuration with package-specific rule
 
 ```javascript
 // packages/my-components/eslint.config.mjs
-import baseConfig from '../../eslint.config.mjs';
+import baseConfig from "../../eslint.config.mjs";
 
 export default [
   ...baseConfig,
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     rules: {
       // Override or add package-specific rules
-      '@stencil/ban-prefix': ['error', ['stencil', 'stnl', 'st']],
+      "@stencil/ban-prefix": ["error", ["stencil", "stnl", "st"]],
     },
   },
 ];
@@ -1892,6 +1898,7 @@ The CEM generation command should complete without errors. Common issues include
 - TypeScript compilation errors in component files
 
 **See Also:**
+
 - Section 5.6 for CEM configuration and setup
 - Section 8.2 for CI/CD integration
 
@@ -2016,10 +2023,10 @@ Path aliases improve import readability and refactoring:
 
 ```typescript
 // Instead of:
-import { formatDate } from '../../../utils/date';
+import { formatDate } from "../../../utils/date";
 
 // Use:
-import { formatDate } from '@/utils/date';
+import { formatDate } from "@/utils/date";
 ```
 
 **Note:** Stencil's `transformAliasedImportPaths` option (default: `true`) automatically resolves these aliases in the compiled output.
@@ -2052,16 +2059,16 @@ interface BaseProps {
 }
 
 // Omit breaks prop reflection and type generation
-@Component({ tag: 'my-input' })
+@Component({ tag: "my-input" })
 export class MyInput {
-  @Prop() props: Omit<BaseProps, 'onChange'>;
+  @Prop() props: Omit<BaseProps, "onChange">;
 }
 ```
 
 ✅ **DO:**
 
 ```typescript
-@Component({ tag: 'my-input' })
+@Component({ tag: "my-input" })
 export class MyInput {
   @Prop() value: string;
   @Prop() disabled: boolean = false;
@@ -2089,11 +2096,11 @@ export enum ButtonVariant {
 ✅ **DO (Option 1: String Union):**
 
 ```typescript
-export type ButtonVariant = 'primary' | 'secondary' | 'danger';
+export type ButtonVariant = "primary" | "secondary" | "danger";
 
-@Component({ tag: 'my-button' })
+@Component({ tag: "my-button" })
 export class MyButton {
-  @Prop() variant: ButtonVariant = 'primary';
+  @Prop() variant: ButtonVariant = "primary";
 }
 ```
 
@@ -2101,12 +2108,12 @@ export class MyButton {
 
 ```typescript
 export const enum ButtonVariant {
-  Primary = 'primary',
-  Secondary = 'secondary',
-  Danger = 'danger',
+  Primary = "primary",
+  Secondary = "secondary",
+  Danger = "danger",
 }
 
-@Component({ tag: 'my-button' })
+@Component({ tag: "my-button" })
 export class MyButton {
   @Prop() variant: ButtonVariant = ButtonVariant.Primary;
 }
@@ -2127,7 +2134,7 @@ export interface ButtonClickDetail {
   value: string;
 }
 
-@Component({ tag: 'my-button' })
+@Component({ tag: "my-button" })
 export class MyButton {
   @Event() myClick: EventEmitter<ButtonClickDetail>;
 }
@@ -2137,10 +2144,10 @@ export class MyButton {
 
 ```typescript
 // Consumer's code
-import type { ButtonClickDetail } from 'your-library';
+import type { ButtonClickDetail } from "your-library";
 
-const button = document.querySelector('my-button');
-button.addEventListener('myClick', (event: CustomEvent<ButtonClickDetail>) => {
+const button = document.querySelector("my-button");
+button.addEventListener("myClick", (event: CustomEvent<ButtonClickDetail>) => {
   console.log(event.detail.timestamp);
 });
 ```
@@ -2190,16 +2197,21 @@ src/
 
 ```typescript
 // Shared size variants
-export type Size = 'small' | 'medium' | 'large';
+export type Size = "small" | "medium" | "large";
 
 // Shared color variants
-export type Variant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+export type Variant =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger";
 
 // Shared alignment
-export type Alignment = 'start' | 'center' | 'end';
+export type Alignment = "start" | "center" | "end";
 
 // Shared component states
-export type ComponentState = 'idle' | 'loading' | 'error' | 'success';
+export type ComponentState = "idle" | "loading" | "error" | "success";
 ```
 
 **⚠️ Avoid Barrel Files:**
@@ -2214,16 +2226,16 @@ Do NOT create `index.ts` files that re-export everything (`export * from`). Barr
 
 ```typescript
 // src/types/index.ts - AVOID THIS PATTERN
-export * from './common';
-export * from './events';
+export * from "./common";
+export * from "./events";
 ```
 
 ✅ **DO:**
 
 ```typescript
 // Import directly from source files
-import type { Size, Variant } from '../../types/common';
-import type { ButtonClickDetail } from './my-button.types';
+import type { Size, Variant } from "../../types/common";
+import type { ButtonClickDetail } from "./my-button.types";
 ```
 
 #### Component Props Typing
@@ -2233,7 +2245,7 @@ Each component should define an explicit interface for its props, even when usin
 **Component-Specific Types (`my-button.types.ts`):**
 
 ```typescript
-import type { Variant, Size } from '../../types';
+import type { Variant, Size } from "../../types";
 
 export interface MyButtonProps {
   variant: Variant;
@@ -2391,18 +2403,18 @@ For optimal tree-shaking and consumer experience, configure package subpath expo
 
 ```typescript
 // Option 1: Quick start (imports full bundle)
-import { Button, Input, Form } from '@your-org/component-library';
+import { Button, Input, Form } from "@your-org/component-library";
 
 // Option 2: Optimal tree-shaking (per-component imports)
-import { Button } from '@your-org/component-library/components/button';
-import { Input } from '@your-org/component-library/components/input';
+import { Button } from "@your-org/component-library/components/button";
+import { Input } from "@your-org/component-library/components/input";
 
 // Framework integration (lazy loading)
-import { defineCustomElements } from '@your-org/component-library/loader';
+import { defineCustomElements } from "@your-org/component-library/loader";
 defineCustomElements();
 
 // Shared types
-import type { Size, Variant } from '@your-org/component-library/types';
+import type { Size, Variant } from "@your-org/component-library/types";
 ```
 
 **Benefits:**
@@ -2500,7 +2512,7 @@ Multi-browser functional testing via [@web/test-runner](https://modern-web.dev/d
 Use the **Arrange-Act-Assert (AAA)** pattern for all test types. This structure applies to unit, integration, E2E, visual, and accessibility tests:
 
 ```typescript
-it('should emit event when button clicked', async () => {
+it("should emit event when button clicked", async () => {
   // ARRANGE - Set up the test environment
   const page = await newSpecPage({
     components: [MyButton],
@@ -2508,7 +2520,7 @@ it('should emit event when button clicked', async () => {
   });
   const button = page.root;
   const eventSpy = jest.fn();
-  button.addEventListener('buttonClick', eventSpy);
+  button.addEventListener("buttonClick", eventSpy);
 
   // ACT - Perform the action being tested
   button.click();
@@ -2516,7 +2528,9 @@ it('should emit event when button clicked', async () => {
 
   // ASSERT - Verify expected outcome
   expect(eventSpy).toHaveBeenCalledTimes(1);
-  expect(eventSpy).toHaveBeenCalledWith(expect.objectContaining({ detail: { label: 'Click me' } }));
+  expect(eventSpy).toHaveBeenCalledWith(
+    expect.objectContaining({ detail: { label: "Click me" } }),
+  );
 });
 ```
 
@@ -2534,11 +2548,11 @@ Unit tests verify individual component behavior in isolation using Stencil's tes
 **Basic Structure:**
 
 ```typescript
-import { newSpecPage } from '@stencil/core/testing';
-import { MyButton } from './my-button';
+import { newSpecPage } from "@stencil/core/testing";
+import { MyButton } from "./my-button";
 
-describe('my-button', () => {
-  it('should render with default props', async () => {
+describe("my-button", () => {
+  it("should render with default props", async () => {
     const page = await newSpecPage({
       components: [MyButton],
       html: `<my-button>Click me</my-button>`,
@@ -2553,17 +2567,17 @@ describe('my-button', () => {
     `);
   });
 
-  it('should emit custom event on click', async () => {
+  it("should emit custom event on click", async () => {
     // ARRANGE
     const page = await newSpecPage({
       components: [MyButton],
       html: `<my-button>Click me</my-button>`,
     });
     const spy = jest.fn();
-    page.root.addEventListener('myClick', spy);
+    page.root.addEventListener("myClick", spy);
 
     // ACT
-    const button = page.root.shadowRoot.querySelector('button');
+    const button = page.root.shadowRoot.querySelector("button");
     button.click();
     await page.waitForChanges();
 
@@ -2571,7 +2585,7 @@ describe('my-button', () => {
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
         detail: expect.objectContaining({ timestamp: expect.any(Number) }),
-      })
+      }),
     );
   });
 });
@@ -2613,10 +2627,10 @@ Integration tests verify components work correctly together and with the DOM usi
 **Example (Stencil E2E):**
 
 ```typescript
-import { newE2EPage } from '@stencil/core/testing';
+import { newE2EPage } from "@stencil/core/testing";
 
-describe('form integration', () => {
-  it('should validate and submit form', async () => {
+describe("form integration", () => {
+  it("should validate and submit form", async () => {
     // ARRANGE
     const page = await newE2EPage();
     await page.setContent(`
@@ -2625,23 +2639,23 @@ describe('form integration', () => {
         <my-button type="submit">Submit</my-button>
       </my-form>
     `);
-    const input = await page.find('my-input');
-    const button = await page.find('my-button');
+    const input = await page.find("my-input");
+    const button = await page.find("my-button");
 
     // ACT - Submit without filling (should show error)
     await button.click();
     await page.waitForChanges();
 
     // ASSERT
-    const error = await page.find('my-input >>> .error');
+    const error = await page.find("my-input >>> .error");
     expect(error).not.toBeNull();
 
     // ACT - Fill input (error should clear)
-    await input.type('test@example.com');
+    await input.type("test@example.com");
     await page.waitForChanges();
 
     // ASSERT
-    const errorAfter = await page.find('my-input >>> .error');
+    const errorAfter = await page.find("my-input >>> .error");
     expect(errorAfter).toBeNull();
   });
 });
@@ -2678,12 +2692,13 @@ Chromatic automatically tests every story in your Storybook. No additional test 
 ```typescript
 // button.stories.tsx - Chromatic captures these automatically
 export default {
-  title: 'Components/Button',
-  component: 'my-button',
+  title: "Components/Button",
+  component: "my-button",
 };
 
 export const Primary = () => `<my-button variant="primary">Primary</my-button>`;
-export const Secondary = () => `<my-button variant="secondary">Secondary</my-button>`;
+export const Secondary = () =>
+  `<my-button variant="secondary">Secondary</my-button>`;
 export const Disabled = () => `<my-button disabled>Disabled</my-button>`;
 ```
 
@@ -2764,10 +2779,10 @@ For projects without Storybook, tight budgets, or needing self-hosted solutions,
 **Example:**
 
 ```typescript
-import { newE2EPage } from '@stencil/core/testing';
+import { newE2EPage } from "@stencil/core/testing";
 
-describe('visual regression', () => {
-  it('should match button variants screenshot', async () => {
+describe("visual regression", () => {
+  it("should match button variants screenshot", async () => {
     const page = await newE2EPage();
     await page.setContent(`
       <div>
@@ -2777,7 +2792,7 @@ describe('visual regression', () => {
       </div>
     `);
 
-    await page.compareScreenshot('button-variants');
+    await page.compareScreenshot("button-variants");
   });
 });
 ```
@@ -2787,7 +2802,7 @@ describe('visual regression', () => {
 ```typescript
 export const config: Config = {
   testing: {
-    screenshotConnector: './screenshot-connector.js',
+    screenshotConnector: "./screenshot-connector.js",
   },
 };
 ```
@@ -2868,7 +2883,7 @@ npm install --save-dev @storybook/addon-a11y
 
 ```typescript
 export default {
-  addons: ['@storybook/addon-a11y'],
+  addons: ["@storybook/addon-a11y"],
 };
 ```
 
@@ -2877,10 +2892,10 @@ export default {
 Automated tools catch ~40-60% of accessibility issues. Test interactive behavior with E2E tests:
 
 ```typescript
-import { newE2EPage } from '@stencil/core/testing';
+import { newE2EPage } from "@stencil/core/testing";
 
-describe('keyboard accessibility', () => {
-  it('should support keyboard navigation', async () => {
+describe("keyboard accessibility", () => {
+  it("should support keyboard navigation", async () => {
     // ARRANGE
     const page = await newE2EPage();
     await page.setContent(`
@@ -2891,29 +2906,31 @@ describe('keyboard accessibility', () => {
     `);
 
     // ACT - Tab through focusable elements
-    await page.keyboard.press('Tab');
-    let focusedElement = await page.evaluate(() => document.activeElement.tagName);
+    await page.keyboard.press("Tab");
+    let focusedElement = await page.evaluate(
+      () => document.activeElement.tagName,
+    );
 
     // ASSERT - First focusable element receives focus
-    expect(focusedElement.toLowerCase()).toBe('button');
+    expect(focusedElement.toLowerCase()).toBe("button");
 
     // ACT - Continue tabbing
-    await page.keyboard.press('Tab');
+    await page.keyboard.press("Tab");
     focusedElement = await page.evaluate(() => document.activeElement.tagName);
 
     // ASSERT - Focus moves to input
-    expect(focusedElement.toLowerCase()).toBe('input');
+    expect(focusedElement.toLowerCase()).toBe("input");
 
     // ACT - Activate with keyboard
-    await page.keyboard.press('Escape');
+    await page.keyboard.press("Escape");
     await page.waitForChanges();
 
     // ASSERT - Modal closes on Escape
-    const modal = await page.find('my-modal');
-    expect(await modal.getProperty('open')).toBe(false);
+    const modal = await page.find("my-modal");
+    expect(await modal.getProperty("open")).toBe(false);
   });
 
-  it('should trap focus within modal', async () => {
+  it("should trap focus within modal", async () => {
     // ARRANGE
     const page = await newE2EPage();
     await page.setContent(`
@@ -2926,13 +2943,13 @@ describe('keyboard accessibility', () => {
     `);
 
     // ACT - Tab from last modal element
-    const insideButton = await page.find('#inside');
+    const insideButton = await page.find("#inside");
     await insideButton.focus();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press("Tab");
 
     // ASSERT - Focus stays within modal
     const focusedId = await page.evaluate(() => document.activeElement.id);
-    expect(focusedId).not.toBe('outside');
+    expect(focusedId).not.toBe("outside");
   });
 });
 ```
@@ -2956,11 +2973,11 @@ Only use jest-axe if you're **NOT using Chromatic**. If Chromatic is integrated,
 **Without Chromatic:**
 
 ```typescript
-import { newSpecPage } from '@stencil/core/testing';
-import { axe } from 'jest-axe';
+import { newSpecPage } from "@stencil/core/testing";
+import { axe } from "jest-axe";
 
-describe('accessibility', () => {
-  it('should have no axe violations', async () => {
+describe("accessibility", () => {
+  it("should have no axe violations", async () => {
     // ARRANGE
     const page = await newSpecPage({
       components: [MyButton],
@@ -3088,8 +3105,8 @@ Document component source code with JSDoc/TSDoc for inline documentation and IDE
  * @slot icon-end - Optional icon displayed after button text
  */
 @Component({
-  tag: 'my-button',
-  styleUrl: 'my-button.css',
+  tag: "my-button",
+  styleUrl: "my-button.css",
   shadow: true,
 })
 export class MyButton {
@@ -3097,7 +3114,7 @@ export class MyButton {
    * The visual style variant of the button.
    * @default 'primary'
    */
-  @Prop() variant: 'primary' | 'secondary' | 'danger' = 'primary';
+  @Prop() variant: "primary" | "secondary" | "danger" = "primary";
 
   /**
    * Disables the button and prevents interaction.
@@ -3184,7 +3201,7 @@ components/
 Stories use Lit's `html` tagged template literal for rendering, even though components are built with Stencil:
 
 ```typescript
-import { html } from 'lit';
+import { html } from "lit";
 ```
 
 **Rationale:**
@@ -3225,54 +3242,55 @@ Each component's `.mdx` file serves as the primary documentation page, combining
 {/* Import Storybook documentation blocks */}
 import { ArgTypes, Canvas, Meta, Subtitle, Title } from '@storybook/blocks';
 import LinkTo from '@storybook/addon-links/react';
-import { Callout } from '@/_storybook/components';
+import { Callout } from '@/\_storybook/components';
 
 {/* Import all stories from the corresponding .stories file */}
-import * as ComponentStories from './component-name.stories';
+import \* as ComponentStories from './component-name.stories';
 
 {/* Link this MDX file to the stories */}
+
 <Meta of={ComponentStories} />
 
 {/* Component title and brief description */}
+
 <Title>Component Name</Title>
 Brief 1-2 sentence description of the component and its primary purpose.
 
 {/* Table of Contents - Optional for simple components, recommended for complex ones */}
-<Subtitle>Table of contents</Subtitle>
-- How to use it
-- Framework integration
-- When to use it
-- Component preview
-- States
-- Form integration
-- JavaScript API
-- CSS custom properties
-- Accessibility
-- Properties
-- Interact with the component
-- Related components
+
+<Subtitle>Table of contents</Subtitle>- How to use it - Framework integration -
+When to use it - Component preview - States - Form integration - JavaScript API
+- CSS custom properties - Accessibility - Properties - Interact with the
+component - Related components
 
 {/* Installation and basic setup */}
+
 <Subtitle>How to use it</Subtitle>
-Installation steps, import statements, registration, and basic HTML usage example.
+Installation steps, import statements, registration, and basic HTML usage
+example.
 
 {/* Framework-specific integration examples - Conditional section */}
+
 <Subtitle>Framework integration</Subtitle>
-Examples showing how to use the component in different frameworks (Vanilla JS, React, Vue, Angular).
-Include property binding, event handling, and framework-specific patterns.
+Examples showing how to use the component in different frameworks (Vanilla JS,
+React, Vue, Angular). Include property binding, event handling, and
+framework-specific patterns.
 
 {/* Usage guidelines and use cases */}
-<Subtitle>When to use it</Subtitle>
-- **Use Case 1**: Description of when to use this component
-- **Use Case 2**: Another common scenario
+
+<Subtitle>When to use it</Subtitle>- **Use Case 1**: Description of when to use
+this component - **Use Case 2**: Another common scenario
 
 **Best practices:**
+
 - Best practice guidance
 
 **Avoid using when:**
+
 - Scenario where alternative approaches are better
 
 {/* Live interactive examples */}
+
 <Subtitle>Component preview</Subtitle>
 
 <Callout variant="tip" icon="💡">
@@ -3285,18 +3303,22 @@ Basic usage examples with Canvas blocks showcasing different variants and config
 <Canvas of={ComponentStories.Variant} />
 
 {/* Component states - Conditional section */}
+
 <Subtitle>States</Subtitle>
-Documentation of different interaction states (disabled, readonly, error, loading, etc.).
+Documentation of different interaction states (disabled, readonly, error,
+loading, etc.).
 
 <Canvas of={ComponentStories.Disabled} />
 <Canvas of={ComponentStories.Error} />
 
 {/* Form integration - Conditional section for form components */}
+
 <Subtitle>Form integration</Subtitle>
-How the component works with HTML forms, validation, and submission.
-Include examples of form association and validation patterns.
+How the component works with HTML forms, validation, and submission. Include
+examples of form association and validation patterns.
 
 {/* JavaScript API - Conditional section for components with events/methods */}
+
 <Subtitle>JavaScript API</Subtitle>
 
 **Events:**
@@ -3308,29 +3330,39 @@ Public methods available for programmatic control.
 Code examples showing event listeners and method calls.
 
 {/* CSS customization - Conditional section */}
+
 <Subtitle>CSS custom properties</Subtitle>
-List of CSS custom properties (CSS variables) available for styling customization.
-Include default values and usage examples.
+List of CSS custom properties (CSS variables) available for styling
+customization. Include default values and usage examples.
 
 {/* Accessibility considerations */}
-<Subtitle>Accessibility</Subtitle>
-- **ARIA attributes**: Roles and attributes used
-- **Keyboard navigation**: Supported keyboard interactions
-- **Screen reader support**: How the component is announced
-- **Focus management**: Focus indicators and tab order
-- **Best practices**: Recommendations for accessible usage
+
+<Subtitle>Accessibility</Subtitle>- **ARIA attributes**: Roles and attributes
+used - **Keyboard navigation**: Supported keyboard interactions - **Screen
+reader support**: How the component is announced - **Focus management**: Focus
+indicators and tab order - **Best practices**: Recommendations for accessible
+usage
 
 {/* API reference - auto-generated */}
+
 <Subtitle>Properties</Subtitle>
 <ArgTypes of={ComponentStories} />
 
 {/* Link to interactive story */}
+
 <Subtitle>Interact with the component</Subtitle>
-To interact with the component, test actions, verify accessibility compliance, and perform visual testing, navigate to the <LinkTo title={ComponentStories.default.title} story="default">Default</LinkTo> section.
+To interact with the component, test actions, verify accessibility compliance,
+and perform visual testing, navigate to the
+<LinkTo title={ComponentStories.default.title} story="default">
+  Default
+</LinkTo>
+section.
 
 {/* Cross-references - Optional section */}
+
 <Subtitle>Related components</Subtitle>
-See also: <LinkTo title="Components/Category/RelatedComponent">Related Component</LinkTo>
+See also:
+<LinkTo title="Components/Category/RelatedComponent">Related Component</LinkTo>
 ```
 
 **Benefits of MDX:**
@@ -3350,50 +3382,50 @@ Story files define interactive examples and control configurations for component
 // my-button.stories.tsx
 
 // Import custom Storybook types for type safety
-import type { ColibriStoryMeta, ColibriStory } from '@/types/storybook';
+import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
 
 // Import Lit for rendering templates
-import { html, nothing } from 'lit';
+import { html, nothing } from "lit";
 
 // Define all args that will be available in stories
 type StoryArgs = {
-  variant: 'primary' | 'secondary' | 'danger';
+  variant: "primary" | "secondary" | "danger";
   disabled: boolean;
-  size: 'sm' | 'md' | 'lg';
+  size: "sm" | "md" | "lg";
 };
 
 // Meta configuration - applies to all stories in this file
 const meta = {
-  title: 'Components/Actions/Button', // Storybook sidebar location
-  component: 'my-button', // Web component tag name
+  title: "Components/Actions/Button", // Storybook sidebar location
+  component: "my-button", // Web component tag name
 
   // Define controls for the Storybook UI
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'danger'],
-      description: 'Visual style variant of the button',
+      control: "select",
+      options: ["primary", "secondary", "danger"],
+      description: "Visual style variant of the button",
       table: {
-        category: 'Core', // Group related controls together
+        category: "Core", // Group related controls together
         type: { summary: `'primary' | 'secondary' | 'danger'` },
-        defaultValue: { summary: 'primary' },
+        defaultValue: { summary: "primary" },
       },
     },
     disabled: {
-      control: 'boolean',
-      description: 'Disables button interaction',
+      control: "boolean",
+      description: "Disables button interaction",
       table: {
-        category: 'Core',
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        category: "Core",
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
-      if: { arg: 'disabled', neq: false }, // Hide control when false
+      if: { arg: "disabled", neq: false }, // Hide control when false
     },
   },
 
   // Default values for all stories
   args: {
-    variant: 'primary',
+    variant: "primary",
     disabled: false,
   },
 } satisfies ColibriStoryMeta<StoryArgs>;
@@ -3405,8 +3437,10 @@ type Story = ColibriStory<StoryArgs>;
  * Default button story - appears first in Storybook
  */
 export const Default: Story = {
-  render: args => html`
-    <my-button variant=${args.variant} ?disabled=${args.disabled}> Click me </my-button>
+  render: (args) => html`
+    <my-button variant=${args.variant} ?disabled=${args.disabled}>
+      Click me
+    </my-button>
   `,
 };
 
@@ -3417,16 +3451,19 @@ export const WithEvent: Story = {
   render: () => {
     // Event handler defined inside render function
     const handleClick = (e: CustomEvent) => {
-      console.log('Button clicked:', e.detail);
+      console.log("Button clicked:", e.detail);
     };
 
-    return html` <my-button @buttonClick=${handleClick}> Click to see event </my-button> `;
+    return html`
+      <my-button @buttonClick=${handleClick}> Click to see event </my-button>
+    `;
   },
   parameters: {
     docs: {
       description: {
         // Additional context shown in the docs
-        story: 'Demonstrates the `buttonClick` event emission. Check browser console.',
+        story:
+          "Demonstrates the `buttonClick` event emission. Check browser console.",
       },
     },
   },
@@ -3462,19 +3499,19 @@ Create comprehensive stories covering all component states and use cases:
 Use custom Storybook types for enhanced type checking and consistency:
 
 ```typescript
-import type { ColibriStoryMeta, ColibriStory } from '@/types/storybook';
+import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
 
 // Define story arguments type
 type StoryArgs = {
-  variant: 'primary' | 'secondary' | 'danger';
+  variant: "primary" | "secondary" | "danger";
   disabled: boolean;
-  size: 'sm' | 'md' | 'lg';
+  size: "sm" | "md" | "lg";
 };
 
 // Type-safe meta object
 const meta: ColibriStoryMeta<StoryArgs> = {
-  title: 'Components/Actions/Button',
-  component: 'my-button',
+  title: "Components/Actions/Button",
+  component: "my-button",
   argTypes: {
     // Fully typed argTypes
   },
@@ -3666,23 +3703,23 @@ Control how stories are positioned in Storybook's Canvas:
 // Global (in .storybook/preview.js)
 const preview = {
   parameters: {
-    layout: 'centered', // Default for all stories
+    layout: "centered", // Default for all stories
   },
 };
 
 // Component level (in meta)
 const meta: Meta = {
-  title: 'Organisms/Site Menu',
-  component: 'site-menu',
+  title: "Organisms/Site Menu",
+  component: "site-menu",
   parameters: {
-    layout: 'fullscreen', // Override for this component
+    layout: "fullscreen", // Override for this component
   },
 };
 
 // Individual story level
 export const MobileView: Story = {
   parameters: {
-    layout: 'fullscreen', // Override for this story
+    layout: "fullscreen", // Override for this story
   },
 };
 ```
@@ -3701,12 +3738,13 @@ For components with `reflect: true` properties, use **HTML attribute syntax** in
 
 ```typescript
 // ✅ CORRECT - Shows in generated code snippets
-const renderComponent: Story['render'] = args => html`
-  <my-select value=${args.value || nothing} label=${args.label || nothing}> </my-select>
+const renderComponent: Story["render"] = (args) => html`
+  <my-select value=${args.value || nothing} label=${args.label || nothing}>
+  </my-select>
 `;
 
 // ❌ INCORRECT - Doesn't appear in code snippets
-const renderComponent: Story['render'] = args => html`
+const renderComponent: Story["render"] = (args) => html`
   <my-select
     .value=${args.value}      // Property binding hidden from docs
     .label=${args.label}      // Property binding hidden from docs
@@ -3731,10 +3769,10 @@ Use `tags: ['!dev']` to hide stories from sidebar while keeping them available f
 ```typescript
 export const InternalExample: Story = {
   args: {
-    variant: 'internal',
+    variant: "internal",
   },
   render: renderComponent,
-  tags: ['!dev'], // Hidden from navigation, available for MDX
+  tags: ["!dev"], // Hidden from navigation, available for MDX
 };
 ```
 
@@ -3747,7 +3785,7 @@ export const InternalExample: Story = {
 **In MDX:**
 
 ```mdx
-import * as ButtonStories from './button.stories';
+import * as ButtonStories from "./button.stories";
 
 ## Internal Example
 
@@ -3762,19 +3800,19 @@ Use `excludeStories` to prevent template functions and utilities from being trea
 
 ```typescript
 const meta: Meta = {
-  title: 'Components/Grid',
-  component: 'my-grid',
+  title: "Components/Grid",
+  component: "my-grid",
   excludeStories: [
-    'GridTemplates', // Template functions
-    'MockData', // Mock data objects
-    'renderHelper', // Utility functions
+    "GridTemplates", // Template functions
+    "MockData", // Mock data objects
+    "renderHelper", // Utility functions
   ],
 };
 
 // Not treated as a story
 export const GridTemplates = {
-  twoColumn: () => renderGrid({ cols: '2' }),
-  threeColumn: () => renderGrid({ cols: '3' }),
+  twoColumn: () => renderGrid({ cols: "2" }),
+  threeColumn: () => renderGrid({ cols: "3" }),
 };
 
 // Actual story
@@ -3797,8 +3835,8 @@ export const Default: Story = {
 Use `LinkTo` component for dynamic, type-safe links that auto-update:
 
 ```mdx
-import LinkTo from '@storybook/addon-links/react';
-import * as ButtonStories from './button.stories';
+import LinkTo from "@storybook/addon-links/react";
+import * as ButtonStories from "./button.stories";
 
 ## See Also
 
@@ -3834,11 +3872,11 @@ For form components, demonstrate real-world integration with `<form>` elements a
 
 ```typescript
 export const FormIntegration: Story = {
-  render: args => {
+  render: (args) => {
     const handleSubmit = (event: Event) => {
       // Check if FormValidationController prevented submission
       if (event.defaultPrevented) {
-        console.log('Form submission blocked by validation');
+        console.log("Form submission blocked by validation");
         return;
       }
 
@@ -3848,7 +3886,7 @@ export const FormIntegration: Story = {
       const form = event.target as HTMLFormElement;
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
-      console.log('Form submitted:', data);
+      console.log("Form submitted:", data);
     };
 
     return html`
@@ -3874,13 +3912,13 @@ export const FormIntegration: Story = {
 Create comprehensive form examples with code highlighting and live output display:
 
 ```typescript
-import { html } from 'lit';
-import { action } from '@storybook/addon-actions';
-import hljs from 'highlight.js/lib/core';
-import type { ColibriStoryMeta, ColibriStory } from '@/types/storybook';
+import { html } from "lit";
+import { action } from "@storybook/addon-actions";
+import hljs from "highlight.js/lib/core";
+import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
 
 export const InteractiveFormExample: Story = {
-  name: 'Interactive Form Example',
+  name: "Interactive Form Example",
   parameters: {
     controls: { disable: true },
     docs: {
@@ -3888,18 +3926,20 @@ export const InteractiveFormExample: Story = {
         // Transform the code snippet to show only the form HTML
         transform: (code: string) => {
           // Extract only the <form> element from the full story code
-          const formMatch = code.match(/<form[^>]*slot="form"[^>]*>[\s\S]*?<\/form>/);
-          return formatCodeString(formMatch?.[0] || '');
+          const formMatch = code.match(
+            /<form[^>]*slot="form"[^>]*>[\s\S]*?<\/form>/,
+          );
+          return formatCodeString(formMatch?.[0] || "");
         },
       },
     },
   },
   render: () => {
-    const formId = 'text-field-form-example';
-    const outputId = 'text-field-form-output';
+    const formId = "text-field-form-example";
+    const outputId = "text-field-form-output";
 
     // Detect if story is in docs mode vs story mode
-    const isInDocs = window.location.search.includes('viewMode=docs');
+    const isInDocs = window.location.search.includes("viewMode=docs");
 
     // Highlight JavaScript code snippet for display
     const codeSnippet = hljs.highlightAuto(`
@@ -3999,9 +4039,9 @@ export const InteractiveFormExample: Story = {
    - Pass to custom `<form-demo>` component for display
    - **Alternative**: Import specific language for smaller bundle:
      ```typescript
-     import hljs from 'highlight.js/lib/core';
-     import javascript from 'highlight.js/lib/languages/javascript';
-     hljs.registerLanguage('javascript', javascript);
+     import hljs from "highlight.js/lib/core";
+     import javascript from "highlight.js/lib/languages/javascript";
+     hljs.registerLanguage("javascript", javascript);
      ```
 
 3. **Docs vs Story Mode Detection (`isInDocs`)**
@@ -4057,8 +4097,8 @@ Use Lit's `css` template literal to define reusable, scoped styles for stories. 
 **Pattern:**
 
 ```typescript
-import { html, css } from 'lit';
-import type { ColibriStoryMeta, ColibriStory } from '@/types/storybook';
+import { html, css } from "lit";
+import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
 
 // Define styles using Lit's css template literal
 const styles = css`
@@ -4098,22 +4138,25 @@ const renderGrid = (args: GridArgs, items: TemplateResult[]) => html`
   <!-- Use CSS classes defined above -->
   <div class="demo-container">
     <my-grid cols=${args.cols} gap=${args.gap}>
-      ${items.map(item => html`<div class="grid-item">${item}</div>`)}
+      ${items.map((item) => html`<div class="grid-item">${item}</div>`)}
     </my-grid>
   </div>
 `;
 
 export const Default: Story = {
-  render: args => renderGrid(args, [html`Item 1`, html`Item 2`, html`Item 3`, html`Item 4`]),
+  render: (args) =>
+    renderGrid(args, [html`Item 1`, html`Item 2`, html`Item 3`, html`Item 4`]),
 };
 
 export const WithInfo: Story = {
-  render: args => html`
+  render: (args) => html`
     <style>
       ${styles}
     </style>
     <div class="story-section">
-      <p class="info-text">This example demonstrates responsive grid behavior</p>
+      <p class="info-text">
+        This example demonstrates responsive grid behavior
+      </p>
       ${renderGrid(args, [html`A`, html`B`, html`C`])}
     </div>
   `,
@@ -4157,26 +4200,32 @@ const styles = css`
 `;
 
 // Shared render function
-const renderButton: Story['render'] = args => html`
+const renderButton: Story["render"] = (args) => html`
   <style>
     ${styles}
   </style>
   <div class="button-demo">
-    <my-button variant=${args.variant} ?disabled=${args.disabled} size=${args.size || nothing}>
+    <my-button
+      variant=${args.variant}
+      ?disabled=${args.disabled}
+      size=${args.size || nothing}
+    >
       ${args.label}
-      ${args.iconName ? html`<my-icon slot="icon-start" name=${args.iconName}></my-icon>` : nothing}
+      ${args.iconName
+        ? html`<my-icon slot="icon-start" name=${args.iconName}></my-icon>`
+        : nothing}
     </my-button>
   </div>
 `;
 
 // Reuse across stories
 export const Primary: Story = {
-  args: { variant: 'primary', label: 'Primary' },
+  args: { variant: "primary", label: "Primary" },
   render: renderButton,
 };
 
 export const WithIcon: Story = {
-  args: { variant: 'primary', label: 'Save', iconName: 'save' },
+  args: { variant: "primary", label: "Save", iconName: "save" },
   render: renderButton,
 };
 ```
@@ -4217,11 +4266,11 @@ Use React components for custom documentation elements in `.mdx` files.
 
 ```tsx
 // _storybook/components/Callout/Callout.tsx
-import React from 'react';
-import styles from './Callout.module.css';
+import React from "react";
+import styles from "./Callout.module.css";
 
 export interface CalloutProps {
-  variant: 'info' | 'tip' | 'warning' | 'error';
+  variant: "info" | "tip" | "warning" | "error";
   icon?: string;
   children: React.ReactNode;
 }
@@ -4231,7 +4280,11 @@ export interface CalloutProps {
  *
  * Usage: MDX files only (not compatible with story files)
  */
-export const Callout: React.FC<CalloutProps> = ({ variant, icon, children }) => {
+export const Callout: React.FC<CalloutProps> = ({
+  variant,
+  icon,
+  children,
+}) => {
   return (
     <div className={`${styles.callout} ${styles[variant]}`}>
       {icon && <div className={styles.icon}>{icon}</div>}
@@ -4270,16 +4323,16 @@ Use Lit web components for interactive elements within story examples.
 
 ```typescript
 // _storybook/components/CodeBlock/CodeBlock.ts
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 /**
  * A Lit web component for syntax-highlighted code blocks in story examples
  *
  * Usage: Story files (.stories.tsx) only
  */
-@customElement('code-block')
+@customElement("code-block")
 export class CodeBlock extends LitElement {
   static styles = css`
     .code-block-container {
@@ -4290,22 +4343,24 @@ export class CodeBlock extends LitElement {
   `;
 
   @property({ type: String })
-  code = '';
+  code = "";
 
-  @property({ type: String, attribute: 'code-theme' })
-  codeTheme = 'dark';
-
-  @property({ type: String })
-  language = '';
+  @property({ type: String, attribute: "code-theme" })
+  codeTheme = "dark";
 
   @property({ type: String })
-  title = '';
+  language = "";
+
+  @property({ type: String })
+  title = "";
 
   render() {
     return html`
       <div class="code-block-container">
-        ${this.title ? html`<h3>${this.title}</h3>` : ''}
-        <pre><code class="language-${this.language}">${unsafeHTML(this.code)}</code></pre>
+        ${this.title ? html`<h3>${this.title}</h3>` : ""}
+        <pre><code class="language-${this.language}">${unsafeHTML(
+          this.code,
+        )}</code></pre>
       </div>
     `;
   }
@@ -4314,7 +4369,7 @@ export class CodeBlock extends LitElement {
 // TypeScript declaration for better IDE support
 declare global {
   interface HTMLElementTagNameMap {
-    'code-block': CodeBlock;
+    "code-block": CodeBlock;
   }
 }
 ```
@@ -4323,8 +4378,8 @@ declare global {
 
 ```typescript
 // my-button.stories.tsx
-import { html } from 'lit';
-import '@/_storybook/components/CodeBlock';
+import { html } from "lit";
+import "@/_storybook/components/CodeBlock";
 
 export const WithCodeExample: Story = {
   render: () => html`
@@ -4389,12 +4444,12 @@ _storybook/
  * Limit to one primary button per screen or section.
  */
 export const Primary: Story = {
-  args: { variant: 'primary' },
+  args: { variant: "primary" },
   render: renderButton,
   parameters: {
     docs: {
       description: {
-        story: 'Use primary buttons for the main action on a page or section.',
+        story: "Use primary buttons for the main action on a page or section.",
       },
     },
   },
@@ -4693,11 +4748,11 @@ export const AccessibilityDemo: Story = {
       config: {
         rules: [
           {
-            id: 'button-name',
+            id: "button-name",
             enabled: true,
           },
           {
-            id: 'color-contrast',
+            id: "color-contrast",
             enabled: true,
           },
         ],
@@ -4793,13 +4848,13 @@ npm install --save-dev custom-element-vs-code-integration custom-element-jet-bra
 Create a `cem.config.mjs` file in your project root:
 
 ```javascript
-import { expandTypesPlugin } from 'cem-plugin-expanded-types';
+import { expandTypesPlugin } from "cem-plugin-expanded-types";
 
 export default {
-  globs: ['src/components/**/*.tsx'],
-  exclude: ['src/**/*.spec.ts', 'src/**/*.stories.ts', 'src/**/*.css.ts'],
+  globs: ["src/components/**/*.tsx"],
+  exclude: ["src/**/*.spec.ts", "src/**/*.stories.ts", "src/**/*.css.ts"],
   stencil: true, // Enable Stencil framework support
-  outdir: '.',
+  outdir: ".",
   packagejson: true,
   plugins: [expandTypesPlugin({ hideLogs: true })],
 };
@@ -4811,8 +4866,8 @@ Enable automatic controls and documentation in Storybook:
 
 ```typescript
 // .storybook/preview.ts
-import { setCustomElementsManifest } from '@storybook/web-components';
-import customElements from '../custom-elements.json';
+import { setCustomElementsManifest } from "@storybook/web-components";
+import customElements from "../custom-elements.json";
 
 setCustomElementsManifest(customElements);
 ```
@@ -4859,9 +4914,44 @@ Add CEM generation to your build scripts:
 ```
 
 **See Also:**
+
 - Section 1.3.X for CEM-compliant JSDoc authoring standards
 - Section 8.2 for CI/CD integration
 - Section 2.4.X for CEM validation in the linting workflow
+
+---
+
+#### Wrapper Package Publishing Standards
+
+These rules apply to `boreal-react` and `boreal-vue` — the Stencil output-target wrapper packages.
+
+**`files` field:** Publish only `dist/`. Never include `lib/` or any other source directory — `lib/` contains auto-generated Stencil proxy files that are TypeScript source and must not be shipped to consumers.
+
+```json
+"files": ["dist"]
+```
+
+**`sideEffects` field:** Declare `"sideEffects": false` on both wrapper packages. Component proxy modules are pure factories with no module-level side effects. Without this field, webpack 5 bundlers cannot tree-shake unused component exports.
+
+```json
+"sideEffects": false
+```
+
+If a future pattern emerges where consumers import CSS as a bare side-effect (e.g. `import '@telesign/boreal-react/dist/css/index.css'`), update to `["dist/css/**", "dist/scss/**"]`.
+
+**`types` and `exports.types` paths:** Declaration files must be co-located with JS files in `dist/`. Do not use `declarationDir` in the tsconfig — it splits declarations into a subdirectory that breaks the expected resolution path.
+
+```json
+"types": "dist/index.d.ts",
+"exports": {
+  ".": {
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  }
+}
+```
+
+**See also:** [ADR 0004](./../decisions/0004-boreal-react-dist-structure.md), [ADR 0008](./../decisions/0008-sideeffects-false-wrapper-packages.md)
 
 ---
 
@@ -5058,6 +5148,70 @@ Supporting reference materials including configuration file locations, troublesh
 ### A. Configuration Files Reference
 
 ### B. Troubleshooting Common Issues
+
+#### B.1 pnpm virtual store resolves stale package after workspace source changes
+
+**Symptom:** After modifying `boreal-web-components` source or `package.json`, builds in `boreal-react` or `boreal-vue` continue to fail as if the changes were not applied. TypeScript errors reference a module shape that should no longer exist.
+
+**Cause:** pnpm's virtual store may have `boreal-react/node_modules/@telesign/boreal-web-components` resolved from a cached `.tgz` snapshot rather than the live workspace symlink. This can happen after branch switches, cherry-picks, or install failures.
+
+**Fix:**
+
+```bash
+# From the workspace root
+pnpm install
+```
+
+This reconciles all workspace symlinks and flushes stale virtual store entries. A full `pnpm install` is fast when the lockfile has not changed; it does not re-download packages.
+
+---
+
+#### B.2 Wrapper package build fails: `Cannot find module '@telesign/boreal-web-components/components/bds-X.js'`
+
+**Symptom:** TypeScript emits `Cannot find module` errors for component subpath imports when building `boreal-react` or `boreal-vue`.
+
+**Cause:** The `exports` map in `boreal-web-components/package.json` is missing the `types` condition on the `./components/*.js` entry. Without it, `moduleResolution: bundler` cannot locate the `.d.ts` file for the subpath.
+
+**Expected shape:**
+
+```json
+"./components/*.js": {
+  "import": "./components-build/*.js",
+  "types": "./components-build/*.d.ts"
+}
+```
+
+**See also:** [ADR 0005](./../decisions/0005-exports-map-types-condition-component-subpaths.md)
+
+---
+
+#### B.3 Stencil `components.d.ts` fails to compile: `Cannot find name 'IFoo'` or `BdsFooCustomEvent` not found
+
+**Symptom:** After Stencil builds `components.d.ts`, TypeScript compilation of `boreal-react` or `boreal-vue` fails with errors about an interface (`IButton`, `IFoo`, etc.) or event type (`BdsFooCustomEvent`) being undefined.
+
+**Cause:** The interface file in the component's `types/` subdirectory uses `export default interface` instead of `export interface`. Stencil's declaration generator only tracks named exports when building the global `Components` namespace in `components.d.ts`. With a default export, the interface is referenced but not imported, breaking the entire component's namespace and all derived types.
+
+**Fix:** Convert to a named export throughout:
+
+```ts
+// types/IFoo.ts — WRONG
+export default interface IFoo { ... }
+
+// types/IFoo.ts — CORRECT
+export interface IFoo { ... }
+```
+
+Update the import in the component file:
+
+```ts
+// bds-foo.tsx — WRONG
+import IFoo from "./types/IFoo";
+
+// bds-foo.tsx — CORRECT
+import { IFoo } from "./types/IFoo";
+```
+
+**See also:** [ADR 0006](./../decisions/0006-stencil-interface-files-named-exports-only.md)
 
 ### C. Tools & Resources
 
