@@ -6,12 +6,12 @@ This guide covers the recurring alpha release workflow and Storybook deployment 
 
 ## Packages in Scope
 
-| Package | npm name | Role |
-|---|---|---|
+| Package          | npm name                            | Role                       |
+| ---------------- | ----------------------------------- | -------------------------- |
 | Style Guidelines | `@telesign/boreal-style-guidelines` | Design tokens and base CSS |
-| Web Components | `@telesign/boreal-web-components` | Stencil component library |
-| React wrapper | `@telesign/boreal-react` | React-native bindings |
-| Vue wrapper | `@telesign/boreal-vue` | Vue-native bindings |
+| Web Components   | `@telesign/boreal-web-components`   | Stencil component library  |
+| React wrapper    | `@telesign/boreal-react`            | React-native bindings      |
+| Vue wrapper      | `@telesign/boreal-vue`              | Vue-native bindings        |
 
 **Tooling stack:** `release-it` orchestrates versioning, changelogs, git tagging, and npm publish. `Turborepo` manages the build graph. `pnpm workspaces` handles inter-package dependencies. `Chromatic` hosts the Storybook documentation site.
 
@@ -44,6 +44,7 @@ pnpm deploy:docs   # requires CHROMATIC_PROJECT_TOKEN in .env
 ```
 
 **Shortcut — release all packages + deploy in one command:**
+
 ```bash
 pnpm release:publish   # styles → wc → validate:all → react → vue → deploy:docs
 ```
@@ -66,11 +67,11 @@ See [§5.6 Automated release sequence](#56-automated-release-sequence-releaseall
 
 Counter progression driven by conventional commits:
 
-| Commits since last tag | Version bump | Example |
-|---|---|---|
-| `fix:` only | patch (counter increments) | `0.1.0-alpha.0` → `0.1.0-alpha.1` |
-| Any `feat:` | minor (counter resets) | `0.1.0-alpha.1` → `0.2.0-alpha.0` |
-| `BREAKING CHANGE` footer | major (counter resets) | `0.1.0-alpha.N` → `1.0.0-alpha.0` |
+| Commits since last tag   | Version bump               | Example                           |
+| ------------------------ | -------------------------- | --------------------------------- |
+| `fix:` only              | patch (counter increments) | `0.1.0-alpha.0` → `0.1.0-alpha.1` |
+| Any `feat:`              | minor (counter resets)     | `0.1.0-alpha.1` → `0.2.0-alpha.0` |
+| `BREAKING CHANGE` footer | major (counter resets)     | `0.1.0-alpha.N` → `1.0.0-alpha.0` |
 
 ### npm dist-tag: `alpha`
 
@@ -98,10 +99,10 @@ Releasing is a shared, manual operation on a shared branch. A few simple practic
 
 release-it enforces two guards in every package's `.release-it.json` that catch common mistakes automatically:
 
-| Guard | What it enforces |
-|---|---|
-| `requireBranch: "release/current"` | release-it aborts if you are on any other branch |
-| `requireCleanWorkingDir: true` | release-it aborts if the working tree has uncommitted changes |
+| Guard                              | What it enforces                                              |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `requireBranch: "release/current"` | release-it aborts if you are on any other branch              |
+| `requireCleanWorkingDir: true`     | release-it aborts if the working tree has uncommitted changes |
 
 These run at the very start of each release invocation — before any build, version prompt, or publish step.
 
@@ -122,16 +123,64 @@ The rebase is safe — the release commit only modifies `package.json` and `CHAN
 
 ## 3. Prerequisites
 
+### NPM authentication
+
+Authenticate with npm using either interactive browser login or token-based authentication:
+
+**Option 1: Interactive login (recommended)**
+
+```bash
+npm login --registry=https://registry.npmjs.org
+```
+
+This opens a browser prompt to enter your credentials. After completion, verify your session and scope access:
+
+```bash
+npm whoami                          # returns your npm username
+npm access list packages @telesign  # lists all four packages with publish access
+```
+
+**Option 2: Token-based authentication**
+
+For headless environments, add your npm token to `~/.npmrc`:
+
+```bash
+echo "//registry.npmjs.org/:_authToken=<your-token>" >> ~/.npmrc
+npm whoami  # verify your username is returned
+```
+
+Your npm account must have publish access to the `@telesign` scope. If access is missing, request it from the account owner before proceeding.
+
+```bash
+npm login --registry=https://registry.npmjs.org
+```
+
+This opens a browser prompt. Once complete, verify the session and confirm scope access:
+
+```bash
+npm whoami                          # must return your username
+npm access list packages @telesign  # must list all four packages with publish access
+```
+
+If you prefer token-based authentication (e.g. in a headless environment), add the token to `~/.npmrc` instead:
+
+```bash
+echo "//registry.npmjs.org/:_authToken=<your-token>" >> ~/.npmrc
+npm whoami  # must return your username
+```
+
+### Commands to run
+
 Run these checks before starting any release. All must pass.
 
-| Check | Command | Expected result |
-|---|---|---|
-| Node.js version | `fnm use` | Activates version from `.node-version` |
-| npm authentication | `npm whoami` | Your npm username |
-| npm scope access | `npm access list packages @telesign` | All four packages listed with publish access |
-| Branch | `git branch --show-current` | `release/current` |
-| Working tree | `git status` | Nothing to commit, working tree clean |
-| Sync remote | `git pull origin release/current` | Up to date |
+| Check              | Command                              | Expected result                              |
+| ------------------ | ------------------------------------ | -------------------------------------------- |
+| Node.js version    | `fnm use`                            | Activates version from `.node-version`       |
+| npm authentication | `npm whoami`                         | Your npm username                            |
+| npm scope access   | `npm access list packages @telesign` | All four packages listed with publish access |
+| Branch             | `git branch --show-current`          | `release/current`                            |
+| Working tree       | `git status`                         | Nothing to commit, working tree clean        |
+| Sync remote        | `git pull origin release/current`    | Up to date                                   |
 
 > **Note on `fnm use` in scripts:** In non-interactive shells (e.g. CI or the Bash tool), `fnm use` alone does not activate the version. Prefix script commands with `eval "$(fnm env --shell bash)" && fnm use &&`.
 
@@ -145,7 +194,7 @@ Run these checks before starting any release. All must pass.
 
 Understanding this prevents the most common mistakes.
 
-**release-it does not auto-detect changes.** It always runs when invoked. Deciding which packages warrant a new version is entirely the developer's responsibility. If you run `pnpm release:wc` with no new commits since the last tag, it will still produce a new `alpha.N` version.
+**release-it does not auto-detect changes by default.** It always runs when invoked — `git.requireCommits` can be configured to abort when there are no commits since the last tag, but it is intentionally not enabled here (see [§11](#11-future--cicd-pipeline) for why). Deciding which packages warrant a new version is the developer's responsibility. If you run `pnpm release:wc` with no new commits since the last tag, it will still produce a new `alpha.N` version.
 
 **`@release-it/conventional-changelog` reads commits since the last git tag** to determine two things only:
 
@@ -182,6 +231,7 @@ pnpm release:styles
 ```
 
 **Verify:**
+
 ```bash
 npm dist-tag ls @telesign/boreal-style-guidelines
 # → alpha: <new-version>
@@ -207,6 +257,7 @@ pnpm release:wc
 ![web-components release complete](./images/2026-03-16_13-59-54.png)
 
 **Verify:**
+
 ```bash
 npm dist-tag ls @telesign/boreal-web-components
 # → alpha: <new-version>
@@ -230,6 +281,7 @@ pnpm release:react
 ![react release complete](./images/2026-03-16_14-01-38.png)
 
 **Verify:**
+
 ```bash
 npm dist-tag ls @telesign/boreal-react
 # → alpha: <new-version>
@@ -255,6 +307,7 @@ pnpm release:vue
 ![vue publish to npm](./images/2026-03-16_14-02-29.png)
 
 **Verify:**
+
 ```bash
 npm dist-tag ls @telesign/boreal-vue
 # → alpha: <new-version>
@@ -266,10 +319,10 @@ npm dist-tag ls @telesign/boreal-vue
 
 Two root scripts combine the per-package steps into a single command:
 
-| Script | What it runs |
-|---|---|
-| `pnpm release:all` | `release:styles → release:wc → validate:all → release:react → release:vue` |
-| `pnpm release:publish` | Everything in `release:all`, then `deploy:docs` |
+| Script                 | What it runs                                                               |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `pnpm release:all`     | `release:styles → release:wc → validate:all → release:react → release:vue` |
+| `pnpm release:publish` | Everything in `release:all`, then `deploy:docs`                            |
 
 **`release:all` works correctly for the happy path** — the sequence is ordered correctly, validation gates are respected (the `&&` chain stops if `validate:all` fails), and `requireCleanWorkingDir` is not an issue because each individual release-it invocation commits and pushes its own changes before exiting.
 
@@ -293,10 +346,10 @@ npm publish cannot be undone. If the chain stops after some packages have been p
 
 The `examples/` directory contains two standalone apps for visually testing wrappers with packed artifacts — without needing to publish to npm first.
 
-| App | Path | Wrapper under test |
-|---|---|---|
+| App           | Path                     | Wrapper under test       |
+| ------------- | ------------------------ | ------------------------ |
 | React sandbox | `examples/react-testapp` | `@telesign/boreal-react` |
-| Vue sandbox | `examples/vue-testapp` | `@telesign/boreal-vue` |
+| Vue sandbox   | `examples/vue-testapp`   | `@telesign/boreal-vue`   |
 
 These apps are useful at two points in the workflow:
 
@@ -316,10 +369,14 @@ This packs `@telesign/boreal-web-components` and `@telesign/boreal-react` as rea
 To add a component under test, edit `examples/react-testapp/src/App.tsx`:
 
 ```tsx
-import { BdsTypography } from '@telesign/boreal-react';
+import { BdsTypography } from "@telesign/boreal-react";
 
 function App() {
-  return <BdsTypography variant="heading" element="h1">Hello Boreal</BdsTypography>;
+  return (
+    <BdsTypography variant="heading" element="h1">
+      Hello Boreal
+    </BdsTypography>
+  );
 }
 ```
 
@@ -376,16 +433,16 @@ The deployment is split across two tools with separate responsibilities:
 
 Chromatic publishes two URLs per deploy:
 
-| URL type | Stability | When to share |
-|---|---|---|
-| **Build URL** | Permanent — tied to a specific git SHA | Linking to a specific snapshot |
+| URL type       | Stability                                              | When to share                                           |
+| -------------- | ------------------------------------------------------ | ------------------------------------------------------- |
+| **Build URL**  | Permanent — tied to a specific git SHA                 | Linking to a specific snapshot                          |
 | **Branch URL** | Always points to the latest build on `release/current` | Share with alpha audience — stays stable across deploys |
 
 ### Setting up the Chromatic project token
 
 The `CHROMATIC_PROJECT_TOKEN` is required to publish. To retrieve it:
 
-1. Log in to [chromatic.com](https://www.chromatic.com)
+1. Log in to [chromatic.com](https://www.chromatic.com) using the `portals.team@telesign.com` user from the “Shared Portals” folder in LastPass
 2. Go to **Manage → Configure**
 3. Copy the project token under the **Project** section
 
@@ -413,10 +470,10 @@ This executes `turbo run build --filter=@telesign/boreal-docs...` followed by th
 
 Two independent caching layers can each cause stale output:
 
-| Layer | What it caches | How to bypass |
-|---|---|---|
-| **Turborepo** | Build output (input file hashes) | `turbo run build --force ...` |
-| **Chromatic** | Upload (git SHA match) | `--force-rebuild` flag on the chromatic CLI |
+| Layer         | What it caches                   | How to bypass                               |
+| ------------- | -------------------------------- | ------------------------------------------- |
+| **Turborepo** | Build output (input file hashes) | `turbo run build --force ...`               |
+| **Chromatic** | Upload (git SHA match)           | `--force-rebuild` flag on the chromatic CLI |
 
 If deployed Storybook does not reflect your latest changes, Turborepo cache is the most likely cause. Bypass it:
 
@@ -479,32 +536,32 @@ Do not re-run `release:all`. Release only the remaining packages manually using 
 
 ### Root npm scripts
 
-| Script | What it does |
-|---|---|
-| `pnpm release:styles` | Release `@telesign/boreal-style-guidelines` |
-| `pnpm release:wc` | Release `@telesign/boreal-web-components` (build + CEM check + publish) |
-| `pnpm release:react` | Release `@telesign/boreal-react` |
-| `pnpm release:vue` | Release `@telesign/boreal-vue` |
-| `pnpm release:all` | Release all packages in dependency order with validation gates |
-| `pnpm release:publish` | `release:all` + Storybook deploy |
-| `pnpm validate:pack:react` | Pre-publish artifact validation gate for react |
-| `pnpm validate:pack:vue` | Pre-publish artifact validation gate for vue |
-| `pnpm validate:all` | Run both artifact validation gates |
-| `pnpm dev:pack:react` | Start react example app with packed local artifacts |
-| `pnpm dev:pack:vue` | Start vue example app with packed local artifacts |
-| `pnpm deploy:docs` | Build Storybook via Turborepo + publish to Chromatic |
+| Script                     | What it does                                                            |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `pnpm release:styles`      | Release `@telesign/boreal-style-guidelines`                             |
+| `pnpm release:wc`          | Release `@telesign/boreal-web-components` (build + CEM check + publish) |
+| `pnpm release:react`       | Release `@telesign/boreal-react`                                        |
+| `pnpm release:vue`         | Release `@telesign/boreal-vue`                                          |
+| `pnpm release:all`         | Release all packages in dependency order with validation gates          |
+| `pnpm release:publish`     | `release:all` + Storybook deploy                                        |
+| `pnpm validate:pack:react` | Pre-publish artifact validation gate for react                          |
+| `pnpm validate:pack:vue`   | Pre-publish artifact validation gate for vue                            |
+| `pnpm validate:all`        | Run both artifact validation gates                                      |
+| `pnpm dev:pack:react`      | Start react example app with packed local artifacts                     |
+| `pnpm dev:pack:vue`        | Start vue example app with packed local artifacts                       |
+| `pnpm deploy:docs`         | Build Storybook via Turborepo + publish to Chromatic                    |
 
 ### Key configuration files
 
-| File | Role |
-|---|---|
+| File                                    | Role                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `packages/boreal-*/` `.release-it.json` | Per-package release config: version bump strategy, branch guard, npm dist-tag, build hooks |
-| `turbo.json` | Build task graph: `release` depends on `^build`; `storybook-static/**` in build outputs |
-| `apps/boreal-docs/package.json` | `chromatic` script with `--storybook-build-dir=storybook-static` |
-| `.env.example` | Template for local environment variables — copy to `.env` and fill in values |
-| `.env` (root, gitignored) | `CHROMATIC_PROJECT_TOKEN` for local Storybook deploys |
-| `examples/react-testapp/` | React sandbox for manual component testing with packed artifacts |
-| `examples/vue-testapp/` | Vue sandbox for manual component testing with packed artifacts |
+| `turbo.json`                            | Build task graph: `release` depends on `^build`; `storybook-static/**` in build outputs    |
+| `apps/boreal-docs/package.json`         | `chromatic` script with `--storybook-build-dir=storybook-static`                           |
+| `.env.example`                          | Template for local environment variables — copy to `.env` and fill in values               |
+| `.env` (root, gitignored)               | `CHROMATIC_PROJECT_TOKEN` for local Storybook deploys                                      |
+| `examples/react-testapp/`               | React sandbox for manual component testing with packed artifacts                           |
+| `examples/vue-testapp/`                 | Vue sandbox for manual component testing with packed artifacts                             |
 
 ---
 
@@ -521,3 +578,26 @@ Chromatic natively supports Bitbucket Pipelines. A pipeline triggered on push to
 If Bitbucket Pipelines runners are unavailable, the monorepo can be mirrored to GitHub via the existing Jenkins sync infrastructure. A GitHub Actions workflow triggers the Chromatic build on push to `release/current`. Requires DevOps to create the `TeleSign/boreal-ds` GitHub repository and configure the sync job.
 
 Full pipeline YAML for both options is documented in `.ai/plans/storybook-chromatic-deployment.md`.
+
+### Per-package change detection (recommended before adopting `requireCommits`)
+
+Once CI runs `release:all` automatically on every merge to `release/current`, releasing all four packages unconditionally on every push becomes unsustainable. The natural solution appears to be enabling `git.requireCommits: true` in each `.release-it.json` — but this breaks the primary release scenario for `boreal-react` and `boreal-vue`, which are routinely released with zero new commits of their own solely to re-pin a new version of `boreal-web-components`.
+
+The right approach is a **pre-release change detection script** that runs before `release-it` and decides per-package whether a release is warranted, accounting for both direct commits and dependency version changes. The logic per package would be:
+
+```
+has_commits        = git log <last-tag>..HEAD -- <package-path>  is non-empty
+dep_version_bumped = last published WC version on npm
+                     ≠ WC version pinned in the previous react/vue tarball
+
+should_release = has_commits OR dep_version_bumped
+```
+
+In practice this can be implemented as a small shell or Node.js script that:
+
+1. Resolves the last git tag for each package (`git describe --tags --match "@telesign/<pkg>@*"`)
+2. Checks `git log <tag>..HEAD -- packages/<pkg>/` for new commits since that tag
+3. For `boreal-react` and `boreal-vue` specifically, additionally compares the `@telesign/boreal-web-components` version in the previous published tarball against the version currently tagged on npm
+4. Skips `release-it` for that package if neither condition is met
+
+This keeps `requireCommits` out of the individual `.release-it.json` files — preserving the flexibility to release wrappers for dependency re-pinning — while still preventing no-op releases in an automated pipeline.
