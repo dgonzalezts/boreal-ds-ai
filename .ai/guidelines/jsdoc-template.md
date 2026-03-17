@@ -69,12 +69,12 @@ Notes:
 ```ts
 /** Emitted when the user closes the banner. */
 @Event()
-bdsBannerClose!: EventEmitter<void>;
+bdsClose!: EventEmitter<void>;
 ```
 
 Rules:
 
-- Use the `bds{Component}{Action}` prefixed camelCase naming convention.
+- Use the `bds{Action}` prefixed camelCase naming convention.
 - Use bare `@Event()` — no explicit options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
 - Do not reuse native DOM event names (`click`, `change`, `input`, etc.).
 
@@ -151,7 +151,7 @@ export class BdsCheckbox {
 
   /** Emitted when the checked state changes (for 2-way binding / v-model). */
   @Event()
-  bdsCheckboxChange!: EventEmitter<{ checked: boolean; value: string }>;
+  bdsChange!: EventEmitter<{ checked: boolean; value: string }>;
 }
 ```
 

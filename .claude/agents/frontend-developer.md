@@ -66,16 +66,78 @@ Then reference SCSS variables (e.g. `tokens.$boreal-bg-primary`) which resolve t
 
 Never hard-code hex values, spacing numbers, or radius values in component SCSS. Run `pnpm validate` in `boreal-styleguidelines` to verify token names before committing.
 
-### 4. Unit Testing (`bds-[name].spec.ts`)
+### 4. Prop Validation
+
+Every prop that accepts a constrained set of string values (e.g. `variant`, `size`, `color`, `type`) must be validated at runtime using `validatePropValue` from `@/utils/helpers/validateProps`.
+
+**Pattern** (mirrors `bds-button.tsx`):
+
+```tsx
+import { validatePropValue } from '@/utils/helpers/validateProps';
+
+// Inside the component class:
+
+/** Validate enum props on every change and before first render. */
+@Watch('variant')
+@Watch('size')
+checkPropValues() {
+  validatePropValue(
+    Object.values(MY_VARIANTS) as MyVariant[],
+    MY_VARIANTS.DEFAULT,
+    this.el as HTMLElement,
+    'variant',
+  );
+  validatePropValue(
+    Object.values(MY_SIZES) as MySizes[],
+    MY_SIZES.MEDIUM,
+    this.el as HTMLElement,
+    'size',
+  );
+}
+
+componentWillLoad() {
+  this.checkPropValues();
+}
+```
+
+Rules:
+
+- Group all `@Watch` decorators above a single `checkPropValues()` method — one watcher per validated prop.
+- Always call `this.checkPropValues()` inside `componentWillLoad()` so the initial render is also guarded.
+- Pass `this.el as HTMLElement` (requires `@Element() el!: HTMLElement` on the class).
+- The fallback value must be the prop's default value.
+- Boolean and free-form string props (e.g. `label`, `name`) do not need validation.
+
+### 5. Unit Testing
+
+Unit tests verify individual component behavior in isolation using Stencil's testing utilities.
+
+#### Scaffolding: by functionality
+
+Create different files for the following types of component functionality when applicable:
+
+- A11y (Accessibility).
+- Basics.
+- Variants.
+- Events.
+- Slots.
+
+The naming convention should follow the rule `{bds-component}.functionality.spec.tsx`. Example:
+
+- `bds-component.a11y.spec.tsx`
+- `bds-component.basics.spec.tsx`
+- `bds-component.variants.spec.tsx`
+- `bds-component.events.spec.tsx`
+- `bds-component.slots.spec.tsx`
 
 - Use `newSpecPage` from `@stencil/core/testing`.
-- Structure: one `describe` block per component, one `it` per behaviour.
+- Structure: one `describe` block per spec file, one `it` per behaviour.
 - Test every prop's effect on rendered output using `toEqualHtml` or DOM assertions.
 - Test `@Event` emissions with `jest.fn()` listeners attached to the host element.
 - Test slot rendering, disabled states, ARIA attributes, and edge cases (empty, boundary values).
 - Target ≥ 90% statement coverage. Run `pnpm test:spec` in `boreal-web-components` to verify.
 
-### 5. Storybook Stories (`apps/boreal-docs/src/stories/`)
+### 6. Storybook Stories (`apps/boreal-docs/src/stories/`)
 
 Stories are always scaffolded via `pnpm generate:story` (Plop.js). The generated file follows a strict five-section structure:
 
@@ -93,7 +155,7 @@ Story render functions use Lit's `html` tagged template literal with:
 
 Every story must cover: default state, all major variants, all size options, disabled state, and any slot combinations.
 
-### 6. MDX Documentation (`apps/boreal-docs/src/stories/`)
+### 7. MDX Documentation (`apps/boreal-docs/src/stories/`)
 
 Each component requires a companion `bds-[name].mdx` with these sections in order:
 
@@ -104,7 +166,7 @@ Each component requires a companion `bds-[name].mdx` with these sections in orde
 5. Accessibility section (ARIA roles, keyboard nav, screen reader behaviour)
 6. `<ArgTypes>` table
 
-### 7. Two-Type Documentation Components
+### 8. Two-Type Documentation Components
 
 | Type            | Location                                 | Framework              | Used in            |
 | --------------- | ---------------------------------------- | ---------------------- | ------------------ |
@@ -113,7 +175,7 @@ Each component requires a companion `bds-[name].mdx` with these sections in orde
 
 Do not mix these types. Do not use React in story Canvas; do not use Lit in MDX pages.
 
-### 8. Release Preparation
+### 9. Release Preparation
 
 Versioning and changelog generation are fully automatic — no manual changeset files are required. The release is driven by conventional commit history and executed by the Engineering Lead from `release/current` using `pnpm release:*`.
 
@@ -134,19 +196,20 @@ See `.ai/guidelines/release-process.md` for the full release runbook.
 1. Read `.ai/sessions/{component_name}.md` — specifically the `## Current State` section — to restore context from prior runs (Figma links, decided API, open questions). Create the file with both zones if it does not exist.
 2. Review the Figma design and identify all states, variants, slots, and brand-theme requirements.
 3. Define the full public API: props, events, slots, CSS parts.
-4. Plan the file structure under the appropriate category folder.
-5. Document SCSS token references for each visual property.
-6. Plan the unit test matrix: one `it` per prop, per event, per slot, per edge case.
-7. Plan the story variants and their `args` overrides.
-8. Plan the MDX sections with copy-paste-ready usage examples.
-9. Identify the correct conventional commit type for each commit — this directly determines the version bump (fix/chore → patch, feat → minor, feat! → major).
-10. Save the completed plan to `.ai/plans/{ticket-id}-{component_name}.md` with the following frontmatter at line 1:
+4. Identify which props require runtime validation (all enum-constrained string props) and plan the `checkPropValues()` method with `@Watch` decorators and `componentWillLoad()` hook.
+5. Plan the file structure under the appropriate category folder.
+6. Document SCSS token references for each visual property.
+7. Plan the unit test matrix: one `it` per prop, per event, per slot, per edge case.
+8. Plan the story variants and their `args` overrides.
+9. Plan the MDX sections with copy-paste-ready usage examples.
+10. Identify the correct conventional commit type for each commit — this directly determines the version bump (fix/chore → patch, feat → minor, feat! → major).
+11. Save the completed plan to `.ai/plans/{ticket-id}-{component_name}.md` with the following frontmatter at line 1:
     ```yaml
     ---
     status: pending
     ---
     ```
-11. Add a row for the new plan in `.ai/plans/INDEX.md` under the **Pending** section.
+12. Add a row for the new plan in `.ai/plans/INDEX.md` under the **Pending** section.
 
 ### Reviewing an existing component
 
@@ -157,6 +220,7 @@ Validate against all of the following:
 - No `any` types — use `unknown` or precise union types.
 - SCSS imports only from `@telesign/boreal-style-guidelines/stencil`; no hard-coded values.
 - `@Event()` uses bare decorator with no options.
+- All enum-constrained props are validated via `validatePropValue` inside a `checkPropValues()` method, called by `componentWillLoad()` and watched with `@Watch` decorators.
 - Unit tests reach ≥ 90% coverage and cover all props, events, and slots.
 - Story file follows the five-section structure generated by Plop.
 - MDX file covers all required sections including accessibility.

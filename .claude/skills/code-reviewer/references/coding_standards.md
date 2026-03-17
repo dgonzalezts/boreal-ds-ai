@@ -39,7 +39,7 @@ Internal barrels (`@/services`, `@/mixins`, `@/utils`) are resolved at compile t
 
 ### Events
 
-- Use prefixed camelCase event names: `bds{Component}{Action}`.
+- Use prefixed camelCase event names: `bds{Action}`.
 - Use bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable` options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
 - Avoid native DOM event names (`click`, `change`, `input`).
 
@@ -59,6 +59,25 @@ Internal barrels (`@/services`, `@/mixins`, `@/utils`) are resolved at compile t
 ### Prop Validation
 
 - Use the shared `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` pattern for enum-like props.
+
+```tsx
+import { validatePropValue } from "@/utils/helpers/validateProps";
+
+// Section 6 — Property Watchers
+@Watch("variant")
+@Watch("size")
+checkPropValues(): void {
+  validatePropValue(Object.values(BUTTON_VARIANTS) as ButtonVariant[], "default", this.el as HTMLElement, "variant");
+  validatePropValue(Object.values(BUTTON_SIZES) as ButtonSizes[], "medium", this.el as HTMLElement, "size");
+}
+
+// Section 9 — Lifecycle methods
+componentWillLoad(): void {
+  this.checkPropValues();
+}
+```
+
+`validatePropValue` resets the prop to `fallbackValue` and issues a `console.warn` when the value is not in `acceptedValues`. After `checkPropValues()` returns, all validated props are guaranteed to hold a valid value. Always pass `Object.values(ENUM)` — never an inline literal array.
 
 ---
 

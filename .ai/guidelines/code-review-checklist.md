@@ -59,7 +59,7 @@ Apply the sections below only when the change touches the corresponding package.
 
 #### Events
 
-- [ ] **Event naming**: Custom events use the `bds{Component}{Action}` prefixed camelCase pattern.
+- [ ] **Event naming**: Custom events use the `bds{Action}` prefixed camelCase pattern.
 - [ ] **Event decorator bare**: `@Event()` uses no explicit options (see ADR `.ai/decisions/0003-event-options-convention.md`).
 - [ ] **No native collisions**: Event names do not reuse native DOM events (`click`, `change`, etc.).
 

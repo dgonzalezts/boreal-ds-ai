@@ -39,7 +39,7 @@
 - ✅ Every @Prop() has `readonly` and an adjacent JSDoc block
 - ✅ Native form attrs (`disabled`, `checked`, `value`) use `@State()` mirror, not `mutable: true`
 - ✅ `validatePropValue` + `componentWillLoad()` + `@Watch()` for enum-like props
-- ✅ Custom events use the `bds{Component}{Action}` prefix pattern
+- ✅ Custom events use the `bds{Action}` prefix pattern
 - ✅ Event names do not reuse native DOM events
 - ✅ @AttachInternals() is on the class body, not in a mixin
 - ✅ `checkValidity()` and `reportValidity()` exposed via @Method()

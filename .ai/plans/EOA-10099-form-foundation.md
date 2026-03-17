@@ -33,33 +33,54 @@ The foundation is split into two phases to avoid over-engineering:
 
 ### Composition Pattern Decision Rules
 
-| What to share                                                                         | Pattern                         | Reason                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@Prop`, `@State`, `@Watch`                                                           | **Mixin factory**               | Stencil decorators require class membership — no function can add `@Prop()` to a component                                                                              |
-| `@AttachInternals()`                                                                  | **Component class (not mixin)** | Stencil's compiler must see this decorator statically on the component class body; inside a mixin factory it is not picked up and `internals` is `undefined` at runtime |
-| Stateless logic (value coercion, validator runner, slot detection)                    | **Utility function**            | No lifecycle, no state, minimal overhead                                                                                                                                |
-| Encapsulated UI behavior with lifecycle (FloatingUI, IntersectionObserver, FocusTrap) | **ReactiveController**          | Lifecycle-dependent, reused across 3+ non-form components, testable in isolation                                                                                        |
-| Simple debounce timer (text input only)                                               | **Inline**                      | 4 lines — controller overhead not justified                                                                                                                             |
+| What to share                                                                         | Pattern                         | Reason                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@Prop`, `@State`, `@Watch`                                                           | **Component class body**        | Stencil's `convertDecoratorsToStatic` generates a `static get properties()` getter on the class containing the decorator. The child component's own getter silently shadows the mixin's, so `cmpMeta.$members$` never includes the mixin props — they are invisible to `newSpecPage` and the Stencil runtime proxy. |
+| `@AttachInternals()`                                                                  | **Component class (not mixin)** | Stencil's compiler must see this decorator statically on the component class body; inside a mixin factory it is not picked up and `internals` is `undefined` at runtime                                                                                                                                             |
+| Stateless logic (value coercion, validator runner, slot detection)                    | **Utility function**            | No lifecycle, no state, minimal overhead                                                                                                                                                                                                                                                                            |
+| Encapsulated UI behavior with lifecycle (FloatingUI, IntersectionObserver, FocusTrap) | **ReactiveController**          | Lifecycle-dependent, reused across 3+ non-form components, testable in isolation                                                                                                                                                                                                                                    |
+| Simple debounce timer (text input only)                                               | **Inline**                      | 4 lines — controller overhead not justified                                                                                                                                                                                                                                                                         |
 
 ---
 
-## Why Mixin over Utilities for Form Props
+## What the Mixin Owns (and Why)
 
-Stencil decorators (`@Prop`, `@State`, `@Watch`, `@AttachInternals`) are class-level metadata. There is no function call that adds a reflected `@Prop()` to a component. Without a mixin, every form component (`bds-text-field`, `bds-select`, `bds-checkbox`, `bds-radio`, `bds-textarea`, `bds-switch`, `bds-number-input`, `bds-range`) would individually declare:
+`formAssociatedMixin` owns exactly one thing: `formDisabledCallback`. That is the only FACE lifecycle callback that is identical across all form components (write `isDisabled`, no value semantics). Everything else must be on the component class body.
 
-```typescript
-// Repeated 8+ times across all form components without a mixin
-@Prop({ reflect: true }) name!: string;
-@Prop({ reflect: true }) disabled: boolean = false;
-@Prop({ reflect: true }) required: boolean = false;
-formDisabledCallback(d: boolean) { this.disabled = d; }
+### Why `@Prop`, `@State`, `@Watch` cannot be in the mixin
+
+Stencil's `convertDecoratorsToStatic` transformer converts every `@Prop()` into an entry in `static get properties()` on the class where the decorator appears. When a mixin inner class and the consuming component both have `@Prop()` declarations, each generates its own `static get properties()` getter. JavaScript static getter inheritance silently shadows the parent's getter with the child's:
+
+```
+BdsCheckbox.properties  → { checked, indeterminate, … }   ← child getter hides parent
+FormAssociated.properties → { name, disabled, required }  ← never reached
 ```
 
-That is ~12 lines × 8+ components = 96+ lines of identical, untestable boilerplate with no single point of correction. The mixin eliminates this.
+Stencil's runtime proxy (`proxyComponent`) reads `cmpMeta.$members$`, populated from the single resolved `Cstr.properties`. With shadowing, mixin props are absent from `$members$` — they are not registered, not reflected as attributes, and `@Watch()` callbacks for them never fire. `newSpecPage` relies entirely on these compiled static getters with no mechanism to merge parent-class metadata. The `@Prop` declarations for `name`, `disabled`, and `required` were removed from the mixin after unit tests confirmed they were invisible to the Stencil runtime proxy.
 
-`@AttachInternals()` is the one decorator that cannot be inside the mixin — Stencil's compiler performs static analysis on the component class and does not pick it up from a mixin factory. Each component must declare `@AttachInternals() internals!: ElementInternals;` directly on its class body. This is confirmed by the Stencil docs: `@AttachInternals()` appears only on component classes, never inside mixin examples.
+> **Note:** Stencil's full compiler pipeline (E2E builds) can traverse the full class hierarchy and merge static metadata, which is why the props appeared to work in `wdio` tests but failed in `newSpecPage`. The Stencil repo has E2E mixin test fixtures but no spec-test equivalents — itself a signal that `newSpecPage` compatibility for mixin props is not guaranteed.
 
-**Reference:** Stencil's official test suite confirms that `@Prop()`, `@State()`, `@Watch()`, and `@Method()` work inside mixin factories: `test/wdio/ts-target/extends-mixin/mixin-a.tsx`.
+**References:** `.ai/research/mixin-limitations.md` — full static-getter shadowing analysis with Stencil compiler and runtime docs citations.
+
+### What each component must declare directly
+
+Because `@Prop()` / `@State()` / `@Watch()` cannot survive in the mixin, every FACE component must declare these directly on its class body:
+
+```typescript
+@Prop({ reflect: true }) readonly name!: string;
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+@Prop({ reflect: true }) readonly required: boolean = false;
+@State() private isDisabled: boolean = false;
+
+@Watch('disabled')
+onDisabledChange(next: boolean): void { this.isDisabled = next; }
+
+componentWillLoad(): void { this.isDisabled = this.disabled; }
+```
+
+That is ~9 lines per component — unavoidable given the static-getter constraint. The mixin still contributes `formDisabledCallback`, which writes to `this.isDisabled` via a cast (`(this as unknown as { isDisabled: boolean }).isDisabled = disabled`), keeping that single shared behaviour at one correction point.
+
+`@AttachInternals()` has an additional constraint: Stencil's compiler performs static analysis and does not wire up `ElementInternals` for a class lacking `@Component()`. Each component must declare `@AttachInternals() internals!: ElementInternals;` directly on its class body.
 
 ---
 
@@ -110,38 +131,74 @@ export interface IFormValidator {
 
 ### 2. Mixin factory (`src/mixins/form-associated.mixin.ts`)
 
-Declares all shared form association props and lifecycle callbacks. Eliminates ~12 lines of boilerplate per component.
+Provides `formDisabledCallback` — the only FACE lifecycle callback that is identical across all form controls. Every decorator-bearing declaration (`@Prop`, `@State`, `@Watch`, `@AttachInternals`) must be on the component class body due to static getter shadowing (see "What the Mixin Owns" above).
 
-Uses Stencil's official `Mixin()` utility and `MixedInCtor` type from `@stencil/core` — no custom Constructor type needed.
+Uses Stencil's `MixedInCtor` type from `@stencil/core` — no custom Constructor type needed.
 
 ```typescript
-import { Prop, type MixedInCtor } from "@stencil/core";
+import { type MixedInCtor } from "@stencil/core";
 
 export const formAssociatedMixin = <B extends MixedInCtor>(Base: B) => {
   class FormAssociated extends Base {
-    @Prop({ reflect: true }) name!: string;
-    @Prop({ reflect: true, mutable: true }) disabled: boolean = false;
-    @Prop({ reflect: true }) required: boolean = false;
-
     formDisabledCallback(disabled: boolean) {
-      this.disabled = disabled;
+      (this as unknown as { isDisabled: boolean }).isDisabled = disabled;
     }
   }
   return FormAssociated;
 };
 ```
 
-Each form component extends the mixin and declares `@AttachInternals()` directly on its class body:
+Each form component extends the mixin and declares all props, state, watches, and `@AttachInternals()` directly on its class body:
 
 ```typescript
-import { AttachInternals, Component, Mixin, Prop } from "@stencil/core";
+import {
+  AttachInternals,
+  Component,
+  Event,
+  EventEmitter,
+  Mixin,
+  Prop,
+  State,
+  Watch,
+} from "@stencil/core";
+import { formAssociatedMixin, type IFormControl } from "@/mixins";
 
 @Component({ tag: "bds-text-field", formAssociated: true })
-export class BdsTextField extends Mixin(formAssociatedMixin) {
-  @AttachInternals() internals!: ElementInternals; // must be on the component class, not in the mixin
+export class BdsTextField
+  extends Mixin(formAssociatedMixin)
+  implements IFormControl<string>
+{
+  @AttachInternals() internals!: ElementInternals;
+
+  // Must be here — not in the mixin (static getter shadowing makes mixin @Prop invisible to newSpecPage)
+  @Prop({ reflect: true }) readonly name!: string;
+  @Prop({ reflect: true }) readonly disabled: boolean = false;
+  @Prop({ reflect: true }) readonly required: boolean = false;
+  @State() private isDisabled: boolean = false;
+
+  @Watch("disabled")
+  onDisabledChange(next: boolean): void {
+    this.isDisabled = next;
+  }
+
+  componentWillLoad(): void {
+    this.isDisabled = this.disabled;
+  }
 
   @Prop({ reflect: true }) error: boolean = false;
   @Prop({ mutable: true, reflect: true }) value: string = "";
+
+  @Event() valueChange!: EventEmitter<string>;
+
+  public formAssociatedCallback(): void {
+    /* set initial form value */
+  }
+  public formResetCallback(): void {
+    this.value = "";
+  }
+  public formStateRestoreCallback(state: unknown): void {
+    this.value = typeof state === "string" ? state : "";
+  }
 
   // Inline debounce — 4 lines, no controller needed
   private debounceTimer?: ReturnType<typeof setTimeout>;
@@ -358,36 +415,19 @@ Equivalent to Colibri's `TextInputBase` + relevant parts of `InputFormComponent`
 
 ```typescript
 // src/mixins/text-input.mixin.ts
-import { Mixin, MixedInCtor } from "@stencil/core";
+import { type MixedInCtor } from "@stencil/core";
 
 export const textInputMixin = <B extends MixedInCtor>(Base: B) => {
   class TextInput extends Base {
-    @Prop() placeholder: string = "";
-    @Prop({ reflect: true }) readonly: boolean = false;
-    @Prop() pattern?: string;
-    @Prop() minLength?: number;
-    @Prop() maxLength?: number;
-    @Prop() inputMode?:
-      | "none"
-      | "text"
-      | "numeric"
-      | "decimal"
-      | "email"
-      | "tel"
-      | "url"
-      | "search";
-
-    @State() dirty: boolean = false;
-    @State() touched: boolean = false; // set true on first blur — enables progressive error disclosure
-
-    // initialValue: captured in componentDidLoad for dirty tracking
+    // Enhanced blur validation (runs runValidators when validationTiming === 'blur' && touched === true)
     // Character counting + limit enforcement
     // @Event() bdsClear — dispatched when clear action triggered
-    // Enhanced blur validation (runs runValidators when validationTiming === 'blur' && touched === true)
   }
   return TextInput;
 };
 ```
+
+> **Constraint (same as `formAssociatedMixin`):** `@Prop()`, `@State()`, and `@Watch()` cannot be declared inside this mixin — static getter shadowing makes them invisible to `newSpecPage`. All text-input props (`placeholder`, `readonly`, `pattern`, `minLength`, `maxLength`, `inputMode`) and the `dirty`/`touched` states must be declared directly on the component class body. The mixin carries only decorator-free behaviour.
 
 **Consumers:** `bds-text-field`, `bds-textarea`, possibly `bds-number-input` (subset of props)
 
@@ -399,21 +439,19 @@ Equivalent to Colibri's `SelectableFormComponent`. Handles the toggle/checked pa
 
 ```typescript
 // src/mixins/selectable.mixin.ts
-import { Mixin, MixedInCtor } from "@stencil/core";
+import { type MixedInCtor } from "@stencil/core";
 
 export const selectableMixin = <B extends MixedInCtor>(Base: B) => {
   class Selectable extends Base {
-    @Prop({ mutable: true, reflect: true }) checked: boolean = false;
-    @Prop() value: string = "on"; // HTML default for checkbox value
-    @Prop() indeterminate?: boolean; // checkbox-specific, ignored by radio/switch
-
     // _performSelection(): toggles checked, calls internals.setFormValue(checked ? value : null)
     // @Event() bdsChange — with { checked, value, indeterminate? } detail
-    // formResetCallback override: restores checked to initial default
+    // formResetCallback hook: restores checked to initial default
   }
   return Selectable;
 };
 ```
+
+> **Constraint (same as `formAssociatedMixin`):** `@Prop()` and `@Watch()` cannot be in this mixin. `checked`, `value`, `indeterminate`, and any `@State()` mirrors must be declared on the component class body. The mixin carries only decorator-free behaviour (`_performSelection`, shared event logic).
 
 **Consumers:** `bds-checkbox`, `bds-radio`, `bds-switch`
 

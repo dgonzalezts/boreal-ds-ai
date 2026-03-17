@@ -154,11 +154,15 @@ Imports in Stencil component files must follow this order:
 3. **Local/relative** (`./` or `../`) — component-specific types, interfaces, assets
 
 ```tsx
-import { Component, Host, Prop, h } from '@stencil/core';
-import { PositioningResult, FloatingTooltipProp, AnchoredHooks } from '@/services';
-import { anchoredMixin } from '@/mixins';
-import { ANCHORED_TOOLTIP } from '@/utils';
-import { ITooltip } from './types/ITooltip';
+import { Component, Host, Prop, h } from "@stencil/core";
+import {
+  PositioningResult,
+  FloatingTooltipProp,
+  AnchoredHooks,
+} from "@/services";
+import { anchoredMixin } from "@/mixins";
+import { ANCHORED_TOOLTIP } from "@/utils";
+import { ITooltip } from "./types/ITooltip";
 ```
 
 The underlying principle: **dependencies flow downward**. Each group only imports from groups above it. Import order mirrors that dependency direction.
@@ -233,7 +237,7 @@ export class BdsButton {
 
 **All properties must be optional** — every `@Prop()` has a sensible default so the component works with zero configuration.
 
-**Event naming convention:** All `@Event()` names must follow the pattern `bds{Component}{Action}` — for example `bdsCheckboxChange`, `bdsTextFieldInput`, `bdsButtonClick`. Generic names like `bdsChange` are forbidden: they semantically collide when a consumer listens to change events from multiple Boreal DS form controls simultaneously. The single exception is `valueChange`, which must remain generic because it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
+**Event naming convention:** All `@Event()` names must follow the pattern `bds{Action}` — for example `bdsChange`, `bdsInput`, `bdsClick`. Do not include the component noun in the event name. The single exception is `valueChange`, which must remain generic because it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
 
 **Light DOM component root selector:** Use `:host` as the root CSS selector for all form controls and interactive components (buttons, tabs). Use a BEM root class on an inner `<div>` for layout and feedback components (banner, card, modal). The deciding factor is whether the component has browser-managed states reflected as attributes or pseudo-classes on the host element itself. Form controls require `:host` because `[disabled]` is a reflected attribute and `:focus-visible` / `:hover` must cascade outward from the element — selectors like `bds-checkbox[disabled] .bds-checkbox__box` and `bds-checkbox:focus-visible .bds-checkbox__box` cannot be written without `:host` as the root. In Stencil light DOM, `:host([disabled])` compiles to `bds-checkbox[disabled] { ... }` and is globally scoped to the tag name.
 
@@ -290,6 +294,56 @@ formDisabledCallback(disabled: boolean): void {
 ```
 
 All render and toggle logic reads `this.isDisabled`. `@Prop()` stays `readonly` and externally owned.
+
+### Prop Validation
+
+For any enum-typed `@Prop()` (variant, size, type, color, etc.), use the shared `validatePropValue` utility combined with stacked `@Watch()` decorators on a single `checkPropValues()` method. Always call `checkPropValues()` in `componentWillLoad()` — `@Watch()` alone does not fire for the initial attribute value set before the component mounts; without the `componentWillLoad()` call, an invalid attribute on the initial HTML render is silently accepted.
+
+```tsx
+import { Component, Element, Prop, Watch, h } from "@stencil/core";
+import { validatePropValue } from "@/utils/helpers/validateProps";
+import { BUTTON_VARIANTS, BUTTON_SIZES } from "./types/enum";
+import { ButtonVariant, ButtonSize } from "./types/types";
+
+@Component({ tag: "bds-button", styleUrl: "bds-button.scss" })
+export class BdsButton {
+  @Element() el!: HTMLBdsButtonElement;
+
+  @Prop() readonly variant: ButtonVariant = "default";
+  @Prop() readonly size: ButtonSize = "medium";
+
+  @Watch("variant")
+  @Watch("size")
+  checkPropValues(): void {
+    validatePropValue(Object.values(BUTTON_VARIANTS) as ButtonVariant[], "default", this.el, "variant");
+    validatePropValue(Object.values(BUTTON_SIZES) as ButtonSize[], "medium", this.el, "size");
+  }
+
+  componentWillLoad(): void {
+    this.checkPropValues();
+  }
+}
+```
+
+**`validatePropValue` signature** (source: `src/utils/helpers/validateProps.ts`):
+
+```ts
+validatePropValue<T extends string>(
+  acceptedValues: readonly T[],
+  fallbackValue: T,
+  element: HTMLElement,
+  propertyName: string,
+): void
+```
+
+When the current prop value is not in `acceptedValues`, the utility resets `element[propertyName]` to `fallbackValue` and issues a `console.warn` naming the component tag, the invalid value, and the full list of valid options. This is a **mutation strategy** — after `checkPropValues()` returns, all validated props are guaranteed to hold a valid value, and the rest of the component render path can proceed without defensive guards.
+
+**Rules:**
+
+- Always use `Object.values(ENUM)` as the accepted values source so the check stays in sync with the enum automatically.
+- Prefer passing `this.el as HTMLElement` (not `this.el as HTMLBdsButtonElement`) to keep `validatePropValue` generic.
+- Do not inline the valid-values array as a literal — enum values are the single source of truth.
+- `checkPropValues()` belongs in the **Property Watchers** section (section 6 of the member ordering) because it carries `@Watch()` decorators.
 
 ### Service Layer Architecture
 
@@ -436,7 +490,10 @@ describe("bds-button", () => {
 Every spec file for a component that uses `formAssociatedMixin` or declares `@AttachInternals()` must include this boilerplate:
 
 ```typescript
-import { mockElementInternals, suppressElementInternalsErrors } from '@/utils/__test__';
+import {
+  mockElementInternals,
+  suppressElementInternalsErrors,
+} from "@/utils/__test__";
 
 let teardown: () => void;
 
@@ -456,10 +513,27 @@ Both utilities live in `packages/boreal-web-components/src/utils/__test__/mocks.
 
 ### Test Organisation
 
-- One `describe` block per component file
+#### Scaffolding: by functionality
+
+Create different files for the following types of component functionality when applicable:
+
+- A11y (Accessibility).
+- Basics.
+- Variants.
+- Events.
+- Slots.
+
+The naming convention should follow the rule `{bds-component}.functionality.spec.tsx`. Example:
+
+- `bds-component.a11y.spec.tsx`
+- `bds-component.basics.spec.tsx`
+- `bds-component.variants.spec.tsx`
+- `bds-component.events.spec.tsx`
+- `bds-component.slots.spec.tsx`
+
+- One `describe` block per spec file
 - One `it` per distinct behaviour (not per line of code)
 - Test descriptions must read as specifications: `"renders as disabled when the disabled prop is true"` — not `"disabled test"`
-- Group tests by concern: rendering → props → events → slots → accessibility → edge cases
 - Utility functions in `src/utils/` are tested separately with Vitest and must have their own `.spec.ts` files
 
 ---
@@ -610,5 +684,5 @@ When a component prop name, type, or event signature changes:
 - **Additive change** (new optional prop, new event): `feat` commit → minor bump
 - **Non-breaking rename** (keep the old prop with `@deprecated` JSDoc, add the new prop): `feat` commit → minor bump; remove the deprecated prop in the next major cycle
 - **Breaking removal or type narrowing**: `feat!` or `BREAKING CHANGE` footer → major bump; document the migration path in the MDX doc under a "Migration" section
-- **Event rename** (e.g. `bdsChange` → `bdsCheckboxChange`): this is always a breaking change. Consumers listening to the old event name will silently receive nothing. Requires a `feat!` commit, major bump, and a migration note.
+- **Event rename** (e.g. `bdsCheckboxChange` → `bdsChange`): this is always a breaking change. Consumers listening to the old event name will silently receive nothing. Requires a `feat!` commit, major bump, and a migration note.
 - Framework wrappers (`boreal-react`, `boreal-vue`) inherit the same API automatically via output targets — always verify wrappers after an API change by running `pnpm build` and checking the generated wrapper types in `packages/boreal-react/lib/components/`

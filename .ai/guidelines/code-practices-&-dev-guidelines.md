@@ -652,6 +652,7 @@ export class MyComponent {
 
 ```typescript
 import { Component, Element, Prop, State, Watch, Event, EventEmitter, Listen, h, Host } from '@stencil/core';
+import { validatePropValue } from '@/utils/helpers/validateProps';
 
 /**
  * Example button component demonstrating proper 15-section member ordering
@@ -697,6 +698,13 @@ export class ExampleButton {
     this.el.setAttribute('aria-disabled', String(isDisabled));
   }
 
+  @Watch('type')
+  @Watch('variant')
+  checkPropValues(): void {
+    validatePropValue(['button', 'submit', 'reset'], 'button', this.el as HTMLElement, 'type');
+    validatePropValue(['primary', 'secondary'], 'primary', this.el as HTMLElement, 'variant');
+  }
+
   // =========================================================================
   // 7. Event declarations
   // =========================================================================
@@ -721,7 +729,7 @@ export class ExampleButton {
   }
 
   componentWillLoad() {
-    this.validateProps();
+    this.checkPropValues();
   }
 
   disconnectedCallback() {
@@ -762,11 +770,8 @@ export class ExampleButton {
   // =========================================================================
   // 13. Internal methods (alphabetical)
   // =========================================================================
-  private validateProps() {
-    const validTypes = ['button', 'submit', 'reset'];
-    if (!validTypes.includes(this.type)) {
-      console.warn(`Invalid type: ${this.type}`);
-    }
+  private getAriaLabel(): string {
+    return this.disabled ? 'Disabled button' : undefined;
   }
 
   // =========================================================================
@@ -1090,67 +1095,61 @@ Properties accept different types with specific coercion behavior:
 
 #### Property Validation
 
-Validate property values to ensure they meet expected constraints and provide helpful warnings for invalid input.
-
-**Validation Patterns:**
+For any enum-typed `@Prop()` (variant, size, type, color, etc.), use the shared `validatePropValue` utility from `@/utils/helpers/validateProps` combined with stacked `@Watch()` decorators on a single `checkPropValues()` method. Always call `checkPropValues()` in `componentWillLoad()` — `@Watch()` alone does not fire for the initial attribute value set via an HTML attribute before the component mounts. Without the `componentWillLoad()` call, an invalid attribute on the initial render is silently accepted.
 
 ```typescript
-import { Prop, Watch } from "@stencil/core";
+import { Component, Element, Prop, Watch, h } from "@stencil/core";
+import { validatePropValue } from "@/utils/helpers/validateProps";
+import { BUTTON_TYPES, BUTTON_VARIANTS, BUTTON_SIZES } from "./types/enum";
+import { ButtonTypes, ButtonVariant, ButtonSizes } from "./types/types";
 
-export class MyComponent {
-  // Enum validation
-  @Prop({ reflect: true }) variant: "primary" | "secondary" | "tertiary" =
-    "primary";
+@Component({ tag: "bds-button", styleUrl: "bds-button.scss" })
+export class BdsButton {
+  @Element() el!: HTMLBdsButtonElement;
 
+  @Prop() readonly type: ButtonTypes = "button";
+  @Prop() readonly variant: ButtonVariant = "default";
+  @Prop() readonly size: ButtonSizes = "medium";
+
+  // Section 6 — Property Watchers
+  @Watch("type")
   @Watch("variant")
-  validateVariant(newValue: string) {
-    const validVariants = ["primary", "secondary", "tertiary"];
-    if (!validVariants.includes(newValue)) {
-      console.warn(
-        `[my-component] Invalid variant: "${newValue}". ` +
-          `Valid options: ${validVariants.join(", ")}. ` +
-          `Falling back to "primary".`,
-      );
-      this.variant = "primary";
-    }
+  @Watch("size")
+  checkPropValues(): void {
+    validatePropValue(Object.values(BUTTON_TYPES) as ButtonTypes[], "button", this.el as HTMLElement, "type");
+    validatePropValue(Object.values(BUTTON_VARIANTS) as ButtonVariant[], "default", this.el as HTMLElement, "variant");
+    validatePropValue(Object.values(BUTTON_SIZES) as ButtonSizes[], "medium", this.el as HTMLElement, "size");
   }
 
-  // Range validation
-  @Prop() maxLength: number = 100;
-
-  @Watch("maxLength")
-  validateMaxLength(newValue: number) {
-    if (newValue < 0) {
-      console.warn(`[my-component] maxLength cannot be negative. Using 0.`);
-      this.maxLength = 0;
-    }
-    if (newValue > 1000) {
-      console.warn(`[my-component] maxLength cannot exceed 1000. Using 1000.`);
-      this.maxLength = 1000;
-    }
-  }
-
-  // Required validation
-  @Prop() name!: string;
-
-  componentWillLoad() {
-    if (!this.name) {
-      console.error(`[my-component] "name" property is required.`);
-    }
+  // Section 9 — Lifecycle methods
+  componentWillLoad(): void {
+    this.checkPropValues();
   }
 }
 ```
 
-**Validation Best Practices:**
+**`validatePropValue` signature:**
 
-| Practice                   | Description                                          | Example                                       |
-| -------------------------- | ---------------------------------------------------- | --------------------------------------------- |
-| **Fail gracefully**        | Provide sensible defaults instead of throwing errors | Fall back to `'primary'` for invalid variant  |
-| **Console warnings**       | Warn developers about invalid values in development  | `console.warn()` for validation failures      |
-| **Component name in logs** | Prefix messages with component name for clarity      | `[my-component] Invalid value...`             |
-| **List valid options**     | Help developers fix the issue quickly                | `Valid options: primary, secondary, tertiary` |
-| **Validate on change**     | Use `@Watch` to validate when properties change      | `@Watch('variant')`                           |
-| **Validate on load**       | Check required properties in `componentWillLoad`     | Ensure `name` is provided                     |
+```ts
+validatePropValue<T extends string>(
+  acceptedValues: readonly T[],
+  fallbackValue: T,
+  element: HTMLElement,
+  propertyName: string,
+): void
+```
+
+When the current prop value is not in `acceptedValues`, the utility resets `element[propertyName]` to `fallbackValue` and issues a `console.warn` naming the component tag, the invalid value, and the full list of valid options. This is a **mutation strategy** — after `checkPropValues()` returns, all validated props are guaranteed to hold a valid value.
+
+**Rules:**
+
+| Rule | Detail |
+| ---- | ------ |
+| Use `Object.values(ENUM)` | Keeps the accepted-values array in sync with the enum automatically |
+| Pass `this.el as HTMLElement` | Keeps `validatePropValue` generic — avoid casting to a specific element type |
+| No inline literals | Enum values are the single source of truth; do not duplicate them as string arrays |
+| `checkPropValues` in section 6 | The method carries `@Watch()` decorators so it belongs with Property Watchers |
+| Call in `componentWillLoad()` | Required to cover the initial render — `@Watch()` alone does not fire on mount |
 
 #### Property Mutability
 
@@ -2544,6 +2543,24 @@ it("should emit event when button clicked", async () => {
 ### 4.2 Unit Testing
 
 Unit tests verify individual component behavior in isolation using Stencil's testing utilities.
+
+#### Scaffolding: by functionality
+
+Create different files for the following types of component functionality when applicable:
+
+- A11y (Accessibility).
+- Basics.
+- Variants.
+- Events.
+- Slots.
+
+The naming convention should follow the rule `{bds-component}.functionality.spec.tsx`. Example:
+
+- `bds-component.a11y.spec.tsx`
+- `bds-component.basics.spec.tsx`
+- `bds-component.variants.spec.tsx`
+- `bds-component.events.spec.tsx`
+- `bds-component.slots.spec.tsx`
 
 **Basic Structure:**
 

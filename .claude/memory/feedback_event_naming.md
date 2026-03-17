@@ -5,10 +5,10 @@
 All custom events in Boreal DS components must use prefixed camelCase names. The required format is:
 
 ```
-bds + {ComponentNoun} + {Action}
+bds + {Action}
 ```
 
-Examples: `bdsButtonClick`, `bdsInputChange`, `bdsSelectOpen`.
+Examples: `bdsClick`, `bdsChange`, `bdsOpen`.
 
 Never use a native DOM event name (e.g. `click`, `change`, `input`) as the value passed to `@Event()`.
 
@@ -27,16 +27,16 @@ Using a native event name like `click` creates three distinct failure modes:
 Prefixed names produce unambiguous, non-colliding framework bindings:
 
 | Framework | Generated binding |
-|---|---|
-| React | `onBdsButtonClick` |
-| Angular | `(bdsButtonClick)` |
-| Vue | `@bds-button-click` |
+| --------- | ----------------- |
+| React     | `onBdsClick`      |
+| Angular   | `(bdsClick)`      |
+| Vue       | `@bds-click`      |
 
 ## Canonical Pattern
 
 ```ts
 @Event()
-bdsButtonClick!: EventEmitter<{ event: MouseEvent }>;
+bdsClick!: EventEmitter<{ event: MouseEvent }>;
 ```
 
 ## Reference

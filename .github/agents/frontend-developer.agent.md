@@ -65,10 +65,30 @@ Then reference SCSS variables (e.g. `tokens.$boreal-bg-primary`) which resolve t
 
 Never hard-code hex values, spacing numbers, or radius values in component SCSS. Run `pnpm validate` in `boreal-styleguidelines` to verify token names before committing.
 
-### 4. Unit Testing (`bds-[name].spec.ts`)
+### 4. Unit Testing
+
+Unit tests verify individual component behavior in isolation using Stencil's testing utilities.
+
+#### Scaffolding: by functionality
+
+Create different files for the following types of component functionality when applicable:
+
+- A11y (Accessibility).
+- Basics.
+- Variants.
+- Events.
+- Slots.
+
+The naming convention should follow the rule `{bds-component}.functionality.spec.tsx`. Example:
+
+- `bds-component.a11y.spec.tsx`
+- `bds-component.basics.spec.tsx`
+- `bds-component.variants.spec.tsx`
+- `bds-component.events.spec.tsx`
+- `bds-component.slots.spec.tsx`
 
 - Use `newSpecPage` from `@stencil/core/testing`.
-- Structure: one `describe` block per component, one `it` per behaviour.
+- Structure: one `describe` block per spec file, one `it` per behaviour.
 - Test every prop's effect on rendered output using `toEqualHtml` or DOM assertions.
 - Test `@Event` emissions with `jest.fn()` listeners attached to the host element.
 - Test slot rendering, disabled states, ARIA attributes, and edge cases (empty, boundary values).

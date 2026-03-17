@@ -212,12 +212,12 @@ A change is considered **production-ready** when every item in this checklist is
 
 ### 4.5 Automated Tests
 
-| Attribute            | Detail                                                                                                                                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Purpose**          | Provide a repeatable, automated verification layer that guards against regressions                                                                                                                     |
-| **Owner**            | Developer (authors); CI (executes)                                                                                                                                                                     |
-| **Contents**         | Unit tests using Jest (Stencil spec runner); tests for every prop, event, and slot; edge case and invalid-input coverage; snapshot tests where applicable                                              |
-| **Quality criteria** | ≥ 90% statement coverage; tests are independent and deterministic; test descriptions read as specifications ("renders a disabled button when `disabled` is true"); no tests that simply pass trivially |
+| Attribute            | Detail                                                                                                                                                                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose**          | Provide a repeatable, automated verification layer that guards against regressions                                                                                                                                                                                                                      |
+| **Owner**            | Developer (authors); CI (executes)                                                                                                                                                                                                                                                                      |
+| **Contents**         | Unit tests using Jest (Stencil spec runner); separate spec files per functionality type (a11y, basics, variants, events, slots) following `{bds-component}.functionality.spec.tsx` naming; tests for every prop, event, and slot; edge case and invalid-input coverage; snapshot tests where applicable |
+| **Quality criteria** | ≥ 90% statement coverage; tests are independent and deterministic; test descriptions read as specifications ("renders a disabled button when `disabled` is true"); no tests that simply pass trivially                                                                                                  |
 
 ---
 
