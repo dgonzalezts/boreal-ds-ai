@@ -89,12 +89,12 @@ boreal-ds/
 │   ├── boreal-web-components/          # @telesign/boreal-web-components
 │   │   └── src/
 │   │       ├── components/
-│   │       │   └── [category]/         # actions | feedback | display | navigation | …
-│   │       │       └── boreal-[name]/
-│   │       │           ├── boreal-[name].tsx
-│   │       │           ├── boreal-[name].scss
+│   │       │   └── [category]/         # see Component Categories below
+│   │       │       └── bds-[name]/
+│   │       │           ├── bds-[name].tsx
+│   │       │           ├── bds-[name].scss
 │   │       │           └── test/
-│   │       │               └── boreal-[name].spec.ts
+│   │       │               └── bds-[name].spec.ts
 │   │       └── utils/
 │   ├── boreal-styleguidelines/         # @telesign/boreal-style-guidelines
 │   │   └── src/
@@ -107,8 +107,8 @@ boreal-ds/
 │       └── src/
 │           ├── stories/
 │           │   └── [category]/
-│           │       ├── boreal-[name].stories.ts
-│           │       └── boreal-[name].mdx
+│           │       ├── bds-[name].stories.ts
+│           │       └── bds-[name].mdx
 │           ├── components/
 │           │   ├── docs/               # React 19 components for MDX pages only
 │           │   └── story/              # Lit 3 components for story Canvas only
@@ -117,6 +117,30 @@ boreal-ds/
 └── examples/
     └── react-testapp/                  # Integration sandbox (not published)
 ```
+
+### Component Categories
+
+All components must be placed under one of the 12 official categories defined in `apps/boreal-docs/plopfile.js`. The category folder name must be identical in both the component package and the documentation app:
+
+- Component: `packages/boreal-web-components/src/components/[category]/bds-[name]/`
+- Stories: `apps/boreal-docs/src/stories/[category]/bds-[name]/`
+
+| Folder name          | Storybook display name |
+| -------------------- | ---------------------- |
+| `actions`            | Actions                |
+| `data-visualization` | Data Visualization     |
+| `feedback`           | Feedback               |
+| `forms`              | Forms                  |
+| `helpers`            | Helpers                |
+| `images-icons`       | Images & Icons         |
+| `layouts`            | Layouts                |
+| `navigation`         | Navigation             |
+| `overlays`           | Overlays               |
+| `patterns`           | Patterns               |
+| `titles-texts`       | Titles & Texts         |
+| `charts`             | Charts                 |
+
+Use `pnpm generate:component` (in `boreal-web-components`) and `pnpm generate:story` (in `boreal-docs`) to scaffold both paths — both generators prompt for category selection from this list.
 
 ---
 
@@ -315,8 +339,18 @@ export class BdsButton {
   @Watch("variant")
   @Watch("size")
   checkPropValues(): void {
-    validatePropValue(Object.values(BUTTON_VARIANTS) as ButtonVariant[], "default", this.el, "variant");
-    validatePropValue(Object.values(BUTTON_SIZES) as ButtonSize[], "medium", this.el, "size");
+    validatePropValue(
+      Object.values(BUTTON_VARIANTS) as ButtonVariant[],
+      "default",
+      this.el,
+      "variant",
+    );
+    validatePropValue(
+      Object.values(BUTTON_SIZES) as ButtonSize[],
+      "medium",
+      this.el,
+      "size",
+    );
   }
 
   componentWillLoad(): void {

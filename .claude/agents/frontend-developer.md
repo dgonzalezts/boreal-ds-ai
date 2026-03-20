@@ -35,7 +35,25 @@ Save the plan at `.ai/plans/{ticket-id}-{component_name}.md`.
 
 - All components are scaffolded via `pnpm generate:component` inside `boreal-web-components`.
 - Tag names follow the convention `bds-[name]` in `kebab-case` (e.g. `bds-badge`).
-- Each component lives in its own directory under the relevant category sub-folder (e.g. `src/components/actions/`, `src/components/feedback/`).
+- Each component lives in its own directory under the relevant category sub-folder. The category must be one of the 12 official categories defined in `apps/boreal-docs/plopfile.js`:
+
+  | Folder name          | Storybook display name |
+  | -------------------- | ---------------------- |
+  | `actions`            | Actions                |
+  | `data-visualization` | Data Visualization     |
+  | `feedback`           | Feedback               |
+  | `forms`              | Forms                  |
+  | `helpers`            | Helpers                |
+  | `images-icons`       | Images & Icons         |
+  | `layouts`            | Layouts                |
+  | `navigation`         | Navigation             |
+  | `overlays`           | Overlays               |
+  | `patterns`           | Patterns               |
+  | `titles-texts`       | Titles & Texts         |
+  | `charts`             | Charts                 |
+
+  The same category folder name must be used in both `packages/boreal-web-components/src/components/[category]/bds-[name]/` and `apps/boreal-docs/src/stories/[category]/bds-[name]/`.
+
 - Every directory contains exactly three files: `bds-[name].tsx`, `bds-[name].scss`, and a `test/bds-[name].spec.ts`.
 - The `@Component` decorator must set `tag: "bds-[name]"` and reference the local SCSS file via `styleUrl`. All components don't use `shadow: true` since we rely on global CSS custom properties for theming and token styling.
 
@@ -197,7 +215,7 @@ See `.ai/guidelines/release-process.md` for the full release runbook.
 2. Review the Figma design and identify all states, variants, slots, and brand-theme requirements.
 3. Define the full public API: props, events, slots, CSS parts.
 4. Identify which props require runtime validation (all enum-constrained string props) and plan the `checkPropValues()` method with `@Watch` decorators and `componentWillLoad()` hook.
-5. Plan the file structure under the appropriate category folder.
+5. Plan the file structure under the appropriate category folder — select from the 12 official categories (see §1 Component Scaffold). Both the component path (`src/components/[category]/bds-[name]/`) and the story path (`src/stories/[category]/bds-[name]/`) must use the same category.
 6. Document SCSS token references for each visual property.
 7. Plan the unit test matrix: one `it` per prop, per event, per slot, per edge case.
 8. Plan the story variants and their `args` overrides.
@@ -216,6 +234,7 @@ See `.ai/guidelines/release-process.md` for the full release runbook.
 Validate against all of the following:
 
 - Tag name uses `bds-` prefix in `kebab-case`.
+- Component is placed under the correct category folder in both `src/components/[category]/` and `apps/boreal-docs/src/stories/[category]/`, using one of the 12 official category folder names (see §1 Component Scaffold).
 - Every `@Prop()` has an explicit type, JSDoc, and default value.
 - No `any` types — use `unknown` or precise union types.
 - SCSS imports only from `@telesign/boreal-style-guidelines/stencil`; no hard-coded values.
