@@ -2,6 +2,7 @@
 ticket: EOA-10057
 component: bds-text-field
 status: in progress
+tasks_complete: 1, 2a, 2b, 2c, 3, 4, 5, 6
 ---
 
 # bds-text-field — Full Implementation Plan
@@ -230,17 +231,23 @@ BEM token-based styles complete. Key decisions:
 - Container transition via `@include bds-transition-surface`; action transition via `@include bds-transition-action`; focus ring via `@include bds-focus-ring($boreal-stroke-focus, $boreal-ui-inverse)`
 - All states covered: `--focused`, `--error`, `--disabled`, `--readonly`, `--plain`, `--clear-on-hover`
 
-### Task 6 — Write unit tests
+### Task 6 — ✅ Write unit tests
 
-**Files (create under `__test__/`):**
+**Files (created under `__test__/`):**
 
-- `bds-text-field-basics.spec.tsx` — renders, default props, label/helper/sublabel/counter rendering
-- `bds-text-field-form.spec.tsx` — form association, FormData, reset, required
-- `bds-text-field-validation.spec.tsx` — all 4 `validationTiming` values (`blur`, `change`, `input`, `submit`), touched/dirty tracking, built-in validators (`valueMissing`, `tooShort`), `customValidators`, `bdsValidationChange` payload
-- `bds-text-field-events.spec.tsx` — `bdsInput`, `bdsChange`, `bdsFocus`, `bdsBlur`, `bdsClear`, `bdsDisclosure`
-- `bds-text-field-a11y.spec.tsx` — `aria-invalid`, `aria-required`, `aria-labelledby`, `aria-describedby`
+- `bds-text-field-basics.spec.tsx` — 21 tests: renders, default props, label/helper/sublabel/counter rendering
+- `bds-text-field-form.spec.tsx` — 10 tests: FACE API, `setFormValue`, `formResetCallback`, `formStateRestoreCallback`, `checkValidity`, `reportValidity`
+- `bds-text-field-validation.spec.tsx` — 20 tests: all 4 `validationTiming` modes, touched/dirty tracking, built-in validators (`valueMissing`, `tooShort`), `customValidators`, `bdsValidationChange` payload shape
+- `bds-text-field-events.spec.tsx` — 16 tests: `bdsInput`, `bdsChange`, `bdsFocus`, `bdsBlur`, `bdsClear`, clear button behaviour, password toggle, `valueChange`, char counter
+- `bds-text-field-a11y.spec.tsx` — 12 tests: `aria-invalid`, `aria-required`, `aria-labelledby`, `aria-describedby`, button labels, `disabled`
 
-Target: ≥ 90% coverage. Use `newSpecPage` pattern from `bds-button` tests as reference.
+**Total: 79 tests — all passing.**
+
+Infrastructure fixes required:
+- `ElementInternals` mock (`src/utils/__test__/mocks/ElementInternals.ts`): removed `if (typeof ... === 'undefined')` guard; replaced with unconditional `Object.defineProperty` — Stencil's mock-doc pre-defines `attachInternals` as a Proxy stub, short-circuiting the guard
+- ESLint config (`eslint.config.ts`): added `no-unsafe-assignment`, `no-unsafe-member-access`, `no-unsafe-call`, `no-unnecessary-type-assertion: 'off'` scoped to `*.spec.{ts,tsx}` — necessary for `page.rootInstance as any` access patterns and Jest's `any[][]` `mock.calls` types
+- Input simulation uses `new Event('input', { bubbles: true })` throughout — `InputEvent` is not defined in Stencil's Node.js test environment
+- Focus simulation uses `new Event('focus')` without `bubbles: true` — bubbling triggers `<Host> onFocus → input.focus()` infinite recursion
 
 ### Task 7 — Storybook stories + MDX docs
 
@@ -271,11 +278,11 @@ MDX: component summary, props table, accessibility notes, slot documentation.
 | `src/components/forms/bds-text-field/types/ITextField.ts`                     | ✅ Done                                                 |
 | `src/components/forms/bds-text-field/types/enum.ts`                           | ✅ Done                                                 |
 | `src/components/forms/bds-text-field/types/types.ts`                          | ✅ Done                                                 |
-| `src/components/forms/bds-text-field/test/bds-text-field-basics.spec.tsx`     | Create                                                  |
-| `src/components/forms/bds-text-field/test/bds-text-field-form.spec.tsx`       | Create                                                  |
-| `src/components/forms/bds-text-field/test/bds-text-field-validation.spec.tsx` | Create                                                  |
-| `src/components/forms/bds-text-field/test/bds-text-field-events.spec.tsx`     | Create                                                  |
-| `src/components/forms/bds-text-field/test/bds-text-field-a11y.spec.tsx`       | Create                                                  |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-basics.spec.tsx`     | ✅ Done (21 tests)                                  |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-form.spec.tsx`       | ✅ Done (10 tests)                                  |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-validation.spec.tsx` | ✅ Done (20 tests)                                  |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-events.spec.tsx`     | ✅ Done (16 tests)                                  |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-a11y.spec.tsx`       | ✅ Done (12 tests)                                  |
 | `src/stories/forms/bds-text-field/bds-text-field.stories.ts`                  | Create                                                  |
 | `src/stories/forms/bds-text-field/bds-text-field.mdx`                         | Create                                                  |
 

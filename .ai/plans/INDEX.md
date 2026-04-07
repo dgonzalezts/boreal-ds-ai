@@ -22,7 +22,7 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                                 | Description                                                                                                                    |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [EOA-10057-bds-text-field.md](EOA-10057-bds-text-field.md)           | Full implementation of `bds-text-field` — Tasks 1 (types) and 2 (TSX logic) done; SCSS, tests, and Storybook docs remaining    |
+| [EOA-10057-bds-text-field.md](EOA-10057-bds-text-field.md)           | Full implementation of `bds-text-field` — Tasks 1–6 done (types, TSX, SCSS, Vue v-model, 79 unit tests); Task 7 (Storybook docs) remaining    |
 | [EOA-10099-form-foundation.md](EOA-10099-form-foundation.md)         | Shared FACE-based form foundation (form association, props, validation) required before any form components can be implemented |
 | [first-alpha-release.md](first-alpha-release.md)                     | Step-by-step runbook for the first `0.1.0-alpha.0` publish to npm — Steps 9–11 (Vue) remaining                                 |
 | [icons-strategy.md](icons-strategy.md)                               | Phased icon library rollout — icon font + S3 CDN for alpha, component wrappers for beta                                        |
