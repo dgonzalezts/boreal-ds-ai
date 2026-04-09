@@ -1,0 +1,43 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: dev:components — fixed (timeout 1m)
+        run: pnpm dev:components
+        timeout-minutes: 1
+        continue-on-error: true
+
+  verify-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: dev:components — fixed (timeout 1m)
+        run: pnpm dev:components
+        timeout-minutes: 1
+        continue-on-error: true

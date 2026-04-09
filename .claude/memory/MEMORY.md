@@ -47,6 +47,24 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts-boreal-pack-pipeline.md` | `publish.js` packs artifacts but does not build. Build guarantee comes from Turborepo `dependsOn` in `turbo.json`. Per-framework script suffix convention (`:react`, `:vue`, `:angular`). `validate:all` aggregator and `release:all` sequence. |
 
+### Turborepo — Dev Task Behavior
+
+| File | What it covers |
+| ---- | -------------- |
+| `turbo-persistent-interactive-pty-hang.md` | `persistent: true` implies `interactive: true` by default — deadlocks silently in headless/CI environments and on Windows with a cold daemon. Fix: add `"interactive": false` explicitly, and bypass Turbo entirely in root `dev:components`/`dev:docs` scripts. Also covers the race condition caused by `dev` scripts that alias `build`. |
+
+### Sass — Path Resolution
+
+| File | What it covers |
+| ---- | -------------- |
+| `sass-paths-windows-forward-slash.md` | Sass treats backslashes as escape characters — all paths in `injectGlobalPaths` and `includePaths` must use forward slashes. Apply `.map(p => p.replace(/\\/g, '/'))` at the array level. Also covers why `require.resolve` is unreliable for locating pnpm workspace packages on Windows/Linux CI. |
+
+### CI Debugging Techniques
+
+| File | What it covers |
+| ---- | -------------- |
+| `github-actions-windows-debug-technique.md` | Using temporary `workflow_dispatch` workflows on `windows-latest`/`ubuntu-latest` runners to reproduce platform-specific bugs. `timeout-minutes` + `continue-on-error` pattern. Using `.git/info/exclude` to keep debug workflows off local branches. |
+
 ### Storybook + Vite
 
 | File                       | What it covers                                                                              |
@@ -100,3 +118,4 @@ This directory contains non-obvious, durable facts about the codebase, environme
 - 2026-03-13 — New topic file added: `stencil-face-test-mocks.md`. Covers: shared `mocks.ts` location for FACE test doubles; `mockElementInternals()` and `suppressElementInternalsErrors()` exports; why optional-chain guards cannot prevent mock-doc `console.error` on `ElementInternals` property access; required boilerplate for every FACE spec file. Source: EOA-10056 bds-checkbox code review.
 - 2026-03-13 — New topic file added: `stencil-light-dom-host-vs-class.md`. Covers: when to use `:host` vs a root BEM class in light DOM Stencil components; form controls require `:host` because `[disabled]` reflects on the host and `:focus-visible` must cascade outward; `:host` compilation in light DOM; state-dependent inner style pattern. Source: EOA-10056 bds-checkbox code review.
 - 2026-03-17 — `bds-text-field` component created (EOA-10057). Tasks 1 (types: `ITextField.ts`, `enum.ts`, `types.ts`) and 2 (full TSX logic: all props, events, FACE callbacks, validation wiring) are complete. Component placed under `src/components/forms/bds-text-field/` in the `forms` category, matching the plopfile category convention. Remaining: shared SCSS partial (Task 3), Figma token audit (Task 4), SCSS styles (Task 5), unit tests (Task 6), Storybook stories + MDX (Task 7). Stories will be scaffolded via `pnpm generate:story` under `src/stories/forms/bds-text-field/`.
+- 2026-04-08 — Three new topic files added from Windows-specific `pnpm dev:components` hang debugging session. `turbo-persistent-interactive-pty-hang.md`: Turbo `persistent: true` silently deadlocks in headless/CI environments; fix is `"interactive": false` plus bypassing Turbo in `dev:components`/`dev:docs` scripts; also covers the `dev`-as-alias-for-`build` race condition. `sass-paths-windows-forward-slash.md`: Sass cannot parse backslash paths; apply `.map(p => p.replace(/\\/g, '/'))` to all Sass path arrays; `require.resolve` is unreliable for pnpm workspace package resolution on Windows/Linux. `github-actions-windows-debug-technique.md`: using `workflow_dispatch` workflows with `timeout-minutes` + `continue-on-error` for platform-specific bug reproduction; `.git/info/exclude` pattern to keep debug workflows off local branches.
