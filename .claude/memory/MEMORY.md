@@ -16,6 +16,18 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | `stencil-async-rendering-gotchas.md`            | Stencil batches DOM updates asynchronously — reflected DOM reads in the same tick as a `@Prop()` set return stale values. `formDisabledCallback` trigger conditions. `HTMLButtonElement.prototype.checkValidity` naming collision in `onclick` scope.                            |
 | `stencil-face-test-mocks.md`                    | Shared `mocks.ts` location for FACE test doubles. `mockElementInternals()` and `suppressElementInternalsErrors()` pattern. Why `?.` optional chain cannot prevent mock-doc `console.error` on `ElementInternals` property access. Required boilerplate for every FACE spec file. |
 
+### Component API Conventions
+
+| File                                 | What it covers                                                                                                                                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `stencil-prop-patterns.md`           | `stencil/props-must-be-readonly` and `stencil/required-jsdoc` are enforced as errors. `disabled` must use a `@State()` mirror — `mutable: true` on `disabled` causes a Stencil compiler warning and races with the browser's FACE lifecycle. `readonly` + `mutable: true` coexist for non-FACE props only. `instanceof Element` triggers TypeScript narrowing; `nodeType` does not. JSDoc feeds `custom-elements.json`. |
+
+**Boolean prop naming** — `@Prop()` booleans must not carry an `is`, `has`, or `show` prefix. Use single descriptive adjectives that match native HTML attribute style (`disabled`, `closable`, `required`, `counter`). Examples: `hasClear` → `clearable`; `showClose` → `closable`; `hasHeader` → `header`.
+
+**Custom event naming** — `@Event()` names follow `bds{Action}` camelCase. No component noun in the middle (`bdsClose`, not `bdsBannerClose`). Exception: `valueChange` is reserved for Vue `v-model` integration.
+
+---
+
 ### Stencil.js — Props, Interfaces, and 2-Way Binding
 
 | File                                 | What it covers                                                                                                                                                                                                                                                                                                                                                                                                          |

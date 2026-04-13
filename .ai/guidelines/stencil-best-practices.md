@@ -98,6 +98,45 @@ Regardless of encapsulation mode, CSS custom properties (`var(--boreal-*)`) cros
 
 ---
 
+## Prop and Event Naming Conventions
+
+### Boolean prop naming
+
+Boolean `@Prop()` declarations must use single descriptive adjectives — the same style as native HTML boolean attributes (`disabled`, `required`, `controls`, `muted`, `open`). Never prefix a boolean prop with `is`, `has`, or `show`.
+
+| ❌ Avoid | ✅ Use instead | Rationale |
+|---|---|---|
+| `hasHeader` | `header` | `has` prefix — mirrors native HTML |
+| `hasFooter` | `footer` | `has` prefix |
+| `showClose` | `closable` | `show` prefix |
+| `hasClear` | `clearable` | `has` prefix |
+| `showCharCount` | `counter` | `show` prefix |
+| `isError` | `error` | `is` prefix |
+| `isDisabled` | `disabled` | `is` prefix — internal `@State()` may keep `isDisabled` |
+
+This rule applies exclusively to public `@Prop()` declarations. Internal `@State()` names are not covered — `isVisible`, `isDisabled`, `isOpen` are valid for private reactive state.
+
+### Custom event naming
+
+All `@Event()` names must follow the pattern `bds{Action}` — camelCase, `bds` prefix, action verb only. Do not include the component noun between the prefix and the action.
+
+```ts
+// ✅ Correct
+bdsClose
+bdsChange
+bdsInput
+bdsClick
+
+// ❌ Wrong — component noun in the name
+bdsBannerClose
+bdsBannerChange
+bdsTextFieldInput
+```
+
+The single exception is `valueChange`, which must remain as-is — it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
+
+---
+
 ## FACE Components: `formAssociated: true` with `scoped: true`
 
 For all form-associated components in this codebase, the canonical pattern is:

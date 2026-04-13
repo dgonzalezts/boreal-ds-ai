@@ -50,6 +50,7 @@ Apply the sections below only when the change touches the corresponding package.
 #### Component and Prop Discipline
 
 - [ ] **Props are readonly + documented**: Every `@Prop()` has `readonly` and an adjacent JSDoc block.
+- [ ] **Boolean prop naming**: No `is`, `has`, or `show` prefix — use descriptive adjectives matching native HTML (`closable` not `showClose`; `header` not `hasHeader`; `error` not `isError`).
 - [ ] **Prop validation pattern**: `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` is used for enum-like props.
 - [ ] **Mutable props**: When `mutable: true` is used, internal assignment uses a narrow cast, not `as any`.
 - [ ] **No class-level `@internal`**: Component classes do not use `@internal` in JSDoc.
