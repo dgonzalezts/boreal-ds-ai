@@ -60,7 +60,26 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 ---
 
-### 4. Plan Document
+### 4. Memory Entry
+
+**When to use:** A non-obvious fact about the codebase, environment, or workflow surfaced that would benefit future AI agent sessions but does not fit an existing instruction file.
+
+**Location:** Create or update a topic file under `.github/instructions/` scoped to the relevant area (e.g. `stencil.instructions.md`, `dom-accessibility.instructions.md`). If a matching file already exists, extend it rather than creating a duplicate.
+
+**Action:**
+1. Write the fact into the appropriate `.github/instructions/` file, under a clearly labelled section.
+2. Note the addition in the accompanying session summary or guideline update changelog.
+
+**Good memory candidates:**
+
+- Environment constraints (e.g. "Turborepo cache breaks when root tsconfig changes")
+- Non-obvious conventions not explicit in any existing file
+- Recurring gotchas discovered in practice
+- Verified commands for build, lint, or test workflows
+
+---
+
+### 5. Plan Document
 
 **When to use:** A session produced a detailed enough specification or approach to constitute a starting point for an implementation plan.
 
@@ -104,6 +123,7 @@ Determine which artifact type(s) are appropriate:
 | A decision with trade-offs and alternatives | ADR              |
 | Multiple findings, no single clear decision | Session summary  |
 | Gap or error in an existing guideline       | Guideline update |
+| Non-obvious codebase or env constraint      | Memory entry     |
 | Enough detail to kick off implementation    | Plan document    |
 
 One session may produce multiple artifact types. Produce all that apply.
@@ -122,10 +142,11 @@ For ADRs, number them sequentially relative to existing files in `.ai/decisions/
 
 Before finalising:
 
-- Check whether any existing ADR, guideline, or session summary covers the same topic. If so, either update the existing artifact or explicitly reference it from the new one.
+- Check whether any existing ADR, guideline, memory entry, or session summary covers the same topic. If so, either update the existing artifact or explicitly reference it from the new one.
 - Check `copilot-instructions.md` and `.github/instructions/` to see if knowledge belongs there for persistent cross-tool access.
 - Check `.ai/guidelines/` for related operational docs that might need updates.
 - If the session revealed a gap in an instruction file, apply the guideline update directly.
+- If the session revealed a non-obvious codebase fact with no matching instruction file, create a memory entry under `.github/instructions/`.
 
 ### Phase 5 — Confirm and Persist
 

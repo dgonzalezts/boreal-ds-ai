@@ -66,9 +66,15 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **When to use:** A non-obvious fact about the codebase, environment, or workflow surfaced that would benefit future AI agent sessions. This complements but does not replace file-based artifacts.
 
-**Action:** Use the memory tools (`mcp_memory_add_observations`) to persist the fact. Also consider whether it belongs in `CLAUDE.md` for persistent file-based access.
+**Primary location:** `.claude/memory/` — the project-level memory directory checked into the repository. This is the canonical store for codebase memory in this project.
 
-**Cross-tool note:** Memory tools are Claude Code-specific (MCP). For cross-tool persistence (GitHub Copilot + Claude Code), always create file-based artifacts first.
+**Action:**
+1. Write the fact as a standalone topic file under `.claude/memory/{slug}.md`.
+2. Add a one-line entry for it in `.claude/memory/MEMORY.md` under the appropriate section.
+3. Add a dated entry to the `## Changelog` section at the bottom of `MEMORY.md`.
+4. Optionally persist to the harness auto-memory via `mcp_memory_add_observations` for cross-session recall, but the file-based record is always primary.
+
+**Cross-tool note:** File-based artifacts in `.claude/memory/` work across all tools and contributors. `mcp_memory_add_observations` is Claude Code-specific (MCP) and user-scoped — use it as a supplement, not a replacement.
 
 **Good memory candidates:**
 
@@ -150,10 +156,11 @@ Before finalising:
 ### Phase 5 — Confirm and Persist
 
 - Write all file-based artifacts using the Write or Edit tools.
-- Persist memory entries using `mcp_memory_add_observations` (Claude Code only — skip if unavailable).
+- For memory entries, write to `.claude/memory/{slug}.md` and update `.claude/memory/MEMORY.md` (index row + changelog entry). This is the primary persistence target.
+- Optionally also persist memory entries using `mcp_memory_add_observations` (Claude Code only — skip if unavailable) as a supplemental cross-session store.
 - Summarise what was created and where, so the user knows exactly what was saved and can verify it.
 
-**Cross-tool compatibility:** File-based artifacts (ADRs, session summaries, guideline updates) work across all tools. Memory entries are Claude Code-specific.
+**Cross-tool compatibility:** File-based artifacts (ADRs, session summaries, guideline updates, `.claude/memory/` entries) work across all tools and contributors. `mcp_memory_add_observations` is user-scoped and Claude Code-specific — always secondary to file-based records.
 
 ---
 
