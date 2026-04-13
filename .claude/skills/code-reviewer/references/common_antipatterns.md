@@ -75,3 +75,19 @@ This reference captures recurring review failures in the Boreal DS monorepo, wit
 
 - **Broad `any` or unsafe casts**: Hides contract issues and breaks editor tooling.
 - **`nodeType` element checks**: Do not narrow types; prefer `instanceof Element`.
+- **Dead `declare global` Popover API blocks**: `declare global { interface HTMLElement { showPopover(): void; ... } }` is dead code since TypeScript 5.2 ships the Popover API in `lib.dom.d.ts`. Delete any such blocks.
+
+---
+
+## Naming and API Design Antipatterns
+
+- **`IBdsComponent.ts` interface file names**: Interface files must be named `IComponent.ts` (e.g. `ITooltip.ts`). The `Bds` prefix is reserved for tag names and class names only. Files named `IBdsTooltip.ts`, `IBdsPopover.ts`, etc. violate the convention.
+- **`get` prefix on getter accessors**: Writing `get getPlacement()` is redundant — the `get` keyword already marks it as an accessor. Use `get placement()` instead.
+- **`!x || false` boolean expressions**: `|| false` is an unreachable branch that adds visual noise. Replace with `!x`.
+
+---
+
+## DOM and Accessibility Antipatterns
+
+- **`setAttribute` with camelCase ARIA names**: `setAttribute('ariaDescribedBy', ...)` creates a non-standard attribute that screen readers ignore. ARIA attribute names must be kebab-case: `setAttribute('aria-describedby', ...)`.
+- **Using `e.target` in `mouseleave` for stayOnHover logic**: `e.target` is the element being left, not the element the pointer is moving to. StayOnHover checks must use `e.relatedTarget` to determine whether the pointer entered the floating content — using `e.target` makes the feature non-functional.

@@ -109,6 +109,42 @@ componentWillLoad(): void {
 - Do not use `mutable: true` on native form attributes (`disabled`, `checked`, `value`). Use a `@State()` mirror instead — `@Prop() readonly disabled` + `@State() private isDisabled` — and write to the state in `formDisabledCallback` and `@Watch`.
 - Prefer `instanceof Element` over `nodeType` checks for type narrowing.
 - Keep side effects explicit and avoid hidden async work inside render paths.
+- Do not add `declare global { interface HTMLElement { showPopover(): void; ... } }` blocks. The Popover API is built into TypeScript's `lib.dom.d.ts` since TS 5.2; any such declaration is dead code and must be deleted.
+
+---
+
+## Naming Conventions
+
+### Interface file naming
+
+Component interface files must be named `IComponent.ts` — e.g. `ITooltip.ts`, `IPopover.ts`. The `Bds` prefix is reserved for tag names and class names only. Never use `IBdsTooltip.ts` or similar.
+
+### Getter accessor naming
+
+Getter accessors must not carry a `get` prefix. Use `placement`, not `getPlacement`; `canShowArrow`, not `getCanShowArrow`. The `get` keyword already communicates accessor semantics.
+
+### Boolean simplification
+
+`!x || false` is always equivalent to `!x` — the `|| false` branch is unreachable. Remove it.
+
+---
+
+## DOM and Accessibility
+
+### ARIA attributes via `setAttribute`
+
+`setAttribute` requires kebab-case ARIA attribute names. Always write:
+
+```ts
+trigger.setAttribute('aria-describedby', 'tooltip-content');
+trigger.setAttribute('aria-haspopup', 'true');
+```
+
+Passing camelCase (`ariaDescribedBy`) creates a non-standard attribute that is ignored by assistive technology.
+
+### `mouseleave` and stayOnHover logic
+
+When implementing "keep the floating element open if the pointer moves into it" (`stayOnHover`), test `e.relatedTarget` (where the pointer is going), not `e.target` (the element being left). `e.target` is always the element that fired the event and does not indicate the destination.
 
 ---
 

@@ -64,6 +64,15 @@ Apply the sections below only when the change touches the corresponding package.
 - [ ] **No ignored JSDoc tags**: Avoid `@element` and `@method` at class level; use method-level JSDoc instead.
 - [ ] **Use `@file`**: Module JSDoc uses `@file` (not `@fileoverview`).
 - [ ] **Type narrowing**: Prefer `instanceof Element` for element-node narrowing instead of `nodeType` checks.
+- [ ] **Interface file naming**: Component interface files are named `IComponent.ts` (e.g. `ITooltip.ts`), never `IBdsComponent.ts`.
+- [ ] **Getter accessor naming**: Getter methods do not carry a `get` prefix — `get placement()` not `get getPlacement()`.
+- [ ] **No redundant boolean expressions**: `!x || false` must be simplified to `!x`.
+- [ ] **No dead Popover API declarations**: No `declare global { interface HTMLElement { showPopover()... } }` blocks — the Popover API is native in TypeScript ≥ 5.2.
+
+#### DOM and Accessibility
+
+- [ ] **ARIA attribute casing in `setAttribute`**: ARIA attributes passed to `setAttribute` use kebab-case (`aria-describedby`, `aria-haspopup`) — never camelCase (`ariaDescribedBy`).
+- [ ] **`mouseleave` stayOnHover uses `relatedTarget`**: Floating element "keep-open" checks use `e.relatedTarget` (pointer destination), not `e.target` (element being left).
 
 #### Events
 
