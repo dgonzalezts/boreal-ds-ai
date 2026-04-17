@@ -32,13 +32,20 @@ CHECKLIST_SECTIONS = {
         ("prop-jsdoc", "Every @Prop() has `readonly` and an adjacent JSDoc block"),
         ("prop-mutable-form-attr", "Native form attrs (`disabled`, `checked`, `value`) use `@State()` mirror, not `mutable: true`"),
         ("prop-validation", "`validatePropValue` + `componentWillLoad()` + `@Watch()` for enum-like props"),
-        ("event-naming", "Custom events use the `bds{Component}{Action}` prefix pattern"),
+        ("event-naming", "Custom events use the `bds{Action}` prefix pattern (e.g. `bdsClose`, not `bdsBannerClose`)"),
         ("no-native-events", "Event names do not reuse native DOM events"),
         ("face-attach-internals", "@AttachInternals() is on the class body, not in a mixin"),
         ("face-method-wrappers", "`checkValidity()` and `reportValidity()` exposed via @Method()"),
         ("face-validity-ownership", "Only ElementInternals.setValidity() manages validity"),
         ("face-reset-restore", "`formResetCallback` and `formStateRestoreCallback` call updateValidity()"),
         ("cem-integrity", "JSDoc changes preserve custom-elements.json generation accuracy"),
+        ("bool-prop-prefix", "Boolean @Prop() names use no `is`/`has`/`show` prefix"),
+        ("prop-in-mixin", "Props declared on component class, not inside mixin factory"),
+        ("mixin-noop-constructor", "No no-op constructor in mixin factory (use ESLint override instead)"),
+        ("aria-camel-set-attr", "ARIA attribute names passed to `setAttribute` are kebab-case"),
+        ("declare-global-popover", "No dead `declare global` Popover API blocks (redundant since TS 5.2)"),
+        ("interface-bds-prefix", "Interface files named `IComponent.ts`, not `IBdsComponent.ts`"),
+        ("getter-get-prefix", "Getter accessors carry no redundant `get` prefix"),
     ],
     "B — React/Vue Wrappers": [
         ("wrapper-outputs", "Generated outputs/types rebuilt when web components change"),
@@ -89,6 +96,14 @@ RULE_TO_CHECKLIST: Dict[str, str] = {
     "missing-tests": "test-coverage",
     "missing-stories": "docs-updated",
     "missing-changeset": "docs-updated",
+    "bool-prop-prefix": "bool-prop-prefix",
+    "event-name-format": "event-naming",
+    "prop-in-mixin": "prop-in-mixin",
+    "mixin-noop-constructor": "mixin-noop-constructor",
+    "aria-camel-set-attr": "aria-camel-set-attr",
+    "declare-global-popover": "declare-global-popover",
+    "interface-bds-prefix": "interface-bds-prefix",
+    "getter-get-prefix": "getter-get-prefix",
 }
 
 
@@ -256,6 +271,13 @@ class ReviewReportGenerator:
             lines.append("")
 
         lines += [
+            "## Memory-Guided Review",
+            "",
+            "> _This section is completed by the agent after reading `.claude/memory/MEMORY.md` "
+            "and the relevant topic files. The script leaves this placeholder intentionally._",
+            "",
+            "<!-- MEMORY_REVIEW_PLACEHOLDER -->",
+            "",
             "---",
             "",
             f"**Result: {total_pass} passed · {total_fail} failed**",

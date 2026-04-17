@@ -69,6 +69,21 @@ RE_IMPORT_ALIAS = re.compile(r"^import\s+.*from\s+['\"](@/[^'\"]+)['\"]", re.MUL
 # Internal alias order: services < mixins < utils (by index)
 ALIAS_ORDER = ["@/services", "@/mixins", "@/utils"]
 
+# Matches @Prop() name starting with is/has/show + uppercase letter
+RE_BOOL_PROP_PREFIX = re.compile(r"@Prop\([^)]*\)\s*(?:readonly\s+)?(is[A-Z]|has[A-Z]|show[A-Z])\w*")
+# Matches setAttribute called with a camelCase ARIA attribute name
+RE_ARIA_CAMEL_SET_ATTR = re.compile(r"""setAttribute\(\s*['"]aria[A-Z]""")
+# Matches declare global block containing Popover API methods (dead since TS 5.2)
+RE_DECLARE_GLOBAL_POPOVER = re.compile(r"declare\s+global\s*\{[^}]*(?:showPopover|hidePopover|togglePopover)")
+# Matches interface filenames using the banned IBds prefix
+RE_INTERFACE_BDS_FILENAME = re.compile(r"^IBds[A-Z].*\.ts$")
+# Matches getter accessor with a redundant `get` prefix in the name
+RE_GETTER_GET_PREFIX = re.compile(r"\bget\s+get[A-Z]\w*\s*\(")
+# Matches no-op mixin constructor identical to the implicit super call
+RE_MIXIN_NOOP_CTOR = re.compile(
+    r"constructor\s*\(\s*\.\.\.args\s*:\s*any\[\]\s*\)\s*\{\s*super\s*\(\s*\.\.\.args\s*\)\s*;\s*\}"
+)
+
 
 class Finding:
     def __init__(self, rule: str, severity: str, message: str, file: str, line: Optional[int] = None):
@@ -109,6 +124,8 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings: List[Finding] = []
     rel = str(path)
 
+    findings += _check_interface_bds_prefix(path, rel)
+
     is_stencil = "@Component(" in source
     is_spec = "__test__" in str(path) or ".spec." in str(path)
 
@@ -120,6 +137,9 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     if not is_stencil and not is_spec:
         findings += _check_typescript_safety(rel, lines)
         findings += _check_barrel_wildcards(rel, source)
+        findings += _check_aria_camel_set_attr(rel, lines)
+        findings += _check_declare_global_popover(rel, source)
+        findings += _check_getter_get_prefix(rel, lines)
         return findings
 
     if is_spec:
@@ -133,6 +153,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_prop_readonly(rel, lines)
     findings += _check_mutable_any_cast(rel, lines)
     findings += _check_event_naming(rel, lines)
+    findings += _check_event_name_format(rel, lines)
     findings += _check_event_options(rel, lines)
     findings += _check_class_jsdoc_tags(rel, source)   # uses full source — anchored to @Component
     findings += _check_fileoverview(rel, lines)
@@ -140,6 +161,12 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_typescript_safety(rel, lines)
     findings += _check_face_patterns(rel, source, code_only)
     findings += _check_import_order(rel, source.splitlines())
+    findings += _check_bool_prop_prefix(rel, lines)
+    findings += _check_prop_in_mixin(rel, code_only)
+    findings += _check_mixin_noop_constructor(rel, lines)
+    findings += _check_aria_camel_set_attr(rel, lines)
+    findings += _check_declare_global_popover(rel, source)
+    findings += _check_getter_get_prefix(rel, lines)
 
     return findings
 
@@ -460,6 +487,168 @@ def _check_import_order(rel: str, lines: List[str]) -> List[Finding]:
 
         prev_group = max(prev_group, group)
 
+    return findings
+
+
+def _check_interface_bds_prefix(path: Path, rel: str) -> List[Finding]:
+    if not RE_INTERFACE_BDS_FILENAME.match(path.name):
+        return []
+    return [Finding(
+        rule="interface-bds-prefix",
+        severity="error",
+        message=(
+            f"Interface file `{path.name}` uses the `IBds` prefix — rename to "
+            f"`I{path.name[4:]}` (e.g. `IBdsTooltip.ts` → `ITooltip.ts`). "
+            "The `Bds` prefix is reserved for tag names and class names."
+        ),
+        file=rel,
+    )]
+
+
+def _check_bool_prop_prefix(rel: str, lines: List[str]) -> List[Finding]:
+    findings = []
+    for i, line in enumerate(lines):
+        if line.strip().startswith(("//", "*")):
+            continue
+        m = RE_BOOL_PROP_PREFIX.search(line)
+        if m:
+            findings.append(Finding(
+                rule="bool-prop-prefix",
+                severity="error",
+                message=(
+                    f"@Prop() name starts with `{m.group(1)}` — boolean props must not carry "
+                    "an `is`/`has`/`show` prefix. Use a plain adjective matching native HTML "
+                    "style (e.g. `hasClear` → `clearable`, `isDisabled` → `disabled`)."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+    return findings
+
+
+def _check_event_name_format(rel: str, lines: List[str]) -> List[Finding]:
+    findings = []
+    for i, line in enumerate(lines):
+        if line.strip().startswith(("//", "*")):
+            continue
+        m = RE_EVENT_DECL.search(line)
+        if not m:
+            continue
+        name = m.group(1)
+        if name.lower() in NATIVE_EVENT_NAMES:
+            continue
+        if not re.match(r"^bds[A-Z]", name):
+            findings.append(Finding(
+                rule="event-name-format",
+                severity="error",
+                message=(
+                    f"@Event() name '{name}' does not follow the `bds{{Action}}` format. "
+                    "Custom events must start with `bds` followed by an uppercase letter "
+                    "(e.g. `bdsClose`, `bdsChange`)."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+    return findings
+
+
+def _check_prop_in_mixin(rel: str, code_only: str) -> List[Finding]:
+    findings = []
+    lines = code_only.splitlines()
+    for i, line in enumerate(lines):
+        if "@Prop(" not in line or line.strip().startswith("*"):
+            continue
+        window = "\n".join(lines[max(0, i - 200):i])
+        if re.search(r"function\s+\w*Mixin\b", window) or re.search(r"return\s+class\s+extends\s+\w+", window):
+            findings.append(Finding(
+                rule="prop-in-mixin",
+                severity="error",
+                message=(
+                    "@Prop() declared inside a mixin factory. Stencil's compiler ignores "
+                    "@Prop() decorators from mixin base classes — declare props directly "
+                    "on the component class."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+    return findings
+
+
+def _check_mixin_noop_constructor(rel: str, lines: List[str]) -> List[Finding]:
+    if "mixins" not in rel:
+        return []
+    source = "\n".join(lines)
+    findings = []
+    for m in RE_MIXIN_NOOP_CTOR.finditer(source):
+        line_num = source[:m.start()].count("\n") + 1
+        findings.append(Finding(
+            rule="mixin-noop-constructor",
+            severity="warning",
+            message=(
+                "No-op constructor `constructor(...args: any[]) { super(...args); }` is "
+                "identical to the implicit super call. Remove it and add a scoped ESLint "
+                "override in `eslint.config.ts` for `**/mixins/**/*.ts` instead."
+            ),
+            file=rel,
+            line=line_num,
+        ))
+    return findings
+
+
+def _check_aria_camel_set_attr(rel: str, lines: List[str]) -> List[Finding]:
+    findings = []
+    for i, line in enumerate(lines):
+        if line.strip().startswith(("//", "*")):
+            continue
+        if RE_ARIA_CAMEL_SET_ATTR.search(line):
+            findings.append(Finding(
+                rule="aria-camel-set-attr",
+                severity="error",
+                message=(
+                    "`setAttribute` called with a camelCase ARIA attribute name. "
+                    "Use kebab-case: `setAttribute('aria-describedby', ...)` not "
+                    "`setAttribute('ariaDescribedBy', ...)`."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+    return findings
+
+
+def _check_declare_global_popover(rel: str, source: str) -> List[Finding]:
+    findings = []
+    for m in RE_DECLARE_GLOBAL_POPOVER.finditer(source):
+        line_num = source[:m.start()].count("\n") + 1
+        findings.append(Finding(
+            rule="declare-global-popover",
+            severity="warning",
+            message=(
+                "`declare global` block augments the Popover API — dead code since TypeScript "
+                "5.2 ships these types in `lib.dom.d.ts`. Delete the block."
+            ),
+            file=rel,
+            line=line_num,
+        ))
+    return findings
+
+
+def _check_getter_get_prefix(rel: str, lines: List[str]) -> List[Finding]:
+    findings = []
+    for i, line in enumerate(lines):
+        if line.strip().startswith(("//", "*")):
+            continue
+        if RE_GETTER_GET_PREFIX.search(line):
+            findings.append(Finding(
+                rule="getter-get-prefix",
+                severity="warning",
+                message=(
+                    "Getter accessor has a redundant `get` prefix in its name. "
+                    "The `get` keyword already communicates accessor semantics — "
+                    "rename to the value it returns (e.g. `get placement()` not `get getPlacement()`)."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
     return findings
 
 
