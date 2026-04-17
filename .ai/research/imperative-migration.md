@@ -20,6 +20,16 @@ This document analyses both components and defines a migration to a layered/prog
 flat `@Prop()` declarations for all scalar options (declarative layer) while keeping `floatingOptions`
 for lifecycle callbacks that can never be expressed as attributes (imperative layer).
 
+**Additionally**, both components use a fragile heuristic-based trigger detection system via `anchoredMixin`
+that requires an adjacent sibling pattern and fails for nested structures. This will be refactored to an
+explicit slot-based pattern inspired by Colibri Components, adapted for **Stencil without shadow DOM**.
+
+### Key constraints:
+
+- **Stencil does NOT have a `@Query()` decorator** — use `@Element()` + `querySelector()` instead
+- **No shadow DOM** — query elements directly from `this.el` (light DOM), not `this.el.shadowRoot`
+- **Slot-based composition** — use `<slot>` + `assignedElements()` for explicit trigger resolution
+
 ---
 
 ## Full `floatingOptions` shape — annotated by declarability
@@ -179,6 +189,179 @@ flat prop. Mark the scalar fields of `FloatingTooltipProp` and `FloatingPopoverP
 
 Replace all `.floatingOptions=${{ placement: 'top' }}` bindings with flat attributes:
 `placement="top"`. Document the callback-only use of `floatingOptions` in MDX.
+
+### Step 8 — Refactor trigger detection from anchoredMixin to slot-based pattern
+
+**⚠️ BREAKING CHANGE** — This requires consumers to update their HTML structure from sibling pattern to nested pattern.
+
+**Problem:** Current `anchoredMixin.onBeforeLoad()` uses heuristic DOM traversal (`previousElementSibling`, `closest()`, tag name checks) to find the trigger element. This is fragile and fails for nested structures (e.g., `<em><bds-tooltip>`).
+
+**Solution:** Adopt Colibri's explicit slot-based trigger resolution pattern, adapted for Stencil without shadow DOM:
+
+1. **Remove implicit trigger detection** — Delete `onBeforeLoad()` logic from `anchoredMixin`
+2. **Add explicit trigger slot** — Both components get a default `<slot>` for the trigger element
+3. **Use `@Element()` decorator** — Get host element reference (Stencil's equivalent to Lit's `@query`)
+4. **Query in `componentDidLoad()`** — Find slot and tooltip content after DOM is ready
+5. **Handle slot changes** — Attach `onSlotchange` event to detect dynamic trigger updates
+6. **Use `assignedElements()`** — Get the actual trigger from slot's assigned elements
+
+**Architecture change:**
+
+```ts
+// Before (anchoredMixin pattern - sibling):
+<bds-button>Click me</bds-button>
+<bds-tooltip>Tooltip text</bds-tooltip>
+
+// After (slot pattern - nested):
+<bds-tooltip placement="top">
+  <bds-button>Click me</bds-button>
+  <span slot="content">Tooltip text</span>
+</bds-tooltip>
+```
+
+**Key advantages:**
+
+- ✅ Explicit trigger relationship (no DOM heuristics)
+- ✅ Works with any HTML element (not just `bds-*` components)
+- ✅ Declarative in plain HTML
+- ✅ Easier to debug (slot assignment visible in DevTools)
+- ✅ Consistent with web standards (slot-based composition)
+
+**Implementation notes for Stencil WITHOUT shadow DOM:**
+
+```ts
+@Component({
+  tag: 'bds-tooltip',
+  styleUrl: 'bds-tooltip.scss',
+  shadow: false,  // ← No shadow DOM
+})
+export class BdsTooltip {
+  @Element() el!: HTMLBdsTooltipElement;  // ← Stencil's host element access
+
+  private triggerSlot!: HTMLSlotElement;
+  private tooltipContent!: HTMLElement;
+
+  componentDidLoad() {
+    // Query directly from host element (light DOM)
+    this.triggerSlot = this.el.querySelector('slot:not([name])') as HTMLSlotElement;
+    this.tooltipContent = this.el.querySelector('.tooltip-content') as HTMLElement;
+
+    // Attach to initial trigger
+    const trigger = this.triggerSlot?.assignedElements()[0] as HTMLElement;
+    if (trigger) {
+      trigger.addEventListener('mouseenter', this.show);
+      trigger.addEventListener('mouseleave', this.hide);
+    }
+  }
+
+  private handleSlotChange = (e: Event) => {
+    const slot = e.target as HTMLSlotElement;
+    const newTrigger = slot.assignedElements()[0] as HTMLElement;
+
+    // Detach from old trigger, attach to new
+    // ... (see full implementation in conversation context)
+  };
+
+  render() {
+    return (
+      <Host class="bds-tooltip">
+        <slot onSlotchange={this.handleSlotChange}></slot>
+        <div class="tooltip-content" popover="manual">
+          {!this.hideArrow && <div class="tooltip-arrow"></div>}
+          <slot name="content"></slot>
+        </div>
+      </Host>
+    );
+  }
+}
+```
+
+**Key differences from Colibri (Lit):**
+
+- ❌ No `@query()` decorator in Stencil — use `@Element()` + `querySelector()`
+- ❌ No `shadowRoot` — query directly from `this.el` (light DOM)
+- ✅ `assignedElements()` works the same way
+- ✅ Slot change events work the same way
+
+### Step 9 — Update `bds-popover` with same slot-based pattern
+
+Apply identical architectural changes to `bds-popover.tsx`:
+
+- Add default slot for trigger
+- Add named `content` slot for popover body
+- Use `@Element()` + `componentDidLoad()` for element queries
+- Handle slot changes for dynamic trigger updates
+- Remove dependency on `anchoredMixin` heuristics
+
+---
+
+## Consumer Migration Guide (Steps 8-9 Breaking Changes)
+
+### Before (sibling pattern):
+
+```html
+<!-- Tooltip -->
+<bds-button>Hover me</bds-button>
+<bds-tooltip>Tooltip text</bds-tooltip>
+
+<!-- Popover -->
+<bds-button>Click me</bds-button>
+<bds-popover>Popover content</bds-popover>
+```
+
+### After (nested slot pattern):
+
+```html
+<!-- Tooltip -->
+<bds-tooltip placement="top">
+  <bds-button>Hover me</bds-button>
+  <span slot="content">Tooltip text</span>
+</bds-tooltip>
+
+<!-- Popover -->
+<bds-popover placement="bottom-start">
+  <bds-button>Click me</bds-button>
+  <div slot="content">Popover content</div>
+</bds-popover>
+```
+
+### React consumers:
+
+```tsx
+// Before
+<>
+  <BdsButton>Hover me</BdsButton>
+  <BdsTooltip>Tooltip text</BdsTooltip>
+</>
+
+// After
+<BdsTooltip placement="top">
+  <BdsButton>Hover me</BdsButton>
+  <span slot="content">Tooltip text</span>
+</BdsTooltip>
+```
+
+### Vue consumers:
+
+```vue
+<!-- Before -->
+<bds-button>Hover me</bds-button>
+<bds-tooltip>Tooltip text</bds-tooltip>
+
+<!-- After -->
+<bds-tooltip placement="top">
+  <bds-button>Hover me</bds-button>
+  <span slot="content">Tooltip text</span>
+</bds-tooltip>
+```
+
+### Codemod opportunity:
+
+A regex-based codemod could automate most of this migration by:
+
+1. Finding sibling `<bds-tooltip>`/`<bds-popover>` elements
+2. Wrapping the preceding element as the first child
+3. Moving tooltip/popover content to a named `content` slot
 
 ---
 
@@ -473,29 +656,47 @@ These require a structured array and remain inherently imperative.
 
 ## Files to modify
 
-| File                                                                       | Change                                                                                                                                               |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/components/overlays/bds-tooltip/bds-tooltip.tsx`                      | Add 4 flat props; update `options`, `validateHide`, `canShowArrow`, `getPlacement`; fix aria attr                                                    |
-| `src/components/overlays/bds-tooltip/types/ITooltip.ts`                    | Add flat prop fields                                                                                                                                 |
-| `src/components/overlays/bds-popover/bds-popover.tsx`                      | Add 5 flat props; update `options`, `canShowArrow`, `getPlacement`, `attachClickOutside`, `detachClickOutside`, `handleFloatingClick`; fix aria attr |
-| `src/components/overlays/bds-popover/types/IPopover.ts`                    | Add flat prop fields                                                                                                                                 |
-| `src/services/floating/interfaces/Props.ts`                                | Deprecate scalar fields on `FloatingTooltipProp` / `FloatingPopoverProp`; remove `arrow` from public interface                                       |
-| `apps/boreal-docs/src/stories/overlays/bds-tooltip/bds-tooltip.stories.ts` | Replace object bindings with flat attrs                                                                                                              |
-| `apps/boreal-docs/src/stories/overlays/bds-popover/bds-popover.stories.ts` | Replace object bindings with flat attrs                                                                                                              |
-| `src/components/forms/bds-flag/bds-flag.tsx`                               | Add 5 `customFlag*` flat props + `flagBaseUrl`; update `getCountry()` to inject synthetic entry; update `flagUrl()` for `flagBaseUrl`                |
-| `src/components/forms/bds-flag/interfaces/IFlag.ts`                        | Add `customFlagIso2`, `customFlagIso3`, `customFlagName`, `customFlagCode`, `customFlagSrc`, `flagBaseUrl` fields                                    |
-| `src/components/forms/bds-flag/interfaces/ICountry.ts`                     | Deprecate `flag_1x1`, `capital`, `continent`; make them optional                                                                                     |
-| `apps/boreal-docs/src/stories/forms/bds-flag/bds-flag.stories.ts`          | Replace `CustomFlag` story `.customFlags=${}` binding with flat attribute bindings; add new argTypes                                                 |
+| File                                                                       | Change                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/overlays/bds-tooltip/bds-tooltip.tsx`                      | Add 4 flat props; **refactor to slot-based trigger pattern**; add `@Element()`, `componentDidLoad()`, `handleSlotChange()`; update `render()` with `<Host>` + slots; update `options`, `validateHide`, `canShowArrow`, `getPlacement`; fix aria attr                                                    |
+| `src/components/overlays/bds-tooltip/types/ITooltip.ts`                    | Add flat prop fields                                                                                                                                                                                                                                                                                    |
+| `src/components/overlays/bds-popover/bds-popover.tsx`                      | Add 5 flat props; **refactor to slot-based trigger pattern**; add `@Element()`, `componentDidLoad()`, `handleSlotChange()`; update `render()` with `<Host>` + slots; update `options`, `canShowArrow`, `getPlacement`, `attachClickOutside`, `detachClickOutside`, `handleFloatingClick`; fix aria attr |
+| `src/components/overlays/bds-popover/types/IPopover.ts`                    | Add flat prop fields                                                                                                                                                                                                                                                                                    |
+| `src/mixins/anchored.mixin.ts`                                             | **Remove heuristic trigger detection** — delete `onBeforeLoad()` DOM traversal logic; components now handle trigger resolution via slots                                                                                                                                                                |
+| `src/services/floating/interfaces/Props.ts`                                | Deprecate scalar fields on `FloatingTooltipProp` / `FloatingPopoverProp`; remove `arrow` from public interface                                                                                                                                                                                          |
+| `apps/boreal-docs/src/stories/overlays/bds-tooltip/bds-tooltip.stories.ts` | Replace object bindings with flat attrs; **update all story render functions to use nested slot pattern** (`<bds-tooltip><button>...<span slot="content">`)                                                                                                                                             |
+| `apps/boreal-docs/src/stories/overlays/bds-tooltip/bds-tooltip.mdx`        | **Update usage examples** to show nested slot pattern for vanilla JS, React, and Vue                                                                                                                                                                                                                    |
+| `apps/boreal-docs/src/stories/overlays/bds-popover/bds-popover.stories.ts` | Replace object bindings with flat attrs; **update all story render functions to use nested slot pattern**                                                                                                                                                                                               |
+| `apps/boreal-docs/src/stories/overlays/bds-popover/bds-popover.mdx`        | **Update usage examples** to show nested slot pattern for vanilla JS, React, and Vue                                                                                                                                                                                                                    |
+| `src/components/forms/bds-flag/bds-flag.tsx`                               | Add 5 `customFlag*` flat props + `flagBaseUrl`; update `getCountry()` to inject synthetic entry; update `flagUrl()` for `flagBaseUrl`                                                                                                                                                                   |
+| `src/components/forms/bds-flag/interfaces/IFlag.ts`                        | Add `customFlagIso2`, `customFlagIso3`, `customFlagName`, `customFlagCode`, `customFlagSrc`, `flagBaseUrl` fields                                                                                                                                                                                       |
+| `src/components/forms/bds-flag/interfaces/ICountry.ts`                     | Deprecate `flag_1x1`, `capital`, `continent`; make them optional                                                                                                                                                                                                                                        |
+| `apps/boreal-docs/src/stories/forms/bds-flag/bds-flag.stories.ts`          | Replace `CustomFlag` story `.customFlags=${}` binding with flat attribute bindings; add new argTypes                                                                                                                                                                                                    |
 
 ---
 
 ## Verification
+
+### Flat props (Steps 1-7)
 
 - Run `pnpm build` from workspace root — no TypeScript errors
 - Open Storybook and confirm `placement`, `offset`, `hideArrow` appear in the Controls panel as editable fields
 - Confirm auto-generated source snippet in the Source panel shows the flat attributes
 - Verify `aria-describedby` is present (kebab-case) in the rendered DOM via DevTools
 - Existing `floatingOptions` object usage still works (backward compat fallback)
+
+### Slot-based trigger pattern (Steps 8-9)
+
+- **Nested pattern works** — `<bds-tooltip><button>Click</button><span slot="content">Text</span></bds-tooltip>` renders correctly
+- **Trigger detection** — Tooltip/popover correctly identifies the first child as trigger (no span wrapper needed)
+- **Dynamic slot changes** — Replacing trigger element via JS correctly detaches old listeners and attaches to new trigger
+- **Light DOM queries** — `this.el.querySelector('slot')` finds slot element (no `shadowRoot` needed)
+- **Works with any element** — Trigger can be `<button>`, `<a>`, `<bds-button>`, `<em>`, or any HTML element
+- **Positioning accuracy** — Tooltip positions relative to actual trigger element, not wrapper or parent
+- **No console errors** — No "trigger not found" or positioning warnings in browser console
+
+### bds-flag changes
+
 - Open the Flag story `CustomFlag` and confirm `custom-flag-*` controls appear in the Controls panel
 - Verify the Source panel shows the declarative attribute syntax — no `<script>` block
 - Confirm the `customFlags` JS array prop still works and takes precedence over the flat-prop entry

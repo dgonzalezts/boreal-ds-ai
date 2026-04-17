@@ -14,6 +14,7 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                               | Description                                                                                                                    |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| [EOA-12029_grid_foundational_system.md](EOA-12029_grid_foundational_system.md) | Foundational 12-column grid system — `bds-grid` + `bds-grid-item` with 5 responsive breakpoints |
 | [generator-extension-strategy.md](generator-extension-strategy.md) | Extend the Plop generator to scaffold Stencil components in `boreal-web-components` and stories in `boreal-docs` cross-package |
 
 ---

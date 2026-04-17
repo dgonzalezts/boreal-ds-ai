@@ -31,6 +31,26 @@ Save the plan at `.ai/plans/{ticket-id}-{component_name}.md`.
 
 ## Architectural Principles
 
+### 0. Light DOM Architecture
+
+**All Boreal DS components use light DOM.** No component uses `shadow: true` or `scoped: true`.
+
+```tsx
+@Component({
+  tag: 'bds-button',
+  styleUrl: 'bds-button.scss',
+  formAssociated: true,  // only for form controls
+})
+```
+
+**Critical implications for component development:**
+
+- **SCSS is globally scoped** — use BEM class naming to prevent collisions. `:host` compiles to the tag name (e.g., `:host([disabled])` → `bds-button[disabled]`).
+- **Events:** Use bare `@Event()` with no options. The `composed` flag is irrelevant (no shadow boundary). See ADR `.ai/decisions/0003-event-options-convention.md`.
+- **DOM queries:** Use `this.el.querySelector()` directly, not `this.el.shadowRoot`.
+- **Tokens:** Global CSS custom properties apply directly—no need for `::part()` or CSS property tunneling.
+- **BEEQ patterns:** Reference implementations using shadow DOM (`.ai/lib/endava-beeq.txt`) must be adapted before use.
+
 ### 1. Component Scaffold (`packages/boreal-web-components/src/components/`)
 
 - All components are scaffolded via `pnpm generate:component` inside `boreal-web-components`.
@@ -55,7 +75,7 @@ Save the plan at `.ai/plans/{ticket-id}-{component_name}.md`.
   The same category folder name must be used in both `packages/boreal-web-components/src/components/[category]/bds-[name]/` and `apps/boreal-docs/src/stories/[category]/bds-[name]/`.
 
 - Every directory contains exactly three files: `bds-[name].tsx`, `bds-[name].scss`, and a `test/bds-[name].spec.ts`.
-- The `@Component` decorator must set `tag: "bds-[name]"` and reference the local SCSS file via `styleUrl`. All components don't use `shadow: true` since we rely on global CSS custom properties for theming and token styling.
+- The `@Component` decorator must set `tag: "bds-[name]"` and reference the local SCSS file via `styleUrl`. Omit the `shadow` property (light DOM—see §0).
 
 ### 2. Props & Public API
 

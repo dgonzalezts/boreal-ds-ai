@@ -18,11 +18,14 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ### Component API Conventions
 
-| File                                          | What it covers                                                                                                                                                                                                                                                                                                                                                                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stencil-prop-patterns.md`                    | `stencil/props-must-be-readonly` and `stencil/required-jsdoc` are enforced as errors. `disabled` must use a `@State()` mirror — `mutable: true` on `disabled` causes a Stencil compiler warning and races with the browser's FACE lifecycle. `readonly` + `mutable: true` coexist for non-FACE props only. `instanceof Element` triggers TypeScript narrowing; `nodeType` does not. JSDoc feeds `custom-elements.json`. |
-| `component-interface-file-naming.md`          | Interface files use `IComponent.ts` (e.g. `ITooltip.ts`), never `IBdsComponent.ts` — the `Bds` prefix is reserved for tag names and class names only.                                                                                                                                                                                                                                                                  |
-| `component-accessor-naming-conventions.md`    | Getter accessors must not carry a `get` prefix (`placement`, not `getPlacement`); `!x \|\| false` is always redundant — use `!x`.                                                                                                                                                                                                                                                                                       |
+| File                                       | What it covers                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stencil-prop-patterns.md`                 | `stencil/props-must-be-readonly` and `stencil/required-jsdoc` are enforced as errors. `disabled` must use a `@State()` mirror — `mutable: true` on `disabled` causes a Stencil compiler warning and races with the browser's FACE lifecycle. `readonly` + `mutable: true` coexist for non-FACE props only. `instanceof Element` triggers TypeScript narrowing; `nodeType` does not. JSDoc feeds `custom-elements.json`. |
+| `feedback_prop_validation_pattern.md`      | Prop validation requires `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` decorators. `@Watch()` alone skips initial attribute values. Pattern adapted from BEEQ reference implementation.                                                                                                                                                                                                              |
+| `component-interface-file-naming.md`       | Interface files use `IComponent.ts` (e.g. `ITooltip.ts`), never `IBdsComponent.ts` — the `Bds` prefix is reserved for tag names and class names only.                                                                                                                                                                                                                                                                   |
+| `component-accessor-naming-conventions.md` | Getter accessors must not carry a `get` prefix (`placement`, not `getPlacement`); `!x \|\| false` is always redundant — use `!x`.                                                                                                                                                                                                                                                                                       |
+| `feedback_event_naming.md`                 | All custom events must use `bds{Action}` camelCase format. Never use native event names (`click`, `change`) — causes type-contract violations, duplicate dispatch, and framework binding collisions.                                                                                                                                                                                                                    |
+| `feedback_event_options_explicit.md`       | Bare `@Event()` with no options is the accepted convention. Explicit `bubbles`, `composed`, `cancelable` not required. Aligns with BEEQ and Aqua DS reference implementations. See ADR 0003.                                                                                                                                                                                                                            |
 
 **Boolean prop naming** — `@Prop()` booleans must not carry an `is`, `has`, or `show` prefix. Use single descriptive adjectives that match native HTML attribute style (`disabled`, `closable`, `required`, `counter`). Examples: `hasClear` → `clearable`; `showClose` → `closable`; `hasHeader` → `header`.
 
@@ -47,6 +50,7 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 | File                                 | What it covers                                                                                                                                                                                                                                                                                       |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_no_shadow_dom.md`           | All components use light DOM only (`shadow: false` or omitted). No shadow boundaries exist. Global CSS applies directly. `composed` event flag is irrelevant. BEEQ shadow-mode patterns must be adapted before adoption. If shadow DOM is introduced, ADR 0003 must be revisited.                    |
 | `stencil-light-dom-host-vs-class.md` | When to use `:host` vs a root BEM class in light DOM components. Form controls require `:host` because `[disabled]` and `:focus-visible` must cascade from the host element. Layout/feedback components use a root class. `:host` compilation in light DOM and state-dependent inner style patterns. |
 
 ### Stencil — Build Output and Distribution
@@ -63,34 +67,34 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ### Turborepo — Dev Task Behavior
 
-| File | What it covers |
-| ---- | -------------- |
+| File                                       | What it covers                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `turbo-persistent-interactive-pty-hang.md` | `persistent: true` implies `interactive: true` by default — deadlocks silently in headless/CI environments and on Windows with a cold daemon. Fix: add `"interactive": false` explicitly, and bypass Turbo entirely in root `dev:components`/`dev:docs` scripts. Also covers the race condition caused by `dev` scripts that alias `build`. |
 
 ### Sass — Path Resolution
 
-| File | What it covers |
-| ---- | -------------- |
+| File                                  | What it covers                                                                                                                                                                                                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sass-paths-windows-forward-slash.md` | Sass treats backslashes as escape characters — all paths in `injectGlobalPaths` and `includePaths` must use forward slashes. Apply `.map(p => p.replace(/\\/g, '/'))` at the array level. Also covers why `require.resolve` is unreliable for locating pnpm workspace packages on Windows/Linux CI. |
 
 ### CI Debugging Techniques
 
-| File | What it covers |
-| ---- | -------------- |
+| File                                        | What it covers                                                                                                                                                                                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `github-actions-windows-debug-technique.md` | Using temporary `workflow_dispatch` workflows on `windows-latest`/`ubuntu-latest` runners to reproduce platform-specific bugs. `timeout-minutes` + `continue-on-error` pattern. Using `.git/info/exclude` to keep debug workflows off local branches. |
 
 ### DOM and Accessibility
 
-| File                                  | What it covers                                                                                                                                                                                            |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dom-setattribute-aria-kebab-case.md` | `setAttribute` requires kebab-case for ARIA attributes (`aria-describedby`, not `ariaDescribedBy`) — camelCase writes a non-standard attribute that screen readers ignore. Bug confirmed in `bds-tooltip.tsx`. |
-| `mouseleave-relatedtarget-vs-target.md` | `mouseleave` "stay on hover" logic must use `e.relatedTarget` (where the pointer is going), not `e.target` (element being left). `bds-tooltip.tsx` has this bug unfixed as of 2026-04-13.            |
+| File                                    | What it covers                                                                                                                                                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dom-setattribute-aria-kebab-case.md`   | `setAttribute` requires kebab-case for ARIA attributes (`aria-describedby`, not `ariaDescribedBy`) — camelCase writes a non-standard attribute that screen readers ignore. Bug confirmed in `bds-tooltip.tsx`. |
+| `mouseleave-relatedtarget-vs-target.md` | `mouseleave` "stay on hover" logic must use `e.relatedTarget` (where the pointer is going), not `e.target` (element being left). `bds-tooltip.tsx` has this bug unfixed as of 2026-04-13.                      |
 
 ### TypeScript
 
-| File                                               | What it covers                                                                                                                                                         |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `typescript-popover-api-declare-global-redundant.md` | `declare global { interface HTMLElement { showPopover()... } }` is dead code since TypeScript 5.2 — delete any such blocks; the project uses `^5.9.3`.             |
+| File                                                 | What it covers                                                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `typescript-popover-api-declare-global-redundant.md` | `declare global { interface HTMLElement { showPopover()... } }` is dead code since TypeScript 5.2 — delete any such blocks; the project uses `^5.9.3`. |
 
 ### Storybook + Vite
 

@@ -46,7 +46,7 @@ Design tokens (CSS custom properties)
         ↓
 Stencil component internal @State / @Prop
         ↓
-Shadow DOM render output
+Light DOM render output
         ↓
 Slotted consumer content
 ```
@@ -145,6 +145,48 @@ Use `pnpm generate:component` (in `boreal-web-components`) and `pnpm generate:st
 ---
 
 ## Coding Standards
+
+### Stencil Component Configuration
+
+**All Boreal DS components use light DOM.** No component uses `shadow: true` or `scoped: true` in its `@Component` decorator. The typical component declaration is:
+
+```tsx
+@Component({
+  tag: 'bds-button',
+  styleUrl: 'bds-button.scss',
+  formAssociated: true,  // only for form controls
+})
+```
+
+The `shadow` property is omitted (defaults to `false` in Stencil 4.x). This architectural decision has several implications:
+
+**Styling:**
+
+- Global CSS and design token stylesheets apply directly to component internals without needing `::part()` selectors or CSS custom property tunneling.
+- Component SCSS is globally scoped to the tag name. Use BEM class naming to prevent collisions.
+- `:host` selectors compile to tag-name selectors (e.g., `:host([disabled])` → `bds-button[disabled]`).
+
+**Events:**
+
+- The `composed` flag in `@Event({ bubbles, composed, cancelable })` is irrelevant — there is no shadow boundary for events to cross.
+- Bare `@Event()` (with no options) is the accepted convention. See ADR `.ai/decisions/0003-event-options-convention.md`.
+
+**DOM queries:**
+
+- Use `this.el.querySelector()` directly — not `this.el.shadowRoot.querySelector()`.
+- Parent components can query child component internals using standard CSS selectors.
+
+**Form controls:**
+
+- Form-associated components (`formAssociated: true`) work identically in light DOM and shadow DOM — `ElementInternals` is independent of encapsulation mode.
+
+**Pattern adaptation:**
+
+- Reference implementations using shadow DOM (e.g., BEEQ at `.ai/lib/endava-beeq.txt`) must be adapted before adoption. Shadow-specific patterns (`::part()`, CSS custom property tunneling, `composed: true` event options) do not apply.
+
+**Future consideration:**
+
+- If shadow DOM is ever introduced, ADR `.ai/decisions/0003-event-options-convention.md` must be revisited. Events with bare `@Event()` do not cross shadow boundaries.
 
 ### Language and Naming Conventions
 
