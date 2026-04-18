@@ -1,56 +1,91 @@
-# Stencil Light DOM — `:host` vs Root Class Selector
+# Stencil Light DOM — Direct Tag Selectors, Not `:host`
 
-## The Rule
+## The Critical Rule
 
-| Component type | Use | Reason |
-|---|---|---|
-| Form controls and interactive components | `:host` | They have browser-managed states reflected as attributes or pseudo-classes on the element itself |
-| Layout and feedback components (banner, card, modal) | Root class on inner `<div>` | No attribute-driven or pseudo-class-driven states at the element level |
+**In Boreal DS light DOM components, `:host` does NOT work.** Use the component tag name directly as the root CSS selector.
 
-## When to Use `:host`
+## Why `:host` Doesn't Work
 
-Use `:host` as the root CSS selector when any of the following apply to the component:
+From [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/:host):
 
-- `[disabled]` is reflected as a prop and used as a CSS attribute selector
-- `:hover`, `:focus-visible`, `:active`, or `:checked` must cascade from the host element outward to inner elements
-- The host element itself needs state-dependent styling driven by a reflected attribute
+> The `:host` CSS pseudo-class selects the shadow host of the **shadow DOM** containing the CSS it is used inside
+>
+> **Note: This has no effect when used outside a shadow DOM.**
 
-All Boreal DS form controls (checkbox, text field, select, radio) must use `:host`. This is non-negotiable because:
+Boreal DS components use light DOM (`@Component` decorators omit `shadow: true`). Without a shadow root, the `:host` pseudo-class matches nothing.
 
-- `[disabled]` is reflected and browser-managed via FACE semantics; you cannot write `div[disabled]` selectors — the attribute lives on the custom element host.
-- `:focus-visible` and `:hover` must cascade outward from the element. A selector like `.bds-checkbox:focus-visible .bds-checkbox__box` is impossible without `:host` because there is no wrapping class on the custom element itself.
+## Correct Pattern for Light DOM
 
-## When to Use a Root Class
-
-Use a BEM root class (e.g. `.bds-banner`) on an inner wrapping `<div>` when the component has no attribute-driven or pseudo-class-driven states at the element level. `bds-banner` is the canonical example: it has no `[disabled]`, no `:focus-visible`, no `:hover` on the host — all state comes from a `variant` prop passed as a class modifier.
-
-## Stencil Light DOM Compilation
-
-In Stencil light DOM (no shadow DOM), `:host` compiles to the custom element tag name selector:
-
-- `:host` → `bds-checkbox { ... }`
-- `:host([disabled])` → `bds-checkbox[disabled] { ... }`
-- `:host(.modifier) .inner-element` → `bds-checkbox.modifier .inner-element { ... }`
-
-This means `:host` selectors in light DOM components are fully valid and globally scoped to the custom element tag. There is no encapsulation boundary — the compiled selector targets the element directly in the document.
-
-## State-Dependent Inner Styles Pattern
-
-To apply inner element styles based on a reflected attribute, use:
+Use the component tag name directly:
 
 ```scss
-:host([disabled]) {
-  .bds-checkbox__box {
-    background-color: var(--boreal-bg-disabled, #e0e0e0);
-    cursor: not-allowed;
-  }
+// ✅ Correct for light DOM
+bds-button {
+  display: inline-flex;
+  position: relative;
 }
 
-:host(:focus-visible) {
-  .bds-checkbox__box {
-    outline: 2px solid var(--boreal-focus-ring, #0066cc);
-  }
+bds-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+bds-checkbox {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+bds-checkbox:focus-visible .bds-checkbox__box {
+  outline: 2px solid $boreal-stroke-focus;
+}
+
+bds-grid-item[col-span="full"] {
+  grid-column: 1 / -1;
 }
 ```
 
-This pattern cannot be replicated without `:host` in a light DOM component. It is the correct and only approach for form controls.
+## What About Stencil's Compilation?
+
+While Stencil technically compiles `:host` to the tag name selector in light DOM components, the browser **does not recognize `:host` as a functional pseudo-class** without a shadow boundary. The resulting CSS works, but only because Stencil transformed it—not because `:host` is valid in this context.
+
+Using direct tag selectors makes the intent clear and avoids relying on a compilation quirk.
+
+## Verified Codebase Pattern
+
+Every component in Boreal DS uses direct tag selectors:
+
+- `bds-button { ... }` ([bds-button.scss](../../packages/boreal-web-components/src/components/actions/bds-button/bds-button.scss))
+- `bds-checkbox { ... }` ([bds-checkbox.scss](../../packages/boreal-web-components/src/components/forms/bds-checkbox/bds-checkbox.scss))
+- `bds-grid { ... }` ([bds-grid.scss](../../packages/boreal-web-components/src/components/layout/bds-grid/grid/bds-grid.scss))
+- `bds-grid-item[col-span='full'] { ... }` ([bds-grid-item.scss](../../packages/boreal-web-components/src/components/layout/bds-grid/grid-item/bds-grid-item.scss))
+
+No component uses `:host` in its SCSS.
+
+## Scoping and Naming
+
+These selectors are **globally scoped**. To prevent collisions:
+
+- All components use the `bds-` tag prefix
+- Inner elements follow BEM naming: `.bds-button__content`, `.bds-checkbox__box`, `.bds-grid-item__inner`
+- Modifier classes follow BEM: `.bds-button--primary`, `.bds-checkbox--checked`
+
+## Reflection Pattern
+
+Props need `reflect: true` when:
+
+1. The prop value is referenced in a CSS **attribute selector** (e.g., `bds-grid-item[col-span='full']`)
+2. The prop must remain observable as an HTML attribute at runtime (e.g., `disabled`)
+
+**Do not reflect** props that are only used in inline styles or class modifiers—reflection adds DOM overhead.
+
+Example:
+
+```tsx
+// ✅ Reflect — used in attribute selector
+@Prop({ reflect: true }) colSpan: 'full' | number = 12;
+// CSS: bds-grid-item[col-span='full'] { ... }
+
+// ❌ Don't reflect — handled via inline style
+@Prop() offset: number = 0;
+// JS: <Host style={{ 'grid-column-start': this.offset + 1 }}>
+```

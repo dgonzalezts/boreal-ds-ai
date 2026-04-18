@@ -164,7 +164,7 @@ The `shadow` property is omitted (defaults to `false` in Stencil 4.x). This arch
 
 - Global CSS and design token stylesheets apply directly to component internals without needing `::part()` selectors or CSS custom property tunneling.
 - Component SCSS is globally scoped to the tag name. Use BEM class naming to prevent collisions.
-- `:host` selectors compile to tag-name selectors (e.g., `:host([disabled])` → `bds-button[disabled]`).
+- The `:host` pseudo-class does not work in light DOM — use direct tag name selectors instead (e.g., `bds-button[disabled] { ... }`).
 
 **Events:**
 
@@ -307,11 +307,34 @@ export class BdsButton {
 
 **Event naming convention:** All `@Event()` names must follow the pattern `bds{Action}` — for example `bdsChange`, `bdsInput`, `bdsClick`. Do not include the component noun in the event name. The single exception is `valueChange`, which must remain generic because it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
 
-**Light DOM component root selector:** Use `:host` as the root CSS selector for all form controls and interactive components (buttons, tabs). Use a BEM root class on an inner `<div>` for layout and feedback components (banner, card, modal). The deciding factor is whether the component has browser-managed states reflected as attributes or pseudo-classes on the host element itself. Form controls require `:host` because `[disabled]` is a reflected attribute and `:focus-visible` / `:hover` must cascade outward from the element — selectors like `bds-checkbox[disabled] .bds-checkbox__box` and `bds-checkbox:focus-visible .bds-checkbox__box` cannot be written without `:host` as the root. In Stencil light DOM, `:host([disabled])` compiles to `bds-checkbox[disabled] { ... }` and is globally scoped to the tag name.
+**Light DOM component styling:** Because Boreal DS uses light DOM (no `shadow: true` or `scoped: true`), the `:host` pseudo-class does not work — it requires a shadow boundary to function. Instead, use the component tag name directly as the root selector:
+
+```scss
+// ✅ Correct for light DOM
+bds-button {
+  display: inline-flex;
+  /* ... */
+}
+
+bds-button[disabled] {
+  cursor: not-allowed;
+}
+
+bds-checkbox:focus-visible .bds-checkbox__box {
+  outline: 2px solid $boreal-stroke-focus;
+}
+
+// ❌ Wrong — :host requires shadow DOM
+:host {
+  display: inline-flex;
+}
+```
+
+These selectors are globally scoped. Use BEM naming for inner elements to prevent collisions (`.bds-button__content`, `.bds-checkbox__box`).
 
 To decide whether a prop needs `reflect: true`, apply this rule: use `reflect: true` only when:
 
-1. The prop value is referenced in a CSS `:host([prop])` attribute selector in the component SCSS
+1. The prop value is referenced in a CSS attribute selector in the component SCSS (e.g., `bds-grid-item[col-span='full']`)
 2. The prop must remain observable as an HTML attribute at runtime (e.g. `disabled`)
 
 ### State Management
