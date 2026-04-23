@@ -80,6 +80,7 @@ Save the plan at `.ai/plans/{ticket-id}-{component_name}.md`.
 ### 2. Props & Public API
 
 - Every `@Prop()` must have an explicit TypeScript type, a JSDoc block, and a default value.
+- For authoritative JSDoc rules (what to write, where, and what the CEM plugin generates automatically) see `.ai/guidelines/jsdoc-template.md`.
 - Export all custom union types (`ButtonVariant`, `BadgeColor`, etc.) from the component file so framework wrappers can re-export them.
 - Boolean props use `@Prop() propName: boolean = false` — never attribute strings for booleans.
 - Prefer `@Prop() reflect: true` only for props that must be observable as HTML attributes at runtime (e.g. `disabled`).

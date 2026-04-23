@@ -2,9 +2,9 @@
 title: "Grid System — bds-grid & bds-grid-item"
 ticket: ".ai/tickets/grid-system-&-component.md"
 figma: "https://www.figma.com/design/htCJc5chrgNRK337cyc14K/-BOR--DSG-COMPONENTS-%E2%86%92-GUIDELINES?node-id=7273-43888"
-status: in progress
+status: done
 date: 2026-04-15
-updated: 2026-04-17
+updated: 2026-04-21
 ---
 
 ## Context
@@ -19,27 +19,27 @@ The Figma node (`7273:43888`) is a **MDS Guidelines / Grid** document — author
 
 ### Ticket misalignments resolved in this plan
 
-| # | Ticket says | This plan supersedes with |
-|---|---|---|
-| 1 | 3 breakpoints (mobile / tablet / desktop) | 5 breakpoints from Figma, aligned to Colibri naming: `sm/md/lg/xl/2xl` |
-| 2 | "Fixed gutters" | Responsive gutters, 16px at sm–lg, 24px at xl–2xl |
-| 3 | max-width: 960px | 960px is the column area; container = 992px at `lg` (see ADR-0010) |
-| 4 | Shadow DOM required | Light DOM — all Boreal DS components use light DOM; Shadow DOM AC removed |
-| 5 | `sidebar-reserve` prop | `--bds-grid-nav-offset` CSS custom property (see ADR-0011) |
-| 6 | Flexbox fallback | Dropped (see ADR-0012) |
-| 7 | `cols-sm`, `cols-md`, `cols-lg` | Prop names use `col-span-sm/md/lg/xl/2xl`, aligned to Colibri and industry conventions |
+| #   | Ticket says                               | This plan supersedes with                                                              |
+| --- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1   | 3 breakpoints (mobile / tablet / desktop) | 5 breakpoints from Figma, aligned to Colibri naming: `sm/md/lg/xl/2xl`                 |
+| 2   | "Fixed gutters"                           | Responsive gutters, 16px at sm–lg, 24px at xl–2xl                                      |
+| 3   | max-width: 960px                          | 960px is the column area; container = 992px at `lg` (see ADR-0010)                     |
+| 4   | Shadow DOM required                       | Light DOM — all Boreal DS components use light DOM; Shadow DOM AC removed              |
+| 5   | `sidebar-reserve` prop                    | `--bds-grid-nav-offset` CSS custom property (see ADR-0011)                             |
+| 6   | Flexbox fallback                          | Dropped (see ADR-0012)                                                                 |
+| 7   | `cols-sm`, `cols-md`, `cols-lg`           | Prop names use `col-span-sm/md/lg/xl/2xl`, aligned to Colibri and industry conventions |
 
 ---
 
 ## Breakpoints (source of truth: Figma, aligned to Colibri naming, amended by ADR-0010)
 
 | Token | Min-width | Columns | Relleno (each side) | Outer margin |
-|---|---|---|---|---|
-| `sm` | 320px | 4 | 16px *(ADR-0010)* | 0 |
-| `md` | 769px | 8 | 16px *(ADR-0010)* | 0 |
-| `lg` | 960px | 12 | 16px | 16px |
-| `xl` | 1152px | 12 | 24px | 24px |
-| `2xl` | 1344px | 12 | 24px | 32px |
+| ----- | --------- | ------- | ------------------- | ------------ |
+| `sm`  | 320px     | 4       | 16px _(ADR-0010)_   | 0            |
+| `md`  | 769px     | 8       | 16px _(ADR-0010)_   | 0            |
+| `lg`  | 960px     | 12      | 16px                | 16px         |
+| `xl`  | 1152px    | 12      | 24px                | 24px         |
+| `2xl` | 1344px    | 12      | 24px                | 32px         |
 
 ---
 
@@ -47,35 +47,36 @@ The Figma node (`7273:43888`) is a **MDS Guidelines / Grid** document — author
 
 ### `<bds-grid>`
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `layout` | `'fixed' \| 'fluid'` | `'fluid'` | Fixed caps the column area at 960px; fluid fills full width |
-| `row-gap` | token key or px value | — | Independent row gap override; defaults to the breakpoint gutter when unset |
+| Prop      | Type                  | Default   | Description                                                                |
+| --------- | --------------------- | --------- | -------------------------------------------------------------------------- |
+| `layout`  | `'fixed' \| 'fluid'`  | `'fluid'` | Fixed caps the column area at 960px; fluid fills full width                |
+| `row-gap` | token key or px value | —         | Independent row gap override; defaults to the breakpoint gutter when unset |
 
 CSS custom properties exposed on host:
+
 - `--bds-grid-nav-offset: 0px` — horizontal offset for navigation reserve (see ADR-0011)
 
 ### `<bds-grid-item>`
 
 > **Naming note**: `col-span` is used (not `cols`) to distinguish item spanning from the container's column count, and to mirror the Colibri reference convention.
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `col-span` | `1–12 \| 'full'` | `12` | Column span at all breakpoints (fallback). `'full'` maps to `grid-column: 1 / -1` |
-| `col-span-sm` | `1–4 \| 'full'` | — | Override at `sm` (320px) |
-| `col-span-md` | `1–8 \| 'full'` | — | Override at `md` (769px) |
-| `col-span-lg` | `1–12 \| 'full'` | — | Override at `lg` (960px) |
-| `col-span-xl` | `1–12 \| 'full'` | — | Override at `xl` (1152px) |
-| `col-span-2xl` | `1–12 \| 'full'` | — | Override at `2xl` (1344px) |
-| `row-span` | `1–N \| 'full'` | — | Row span (`grid-row: span N`). `'full'` maps to `grid-row: 1 / -1` |
-| `offset` | `0–11` | `0` | Column offset (shifts item right by N columns) |
+| Prop           | Type             | Default | Description                                                                       |
+| -------------- | ---------------- | ------- | --------------------------------------------------------------------------------- |
+| `col-span`     | `1–12 \| 'full'` | `12`    | Column span at all breakpoints (fallback). `'full'` maps to `grid-column: 1 / -1` |
+| `col-span-sm`  | `1–4 \| 'full'`  | —       | Override at `sm` (320px)                                                          |
+| `col-span-md`  | `1–8 \| 'full'`  | —       | Override at `md` (769px)                                                          |
+| `col-span-lg`  | `1–12 \| 'full'` | —       | Override at `lg` (960px)                                                          |
+| `col-span-xl`  | `1–12 \| 'full'` | —       | Override at `xl` (1152px)                                                         |
+| `col-span-2xl` | `1–12 \| 'full'` | —       | Override at `2xl` (1344px)                                                        |
+| `row-span`     | `1–N \| 'full'`  | —       | Row span (`grid-row: span N`). `'full'` maps to `grid-row: 1 / -1`                |
+| `offset`       | `0–11`           | `0`     | Column offset (shifts item right by N columns)                                    |
 
 ---
 
 ## Architecture notes
 
-- **Light DOM** — consistent with all other Boreal DS components; `shadow: false` (Stencil default). `:host` compiles to the tag-name selector and is injected into `<head>`. No shadow boundary, no `::part()`.
-- **Host as grid container** — `bds-grid`'s `:host` has `display: grid`. Direct `bds-grid-item` children are natural CSS Grid items; no `display: contents` wrapper needed.
+- **Light DOM** — consistent with all other Boreal DS components; `shadow: false` (Stencil default). Stencil injects component styles as a plain `<style>` tag into `<head>` — `:host` is a Shadow DOM pseudo-class and is **not** transformed to the tag name in light DOM mode. Component SCSS must use `bds-grid{}` / `bds-grid-item[]` tag-name selectors directly (confirmed by comparing compiled output of `bds-button.entry.js` vs `bds-grid.entry.js`).
+- **Host as grid container** — `bds-grid` has `display: grid`. Direct `bds-grid-item` children are natural CSS Grid items; no `display: contents` wrapper needed.
 - **CSS custom properties for responsive tokens** — `--bds-grid-columns`, `--bds-grid-gutter`, `--bds-grid-margin` are redefined per breakpoint inside `@media` blocks in the component SCSS. Props on `bds-grid-item` inject a `--_bds-col-span` internal variable used by `grid-column: span var(--_bds-col-span)`.
 - **No ARIA grid roles** — `role="grid"` / `role="gridcell"` are ARIA data-grid roles (for spreadsheet-like widgets). A CSS layout grid carries no ARIA role; semantics belong to the content inside the items.
 
@@ -83,14 +84,14 @@ CSS custom properties exposed on host:
 
 ## Implementation Progress
 
-| Step | Status | Notes |
-|---|---|---|
-| Step 1 — Design tokens | ✅ Done | `primitives.json` updated; `token-processor.ts` updated; Option C generator added |
-| Step 2 — `bds-grid` component | ✅ Done | Compound sub-folder structure; `$boreal-breakpoint-*` vars from generated file |
-| Step 3 — `bds-grid-item` component | ✅ Done | Component-specific `types/` folders; CSS custom property cascade pattern |
-| Step 4 — Manual testing | 🔲 Pending | |
-| Step 5 — Unit tests | 🔲 Pending | |
-| Step 6 — Storybook | 🔲 Pending | |
+| Step                               | Status  | Notes                                                                             |
+| ---------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| Step 1 — Design tokens             | ✅ Done | `primitives.json` updated; `token-processor.ts` updated; Option C generator added |
+| Step 2 — `bds-grid` component      | ✅ Done | Compound sub-folder structure; `$boreal-breakpoint-*` vars from generated file    |
+| Step 3 — `bds-grid-item` component | ✅ Done | Component-specific `types/` folders; CSS custom property cascade pattern          |
+| Step 4 — Manual testing            | ✅ Done | All 8 cases verified                                                              |
+| Step 5 — Unit tests                | ✅ Done | 3 spec files; 100% mutation score (90 mutants killed)                             |
+| Step 6 — Storybook                 | ✅ Done | 7 stories + full MDX page; grid overlay; nav-offset slider                        |
 
 ### Implementation decisions
 
@@ -158,6 +159,7 @@ key.includes("grid-fixed") ||
 **`packages/boreal-styleguidelines/src/generators/generate.ts`** — add `generateStencilBreakpoints(primitives)` call after `generateStencilPrimitives`.
 
 ### Step 2 — `bds-grid` component ✅
+
 - **Location**: `packages/boreal-web-components/src/components/layout/bds-grid/grid/`
 - Light DOM (no `shadow` key in `@Component`)
 - `:host` → `display: grid`, `grid-template-columns: repeat(var(--bds-grid-columns), 1fr)`, `gap: var(--bds-grid-gutter)`, `padding-inline: var(--bds-grid-margin)`, `margin-inline-start: var(--bds-grid-nav-offset, 0px)`
@@ -167,6 +169,7 @@ key.includes("grid-fixed") ||
 - Types in `grid/types/` (`enum.ts`, `IGrid.ts`, `types.ts`, `index.ts`)
 
 ### Step 3 — `bds-grid-item` component ✅
+
 - **Location**: `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/`
 - Light DOM; host element is the grid item (no wrapper div needed)
 - All `col-span-*` props use `reflect: true`; CSS attribute selectors handle `="full"` cases → `grid-column: 1 / -1`
@@ -176,7 +179,8 @@ key.includes("grid-fixed") ||
 - Zero internal padding — grid manages position only
 - Types in `grid-item/types/` (`IGridItem.ts`, `types.ts`, `index.ts`)
 
-### Step 4 — Manual testing
+### Step 4 — Manual testing ✅
+
 - **File**: `packages/boreal-web-components/src/index.html` — add `<bds-grid>` + `<bds-grid-item>` examples to the `<body>`
 - **Command**: `pnpm dev:components` from monorepo root → opens dev server at localhost
 - **Checklist**:
@@ -191,7 +195,8 @@ key.includes("grid-fixed") ||
   - Invalid prop (e.g. `col-span="15"`) logs a `[BorealDS]` warning in the console
   - No console errors; no style leakage to surrounding page
 
-### Step 5 — Unit tests
+### Step 5 — Unit tests ✅
+
 - **Location**: `packages/boreal-web-components/src/components/layout/bds-grid/__tests__/bds-grid.spec.tsx`
 - Column span math per breakpoint
 - `col-span="full"` renders `grid-column: 1 / -1`
@@ -199,40 +204,46 @@ key.includes("grid-fixed") ||
 - Offset rendering
 - Fixed vs fluid container width
 
-### Step 6 — Storybook
-- **Location**: `apps/boreal-docs/src/stories/layout/bds-grid.stories.ts` + `.mdx`
-- Default story: 12-column desktop layout
-- Responsive story: items spanning all 5 breakpoints
-- Grid overlay toggle (CSS `background-image` column visualiser, toggled via story arg)
-- Navigation reserve story: `--bds-grid-nav-offset` at 64px and 294px
-- MDX: document `col-span="full"`, minimum browser requirements (Chrome/Firefox/Safari last 2 major)
+### Step 6 — Storybook ✅
+
+- **Location**: `apps/boreal-docs/src/stories/layouts/bds-grid/bds-grid.stories.ts` + `bds-grid.mdx`
+- `Default` — fluid grid across three rows; controls for `layout`, `row-gap`, and column overlay toggle
+- `FixedLayout` — column area capped at 960 px with a dashed ruler
+- `ResponsiveBreakpoints` — items changing col-span at `sm`, `md`, `lg`
+- `FullSpan` — `col-span="full"` stretching across all columns
+- `RowSpan` — item spanning two rows with column overlay
+- `Offset` — three items at offset 0, 4, and 8
+- `NavigationReserve` — `--bds-grid-nav-offset` slider (0–294 px) with nav area visualisation
+- MDX: How to use, When to use, Accessibility, and per-component ArgTypes tables
 
 ---
 
 ## Files to create / modify
 
-| File | Status | Notes |
-|---|---|---|
-| `packages/boreal-styleguidelines/src/tokens/primitives/primitives.json` | ✅ Done | `"grid"` section added |
-| `packages/boreal-styleguidelines/src/generators/token-processor.ts` | ✅ Done | 4 `grid-*` path checks added to `addUnitIfNeeded()` |
-| `packages/boreal-styleguidelines/src/generators/scss-generator.ts` | ✅ Done | `generateStencilBreakpoints()` added; `generateStencilIndex()` updated |
-| `packages/boreal-styleguidelines/src/generators/generate.ts` | ✅ Done | `generateStencilBreakpoints` call added |
-| `packages/boreal-web-components/stencil.config.ts` | ✅ Done | Removed manual `_breakpoints.scss` entry from `injectGlobalPaths` |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/bds-grid.tsx` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/bds-grid.scss` | ✅ Done | Uses `$boreal-breakpoint-*` vars |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/types/IGrid.ts` | ✅ Done | Component-specific types folder |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/types/enum.ts` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/types/types.ts` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid/types/index.ts` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/bds-grid-item.tsx` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/bds-grid-item.scss` | ✅ Done | Uses `$boreal-breakpoint-*` vars |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/types/IGridItem.ts` | ✅ Done | Component-specific types folder |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/types/types.ts` | ✅ Done | |
-| `packages/boreal-web-components/src/components/layout/bds-grid/grid-item/types/index.ts` | ✅ Done | |
-| `packages/boreal-web-components/src/index.html` | 🔲 Pending | Step 4 |
-| `packages/boreal-web-components/src/components/layout/bds-grid/__tests__/bds-grid.spec.tsx` | 🔲 Pending | Step 5 |
-| `apps/boreal-docs/src/stories/layout/bds-grid.stories.ts` | 🔲 Pending | Step 6 |
-| `apps/boreal-docs/src/stories/layout/bds-grid.mdx` | 🔲 Pending | Step 6 |
+| File                                                                                                       | Status     | Notes                                                                  |
+| ---------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `packages/boreal-styleguidelines/src/tokens/primitives/primitives.json`                                    | ✅ Done    | `"grid"` section added                                                 |
+| `packages/boreal-styleguidelines/src/generators/token-processor.ts`                                        | ✅ Done    | 4 `grid-*` path checks added to `addUnitIfNeeded()`                    |
+| `packages/boreal-styleguidelines/src/generators/scss-generator.ts`                                         | ✅ Done    | `generateStencilBreakpoints()` added; `generateStencilIndex()` updated |
+| `packages/boreal-styleguidelines/src/generators/generate.ts`                                               | ✅ Done    | `generateStencilBreakpoints` call added                                |
+| `packages/boreal-web-components/stencil.config.ts`                                                          | ✅ Done | Removed manual `_breakpoints.scss` entry from `injectGlobalPaths`      |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/bds-grid.tsx`                          | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/bds-grid.scss`                         | ✅ Done | Uses `$boreal-breakpoint-*` vars                                       |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/types/IGrid.ts`                        | ✅ Done | Component-specific types folder                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/types/enum.ts`                         | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/types/types.ts`                        | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid/types/index.ts`                        | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid-item/bds-grid-item.tsx`                | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid-item/bds-grid-item.scss`               | ✅ Done | Uses `$boreal-breakpoint-*` vars                                       |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid-item/types/IGridItem.ts`               | ✅ Done | Component-specific types folder                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid-item/types/types.ts`                   | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/grid-item/types/index.ts`                   | ✅ Done |                                                                        |
+| `packages/boreal-web-components/src/index.html`                                                             | ✅ Done | All 8 test cases active                                                |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/__test__/bds-grid.basics.spec.tsx`          | ✅ Done | Step 5                                                                 |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/__test__/bds-grid-item.basics.spec.tsx`     | ✅ Done | Step 5                                                                 |
+| `packages/boreal-web-components/src/components/layouts/bds-grid/__test__/bds-grid-item.validation.spec.tsx` | ✅ Done | Step 5                                                                 |
+| `apps/boreal-docs/src/stories/layouts/bds-grid/bds-grid.stories.ts`                                         | ✅ Done | Step 6 — 7 stories                                                     |
+| `apps/boreal-docs/src/stories/layouts/bds-grid/bds-grid.mdx`                                                | ✅ Done | Step 6 — full MDX page                                                 |
 
 ---
 
@@ -246,11 +257,11 @@ key.includes("grid-fixed") ||
 
 ## Verification
 
-1. `pnpm --filter boreal-styleguidelines build` — generated `_primitives.scss` contains `--boreal-grid-gutter-sm: 16px` (with px) and `--boreal-grid-columns-sm: 4` (no px)
-2. `pnpm --filter boreal-web-components build` — zero TypeScript errors
-3. `pnpm --filter boreal-web-components test` — all column math and span tests pass
-4. Manual test via `src/index.html` passes all checklist items (Step 5)
-5. Open Storybook → grid overlay visible and correct at all 5 breakpoints
-6. Set `layout="fixed"` — container caps at ~992px (960 + 2×16 at `lg`)
-7. Set `--bds-grid-nav-offset: 64px` — grid shifts right without breaking alignment
-8. `col-span="full"` — item spans all columns regardless of breakpoint
+1. ✅ `pnpm --filter boreal-styleguidelines build` — generated `_primitives.scss` contains `--boreal-grid-gutter-sm: 16px` (with px) and `--boreal-grid-columns-sm: 4` (no px)
+2. ✅ `pnpm --filter boreal-web-components build` — zero TypeScript errors
+3. ✅ `pnpm --filter boreal-web-components test` — 3 spec files; 100% mutation score (90 mutants killed)
+4. ✅ Manual test via `src/index.html` — all 8 checklist items verified (Step 4)
+5. ✅ Open Storybook → 7 stories render; grid overlay toggles correctly; nav-offset slider works
+6. ✅ `layout="fixed"` — container caps at ~992px (960 + 2×16 at `lg`)
+7. ✅ `--bds-grid-nav-offset: 64px` — grid shifts right without breaking alignment
+8. ✅ `col-span="full"` — item spans all columns regardless of breakpoint

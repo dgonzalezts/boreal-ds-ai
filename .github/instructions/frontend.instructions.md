@@ -591,26 +591,22 @@ describe("bds-button", () => {
 Every spec file for a component that uses `formAssociatedMixin` or declares `@AttachInternals()` must include this boilerplate:
 
 ```typescript
-import {
-  mockElementInternals,
-  suppressElementInternalsErrors,
-} from "@/utils/__test__";
+import { attachInternals, suppressConsoleError } from "@/utils";
 
-let teardown: () => void;
+describe("bds-[name] ...", () => {
+  suppressConsoleError();
 
-beforeAll(() => {
-  mockElementInternals();
-  teardown = suppressElementInternalsErrors();
-});
+  beforeAll(() => {
+    attachInternals();
+  });
 
-afterAll(() => {
-  teardown();
+  // tests...
 });
 ```
 
-`mockElementInternals()` polyfills `HTMLElement.prototype.attachInternals` for `newSpecPage`. `suppressElementInternalsErrors()` silences `console.error` output that Stencil's mock-doc generates on every `ElementInternals` property access — optional-chain guards (`setFormValue?.()`) cannot prevent this because the getter fires on the property read itself, before the call decision.
+`attachInternals()` polyfills `HTMLElement.prototype.attachInternals` for `newSpecPage`. `suppressConsoleError()` installs a `jest.spyOn(console, 'error').mockImplementation(() => {})` in `beforeEach` and calls `jest.restoreAllMocks()` in `afterEach` — silencing the `console.error` that Stencil's mock-doc generates on every `ElementInternals` property access. Optional-chain guards (`setFormValue?.()`) cannot prevent this because the getter fires on the property read itself, before the call decision.
 
-Both utilities live in `packages/boreal-web-components/src/utils/__test__/mocks.ts`. Do not inline them in individual spec files and do not mix them into `helpers.ts`. The distinction is: `helpers.ts` holds assertion utilities and DOM query helpers; `mocks.ts` holds test doubles that replace real browser or runtime APIs.
+Both utilities are exported from `packages/boreal-web-components/src/utils/testing/mocks/`. Import via `@/utils` (barrel). Do not inline them in individual spec files.
 
 ### Test Organisation
 
@@ -624,13 +620,13 @@ Create different files for the following types of component functionality when a
 - Events.
 - Slots.
 
-The naming convention should follow the rule `{bds-component}.functionality.spec.tsx`. Example:
+The naming convention should follow the rule `{bds-component}.functionality.spec.ts`. Example:
 
-- `bds-component.a11y.spec.tsx`
-- `bds-component.basics.spec.tsx`
-- `bds-component.variants.spec.tsx`
-- `bds-component.events.spec.tsx`
-- `bds-component.slots.spec.tsx`
+- `bds-component.a11y.spec.ts`
+- `bds-component.basics.spec.ts`
+- `bds-component.variants.spec.ts`
+- `bds-component.events.spec.ts`
+- `bds-component.slots.spec.ts`
 
 - One `describe` block per spec file
 - One `it` per distinct behaviour (not per line of code)

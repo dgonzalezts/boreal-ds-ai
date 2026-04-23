@@ -1,26 +1,13 @@
 # PR Title
 
-docs(boreal-docs): EOA-10057 add bds-text-field Storybook documentation
+docs(boreal-docs): EOA-12029 add Storybook documentation for bds-grid and bds-grid-item
 
 ---
 
 # PR Body
 
-Adds the Storybook MDX documentation page and interactive stories for
-`bds-text-field`, completing the three-branch delivery of the text field
-component (implementation → unit tests → docs).
+Adds the interactive Storybook stories and MDX documentation page for `bds-grid` and `bds-grid-item`, completing the three-branch delivery of the foundational grid system (implementation → tests → docs). Intended to merge into `feature/EOA-12029_grid_foundational_system_testing_DG`.
 
-The stories file covers all major prop combinations — variants, sizes,
-validation states, helper text, char counter, clearable, readonly, and
-disabled — as well as a dedicated `FormIntegration` story that exercises
-native form participation via FACE. The MDX page documents every prop,
-event, slot, and CSS part with usage guidelines and accessibility notes.
-Two minor Storybook fixes are also included: a global variable mismatch
-in `preview.ts` and missing brand themes in the main navigation sidebar.
+The stories file covers the full prop surface — column counts, gap sizes, breakpoint overrides, and `bds-grid-item` span/offset combinations — using live interactive controls. A `contrast.ts` utility was added to `boreal-docs` to compute accessible background swatches in the story canvas; it is a Storybook-only helper and does not ship in the component package.
 
-This branch was built on top of
-`feature/EOA-10057_add_text_field_component_testing_DG`, so all
-implementation code and unit tests for the component are already included
-through the merge history.
-
-Refs EOA-10057
+Refs EOA-12029

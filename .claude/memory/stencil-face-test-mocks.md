@@ -5,43 +5,48 @@
 Browser API test doubles for Form-Associated Custom Elements (FACE) belong in:
 
 ```
-packages/boreal-web-components/src/utils/__test__/mocks.ts
+packages/boreal-web-components/src/utils/testing/mocks/
 ```
 
-This file is separate from `helpers.ts`, which holds assertion utilities and DOM query helpers. The distinction is:
+The `mocks/` folder is separate from `helpers/`, which holds assertion utilities and DOM query helpers. The distinction is:
 
-- `helpers.ts` — test utilities that assist with assertions and DOM queries (e.g. `getInner`)
-- `mocks.ts` — test doubles that replace real browser or runtime APIs
+- `helpers/` — test utilities that assist with assertions and DOM queries (e.g. `assertExists`)
+- `mocks/` — test doubles that replace real browser or runtime APIs
 
-Do not inline FACE mocks inside individual spec files. Do not add mocks to `helpers.ts`.
+All mocks are re-exported through `src/utils/testing/index.ts` → `src/utils/index.ts`. Import via `@/utils`.
 
-## Required Exports in `mocks.ts`
+Do not inline FACE mocks inside individual spec files.
 
-### `mockElementInternals()`
+## Required Exports from `mocks/elementInternals.ts`
 
-Polyfills `HTMLElement.prototype.attachInternals` so that `newSpecPage` does not throw when a FACE component calls `@AttachInternals()` at construction time.
+### `attachInternals()`
 
-### `suppressElementInternalsErrors(): () => void`
+Polyfills `HTMLElement.prototype.attachInternals` so that `newSpecPage` does not throw when a FACE component calls `@AttachInternals()` at construction time. Call inside `beforeAll`.
 
-Suppresses `console.error` output that Stencil's mock-doc generates when any property on an `ElementInternals` instance is accessed. Returns a teardown function that must be called in `afterAll` to restore the original `console.error`.
+### `suppressConsoleError()`
+
+Installs `jest.spyOn(console, 'error').mockImplementation(() => {})` in `beforeEach` and calls `jest.restoreAllMocks()` in `afterEach`. Silences the `console.error` that Stencil's mock-doc generates on every `ElementInternals` property access.
 
 **Why this suppression is necessary:** Stencil's mock-doc intercepts every property read on `ElementInternals` instances via a Proxy getter and logs `console.error` before any optional-chain (`?.`) check can prevent it. A guard like `this.internals.setFormValue?.()` does not help — the getter fires on the property access itself, before the call decision is made. Suppressing the console output is the only viable approach inside `newSpecPage`.
+
+**Note:** `suppressConsoleError()` uses `jest.spyOn` — the mock still tracks calls. `expect(console.error).toHaveBeenCalledWith(...)` assertions work alongside suppression.
 
 ## Usage Pattern for Every FACE Spec File
 
 ```typescript
-import { mockElementInternals, suppressElementInternalsErrors } from '@/utils/__test__';
+import { attachInternals, suppressConsoleError } from "@/utils";
 
-let teardown: () => void;
+describe("bds-[name] ...", () => {
+  suppressConsoleError();
 
-beforeAll(() => {
-  mockElementInternals();
-  teardown = suppressElementInternalsErrors();
-});
+  beforeAll(() => {
+    attachInternals();
+  });
 
-afterAll(() => {
-  teardown();
+  // tests...
 });
 ```
 
-Apply this block at the top of the `describe` body in every spec file for a component that uses `formAssociatedMixin` or declares `@AttachInternals()`.
+Call `suppressConsoleError()` at `describe` block level (not inside `beforeAll` or `it`). Call `attachInternals()` inside `beforeAll`.
+
+Apply this pattern in every spec file for a component that uses `formAssociatedMixin` or declares `@AttachInternals()`.

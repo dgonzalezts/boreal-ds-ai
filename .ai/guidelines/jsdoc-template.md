@@ -1,34 +1,57 @@
 # JSDoc Template for Boreal Web Components
 
-This template reflects the Boreal Stencil setup and the Custom Elements Manifest (CEM) analyzer behavior enforced by `eslint.config.ts`.
+This template reflects the Boreal Stencil setup and the Custom Elements Manifest (CEM) analyzer behavior.
+
+Reference: [Stencil — Generating Documentation in CEM format](https://stenciljs.com/docs/docs-custom-elements-manifest)
+
+---
+
+## How the CEM is Generated
+
+Stencil uses the `docs-custom-elements-manifest` output target (configured in `stencil.config.ts`). This runs the CEM analyzer with the Stencil plugin, which reads decorators directly from the TypeScript AST.
+
+| Source                         | What the plugin generates automatically                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@Prop()` decorator            | `attributes[]` entry (kebab-case name) + `members[]` entry (camelCase name), with type, default, `readonly`, and cross-reference |
+| Inline `/** */` on `@Prop()`   | `description` field in both entries                                                                                              |
+| `@Event()` decorator           | `events[]` entry                                                                                                                 |
+| Inline `/** */` on `@Event()`  | `description` field in the event entry                                                                                           |
+| `@Method()` decorator          | `members[]` method entry                                                                                                         |
+| Inline `/** */` on `@Method()` | `description` field                                                                                                              |
+| `@slot` in class JSDoc         | `slots[]` entry                                                                                                                  |
+| `@prop` comment in SCSS        | `cssProperties[]` entry                                                                                                          |
 
 ---
 
 ## Core Rules
 
-- **Every `@Prop()` must have JSDoc** directly above the decorator.
-- **Do not use `@element` or `@method`** on class JSDoc. They are ignored by the CEM analyzer.
-- **Do not use `@internal` on a component class JSDoc.** It removes the component from `custom-elements.json`.
+- **Every `@Prop()` must have inline JSDoc** (`/** */`) directly above the decorator — this is enforced by `stencil/required-jsdoc: 'error'`.
+- **Do not use `@attr`, `@property`, `@fires`, `@summary`, `@method`, or `@element`** in the class-level JSDoc block. The Stencil plugin generates all of these from decorators. These tags are redundant and produce no additional output.
+- **Do not use `@cssprop` in the TSX class JSDoc.** CSS custom properties must be documented with `@prop` comments in the SCSS file instead — that is where Stencil reads them from.
+- **Do not use `@internal` on a component class JSDoc.** It silently removes the entire component from `custom-elements.json` and from generated React/Vue wrappers.
 - **Use `@file` (not `@fileoverview`)** for module-level documentation.
-- **Document events on the `@Event()` field** with a JSDoc block, not on the class.
+- **Do not use `@part` (CSS Shadow Parts).** This project uses light DOM — there is no shadow boundary and no `part` attribute.
 
 ---
 
-## Component Class JSDoc (Recommended)
+## What Belongs in the Class JSDoc Block
 
-Use a short description and any high-level usage notes. Keep it minimal.
+The class-level JSDoc block has exactly two responsibilities:
+
+1. **Component description** — the first paragraph becomes the `description` field in the manifest. Keep it concise.
+2. **`@slot` tags** — the only tag the Stencil plugin cannot infer from the render function. Document every slot.
 
 ```ts
 /**
- * Banner component used to display important messages with status variants.
+ * Banner component for displaying important messages with status variants.
  *
- * @summary Displays a dismissible banner with a title, body, and optional actions.
- *
- * @slot title - Slot for the banner title text.
  * @slot - Default slot for the banner body content.
+ * @slot title - Slot for the banner title text.
  * @slot actions - Slot for action buttons or links.
  */
 ```
+
+Nothing else. No `@attr`, `@property`, `@cssprop`, `@fires`, `@summary`, `@method`.
 
 ---
 
@@ -96,22 +119,35 @@ Do not add `@method` tags at the class level.
 
 ---
 
-## Optional CEM Tags (Use Only When Applicable)
+## CSS Custom Properties — Document in SCSS, Not in TSX
 
-Use these tags in the **class JSDoc** when they are truly supported and needed.
+Stencil reads CSS custom property documentation from `@prop` JSDoc comments **in the SCSS file**, not from `@cssprop` tags in the component class JSDoc. The comment must appear above the variable **declaration** inside the component's tag selector block.
 
-```ts
-@slot title - Slot for the title content.
-@csspart container - Main banner container.
-@cssprop --bds-banner-background - Background color token.
-@attr {string} variant - Reflected attribute for the visual variant.
-@property {string} variant - Property for the visual variant.
+```scss
+/* ✅ Correct — Stencil reads this and generates cssProperties[] in the manifest */
+bds-dialog {
+  /**
+   * @prop --bds-dialog-width: Custom width when no preset size is active.
+   * @prop --bds-dialog-height: Custom height when no preset size is active.
+   */
+  --bds-dialog-width: auto;
+  --bds-dialog-height: auto;
+}
 ```
 
-Notes:
+```ts
+/* ❌ Wrong — @cssprop in the TSX class JSDoc produces nothing in the manifest */
+/**
+ * @cssprop --bds-dialog-width - Custom width for the dialog.
+ */
+@Component({ tag: 'bds-dialog' })
+export class BdsDialog { ... }
+```
 
-- Prefer one of `@attr` or `@attribute` (not both). Same for `@prop` / `@property`.
-- If an attribute is not reflected, document only the property.
+Additional rules:
+
+- Declare the variable with its default value in the same block as the `@prop` comment. Do not scatter defaults as fallback values in `var(--name, default)` calls elsewhere.
+- Internal implementation variables (e.g. `--_col-base`, `--_row-span`) must use the `--_` underscore prefix convention and must **not** have `@prop` documentation — they are not public API.
 
 ---
 
@@ -119,17 +155,9 @@ Notes:
 
 ```ts
 /**
- * Checkbox component for boolean selection with an optional label.
- *
- * @summary A form control with checked and indeterminate states.
+ * Checkbox component for boolean selection with three visual states.
  *
  * @slot - Label content when no `label` prop is provided.
- *
- * @attr {boolean} checked - Reflected checked state.
- * @attr {boolean} indeterminate - Reflected indeterminate state.
- * @attr {string} value - Value submitted with form data when checked.
- *
- * @property {string} label - Label displayed next to the checkbox.
  */
 @Component({
   tag: "bds-checkbox",
@@ -164,3 +192,7 @@ export class BdsCheckbox {
 - Using `@fileoverview` instead of `@file`.
 - Adding explicit `bubbles/composed/cancelable` to `@Event()` — bare `@Event()` is the convention.
 - Naming events with native DOM names (`click`, `input`, `change`).
+- Writing `@cssprop` in the TSX class JSDoc — use `@prop` in the SCSS file instead.
+- Writing `@attr` or `@property` in the class JSDoc — the Stencil plugin generates both from `@Prop()` decorators.
+- Documenting internal `--_*` CSS variables with `@prop` — they are not public API.
+- Using fallback values in `var(--custom-prop, default)` instead of declaring the variable with its default in the tag selector block.

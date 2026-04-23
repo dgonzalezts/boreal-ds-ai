@@ -61,15 +61,92 @@ export function hasSlotContent(el: HTMLElement, slotName?: string): boolean {
   if (slotName !== undefined) {
     return el.querySelector(`[slot="${slotName}"]`) !== null;
   }
-  return Array.from(el.childNodes).some(node => {
-    if (node instanceof Element) return node.slot === '';
-    if (node.nodeType === Node.TEXT_NODE) return node.textContent?.trim() !== '';
+  return Array.from(el.childNodes).some((node) => {
+    if (node instanceof Element) return node.slot === "";
+    if (node.nodeType === Node.TEXT_NODE)
+      return node.textContent?.trim() !== "";
     return false;
   });
 }
 ```
 
 Text nodes do not have an `instanceof` equivalent, so `nodeType === Node.TEXT_NODE` remains correct for those — but always prefer `instanceof` checks for element nodes.
+
+## `reflect: true` — When to Use It and When Not To
+
+### The rule
+
+Add `reflect: true` **only** when the prop value is directly referenced by a CSS **attribute selector** in the component SCSS. In every other case, do not reflect.
+
+```ts
+// ✅ Reflect — SCSS has bds-grid-item[col-span='full'] { grid-column: 1 / -1 }
+@Prop({ reflect: true }) readonly colSpan: IGridItem['colSpan'] = 12;
+
+// ✅ Reflect — SCSS has bds-badge[variant='info'] { ... }
+@Prop({ reflect: true }) readonly variant: BannerVariant = 'info';
+
+// ❌ Do NOT reflect — SCSS uses .bds-grid--fixed class, not [layout='fixed']
+@Prop() readonly layout: IGrid['layout'] = GRID_LAYOUT.FLUID;
+
+// ❌ Do NOT reflect — applied as inline style via Host style binding
+@Prop() readonly rowGap: IGrid['rowGap'];
+```
+
+### Why this matters
+
+Stencil **always** observes every `@Prop()` as a DOM attribute (converting camelCase → kebab-case). This means:
+
+- **HTML attribute → JS prop** works for free, without `reflect: true`.
+- `reflect: true` only enables the reverse: **JS prop change → DOM attribute update**.
+
+Without reflection, a programmatic change like `el.layout = 'fixed'` updates the Stencil prop and triggers a re-render, but `el.getAttribute('layout')` stays `null`. This is correct behaviour when the CSS strategy uses a class or inline style rather than an attribute selector.
+
+### The `'full'` sentinel value pattern
+
+When a prop has a `'full'` sentinel that triggers a `grid-column: 1 / -1` CSS rule, there are two valid approaches:
+
+**Current pattern (reflect + CSS attribute selector):**
+
+```scss
+bds-grid-item[col-span="full"] {
+  grid-column: 1 / -1;
+}
+```
+
+```ts
+@Prop({ reflect: true }) readonly colSpan: IGridItem['colSpan'] = 12;
+```
+
+**Alternative (pure JS — no reflection needed):**
+
+```ts
+private getHostStyles() {
+  if (this.colSpan === 'full') return { 'grid-column': '1 / -1' };
+  return { '--_col-base': String(this.colSpan) };
+}
+```
+
+Trade-offs:
+
+|                               | Reflect + CSS selector | Pure JS getter                   |
+| ----------------------------- | ---------------------- | -------------------------------- |
+| `reflect: true` required      | Yes                    | No                               |
+| DOM attribute mirrors JS prop | Yes                    | No                               |
+| `getHostStyles()` complexity  | Simpler                | More verbose (branches per prop) |
+| CSS selector strategy         | Attribute              | None                             |
+
+Both are valid. The reflect + CSS selector approach is the current convention in this codebase.
+
+### Attribute direction is always free
+
+```
+HTML attribute  →  Stencil prop   ✅ free (always)
+JS prop change  →  DOM attribute  ✅ only with reflect: true
+```
+
+`<bds-grid layout="fixed">` in HTML always works — no reflection required. The DOM fires `attributeChangedCallback` and Stencil maps it back to the prop.
+
+---
 
 ## JSDoc and `custom-elements.json`
 
@@ -82,6 +159,7 @@ The Custom Elements Manifest (CEM) analyzer honours the `@internal` JSDoc tag as
 Reference: https://custom-elements-manifest.open-wc.org/analyzer/getting-started/#supported-jsdoc
 
 Consequences:
+
 - The component is absent from the manifest, so the Stencil React/Vue output target never generates a wrapper for it.
 - No build error is thrown — the component simply disappears silently from generated wrappers and Storybook argTypes.
 

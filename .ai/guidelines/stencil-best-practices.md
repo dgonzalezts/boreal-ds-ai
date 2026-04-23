@@ -104,15 +104,15 @@ Regardless of encapsulation mode, CSS custom properties (`var(--boreal-*)`) cros
 
 Boolean `@Prop()` declarations must use single descriptive adjectives — the same style as native HTML boolean attributes (`disabled`, `required`, `controls`, `muted`, `open`). Never prefix a boolean prop with `is`, `has`, or `show`.
 
-| ❌ Avoid | ✅ Use instead | Rationale |
-|---|---|---|
-| `hasHeader` | `header` | `has` prefix — mirrors native HTML |
-| `hasFooter` | `footer` | `has` prefix |
-| `showClose` | `closable` | `show` prefix |
-| `hasClear` | `clearable` | `has` prefix |
-| `showCharCount` | `counter` | `show` prefix |
-| `isError` | `error` | `is` prefix |
-| `isDisabled` | `disabled` | `is` prefix — internal `@State()` may keep `isDisabled` |
+| ❌ Avoid        | ✅ Use instead | Rationale                                               |
+| --------------- | -------------- | ------------------------------------------------------- |
+| `hasHeader`     | `header`       | `has` prefix — mirrors native HTML                      |
+| `hasFooter`     | `footer`       | `has` prefix                                            |
+| `showClose`     | `closable`     | `show` prefix                                           |
+| `hasClear`      | `clearable`    | `has` prefix                                            |
+| `showCharCount` | `counter`      | `show` prefix                                           |
+| `isError`       | `error`        | `is` prefix                                             |
+| `isDisabled`    | `disabled`     | `is` prefix — internal `@State()` may keep `isDisabled` |
 
 This rule applies exclusively to public `@Prop()` declarations. Internal `@State()` names are not covered — `isVisible`, `isDisabled`, `isOpen` are valid for private reactive state.
 
@@ -122,15 +122,15 @@ All `@Event()` names must follow the pattern `bds{Action}` — camelCase, `bds` 
 
 ```ts
 // ✅ Correct
-bdsClose
-bdsChange
-bdsInput
-bdsClick
+bdsClose;
+bdsChange;
+bdsInput;
+bdsClick;
 
 // ❌ Wrong — component noun in the name
-bdsBannerClose
-bdsBannerChange
-bdsTextFieldInput
+bdsBannerClose;
+bdsBannerChange;
+bdsTextFieldInput;
 ```
 
 The single exception is `valueChange`, which must remain as-is — it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
@@ -159,3 +159,38 @@ Key rules:
 - `@AttachInternals()` must be declared directly on the component class body — never inside a mixin factory (see `.claude/memory/stencil-face-attach-internals.md`).
 - Native FACE prototype members are blocked by Stencil's element proxy; expose them via `@Method()` wrappers (see `.claude/memory/stencil-face-element-proxy-limits.md`).
 - Use `el.querySelector(...)` (not `el.shadowRoot.querySelector(...)`) for all inner element access.
+
+---
+
+## Guarding Reflected `@Prop` Writes Inside `@Watch` Call Chains
+
+**Problem:** When a `@Watch` handler (or a method it calls) writes back to the same reflected `@Prop` that triggered the watch, Stencil emits:
+
+```
+The state/prop "active" changed during rendering. This can potentially lead to infinite-loops and other bugs.
+```
+
+This happens because:
+
+1. The VDOM reconciler calls `setAttribute` on the host element to reflect the updated prop.
+2. mock-doc fires `attributeChangedCallback` synchronously during that DOM patch.
+3. `attributeChangedCallback` re-enters the reactive prop system while the render cycle is still running.
+4. Any write to the same prop at this point is flagged as a write-during-render.
+
+**Pattern:** Guard the assignment with an equality check so the write is skipped when the value is already correct:
+
+```ts
+// ❌ Always writes — triggers Stencil warning when called during a @Watch cycle
+private transitionBeforeClose() {
+  this.active = false;
+}
+
+// ✅ Guards the write — no-op if active is already false
+private transitionBeforeClose() {
+  if (this.active) this.active = false;
+}
+```
+
+Apply this guard anywhere a method is called from a `@Watch` handler and writes back to a reflected `@Prop`.
+
+**Test environment note:** Even with the component-level guard in place, Stencil's mock-doc re-entrancy (synchronous `attributeChangedCallback` during VDOM patching) can still produce the warning for the attribute reflection itself — not the component write. This residual noise is a test-environment artifact with no browser equivalent. Suppress it with `suppressConsoleWarn()` from `@/utils/testing/mocks/console` in the affected spec file.
