@@ -1,13 +1,20 @@
 # PR Title
 
-docs(boreal-docs): EOA-12029 add Storybook documentation for bds-grid and bds-grid-item
+refactor(styleguidelines): synchronize all theme and usage tokens with Figma standards
 
 ---
 
 # PR Body
 
-Adds the interactive Storybook stories and MDX documentation page for `bds-grid` and `bds-grid-item`, completing the three-branch delivery of the foundational grid system (implementation → tests → docs). Intended to merge into `feature/EOA-12029_grid_foundational_system_testing_DG`.
+Standardizes all brand themes (Proximus, Protect, Engage, Connect) and semantic usage tokens to align with W3C DTCG standards and the latest Figma exports, while improving the robustness of documentation token extraction.
 
-The stories file covers the full prop surface — column counts, gap sizes, breakpoint overrides, and `bds-grid-item` span/offset combinations — using live interactive controls. A `contrast.ts` utility was added to `boreal-docs` to compute accessible background swatches in the story canvas; it is a Storybook-only helper and does not ship in the component package.
+This update synchronizes the local repository with the current Figma source of truth, ensuring consistent naming, hierarchy, and key ordering across all themes. By stripping `$extensions` metadata and reordering keys to match the design source, we reduce file noise and improve maintainability for downstream generators.
 
-Refs EOA-12029
+N/A
+
+Notes for reviewers:
+- **Full Sync**: All 4 theme JSON files and the `colors-themes.json` usage file have been updated, sorted, and cleaned of `$extensions`.
+- **Infrastructure**: `tokens-helper.ts` in `boreal-docs` has been updated to support `$value` detection and integrated sanitization to ensure perfect alignment with CSS variable output.
+- **Pending**: The new Node.js synchronization scripts and the standardized Figma export documentation are not included in this push and remain pending for the next iteration.
+
+Refs [token-synchronization-and-cleanup.md](.ai/plans/token-synchronization-and-cleanup.md)

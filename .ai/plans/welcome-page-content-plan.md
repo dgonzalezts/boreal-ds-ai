@@ -1,5 +1,5 @@
 ---
-status: in progress
+status: done
 ---
 
 # Implementation Plan: Welcome Page Content for Boreal DS Storybook

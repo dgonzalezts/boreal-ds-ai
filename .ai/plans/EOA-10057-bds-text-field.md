@@ -1,7 +1,7 @@
 ---
 ticket: EOA-10057
 component: bds-text-field
-status: in progress
+status: done
 tasks_complete: 1, 2a, 2b, 2c, 3, 4, 5, 6
 ---
 
@@ -210,6 +210,7 @@ Created and wired via `injectGlobalPaths` in `stencil.config.ts` (injected after
 - `bds-icon($size, $font-size)` — styles `em[class^='bds-icon-']` / `em[class*=' bds-icon-']` children
 
 Applied to:
+
 - `bds-button.scss` — `@include bds-focus-ring(...)`, `bds-focus-ring-value(...)`, `@include bds-transition-surface`
 - `bds-text-field.scss` — container and action transitions + focus ring via shared mixins; local `@mixin bds-icon` removed
 
@@ -244,6 +245,7 @@ BEM token-based styles complete. Key decisions:
 **Total: 79 tests — all passing.**
 
 Infrastructure fixes required:
+
 - `ElementInternals` mock (`src/utils/__test__/mocks/ElementInternals.ts`): removed `if (typeof ... === 'undefined')` guard; replaced with unconditional `Object.defineProperty` — Stencil's mock-doc pre-defines `attachInternals` as a Proxy stub, short-circuiting the guard
 - ESLint config (`eslint.config.ts`): added `no-unsafe-assignment`, `no-unsafe-member-access`, `no-unsafe-call`, `no-unnecessary-type-assertion: 'off'` scoped to `*.spec.{ts,tsx}` — necessary for `page.rootInstance as any` access patterns and Jest's `any[][]` `mock.calls` types
 - Input simulation uses `new Event('input', { bubbles: true })` throughout — `InputEvent` is not defined in Stencil's Node.js test environment
@@ -270,21 +272,21 @@ MDX: component summary, props table, accessibility notes, slot documentation.
 
 ## Critical Files
 
-| File                                                                          | Action                                                  |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `src/styles/_interactions.scss`                                               | ✅ Done (shared focus ring, transitions, icon mixin)    |
-| `src/components/forms/bds-text-field/bds-text-field.tsx`                      | ✅ Done (full props/events/logic)                       |
-| `src/components/forms/bds-text-field/bds-text-field.scss`                     | ✅ Done (full token-based BEM styles)                   |
-| `src/components/forms/bds-text-field/types/ITextField.ts`                     | ✅ Done                                                 |
-| `src/components/forms/bds-text-field/types/enum.ts`                           | ✅ Done                                                 |
-| `src/components/forms/bds-text-field/types/types.ts`                          | ✅ Done                                                 |
-| `src/components/forms/bds-text-field/__test__/bds-text-field-basics.spec.tsx`     | ✅ Done (21 tests)                                  |
-| `src/components/forms/bds-text-field/__test__/bds-text-field-form.spec.tsx`       | ✅ Done (10 tests)                                  |
-| `src/components/forms/bds-text-field/__test__/bds-text-field-validation.spec.tsx` | ✅ Done (20 tests)                                  |
-| `src/components/forms/bds-text-field/__test__/bds-text-field-events.spec.tsx`     | ✅ Done (16 tests)                                  |
-| `src/components/forms/bds-text-field/__test__/bds-text-field-a11y.spec.tsx`       | ✅ Done (12 tests)                                  |
-| `src/stories/forms/bds-text-field/bds-text-field.stories.ts`                  | Create                                                  |
-| `src/stories/forms/bds-text-field/bds-text-field.mdx`                         | Create                                                  |
+| File                                                                              | Action                                               |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/styles/_interactions.scss`                                                   | ✅ Done (shared focus ring, transitions, icon mixin) |
+| `src/components/forms/bds-text-field/bds-text-field.tsx`                          | ✅ Done (full props/events/logic)                    |
+| `src/components/forms/bds-text-field/bds-text-field.scss`                         | ✅ Done (full token-based BEM styles)                |
+| `src/components/forms/bds-text-field/types/ITextField.ts`                         | ✅ Done                                              |
+| `src/components/forms/bds-text-field/types/enum.ts`                               | ✅ Done                                              |
+| `src/components/forms/bds-text-field/types/types.ts`                              | ✅ Done                                              |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-basics.spec.tsx`     | ✅ Done (21 tests)                                   |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-form.spec.tsx`       | ✅ Done (10 tests)                                   |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-validation.spec.tsx` | ✅ Done (20 tests)                                   |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-events.spec.tsx`     | ✅ Done (16 tests)                                   |
+| `src/components/forms/bds-text-field/__test__/bds-text-field-a11y.spec.tsx`       | ✅ Done (12 tests)                                   |
+| `src/stories/forms/bds-text-field/bds-text-field.stories.ts`                      | Create                                               |
+| `src/stories/forms/bds-text-field/bds-text-field.mdx`                             | Create                                               |
 
 ## Utilities to Reuse
 
