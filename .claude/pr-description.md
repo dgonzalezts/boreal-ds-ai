@@ -1,20 +1,17 @@
 # PR Title
 
-refactor(styleguidelines): synchronize all theme and usage tokens with Figma standards
+feat(web-components): EOA-12334 add bds-radio leaf component
 
 ---
 
 # PR Body
 
-Standardizes all brand themes (Proximus, Protect, Engage, Connect) and semantic usage tokens to align with W3C DTCG standards and the latest Figma exports, while improving the robustness of documentation token extraction.
+Adds `bds-radio`, the private building-block element that `bds-radio-group` will compose. Also defines the `IRadio` and `IRadioGroup` TypeScript interfaces.
 
-This update synchronizes the local repository with the current Figma source of truth, ensuring consistent naming, hierarchy, and key ordering across all themes. By stripping `$extensions` metadata and reordering keys to match the design source, we reduce file noise and improve maintainability for downstream generators.
+`bds-radio` is intentionally not form-associated and carries no Storybook entry — it fires `bdsMount` (bubbling) on load so the parent group can register it without imperative DOM queries, and `bdsChange` (bubbling) on selection so the group can enforce single selection. For a single binary choice, consumers should use `bds-checkbox` instead.
 
-N/A
+The hidden native `<input type="radio" aria-hidden>` exists solely so FormData picks up the name/value pair when the element is used inside a plain `<form>` outside a group. ARIA `role="radio"` and `aria-checked` are stamped in `componentDidLoad`; Space key selection is wired alongside click handling.
 
-Notes for reviewers:
-- **Full Sync**: All 4 theme JSON files and the `colors-themes.json` usage file have been updated, sorted, and cleaned of `$extensions`.
-- **Infrastructure**: `tokens-helper.ts` in `boreal-docs` has been updated to support `$value` detection and integrated sanitization to ensure perfect alignment with CSS variable output.
-- **Pending**: The new Node.js synchronization scripts and the standardized Figma export documentation are not included in this push and remain pending for the next iteration.
+`bds-radio-group` (the public FACE orchestrator, keyboard navigation, Vue v-model registration, and Storybook docs) lands in a follow-up PR. `IRadioGroup.ts` is committed here so the interface is in place when the group is implemented.
 
-Refs [token-synchronization-and-cleanup.md](.ai/plans/token-synchronization-and-cleanup.md)
+Refs EOA-12334

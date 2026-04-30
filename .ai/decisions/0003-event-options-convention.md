@@ -18,10 +18,10 @@ When the decorator is used without options (`@Event()`), the Stencil runtime set
 ```typescript
 // src/runtime/event-emitter.ts (stenciljs/core)
 const event = new CustomEvent(name, {
-  bubbles:    !!(flags & EVENT_FLAGS.Bubbles),    // false if not set
-  composed:   !!(flags & EVENT_FLAGS.Composed),   // false if not set
+  bubbles: !!(flags & EVENT_FLAGS.Bubbles), // false if not set
+  composed: !!(flags & EVENT_FLAGS.Composed), // false if not set
   cancelable: !!(flags & EVENT_FLAGS.Cancellable), // false if not set
-  detail
+  detail,
 });
 ```
 
@@ -33,11 +33,11 @@ The Boreal DS checklist previously required explicit declaration of all three fl
 
 **Two reference design systems were examined:**
 
-| Project | Shadow DOM | `@Event()` with options | `@Event()` bare | Stencil |
-|---|---|---|---|---|
-| **BEEQ** (Endava) | `shadow: true` | 0 | 88 | Yes |
-| **Aqua DS** | `shadow: false` | 0 | 80 | Yes |
-| **Boreal DS** | `shadow: false` | 0 | — | Yes |
+| Project           | Shadow DOM      | `@Event()` with options | `@Event()` bare | Stencil |
+| ----------------- | --------------- | ----------------------- | --------------- | ------- |
+| **BEEQ** (Endava) | `shadow: true`  | 0                       | 88              | Yes     |
+| **Aqua DS**       | `shadow: false` | 0                       | 80              | Yes     |
+| **Boreal DS**     | `shadow: false` | 0                       | —               | Yes     |
 
 Both projects use bare `@Event()` consistently across every component, with no exceptions. Neither documents this as an explicit rule — it is an implicit convention arising from their event consumption model.
 
@@ -66,6 +66,7 @@ Direct attachment does not require `bubbles: true`. Bubbling is only needed for 
 Explicit `bubbles`, `composed`, and `cancelable` options are not required. This aligns with both BEEQ and Aqua DS, which are the primary reference implementations for this design system.
 
 The `event-implicit-options` rule has been removed from:
+
 - `code_quality_checker.py` — rule no longer fires
 - `review_report_generator.py` — removed from checklist section A and rule-to-checklist mapping
 - `code_review_checklist.md` — "Event options explicit" item removed
@@ -77,13 +78,31 @@ The `event-implicit-options` rule has been removed from:
 ## Consequences
 
 **Positive:**
+
 - Boreal DS components are consistent with BEEQ and Aqua DS conventions
 - Less boilerplate on every `@Event()` declaration
 - No false positives in automated review reports
 
 **Constraint introduced:**
+
 - Consumers **must** attach listeners directly to the component element, not to ancestor containers. This is an implicit API contract that is not enforced by types or tooling.
-- If Boreal DS ever introduces a usage pattern that requires event delegation, explicit `bubbles: true` will be needed on affected events and this ADR should be revisited.
+
+**Exception — internal parent-child coordination events:**
+
+When a child component emits an event that a parent component catches via `@Listen()`, the event **must** have `bubbles: true`. `@Listen()` is event delegation — it registers a listener on the parent host element and waits for events to bubble up from descendants. Without `bubbles: true`, the event is contained on the emitting child and never reaches the parent's listener.
+
+This pattern is used in composite components:
+
+```typescript
+// Child (bds-radio): internal coordination event — bubbles required
+@Event({ bubbles: true }) bdsMount!: EventEmitter<RadioMountDetail>;
+
+// Parent (bds-radio-group): catches the bubbling event via delegation
+@Listen('bdsMount')
+handleRadioMount(event: CustomEvent<RadioMountDetail>) { ... }
+```
+
+Rule: `bubbles: true` is required on any `@Event()` that a sibling component catches with `@Listen()`. All other events remain bare `@Event()`.
 
 ---
 

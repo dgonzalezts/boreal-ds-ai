@@ -98,7 +98,8 @@ bdsClose!: EventEmitter<void>;
 Rules:
 
 - Use the `bds{Action}` prefixed camelCase naming convention.
-- Use bare `@Event()` — no explicit options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
+- Use bare `@Event()` for consumer-facing events — no explicit options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
+- **Exception:** events caught by a parent component via `@Listen()` must use `@Event({ bubbles: true })`. `@Listen()` relies on bubbling — without it the event never reaches the parent's listener.
 - Do not reuse native DOM event names (`click`, `change`, `input`, etc.).
 
 ---

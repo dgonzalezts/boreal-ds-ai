@@ -48,6 +48,26 @@ If `mutable: true` is genuinely needed on a non-FACE prop (a prop only the compo
 
 In `custom-elements.json`, `mutable: true` causes Stencil to omit `"readonly": true` from the manifest entry. This is correct and intentional — it signals to consumers that the prop may change at runtime.
 
+## Never Use Indexed Access Types on `@Prop()` Declarations
+
+Do **not** write `@Prop() readonly foo: IFoo['foo'] = ''`. TypeScript's indexed access types (e.g. `IFoo['propName']`) appear to work at editor time but produce an `error`-typed result in the Stencil compiler context. This causes `@typescript-eslint/no-unsafe-assignment` errors on every read of that prop (event emitter calls, JSX attributes, class map values, etc.).
+
+The root cause: the Stencil decorator transform evaluates prop types before the full type-checker is available. When the source interface transitively references `@stencil/core/internal` types (e.g. `EventEmitter`), the indexed access degrades to `error`. Even after removing those transitively problematic members, the cached analysis may not update reliably.
+
+**Rule**: always use concrete primitives directly on `@Prop()` declarations:
+
+```typescript
+// ✅ Correct
+@Prop() readonly value: string = '';
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+
+// ❌ Wrong — degrades to error type in Stencil decorator context
+@Prop() readonly value: IFoo['value'] = '';
+@Prop({ reflect: true }) readonly disabled: IFoo['disabled'] = false;
+```
+
+The `implements IFoo` clause on the class still enforces the structural contract — that is the correct role for the interface. The interface is the contract; the prop declaration is the implementation.
+
 ## `instanceof Element` Over `nodeType` Checks
 
 `node.nodeType === Node.ELEMENT_NODE` does NOT trigger TypeScript's control-flow narrowing. After the check the variable's type remains `ChildNode`, requiring an explicit cast `(node as Element)` to access element properties.

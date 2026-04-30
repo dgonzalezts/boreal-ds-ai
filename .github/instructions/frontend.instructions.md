@@ -485,6 +485,15 @@ In SCSS, always use CSS custom property references with a hard-coded fallback fo
 
 Apply the `data-theme` attribute on `<html>` or `<body>` to switch brands. The component SCSS requires no theme-specific overrides — the token sheet handles all brand differences automatically.
 
+### Global SCSS Utilities
+
+Two partials are injected into every component stylesheet via `injectGlobalPaths` in `stencil.config.ts` — **no `@use` or `@import` is needed**:
+
+- `src/styles/_commons.scss` — exports `%flex-center` (`display: flex; align-items: center`). Use `@extend %flex-center` instead of repeating those two declarations.
+- `src/styles/_interactions.scss` — exports `@include bds-transition-surface`, `@include bds-focus-ring(...)`, `@include bds-hover-shadow(...)`, `@include bds-active-shadow-inset(...)`, and related mixins/functions for consistent interaction feedback.
+
+Always prefer these over raw `display: flex`, `box-shadow`, or `transition` declarations. See `.ai/guidelines/stencil-best-practices.md` — _Global SCSS Utilities_ section for the full reference table and examples.
+
 ### Form Handling
 
 Form-associated components (inputs, checkboxes, selects) must:

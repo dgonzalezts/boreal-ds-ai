@@ -98,6 +98,86 @@ Regardless of encapsulation mode, CSS custom properties (`var(--boreal-*)`) cros
 
 ---
 
+## Global SCSS Utilities (`_commons.scss` and `_interactions.scss`)
+
+Two SCSS partial files in `packages/boreal-web-components/src/styles/` are injected globally into every component stylesheet via `injectGlobalPaths` in `stencil.config.ts`. No `@use` or `@import` is needed in component SCSS files — their contents are available everywhere.
+
+### `_commons.scss` — layout placeholders
+
+Defines `%flex-center` (`display: flex; align-items: center`). Use `@extend %flex-center` instead of repeating the two declarations inline.
+
+```scss
+// ✅ Correct
+.bds-radio__content {
+  @extend %flex-center;
+  gap: $boreal-spacing-3xs;
+}
+
+// ❌ Avoid
+.bds-radio__content {
+  display: flex;
+  align-items: center;
+  gap: $boreal-spacing-3xs;
+}
+```
+
+### `_interactions.scss` — interaction mixins and functions
+
+Provides consistent interaction feedback across all components. Always prefer these over raw `box-shadow` or `transition` declarations:
+
+| Symbol                                            | Type     | Use for                                                         |
+| ------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| `bds-focus-ring($outer, $inner)`                  | mixin    | Keyboard focus ring (`box-shadow`)                              |
+| `bds-focus-ring-value($outer, $inner)`            | function | Focus ring value when composing with other shadows              |
+| `bds-hover-shadow($color)`                        | mixin    | Elevation shadow on hover                                       |
+| `bds-shadow-inset($color)`                        | function | Inset shadow value for active/pressed states                    |
+| `bds-active-shadow-inset($outer, $inner, $inset)` | mixin    | Combined focus ring + inset shadow for active/pressed           |
+| `bds-transition-surface`                          | mixin    | Transition for `background-color`, `border-color`, `box-shadow` |
+| `bds-transition-visibility`                       | mixin    | Transition for `opacity`                                        |
+| `bds-transition-action`                           | mixin    | Transition for `color` and `opacity`                            |
+| `bds-icon($size, $font-size)`                     | mixin    | Consistent sizing for `<em>` icon elements                      |
+
+```scss
+// ✅ Correct — use the shared mixins
+.bds-radio__button {
+  @include bds-transition-surface;
+}
+
+bds-radio:focus-visible .bds-radio__button {
+  @include bds-focus-ring($boreal-stroke-focus, $boreal-ui-inverse);
+}
+
+bds-radio:hover:not(.--disabled) .bds-radio__button {
+  @include bds-hover-shadow(rgba(19, 19, 22, 0.15));
+}
+
+// ❌ Avoid — raw declarations that duplicate shared logic
+.bds-radio__button {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+```
+
+### Hover block consolidation
+
+When hover applies to multiple child elements, nest them under a single `&:hover` parent rather than repeating the full selector chain:
+
+```scss
+// ✅ Correct — one selector block, multiple children
+&:hover:not(.--disabled):not(.--checked) {
+  .bds-radio__button { @include bds-hover-shadow(rgba(19, 19, 22, 0.15)); }
+  .bds-radio__dot    { background-color: $boreal-ui-base-light; }
+}
+
+// ❌ Avoid — repeated selector
+&:hover:not(.--disabled):not(.--checked) .bds-radio__button { ... }
+&:hover:not(.--disabled):not(.--checked) .bds-radio__dot    { ... }
+```
+
+---
+
 ## Prop and Event Naming Conventions
 
 ### Boolean prop naming

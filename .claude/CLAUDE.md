@@ -14,6 +14,8 @@ Key topic files currently available:
 - `.claude/memory/stencil-face-element-proxy-limits.md` — Stencil's element proxy blocks native FACE prototype members; use `@Method()` wrappers
 - `.claude/memory/stencil-face-constraint-validation-pattern.md` — how to avoid doubled validation events; `IFormValidator` / `customValidators` pattern
 - `.claude/memory/stencil-async-rendering-gotchas.md` — async DOM reflection, `formDisabledCallback` trigger conditions, naming collision gotcha
+- `.claude/memory/component-bds-typography-group-labels.md` — group components use `<bds-typography>` for `label` (variant=label, required+tooltipText) and `helperText` (variant=helper, state prop); leaf labels stay as plain spans
+- `.claude/memory/stencil-form-control-interfaces.md` — every form component with a `value` prop must register in `componentModels` in `vue-output-target.ts` for Vue v-model support; must land in the same PR as the component
 
 ---
 
