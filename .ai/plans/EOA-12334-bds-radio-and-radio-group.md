@@ -1,5 +1,5 @@
 ---
-status: in progress
+status: done
 ---
 
 # bds-radio + bds-radio-group Implementation Plan
@@ -166,7 +166,7 @@ export class BdsRadio implements IRadio {
 
 ---
 
-## Task 3: bds-radio lifecycle + interaction _(tracker #11 — in progress)_
+## Task 3: bds-radio lifecycle + interaction _(tracker #11 — completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio/bds-radio.tsx`
 
@@ -212,7 +212,7 @@ private handleKeyDown = (event: KeyboardEvent) => {
 
 ---
 
-## Task 4: bds-radio render() _(tracker #12)_
+## Task 4: bds-radio render() _(tracker #12 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio/bds-radio.tsx`
 
@@ -264,7 +264,7 @@ render() {
 
 ---
 
-## Task 4b: bds-radio JSDoc audit
+## Task 4b: bds-radio JSDoc audit _(completed)_
 
 **File:** `bds-radio/bds-radio.tsx`
 
@@ -280,7 +280,7 @@ Verify `bds-radio.tsx` satisfies all rules in `.ai/guidelines/jsdoc-template.md`
 
 ---
 
-## Task 5: bds-radio tests _(tracker #3)_
+## Task 5: bds-radio tests _(tracker #3 - completed)_
 
 **Files:** `__test__/bds-radio.basics.spec.ts`, `bds-radio.a11y.spec.ts`, `bds-radio.events.spec.ts`
 
@@ -453,7 +453,7 @@ describe("bds-radio events", () => {
 
 ---
 
-## Task 6: bds-radio SCSS _(tracker #4)_
+## Task 6: bds-radio SCSS _(tracker #4 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio/bds-radio.scss`
 
@@ -574,7 +574,7 @@ bds-radio {
 
 ---
 
-## Task 7: bds-radio-group scaffold _(tracker #13)_
+## Task 7: bds-radio-group scaffold _(tracker #13 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.tsx`
 
@@ -660,9 +660,16 @@ export class BdsRadioGroup extends Mixin(formAssociatedMixin) implements IRadioG
 }
 ```
 
+**Manual test (waiveable):**
+
+- Run `pnpm dev:components` and open the playground in the browser
+- Verify no console errors on page load (no "undefined element" warnings)
+- Inspect the DOM — `<bds-radio-group>` is registered and rendered; `<bds-radio>` children are accepted in the default slot
+- The component tag and its children are visible in DevTools Elements panel
+
 ---
 
-## Task 8: bds-radio-group child listeners _(tracker #14)_
+## Task 8: bds-radio-group child listeners _(tracker #14 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.tsx`
 
@@ -704,9 +711,17 @@ handleRadioChange(event: CustomEvent<{ checked: boolean; value: string }>) {
 }
 ```
 
+**Manual test (waiveable):**
+
+- Open the playground (section 1 — "Default (unchecked)")
+- In DevTools console: `document.querySelector('bds-radio-group').addEventListener('bdsChange', e => console.log('bdsChange', e.detail))`
+- Click **Option A** → dot appears on Option A; console logs `{ value: 'a' }`
+- Click **Option B** → dot moves to Option B; Option A dot disappears; console logs `{ value: 'b' }`
+- Inspect DOM: each `bds-radio` has `name=""` attribute (or whatever `name` prop is set to)
+
 ---
 
-## Task 9: bds-radio-group keyboard navigation _(tracker #15)_
+## Task 9: bds-radio-group keyboard navigation _(tracker #15 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.tsx`
 
@@ -765,9 +780,18 @@ private updateTabIndexes(active: LeafElement | null) {
 }
 ```
 
+**Manual test (waiveable):**
+
+- Open the playground and Tab into the group (after Task 11 adds `componentDidLoad`) — or click any radio to give focus
+- Press **ArrowDown** → next radio gets selected dot and focus; page does not scroll
+- Press **ArrowUp** → previous radio selected
+- Press **ArrowRight** from the last radio → wraps to the first radio
+- Press **ArrowLeft** from the first radio → wraps to the last radio
+- Add `disabled` to Option B (`<bds-radio disabled ...>`), navigate with arrows → Option B is skipped
+
 ---
 
-## Task 10: bds-radio-group @Watch + form lifecycle _(tracker #16)_
+## Task 10: bds-radio-group @Watch + form lifecycle _(tracker #16 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.tsx`
 
@@ -844,9 +868,23 @@ private updateFormValidity() {
 }
 ```
 
+**Manual test (waiveable):**
+
+- Open the playground at section **"Fieldset disabled"** — all three radios must appear visually disabled; clicking them must have no effect
+- Open section **"Required validation + form reset"**:
+  - Click **Submit** without selecting → browser shows native "Please select an option" tooltip
+  - Select **Option B** → click **Submit** → `<pre>` shows `{ "group-required": "b" }`
+  - Click **Reset** → all radios deselect; submitting again shows the required tooltip
+- Open section **"Programmatic value / error / disabled"**:
+  - Click **Set value = b** → Option B becomes checked without a click event
+  - Click **Set error = true** → all radios show error styling (red border)
+  - Click **Clear error** → error styling removed
+  - Click **Disable** → all radios appear disabled; click has no effect
+  - Click **Enable** → radios are interactive again
+
 ---
 
-## Task 11: bds-radio-group componentDidLoad + render() _(tracker #17)_
+## Task 11: bds-radio-group componentDidLoad + render() _(tracker #17 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.tsx`
 
@@ -932,7 +970,7 @@ render() {
 
 ---
 
-## Task 11b: bds-radio-group JSDoc audit
+## Task 11b: bds-radio-group JSDoc audit _(completed)_
 
 **File:** `bds-radio-group/bds-radio-group.tsx`
 
@@ -946,9 +984,18 @@ Verify `bds-radio-group.tsx` satisfies all rules in `.ai/guidelines/jsdoc-templa
 - [ ] CSS custom properties (if any) are documented with `@prop` in `bds-radio-group.scss`, not `@cssprop` in the TSX.
 - [ ] `override formDisabledCallback` has a JSDoc block describing what it propagates to children.
 
+**Manual test (waiveable):**
+
+- Open `bds-radio-group.tsx` and verify:
+  - Class-level `/** */` block describes the component and lists `@slot` for the default slot
+  - Every `@Prop()` has an inline `/** */` block immediately above it (no bare props)
+  - `bdsChange` and `valueChange` `@Event()` each have an inline `/** */` block
+  - No `@attr`, `@property`, `@fires`, `@element`, `@cssprop`, `@internal`, or `@part` tags exist anywhere in the class-level JSDoc
+  - `override formDisabledCallback` has a JSDoc describing that it propagates `disabled` to all child `bds-radio` elements
+
 ---
 
-## Task 12: bds-radio-group tests _(tracker #6)_
+## Task 12: bds-radio-group tests _(tracker #6 - completed)_
 
 **Files:** `__test__/bds-radio-group.basics.spec.ts`, `bds-radio-group.a11y.spec.ts`, `bds-radio-group.events.spec.ts`, `bds-radio-group.keyboard.spec.ts`
 
@@ -1262,7 +1309,7 @@ describe("bds-radio-group keyboard navigation", () => {
 
 ---
 
-## Task 13: bds-radio-group SCSS _(tracker #7)_
+## Task 13: bds-radio-group SCSS _(tracker #7 - completed)_
 
 **File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-group/bds-radio-group.scss`
 
@@ -1290,40 +1337,57 @@ bds-radio-group {
 
 ---
 
-## Task 14: Vue v-model registration _(tracker #18)_
+## Task 14: Vue v-model registration _(tracker #18 — completed)_
 
-**File to modify:** `packages/boreal-web-components/targets/vue-output-target.ts`
+**File modified:** `packages/boreal-web-components/targets/vue-output-target.ts`
 
-Add one entry to the `componentModels` array so `@stencil/vue-output-target` generates a v-model-enabled proxy for `bds-radio-group`:
+Added `bds-radio-group` to the existing `componentModels` entry alongside `bds-text-field`, since both share the same `event` and `targetAttr`:
 
 ```typescript
 {
-  elements: ['bds-radio-group'],
+  elements: ['bds-text-field', 'bds-radio-group'],
   event: 'valueChange',
   targetAttr: 'value',
 },
 ```
 
-This follows the identical pattern used by `bds-text-field`. The `valueChange` event is already emitted in `handleRadioChange` and `navigateTo` in the group TSX — no component changes are needed, only the config entry.
+This follows the identical pattern used by `bds-text-field`. The `valueChange` event is already emitted in `handleRadioChange` and `navigateTo` in the group TSX — no component changes were needed, only the config entry.
 
-Per `.claude/memory/stencil-form-control-interfaces.md`: this must land in the same PR as the finished component.
+The generated proxy in `packages/boreal-vue/lib/components.ts` now calls `defineContainer` with `'value'` and `'valueChange'` as the last two arguments, which is what enables v-model on the wrapper component.
 
-**Manual test (waiveable):**
+Per `.claude/memory/stencil-form-control-interfaces.md`: this landed in the same PR as the finished component.
 
-After rebuilding `boreal-vue`, verify in a Vue template:
+**Manual test — verified ✓**
+
+Test template used in `examples/vue-testapp/src/App.vue`:
 
 ```vue
-<BdsRadioGroup v-model="selected" name="test">
-  <BdsRadio value="a" label="A" />
-  <BdsRadio value="b" label="B" />
-</BdsRadioGroup>
+<script setup lang="ts">
+import { ref } from "vue";
+import { BdsRadioGroup, BdsRadio } from "@telesign/boreal-vue";
+
+const selected = ref("");
+</script>
+
+<template>
+  <p>Selected: {{ selected }}</p>
+  <BdsRadioGroup v-model="selected" name="test">
+    <BdsRadio value="a" label="A" />
+    <BdsRadio value="b" label="B" />
+  </BdsRadioGroup>
+</template>
 ```
 
-Selecting a radio should update `selected` without an explicit `@valueChange` listener.
+Key concepts required to make the test work correctly:
+
+- **`ref()`** — Vue's primitive for reactive scalar state in `<script setup>`. Wraps a plain value in a reactive container; the template auto-unwraps it (no `.value` needed inside `{{ }}`). Without `ref`, `selected` would be a plain string, Vue would not track changes to it, and the paragraph would never update.
+- **Named imports from `@telesign/boreal-vue`** — Stencil-generated Vue proxies must be imported explicitly. Without the import, Vue cannot resolve `BdsRadioGroup` as a component and logs "Failed to resolve component: BdsRadioGroup". The `compilerOptions.isCustomElement` escape hatch is only appropriate for raw custom elements used without a framework proxy.
+- **`v-model` on a custom element proxy** — Vue's `v-model` on a non-native element is syntactic sugar for `:value="selected" @valueChange="selected = $event.detail"`. The `componentModels` config in `vue-output-target.ts` tells the code generator which prop (`targetAttr: 'value'`) and which event (`event: 'valueChange'`) to wire together. The proxy reads `$event.detail` (the raw Stencil `CustomEvent` payload) rather than `$event.target.value`.
+- **`modelvalue` attribute on the DOM element** — Selecting a radio sets a visible `modelvalue="b"` attribute on `<bds-radio-group>` in DevTools. This is Vue serializing the bound model value back onto the custom element as a DOM attribute and is harmless; the component reads the `value` `@Prop`, not this attribute.
 
 ---
 
-## Task 15: Storybook stories _(tracker #8)_
+## Task 15: Storybook stories _(tracker #8 - completed)_
 
 **File:**
 
@@ -1342,7 +1406,7 @@ Follow the existing Lit HTML story convention in this repo (see other forms stor
 
 ---
 
-## Task 16: MDX documentation _(tracker #9)_
+## Task 16: MDX documentation _(tracker #9 - completed)_
 
 **File:**
 

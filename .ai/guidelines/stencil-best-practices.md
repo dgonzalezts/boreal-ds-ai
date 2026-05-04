@@ -274,3 +274,68 @@ private transitionBeforeClose() {
 Apply this guard anywhere a method is called from a `@Watch` handler and writes back to a reflected `@Prop`.
 
 **Test environment note:** Even with the component-level guard in place, Stencil's mock-doc re-entrancy (synchronous `attributeChangedCallback` during VDOM patching) can still produce the warning for the attribute reflection itself — not the component write. This residual noise is a test-environment artifact with no browser equivalent. Suppress it with `suppressConsoleWarn()` from `@/utils/testing/mocks/console` in the affected spec file.
+
+---
+
+## Event Listener Placement: vDOM vs `@Listen` vs `addEventListener`
+
+### Decision rule
+
+Use **vDOM inline listeners** on `<Host />` or any rendered element for all events that reach the host via DOM bubbling. Use `@Listen` only when you need one of its exclusive options — otherwise you lose TypeScript type safety and trigger the `prefer-vdom-listener` ESLint rule.
+
+| Dimension                              | vDOM inline (`onKeyDown={...}`) | `@Listen`                        | imperative `addEventListener` |
+| -------------------------------------- | ------------------------------- | -------------------------------- | ----------------------------- |
+| TypeScript type-safe                   | ✅ handler signature enforced   | ❌ event name is a plain string  | ✅                            |
+| ESLint `prefer-vdom-listener`          | ✅ compliant                    | ⚠️ triggers rule without options | ✅ compliant                  |
+| Target: `window` / `document` / `body` | ❌                              | ✅ via `{ target: '...' }`       | ✅                            |
+| Capture phase                          | ❌                              | ✅ via `{ capture: true }`       | ✅                            |
+| Passive listener                       | ❌                              | ✅ via `{ passive: true }`       | ✅                            |
+| Lifecycle auto-managed                 | ✅                              | ✅                               | ❌ manual cleanup required    |
+
+### vDOM listener (default)
+
+```tsx
+// ✅ Correct for component-scoped keyboard/pointer events
+render() {
+  return (
+    <Host role="radiogroup" onKeyDown={this.handleKeyDown}>
+      <slot />
+    </Host>
+  );
+}
+```
+
+The handler is a class arrow function to preserve `this`:
+
+```tsx
+private handleKeyDown = (event: KeyboardEvent) => {
+  // TypeScript enforces KeyboardEvent here — typos and wrong signatures are caught at compile time
+};
+```
+
+### `@Listen` (only when required)
+
+Use `@Listen` only for events outside the component's subtree, capture phase, or explicit passive requirements:
+
+```tsx
+// ✅ Correct — window-scoped, passive scroll listener
+@Listen('scroll', { target: 'window', passive: true })
+handleScroll(ev: Event) { ... }
+
+// ❌ Wrong — no options, component-scoped; triggers prefer-vdom-listener, loses type safety
+@Listen('keydown')
+handleKeyDown(ev: KeyboardEvent) { ... }
+```
+
+The `prefer-vdom-listener` ESLint rule fires on bare `@Listen('keydown')` (no second argument). Passing `{}` or `{ passive: false }` silences the rule as a side-effect of the rule's condition, but that is a workaround — the right fix is to use a vDOM listener.
+
+### `addEventListener` (avoid for component-scoped events)
+
+Imperative `addEventListener` requires manual lifecycle wiring:
+
+```tsx
+connectedCallback() { this.el.addEventListener('keydown', this.handleKeyDown); }
+disconnectedCallback() { this.el.removeEventListener('keydown', this.handleKeyDown); }
+```
+
+Omitting the `disconnectedCallback` cleanup is a common memory leak. Prefer vDOM listeners, which are managed by Stencil's reconciler automatically.

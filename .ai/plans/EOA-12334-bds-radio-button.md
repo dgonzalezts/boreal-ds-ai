@@ -11,6 +11,7 @@ status: pending
 **Scope:** `bds-radio-button` (leaf component) + extension of `bds-radio-group` to support `type="radiobutton"`.
 
 **Why a separate component (not a CSS-only variant of bds-radio):**
+
 1. **DOM difference** — `bds-radio-button` has no circle indicator (`.bds-radio__button`, `.bds-radio__dot`) in the DOM at all; the absence is structural, not just CSS-hidden.
 2. **Different API** — carries a `label` string prop and an `icon` named slot that are meaningless on `bds-radio`.
 3. **Segmented control CSS** — the adjacent-sibling border-collapsing layout requires a dedicated tag name; CSS `+` combinators cannot target a subset of elements sharing the same tag name.
@@ -39,13 +40,15 @@ packages/boreal-web-components/src/components/forms/bds-radio/
     types/
       IRadioGroup.ts                        ← MODIFY (extend type union)
 
-apps/boreal-docs/src/stories/forms/bds-radio-button/   ← NEW
-  bds-radio-button.stories.ts
-  bds-radio-button.mdx
 apps/boreal-docs/src/stories/forms/bds-radio-group/
   bds-radio-group.stories.ts               ← MODIFY (add type=radiobutton stories)
-  bds-radio-group.mdx                      ← MODIFY (document radiobutton variant)
+  bds-radio-group.mdx                      ← MODIFY (refactor to import both variants)
+  _variants/
+    RadioCircular.mdx                      ← NEW (extract existing circular examples)
+    RadioButton.mdx                        ← NEW (radiobutton variant documentation)
 ```
+
+**Note:** `bds-radio-button` has **no standalone Storybook entry** — it is a private building block like `bds-radio`. All documentation lives inside `bds-radio-group` stories and MDX.
 
 ---
 
@@ -54,7 +57,7 @@ apps/boreal-docs/src/stories/forms/bds-radio-group/
 ### Create: `bds-radio-button/types/IRadioButton.ts`
 
 ```typescript
-import type { EventEmitter } from '@stencil/core/internal';
+import type { EventEmitter } from "@stencil/core/internal";
 
 export interface RadioButtonChangeDetail {
   checked: boolean;
@@ -83,10 +86,10 @@ Extend the `type` union:
 
 ```typescript
 // Before
-type: 'radio';
+type: "radio";
 
 // After
-type: 'radio' | 'radiobutton';
+type: "radio" | "radiobutton";
 ```
 
 ---
@@ -98,6 +101,7 @@ type: 'radio' | 'radiobutton';
 `bds-radio-button` is NOT form-associated. It uses the same event contract as `bds-radio` (`bdsMount` + `bdsChange`) so the group handles both uniformly.
 
 Key differences from `bds-radio`:
+
 - No circle indicator — neither `.bds-radio__button` nor `.bds-radio__dot` appear in the DOM
 - `icon` named slot rendered conditionally before the label
 - The hidden native `<input type="radio">` is still included (same as `bds-radio`) for form submission fallback and focus forwarding
@@ -180,6 +184,7 @@ export class BdsRadioButton implements IRadioButton {
 ```
 
 **Manual test (waiveable):**
+
 - Render `<bds-radio-button label="Option A" value="a"></bds-radio-button>` in isolation
 - Verify **no** `.bds-radio__button` or `.bds-radio__dot` element exists in the DOM
 - Verify the hidden `<input type="radio">` IS present with `aria-hidden="true"` and `tabindex="-1"`
@@ -196,69 +201,71 @@ export class BdsRadioButton implements IRadioButton {
 ### bds-radio-button.basics.spec.ts
 
 ```typescript
-import { newSpecPage } from '@stencil/core/testing';
-import { BdsRadioButton } from '../bds-radio-button';
+import { newSpecPage } from "@stencil/core/testing";
+import { BdsRadioButton } from "../bds-radio-button";
 
-describe('bds-radio-button basics', () => {
-  it('renders without circle indicator', async () => {
+describe("bds-radio-button basics", () => {
+  it("renders without circle indicator", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="Option"></bds-radio-button>',
     });
-    expect(root.querySelector('.bds-radio__button')).toBeNull();
-    expect(root.querySelector('.bds-radio__dot')).toBeNull();
+    expect(root.querySelector(".bds-radio__button")).toBeNull();
+    expect(root.querySelector(".bds-radio__dot")).toBeNull();
   });
 
-  it('renders hidden native input for form fallback', async () => {
+  it("renders hidden native input for form fallback", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="Option" value="x"></bds-radio-button>',
     });
     const input = root.querySelector('input[type="radio"]') as HTMLInputElement;
     expect(input).toBeTruthy();
-    expect(input.getAttribute('aria-hidden')).toBe('true');
+    expect(input.getAttribute("aria-hidden")).toBe("true");
     expect(input.tabIndex).toBe(-1);
-    expect(input.value).toBe('x');
+    expect(input.value).toBe("x");
   });
 
-  it('renders label text', async () => {
+  it("renders label text", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="My Option"></bds-radio-button>',
     });
-    expect(root.querySelector('.bds-radio-button__label').textContent).toBe('My Option');
+    expect(root.querySelector(".bds-radio-button__label").textContent).toBe(
+      "My Option",
+    );
   });
 
-  it('renders icon slot container', async () => {
+  it("renders icon slot container", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="Option"></bds-radio-button>',
     });
-    expect(root.querySelector('.bds-radio-button__icon')).toBeTruthy();
+    expect(root.querySelector(".bds-radio-button__icon")).toBeTruthy();
   });
 
-  it('reflects checked', async () => {
+  it("reflects checked", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button checked label="Option"></bds-radio-button>',
     });
-    expect(root.classList.contains('--checked')).toBe(true);
+    expect(root.classList.contains("--checked")).toBe(true);
   });
 
-  it('reflects disabled', async () => {
+  it("reflects disabled", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button disabled label="Option"></bds-radio-button>',
     });
-    expect(root.classList.contains('--disabled')).toBe(true);
+    expect(root.classList.contains("--disabled")).toBe(true);
   });
 
-  it('reflects error', async () => {
+  it("reflects error", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button error label="Option"></bds-radio-button>',
     });
-    expect(root.classList.contains('--error')).toBe(true);
+    expect(root.classList.contains("--error")).toBe(true);
   });
 });
 ```
@@ -266,51 +273,51 @@ describe('bds-radio-button basics', () => {
 ### bds-radio-button.a11y.spec.ts
 
 ```typescript
-import { newSpecPage } from '@stencil/core/testing';
-import { BdsRadioButton } from '../bds-radio-button';
+import { newSpecPage } from "@stencil/core/testing";
+import { BdsRadioButton } from "../bds-radio-button";
 
-describe('bds-radio-button a11y', () => {
-  it('has role=radio on host', async () => {
+describe("bds-radio-button a11y", () => {
+  it("has role=radio on host", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
-    expect(root.getAttribute('role')).toBe('radio');
+    expect(root.getAttribute("role")).toBe("radio");
   });
 
-  it('aria-checked is false by default', async () => {
+  it("aria-checked is false by default", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
-    expect(root.getAttribute('aria-checked')).toBe('false');
+    expect(root.getAttribute("aria-checked")).toBe("false");
   });
 
-  it('aria-checked updates to true on click', async () => {
+  it("aria-checked updates to true on click", async () => {
     const { root, waitForChanges } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
-    root.dispatchEvent(new MouseEvent('click'));
+    root.dispatchEvent(new MouseEvent("click"));
     await waitForChanges();
-    expect(root.getAttribute('aria-checked')).toBe('true');
+    expect(root.getAttribute("aria-checked")).toBe("true");
   });
 
-  it('native input has aria-hidden=true so AT ignores it', async () => {
+  it("native input has aria-hidden=true so AT ignores it", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
     const input = root.querySelector('input[type="radio"]');
-    expect(input.getAttribute('aria-hidden')).toBe('true');
+    expect(input.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it('has tabindex attribute on host after mount', async () => {
+  it("has tabindex attribute on host after mount", async () => {
     const { root } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
-    expect(root.hasAttribute('tabindex')).toBe(true);
+    expect(root.hasAttribute("tabindex")).toBe(true);
   });
 });
 ```
@@ -318,67 +325,67 @@ describe('bds-radio-button a11y', () => {
 ### bds-radio-button.events.spec.ts
 
 ```typescript
-import { newSpecPage } from '@stencil/core/testing';
-import { BdsRadioButton } from '../bds-radio-button';
+import { newSpecPage } from "@stencil/core/testing";
+import { BdsRadioButton } from "../bds-radio-button";
 
-describe('bds-radio-button events', () => {
-  it('emits bdsChange with correct payload on click', async () => {
+describe("bds-radio-button events", () => {
+  it("emits bdsChange with correct payload on click", async () => {
     const { root, waitForChanges } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A" value="a"></bds-radio-button>',
     });
     const spy = jest.fn();
-    root.addEventListener('bdsChange', spy);
-    root.dispatchEvent(new MouseEvent('click'));
+    root.addEventListener("bdsChange", spy);
+    root.dispatchEvent(new MouseEvent("click"));
     await waitForChanges();
-    expect(spy.mock.calls[0][0].detail).toEqual({ checked: true, value: 'a' });
+    expect(spy.mock.calls[0][0].detail).toEqual({ checked: true, value: "a" });
   });
 
-  it('does not emit bdsChange when already checked', async () => {
+  it("does not emit bdsChange when already checked", async () => {
     const { root, waitForChanges } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button checked label="A" value="a"></bds-radio-button>',
     });
     const spy = jest.fn();
-    root.addEventListener('bdsChange', spy);
-    root.dispatchEvent(new MouseEvent('click'));
+    root.addEventListener("bdsChange", spy);
+    root.dispatchEvent(new MouseEvent("click"));
     await waitForChanges();
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('does not emit bdsChange when disabled', async () => {
+  it("does not emit bdsChange when disabled", async () => {
     const { root, waitForChanges } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button disabled label="A"></bds-radio-button>',
     });
     const spy = jest.fn();
-    root.addEventListener('bdsChange', spy);
-    root.dispatchEvent(new MouseEvent('click'));
+    root.addEventListener("bdsChange", spy);
+    root.dispatchEvent(new MouseEvent("click"));
     await waitForChanges();
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('emits bdsChange on Space key', async () => {
+  it("emits bdsChange on Space key", async () => {
     const { root, waitForChanges } = await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A" value="a"></bds-radio-button>',
     });
     const spy = jest.fn();
-    root.addEventListener('bdsChange', spy);
-    root.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    root.addEventListener("bdsChange", spy);
+    root.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
     await waitForChanges();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it('emits bdsMount on componentDidLoad', async () => {
+  it("emits bdsMount on componentDidLoad", async () => {
     const spy = jest.fn();
-    document.addEventListener('bdsMount', spy);
+    document.addEventListener("bdsMount", spy);
     await newSpecPage({
       components: [BdsRadioButton],
       html: '<bds-radio-button label="A"></bds-radio-button>',
     });
     expect(spy).toHaveBeenCalledTimes(1);
-    document.removeEventListener('bdsMount', spy);
+    document.removeEventListener("bdsMount", spy);
   });
 });
 ```
@@ -404,9 +411,11 @@ bds-radio-button {
   cursor: pointer;
   outline: none;
   background-color: transparent;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 
-  input[type='radio'] {
+  input[type="radio"] {
     position: absolute;
     opacity: 0;
     width: 0;
@@ -464,7 +473,7 @@ bds-radio-button {
   }
 }
 
-bds-radio-group[type='radiobutton'] {
+bds-radio-group[type="radiobutton"] {
   bds-radio-button + bds-radio-button {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
@@ -483,6 +492,7 @@ bds-radio-group[type='radiobutton'] {
 ## Task 5: Extend bds-radio-group to handle bds-radio-button
 
 **Files to modify:**
+
 - `bds-radio-group/bds-radio-group.tsx` — read the current file first; then apply the following targeted changes:
 
 ### Change 1 — Type alias
@@ -499,20 +509,22 @@ type LeafElement = HTMLBdsRadioElement | HTMLBdsRadioButtonElement;
 
 ```typescript
 // Before
-const LEAF_TAGS = ['BDS-RADIO'];
+const LEAF_TAGS = ["BDS-RADIO"];
 
 // After
-const LEAF_TAGS = ['BDS-RADIO', 'BDS-RADIO-BUTTON'];
+const LEAF_TAGS = ["BDS-RADIO", "BDS-RADIO-BUTTON"];
 ```
 
 ### Change 3 — radioElements getter
 
 ```typescript
 // Before
-return Array.from(this.el.querySelectorAll<LeafElement>('bds-radio'));
+return Array.from(this.el.querySelectorAll<LeafElement>("bds-radio"));
 
 // After
-return Array.from(this.el.querySelectorAll<LeafElement>('bds-radio, bds-radio-button'));
+return Array.from(
+  this.el.querySelectorAll<LeafElement>("bds-radio, bds-radio-button"),
+);
 ```
 
 ### Change 4 — type prop
@@ -528,6 +540,7 @@ return Array.from(this.el.querySelectorAll<LeafElement>('bds-radio, bds-radio-bu
 No other logic changes needed — all group methods (`navigateTo`, `updateTabIndexes`, `handleRadioMount`, `handleRadioChange`, `handleKeyDown`) already include the `LEAF_TAGS` guard and operate on `LeafElement[]`. Both leaf types will be handled correctly once the constant, getter, and type prop are updated.
 
 **Manual test (waiveable):**
+
 - Render `<bds-radio-group type="radiobutton" name="g">` with multiple `<bds-radio-button>` children
 - Verify segmented control visual (border-collapsing between adjacent buttons)
 - Verify single selection (clicking one deselects others)
@@ -538,38 +551,285 @@ No other logic changes needed — all group methods (`navigateTo`, `updateTabInd
 
 ## Task 6: Storybook stories
 
-**Files:**
-- `apps/boreal-docs/src/stories/forms/bds-radio-button/bds-radio-button.stories.ts` — standalone stories
-- Update `apps/boreal-docs/src/stories/forms/bds-radio-group/bds-radio-group.stories.ts` — add `type=radiobutton` story
+**File to modify:**
 
-Follow the existing Lit HTML story convention (see other forms stories).
+- `apps/boreal-docs/src/stories/forms/bds-radio-group/bds-radio-group.stories.ts`
 
-**bds-radio-button standalone stories must cover:** all states (default, checked, disabled, error), with icon slot.
+**No standalone `bds-radio-button` stories** — it is a private building block. All stories showing `bds-radio-button` must be inside the `bds-radio-group` story file, using `type="radiobutton"`.
 
-**bds-radio-group + radiobutton story must cover:**
-- `type=radiobutton` — segmented control appearance (horizontal, border-collapsing)
-- Disabled group
-- Error state
+Add the following stories to `bds-radio-group.stories.ts`:
+
+1. **RadioButton** — `type="radiobutton"`, horizontal segmented control appearance with 3 `<bds-radio-button>` children, one pre-selected
+2. **RadioButtonWithIcons** — same as above but with icon slot filled on each button
+3. **RadioButtonDisabled** — `type="radiobutton"` with `disabled` prop on the group
+4. **RadioButtonError** — `type="radiobutton"` with `error` prop and `errorMessage`
+
+These stories demonstrate the button variant's visual states within the group context. Follow the existing Lit HTML story convention and use the `showIcons` Storybook-only control pattern if needed.
 
 ---
 
-## Task 7: MDX documentation
+## Task 7: MDX documentation refactoring
 
-**Files:**
-- `apps/boreal-docs/src/stories/forms/bds-radio-button/bds-radio-button.mdx` — NEW
-- Update `apps/boreal-docs/src/stories/forms/bds-radio-group/bds-radio-group.mdx` — add radiobutton variant section
+**Files to create/modify:**
 
-### bds-radio-button.mdx must include:
-- Component description: button-shaped radio option for use inside `bds-radio-group[type="radiobutton"]`
-- Props table (including `name` — set automatically by the parent group, not typically set manually)
-- Slots table: `icon` (named, optional), default slot (label fallback)
-- Events table: `bdsChange`, `bdsMount`
-- Usage note: must be used inside `<bds-radio-group type="radiobutton">` for correct keyboard behavior and segmented layout
-- Accessibility note: `role="radio"` on host, `aria-checked`, hidden native `<input type="radio">` present for form fallback (invisible to AT via `aria-hidden`), keyboard navigation managed by parent group
+- `apps/boreal-docs/src/stories/forms/bds-radio-group/_variants/RadioCircular.mdx` ← NEW (extract existing)
+- `apps/boreal-docs/src/stories/forms/bds-radio-group/_variants/RadioButton.mdx` ← NEW
+- `apps/boreal-docs/src/stories/forms/bds-radio-group/bds-radio-group.mdx` ← MODIFY (refactor to import both)
 
-### bds-radio-group.mdx additions:
-- New `type="radiobutton"` variant section: what it looks like, when to use it
-- Code example showing `<bds-radio-group type="radiobutton">` with `<bds-radio-button>` children
+**Goal:** Organize variant-specific content into separate MDX files for better maintainability and readability. Both Radio (Circular) and Radio Button variants get equal treatment as importable sections.
+
+**No standalone Storybook entry** — `bds-radio-button` is a private building block. All documentation lives inside the Radio Group docs via MDX imports.
+
+---
+
+### Step 1: Extract existing circular examples to `_variants/RadioCircular.mdx`
+
+Read the current `bds-radio-group.mdx` and extract all content from the "Component preview" section that relates to the Radio (Circular) variant into a new file.
+
+**Content to extract:**
+
+- Callout about "Show code" tip
+- "Basic Usage" section + Canvas
+- "Horizontal Orientation" section + Canvas
+- "Pre-selected Value" section + Canvas
+- "With Info Tooltip" section + Canvas
+- "With Icons" section + Canvas
+
+**Full RadioCircular.mdx structure:**
+
+```mdx
+import { Canvas } from "@storybook/addon-docs/blocks";
+import { Callout } from "@/components/docs";
+import * as BdsRadioGroupStories from "../bds-radio-group.stories";
+
+## Radio (Circular) Variant
+
+Traditional radio buttons with circular indicators. This is the default variant using `<bds-radio>` child elements.
+
+<Callout variant="tip" icon="💡">
+  You can click on the **Show code** button in the bottom-right section of the
+  following code snippets to see how to use the component.
+</Callout>
+
+### Basic Usage
+
+The default configuration uses vertical orientation with no pre-selected value. Provide a `label` and optionally `helper-text` to guide the user.
+
+<Canvas of={BdsRadioGroupStories.Default} />
+
+### Horizontal Orientation
+
+Use `orientation="horizontal"` to display options side by side. Best suited for short labels where screen width allows.
+
+<Canvas of={BdsRadioGroupStories.Horizontal} />
+
+### Pre-selected Value
+
+Set the `value` attribute to pre-select one of the radio options. This is useful for controlled state scenarios and default form values.
+
+<Canvas of={BdsRadioGroupStories.WithValue} />
+
+### With Info Tooltip
+
+The `info` attribute adds a tooltip icon next to the group label, useful for providing additional context without cluttering the UI.
+
+<Canvas of={BdsRadioGroupStories.WithInfoTooltip} />
+
+### With Icons
+
+Each `bds-radio` child accepts an icon via the `slot="icon"` slot, displayed to the left of the label text. Icons must be 16×16.
+
+<Canvas of={BdsRadioGroupStories.WithIcons} />
+```
+
+---
+
+### Step 2: Create `_variants/RadioButton.mdx`
+
+This file contains the full "Radio Button Variant" section content:
+
+- **Description**: Button-shaped radio option that creates a segmented control appearance when used with `type="radiobutton"`. Best for 2–4 short-label options where the button visual metaphor is clearer than circles.
+- **When to use**: Short labels (1–2 words), binary/ternary choices, actions that feel like mode switches (View: Grid | List | Table)
+- **Visual differences from circle variant**: No circle indicator, pill/button shape, segmented control layout when horizontal
+- **Usage example**:
+  ```html
+  <bds-radio-group
+    type="radiobutton"
+    name="view"
+    label="Choose view mode"
+    orientation="horizontal"
+  >
+    <bds-radio-button value="grid" label="Grid">
+      <em slot="icon" class="bds-icon-grid"></em>
+    </bds-radio-button>
+    <bds-radio-button value="list" label="List">
+      <em slot="icon" class="bds-icon-list"></em>
+    </bds-radio-button>
+  </bds-radio-group>
+  ```
+- **Child element props** (`bds-radio-button`):
+  - `value` (string) — submitted value when selected
+  - `label` (string) — button text
+  - `checked` (boolean) — managed by parent group
+  - `disabled` (boolean) — propagated from parent group
+  - `error` (boolean) — propagated from parent group
+  - `name` (string) — set automatically by parent group
+  - Slot `icon` (named, optional) — 16×16 icon rendered before label
+  - Slot `default` — label fallback when `label` prop is empty
+- **Canvas previews**: Reference the new stories (`RadioButton`, `RadioButtonWithIcons`, `RadioButtonDisabled`, `RadioButtonError`)
+- **Accessibility note**: Same keyboard navigation as circle variant (Arrow keys select, Tab enters/exits group, roving tabindex). Each `bds-radio-button` has `role="radio"` and `aria-checked`. Hidden native `<input type="radio">` present for form fallback (invisible to AT via `aria-hidden`).
+
+**Full RadioButton.mdx structure:**
+
+````mdx
+import { Canvas } from '@storybook/addon-docs/blocks';
+import { Callout } from '@/components/docs';
+import * as BdsRadioGroupStories from '../bds-radio-group.stories';
+## Radio Button Variant
+
+Button-shaped radio option that creates a segmented control appearance when used with `type="radiobutton"`. Best for 2–4 short-label options where the button visual metaphor is clearer than circles.
+
+### When to use
+
+- **Short labels** (1–2 words) like "Grid", "List", "Table"
+- **Binary or ternary choices** where options are mutually exclusive
+- **Mode switches** or view toggles (e.g., "Day / Week / Month")
+- **Toolbar-style controls** where the segmented visual fits the UI context
+
+### Visual differences from Radio (Circular)
+
+- No circle indicator — uses pill/button shape instead
+- Segmented control layout when horizontal (borders collapse between adjacent buttons)
+- Icon slot optional but commonly used for visual clarity
+- Background color changes on selection (lighter tint of primary)
+
+### Usage
+
+<Callout variant="tip" icon="💡">
+  Set `type="radiobutton"` on the `bds-radio-group` to activate the segmented
+  control styling.
+</Callout>
+
+```html
+<bds-radio-group
+  type="radiobutton"
+  name="view"
+  label="Choose view mode"
+  orientation="horizontal"
+>
+  <bds-radio-button value="grid" label="Grid">
+    <em slot="icon" class="bds-icon-grid"></em>
+  </bds-radio-button>
+  <bds-radio-button value="list" label="List">
+    <em slot="icon" class="bds-icon-list"></em>
+  </bds-radio-button>
+  <bds-radio-button value="table" label="Table">
+    <em slot="icon" class="bds-icon-table"></em>
+  </bds-radio-button>
+</bds-radio-group>
+```
+````
+
+### Child Element Props
+
+The `bds-radio-button` element accepts the following attributes:
+
+| Property   | Type      | Default | Description                                   |
+| ---------- | --------- | ------- | --------------------------------------------- |
+| `value`    | `string`  | `''`    | Submitted value when selected                 |
+| `label`    | `string`  | `''`    | Button text                                   |
+| `checked`  | `boolean` | `false` | Selection state (managed by parent group)     |
+| `disabled` | `boolean` | `false` | Disabled state (propagated from parent group) |
+| `error`    | `boolean` | `false` | Error state (propagated from parent group)    |
+| `name`     | `string`  | `''`    | Set automatically by parent group             |
+
+**Slots:**
+
+| Slot           | Description                               |
+| -------------- | ----------------------------------------- |
+| `icon` (named) | Optional 16×16 icon rendered before label |
+| `default`      | Label fallback when `label` prop is empty |
+
+### Examples
+
+<Callout variant="tip" icon="💡">
+  Click **Show code** in the bottom-right of each preview to see the full implementation.
+</Callout>
+
+#### Basic Radio Button
+
+Segmented control with three options, middle one pre-selected.
+
+<Canvas of={BdsRadioGroupStories.RadioButton} />
+
+#### With Icons
+
+Each button includes a 16×16 icon via the `icon` slot.
+
+<Canvas of={BdsRadioGroupStories.RadioButtonWithIcons} />
+
+#### Disabled State
+
+The `disabled` prop on the group disables all buttons.
+
+<Canvas of={BdsRadioGroupStories.RadioButtonDisabled} />
+
+#### Error State
+
+The `error` prop applies error styling to all buttons and shows the error message.
+
+<Canvas of={BdsRadioGroupStories.RadioButtonError} />
+
+### Accessibility
+
+Keyboard navigation and ARIA behavior are identical to the Radio (Circular) variant:
+
+- **Arrow keys** move focus and select the next/previous button (wraps at ends)
+- **Tab** enters the group at the checked button (or first non-disabled), then exits
+- **Space** selects the focused button
+- **Roving tabindex** ensures only one button is tabbable at a time
+- Each `bds-radio-button` has `role="radio"` and `aria-checked` reflecting selection state
+- Hidden native `<input type="radio" aria-hidden="true">` for form fallback (invisible to AT)
+
+````
+
+---
+
+### Step 3: Modify main `bds-radio-group.mdx`
+
+Refactor the main MDX file to import both variant sections. Replace the "Component preview" section content with imports.
+
+**Changes to make:**
+
+1. **Add imports** at the top (after existing Storybook imports):
+   ```mdx
+   import RadioCircularDocs from './_variants/RadioCircular.mdx';
+   import RadioButtonDocs from './_variants/RadioButton.mdx';
+````
+
+2. **Replace the Component preview section** with:
+
+   ```mdx
+   <Subtitle>Component preview</Subtitle>
+
+   The following examples showcase the core features and visual options of the Radio Group component across its two variants.
+
+   <RadioCircularDocs />
+
+   <RadioButtonDocs />
+
+   ## States
+   ```
+
+3. **Remove** the extracted circular examples (Basic Usage, Horizontal, Pre-selected Value, With Info, With Icons sections)
+
+4. **Keep** all shared sections as-is:
+   - States (Disabled, Error)
+   - Form Integration
+   - Accessibility
+   - Properties (ArgTypes)
+
+**Result:** Main MDX becomes a clean orchestrator (~150-200 lines) that imports variant-specific content, with all shared documentation (States, Form Integration, Accessibility, Props) remaining in one place.
 
 ---
 
@@ -578,8 +838,12 @@ Follow the existing Lit HTML story convention (see other forms stories).
 - **No `@use` in SCSS files** — `$boreal-*` tokens are globally injected via `injectGlobalPaths` in `stencil.config.ts`; adding `@use` causes a Sass double-import error; start directly with selectors
 - **Hidden native input required** — both `bds-radio` and `bds-radio-button` include `<input type="radio" aria-hidden="true" tabindex="-1">` for form submission fallback and focus forwarding; it must be visually suppressed via `input[type='radio'] { position: absolute; opacity: 0; ... }` in component SCSS (light DOM does not hide it automatically)
 - **No `:host` selectors** — all selectors target element tag names directly
-- `bds-radio-button` is NOT form-associated — no `@AttachInternals()` on the leaf
-- Only `bds-radio-group` retains `@AttachInternals()` (already on its class body — do not move it)
+- `bds-radio-Group → navigate to "Radio Button Variant" section in MDX
+
+# → Canvas shows: RadioButton (segmented), RadioButtonWithIcons, RadioButtonDisabled, RadioButtonError
+
+# → Verify: pill shape, NO circle indicator, border-collapsing layout, icon slot, all statese it)
+
 - Do NOT remove or alter the existing `bds-radio` implementation — this plan only adds and extends
 - No inline code comments; no `Co-Authored-By` commit trailers
 - Interface file: `IRadioButton.ts` (no `Bds` prefix — project convention per memory)
@@ -603,7 +867,8 @@ eval "$(fnm env --shell bash)" && fnm use && \
 
 # Storybook visual check
 pnpm dev:docs
-# Forms/RadioButton → pill shape, NO circle indicator, icon slot, all states
-# Forms/RadioGroup  → type=radiobutton shows segmented control layout, horizontal orientation
-# Keyboard (group)  → same Arrow/Tab/Space behavior as radio variant
+# Forms/Radio Group → navigate to "Radio Button Variant" section (imported from RadioButton.mdx)
+# → Canvas shows: RadioButton, RadioButtonWithIcons, RadioButtonDisabled, RadioButtonError
+# → Verify: pill shape, NO circle indicator, segmented control border-collapsing, icon slot, all states
+# → Keyboard: same Arrow/Tab/Space behavior as Radio (Circular) variant
 ```

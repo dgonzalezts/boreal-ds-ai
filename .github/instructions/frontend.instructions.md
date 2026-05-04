@@ -446,6 +446,46 @@ When the current prop value is not in `acceptedValues`, the utility resets `elem
 - Do not inline the valid-values array as a literal — enum values are the single source of truth.
 - `checkPropValues()` belongs in the **Property Watchers** section (section 6 of the member ordering) because it carries `@Watch()` decorators.
 
+### Event Listener Placement
+
+Use **vDOM inline listeners** (`onKeyDown={...}` on `<Host />` or any rendered element) for all component-scoped events that reach the host via DOM bubbling. Use `@Listen` only when one of its exclusive options is required.
+
+| Dimension                              | vDOM inline (`onKeyDown={...}`) | `@Listen`        | imperative `addEventListener` |
+| -------------------------------------- | ------------------------------- | ---------------- | ----------------------------- |
+| TypeScript type-safe                   | ✅                              | ❌ plain string  | ✅                            |
+| ESLint `prefer-vdom-listener`          | ✅ compliant                    | ⚠️ triggers rule | ✅ compliant                  |
+| Target: `window` / `document` / `body` | ❌                              | ✅               | ✅                            |
+| Capture phase                          | ❌                              | ✅               | ✅                            |
+| Passive listener support               | ❌                              | ✅               | ✅                            |
+| Lifecycle auto-managed                 | ✅                              | ✅               | ❌ manual                     |
+
+**Default choice — vDOM listener:**
+
+```tsx
+// ✅ Type-checked, ESLint-compliant, auto-managed
+render() {
+  return (
+    <Host role="radiogroup" onKeyDown={this.handleKeyDown}>
+      <slot />
+    </Host>
+  );
+}
+```
+
+**Use `@Listen` only for:** events originating outside the component's subtree (`target: 'window'`), capture-phase requirements, or explicit passive control:
+
+```tsx
+// ✅ @Listen is correct here — window-scoped target
+@Listen('scroll', { target: 'window', passive: true })
+handleScroll(ev: Event) { ... }
+```
+
+**Never use `@Listen` for keyboard or pointer events scoped to the component's own host element or its slotted children** — those events bubble naturally to the host, and the vDOM listener handles them with full TypeScript validation.
+
+**Avoid imperative `addEventListener`** for component-scoped events — it requires manual `connectedCallback`/`disconnectedCallback` wiring and is a source of memory leaks if the cleanup is forgotten.
+
+---
+
 ### Service Layer Architecture
 
 The "service layer" in this design system is the **design token and utility layer** in `packages/boreal-web-components/src/utils/`. It provides:

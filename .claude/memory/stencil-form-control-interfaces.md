@@ -4,16 +4,19 @@
 
 Three interface levels govern all Boreal DS form controls:
 
-| Interface | Location | Responsibility |
-|---|---|---|
-| `IFormAssociatedCallbacks` | `form-associated.mixin.ts` | Declares `formDisabledCallback`, `formResetCallback`, `formStateRestoreCallback` signatures |
-| `IFormValueEmitter<T>` | `form-associated.mixin.ts` | Declares `valueChange: EventEmitter<T>` — enforces consistent event naming across all form controls |
-| `IFormControl<T>` | `form-associated.mixin.ts` | Composite: `IFormAssociatedCallbacks & IFormValueEmitter<T>` — the single interface a component class implements |
+| Interface                  | Location                   | Responsibility                                                                                                   |
+| -------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `IFormAssociatedCallbacks` | `form-associated.mixin.ts` | Declares `formDisabledCallback`, `formResetCallback`, `formStateRestoreCallback` signatures                      |
+| `IFormValueEmitter<T>`     | `form-associated.mixin.ts` | Declares `valueChange: EventEmitter<T>` — enforces consistent event naming across all form controls              |
+| `IFormControl<T>`          | `form-associated.mixin.ts` | Composite: `IFormAssociatedCallbacks & IFormValueEmitter<T>` — the single interface a component class implements |
 
 Component class declaration pattern:
 
 ```typescript
-export class BdsTextField extends Mixin(formAssociatedMixin) implements ITextField, IFormControl<string> {
+export class BdsTextField
+  extends Mixin(formAssociatedMixin)
+  implements ITextField, IFormControl<string>
+{
   @AttachInternals() internals!: ElementInternals;
 
   @Event() valueChange!: EventEmitter<string>;
@@ -24,36 +27,37 @@ export class BdsTextField extends Mixin(formAssociatedMixin) implements ITextFie
 
 ## 2-Way Binding: What Belongs Where
 
-| Concern | Location |
-|---|---|
-| `@Event() valueChange: EventEmitter<T>` declaration | Component class |
-| `.emit()` call | Inside `@Watch('value')` on the component class |
-| `IFormValueEmitter<T>` interface (enforces naming) | `form-associated.mixin.ts` |
-| `componentModels` config (enables `v-model`) | `vue-output-target.ts` |
+| Concern                                             | Location                                                                                                                                                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@Event() valueChange: EventEmitter<T>` declaration | Component class                                                                                                                                                                                                                             |
+| `.emit()` call                                      | In event/interaction handlers that change the value (e.g. `handleRadioChange`, `navigateTo`). For simpler controls a `@Watch('value')` also works; either pattern is valid as long as every code path that mutates `value` calls `.emit()`. |
+| `IFormValueEmitter<T>` interface (enforces naming)  | `form-associated.mixin.ts`                                                                                                                                                                                                                  |
+| `componentModels` config (enables `v-model`)        | `vue-output-target.ts`                                                                                                                                                                                                                      |
 
 The `componentModels` config in `vue-output-target.ts` must land in the same PR as the finished component. It must never be added ahead of the component being complete — the Vue output target does NOT auto-generate v-model bindings from naming conventions. Explicit registration in `componentModels` is always required.
 
 ## `componentModels` Config Fields
 
-`@stencil/vue-output-target`'s `componentModels` requires exactly three fields:
+`@stencil/vue-output-target`'s `componentModels` requires exactly three fields per entry. Components that share the same `event` and `targetAttr` can be grouped in a single entry:
 
 ```typescript
 componentModels: [
   {
-    elements: ['bds-text-field'],
-    event: 'valueChange',
-    targetAttr: 'value',
+    elements: ["bds-text-field", "bds-radio-group"],
+    event: "valueChange",
+    targetAttr: "value",
   },
-]
+];
 ```
 
-| Field | Purpose |
-|---|---|
-| `elements` | Array of custom element tag names |
-| `event` | The Stencil `@Event()` name |
-| `targetAttr` | The `@Prop()` name that holds the current value |
+| Field        | Purpose                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| `elements`   | Array of custom element tag names. Group elements that share the same event + targetAttr. |
+| `event`      | The Stencil `@Event()` name                                                               |
+| `targetAttr` | The `@Prop()` name that holds the current value                                           |
 
-By default the output target reads the new value from `event.detail[targetAttr]`. If `valueChange` emits a flat primitive (not an object), add `eventAttr` pointing to the correct detail path to avoid `undefined` reads.
+**Flat primitive payloads work without `eventAttr`.**
+When `valueChange` emits a flat primitive (e.g. `string`), the generated proxy reads `$event.detail` directly — Vue's `v-model` receives the correct value. `eventAttr` is not needed and should not be added. Verified with `bds-radio-group` which emits `valueChange` as a plain `string`.
 
 ## `IFormAssociatedCallbacks` JSDoc as Canonical Reference
 
