@@ -307,6 +307,14 @@ export class BdsButton {
 
 **Event naming convention:** All `@Event()` names must follow the pattern `bds{Action}` — for example `bdsChange`, `bdsInput`, `bdsClick`. Do not include the component noun in the event name. The single exception is `valueChange`, which must remain generic because it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
 
+**Component interface files (`IComponent.ts`):** Interface files describe only what the **consumer configures** — the set of publicly settable `@Prop()` members. The following must NOT appear in the interface:
+
+- `@Event()` outputs (`EventEmitter<T>` members) — declare these on the component class body and document via JSDoc; they are outputs, not consumer inputs.
+- Group-propagated props — props written imperatively by a parent component (e.g. `name` on a leaf radio element, `showDivider`, `isFirst`) are parent-child coordination details, not consumer API.
+- `@State()` mirrors (e.g. `isDisabled`, `isOpen`) — internal reactive state is never public API.
+
+The litmus test: if a consumer would set it in HTML markup or a framework prop binding, it belongs in the interface. If it is an event output or an internal/group concern, it stays on the class body only. `ICheckbox` is a known exception that predates this convention — do not replicate its pattern.
+
 **Light DOM component styling:** Because Boreal DS uses light DOM (no `shadow: true` or `scoped: true`), the `:host` pseudo-class does not work — it requires a shadow boundary to function. Instead, use the component tag name directly as the root selector:
 
 ```scss
