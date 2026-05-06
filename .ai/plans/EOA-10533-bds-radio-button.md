@@ -94,9 +94,195 @@ type: "radio" | "radiobutton";
 
 ---
 
-## Task 2: bds-radio-button TSX
+## Task 2a: bds-radio-button scaffold
 
-**File:** `packages/boreal-web-components/src/components/forms/bds-radio/bds-radio-button/bds-radio-button.tsx`
+**File:** `packages/boreal-web-components/src/components/forms/bds-radio-button/bds-radio-button.tsx`
+
+`bds-radio-button` is NOT form-associated. It uses the same event contract as `bds-radio` (`bdsChange`) so the group handles both uniformly.
+
+Key differences from `bds-radio`:
+
+- No circle indicator — neither `.bds-radio__button` nor `.bds-radio__dot` appear in the DOM
+- `icon` named slot rendered before the label
+- `info` prop forwards tooltip text to `bds-typography`
+- `showDivider` / `isFirst` props (set by the parent group) control the leading `bds-divider`
+- The hidden native `<input type="radio">` is still included for form submission fallback and focus forwarding
+
+**Important:** `@Element() el!: HTMLBdsRadioButtonElement` references a Stencil-generated type that does not exist until the first build. Write the scaffold and run the build step before adding lifecycle methods that call `this.el.setAttribute(...)`.
+
+Class shell with all `@Prop` and `@Event` declarations. `render()` returns a stub `<Host />` until Task 2c replaces it.
+
+```typescript
+import { Component, Element, Event, EventEmitter, Host, Prop, h } from '@stencil/core';
+import type { IRadioButton, RadioButtonChangeDetail } from './types/IRadioButton';
+
+/**
+ * Button-shaped radio option for use inside `bds-radio-group[type="radiobutton"]`.
+ * Creates a segmented control appearance when grouped. Not form-associated — the parent
+ * `bds-radio-group` owns form state and single-selection enforcement.
+ *
+ * @slot - Label content when no `label` prop is provided.
+ * @slot icon - Optional icon rendered to the left of the label.
+ */
+@Component({
+  tag: 'bds-radio-button',
+  styleUrl: 'bds-radio-button.scss',
+})
+export class BdsRadioButton implements IRadioButton {
+  @Element() el!: HTMLBdsRadioButtonElement;
+
+  /** Whether this button is selected. Managed by bds-radio-group; can be set directly when used standalone. */
+  @Prop({ mutable: true, reflect: true }) checked: boolean = false;
+
+  /** Disables the button, preventing interaction and selection. */
+  @Prop({ reflect: true }) readonly disabled: boolean = false;
+
+  /** Shows error styling on the button. Propagated by bds-radio-group. */
+  @Prop({ reflect: true }) readonly error: boolean = false;
+
+  /** Value submitted with the form when this button is selected. */
+  @Prop() readonly value: string = 'on';
+
+  /** Name attribute stamped by the parent bds-radio-group via setAttribute. Set directly when used standalone. */
+  @Prop({ reflect: true }) readonly name: string = '';
+
+  /** Label text displayed inside the button. Falls back to the default slot when empty. */
+  @Prop() readonly label: string = '';
+
+  /** Tooltip text shown on an info icon next to the label. */
+  @Prop() readonly info: string = '';
+
+  /** Set by parent bds-radio-group. Renders a leading bds-divider when true. */
+  @Prop() readonly showDivider: boolean = false;
+
+  /** Set by parent bds-radio-group. Suppresses the leading divider on the first button in the group. */
+  @Prop() readonly isFirst: boolean = false;
+
+  /** Emitted when the user selects this button. Listened to by the parent bds-radio-group to enforce single selection. */
+  @Event({ bubbles: true }) bdsChange!: EventEmitter<RadioButtonChangeDetail>;
+
+  render() { return <Host />; }
+}
+```
+
+After writing the scaffold, trigger a build so Stencil generates `HTMLBdsRadioButtonElement` in `src/components.d.ts`:
+
+```bash
+eval "$(fnm env --shell bash)" && fnm use && pnpm --filter boreal-web-components build
+```
+
+**Manual test (waiveable):**
+
+- Run the build command above — expect zero errors and a new `HTMLBdsRadioButtonElement` entry in `packages/boreal-web-components/src/components.d.ts`
+- Run `pnpm --filter boreal-web-components exec tsc --noEmit` — zero TypeScript errors
+- Verify the IDE no longer shows "unsafe member access" lint errors on `this.el.*` calls
+
+---
+
+## Task 2b: bds-radio-button lifecycle + interaction
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-radio-button/bds-radio-button.tsx`
+
+Add to the class body (before `render()`):
+
+- `componentDidLoad` — stamps `role`, `aria-checked`, `tabindex` onto the host element
+- `select()` — guards against disabled/already-checked; sets `checked`, updates `aria-checked`, emits `bdsChange`
+- `handleClick` — arrow function delegating to `select()`
+- `handleKeyDown` — Space key triggers `select()`; `preventDefault()` blocks page scroll
+
+```typescript
+componentDidLoad() {
+  this.el.setAttribute('role', 'radio');
+  this.el.setAttribute('aria-checked', String(this.checked));
+  this.el.setAttribute('tabindex', '-1');
+}
+
+private select() {
+  if (this.disabled || this.checked) return;
+  this.checked = true;
+  this.el.setAttribute('aria-checked', 'true');
+  this.bdsChange.emit({ checked: true, value: this.value });
+}
+
+private handleClick = () => this.select();
+
+private handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === ' ') {
+    event.preventDefault();
+    this.select();
+  }
+};
+```
+
+**Manual test (waiveable):**
+
+- Run `pnpm --filter boreal-web-components exec tsc --noEmit` — zero errors
+- After mount, inspect a rendered `<bds-radio-button>` — expect `role="radio"`, `aria-checked="false"`, `tabindex="-1"` on the host
+- Click → `aria-checked` becomes `"true"`, `bdsChange` fires in DevTools console
+- Click again → no second event (already-checked guard)
+- Keyboard Space → also triggers selection on an unchecked button
+
+---
+
+## Task 2c: bds-radio-button render()
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-radio-button/bds-radio-button.tsx`
+
+Replace the stub `render() { return <Host />; }` with the full DOM structure. Wire `onClick={this.handleClick}` and `onKeyDown={this.handleKeyDown}` on `<Host>`. Include the conditional `bds-divider`, the hidden native `<input>`, the icon slot, and `bds-typography` for the label.
+
+```tsx
+render() {
+  return (
+    <Host
+      class={{
+        'bds-radio-button': true,
+        '--checked': this.checked,
+        '--error': this.error,
+        '--disabled': this.disabled,
+      }}
+      onClick={this.handleClick}
+      onKeyDown={this.handleKeyDown}
+    >
+      {this.showDivider && !this.isFirst && <bds-divider orientation="vertical" />}
+      <input
+        type="radio"
+        name={this.name}
+        value={this.value}
+        checked={this.checked}
+        disabled={this.disabled}
+        aria-hidden="true"
+        tabIndex={-1}
+        onFocus={() => (this.el as HTMLElement).focus()}
+      />
+      <span class="bds-radio-button__icon">
+        <slot name="icon" />
+      </span>
+      <bds-typography
+        class="bds-radio-button__label"
+        variant="label"
+        tooltipText={this.info !== '' ? this.info : undefined}
+      >
+        {this.label || <slot />}
+      </bds-typography>
+    </Host>
+  );
+}
+```
+
+**Manual test (waiveable):**
+
+- Render `<bds-radio-button label="Option A" value="a"></bds-radio-button>` in isolation
+- Verify **no** `.bds-radio__button` or `.bds-radio__dot` element exists in the DOM
+- Verify the hidden `<input type="radio">` IS present with `aria-hidden="true"` and `tabindex="-1"`
+- Verify label renders; click emits `bdsChange`; Space also triggers selection
+- Render with `<svg slot="icon">…</svg>` — icon appears before the label
+- Render inside `<bds-radio-group type="radiobutton">` with siblings — segmented border layout applies
+
+---
+
+## Task 2d: bds-radio-button JSDoc audit
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-radio-button/bds-radio-button.tsx`
 
 `bds-radio-button` is NOT form-associated. It uses the same event contract as `bds-radio` (`bdsChange`) so the group handles both uniformly.
 
@@ -538,7 +724,7 @@ The segmented control uses a **single shared border on the group's `.bds-radio-g
 **In `bds-radio-button.scss`** — add inside the group context (individual borders and radius are stripped):
 
 ```scss
-bds-radio-group[type='radiobutton'] {
+bds-radio-group[type="radiobutton"] {
   bds-radio-button {
     border: none;
     border-radius: 0;
@@ -549,7 +735,7 @@ bds-radio-group[type='radiobutton'] {
 **In `bds-radio-group.scss`** — add a new block (the wrapper becomes the single bordered container):
 
 ```scss
-bds-radio-group[type='radiobutton'] {
+bds-radio-group[type="radiobutton"] {
   .bds-radio-group__options {
     display: inline-flex;
     border: 1px solid $boreal-stroke-default-light;
@@ -674,6 +860,7 @@ Same as Change 5f in the primary approach above — strip button borders in grou
 ## Task 5: bds-radio-button SCSS
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/forms/bds-radio-button/bds-radio-button.scss`
 - `packages/boreal-web-components/src/components/forms/bds-radio-group/bds-radio-group.scss`
 
@@ -698,7 +885,7 @@ bds-radio-button {
     border-color 0.2s ease,
     background-color 0.2s ease;
 
-  input[type='radio'] {
+  input[type="radio"] {
     position: absolute;
     opacity: 0;
     width: 0;
@@ -756,7 +943,7 @@ bds-radio-button {
   }
 }
 
-bds-radio-group[type='radiobutton'] {
+bds-radio-group[type="radiobutton"] {
   bds-radio-button {
     border: none;
     border-radius: 0;
@@ -769,7 +956,7 @@ bds-radio-group[type='radiobutton'] {
 Append to the existing `bds-radio-group.scss` file:
 
 ```scss
-bds-radio-group[type='radiobutton'] {
+bds-radio-group[type="radiobutton"] {
   .bds-radio-group__options {
     display: inline-flex;
     border: 1px solid $boreal-stroke-default-light;
