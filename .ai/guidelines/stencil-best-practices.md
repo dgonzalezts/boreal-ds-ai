@@ -178,6 +178,44 @@ When hover applies to multiple child elements, nest them under a single `&:hover
 
 ---
 
+## `@Prop()` Type Declaration and Default Value Rules
+
+When a prop has a default value, TypeScript infers its type — no explicit annotation is needed:
+
+```typescript
+@Prop({ reflect: true }) readonly disabled = false;         // inferred boolean
+@Prop({ reflect: true }) readonly orientation = 'vertical'; // inferred string
+```
+
+When there is no default, the type cannot be inferred and must be declared explicitly:
+
+```typescript
+@Prop({ reflect: true }) readonly name!: string;   // required, no default
+@Prop({ reflect: true }) readonly formId?: string; // optional, no default
+```
+
+### When to use a default value
+
+- The prop has a sensible "off" state that works without user input: `disabled = false`, `required = false`.
+- There is always a valid fallback and the prop is purely behavioral.
+
+### When NOT to use a default value
+
+- **Identity data** — `name` and `value` on a leaf element are required (`!`). A default of `''` would silently submit invalid form data while passing HTML validation.
+- **Optional context** — props like `formId?: string` and `required?: boolean` are optional because their _absence_ has meaning (no form association, not required). Defaulting them to `''` or `false` changes DOM attribute presence semantics.
+
+### Rule of thumb
+
+| Declaration        | Meaning                                                            |
+| ------------------ | ------------------------------------------------------------------ |
+| `name!: string`    | Required, no default — component cannot function without it        |
+| `formId?: string`  | Optional, no default — `undefined` is a valid and meaningful value |
+| `disabled = false` | Has default — behavioral, always a valid fallback                  |
+
+> **Stencil + React/Vue wrappers**: for boolean props with `reflect: true`, Stencil strips the DOM attribute when the value is `false` — so `false` and `undefined` produce identical DOM output. The `required={false}` vs `required={undefined}` distinction that matters in plain HTML does not apply here.
+
+---
+
 ## Prop and Event Naming Conventions
 
 ### Boolean prop naming

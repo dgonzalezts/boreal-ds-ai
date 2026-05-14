@@ -23,6 +23,7 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                                         | Description                                                                                                       |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [EOA-12342-bds-checkbox-button.md](EOA-12342-bds-checkbox-button.md)         | `bds-checkbox-button` leaf — Tasks 1–9 done; stories + MDX need updates once `bds-checkbox-group` wrapper lands  |
 | [alpha-release-vue-react-storybook.md](alpha-release-vue-react-storybook.md) | Vue first publish, React re-publish, and Storybook deploy to Chromatic                                            |
 | [icons-strategy.md](icons-strategy.md)                                       | Phased icon library rollout — icon font + S3 CDN for alpha, component wrappers for beta                           |
 | [integrated-monorepo-migration.md](integrated-monorepo-migration.md)         | pnpm workspaces + Turborepo + root-level git hooks + release-it migration. Missing watch mode on styleguidelines. |

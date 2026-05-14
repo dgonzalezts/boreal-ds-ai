@@ -1,6 +1,13 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: >
+  Use BEFORE writing any code when planning a new Stencil component, feature, or multi-step
+  implementation task for Boreal DS. Invoke when the user says "write a plan", "create a plan",
+  "plan this component", "plan the implementation", "I want to build X", "let's plan X", or
+  provides a spec, ticket, or Figma design and asks what to do next. Produces a task-by-task
+  implementation plan saved to .ai/plans/ covering files to create or modify, acceptance criteria,
+  unit test behaviors, manual test steps, and commit messages. Always use this skill before
+  dispatching any implementation subagent or starting development work on a new component.
 ---
 
 # Writing Plans
@@ -15,16 +22,39 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `.ai/plans/<ticket-id>-<feature-name>.md`. Pull the ticket ID from the active branch, then confirm the filename with the user before saving.
 
-## Bite-Sized Task Granularity
+## Task Granularity
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+**Each task maps to one logical development step** — the smallest unit a developer would naturally commit and manually test in sequence, as if coding without AI assistance.
+
+Tasks follow the natural development order within each component. The reference below covers the **most complex case** — a form-associated leaf component paired with an orchestrator group. Simpler components are subsets: omit steps that do not apply (e.g. a display-only component skips form lifecycle and keyboard navigation; a standalone component with no group skips all group steps).
+
+**Leaf component (e.g. `bds-radio`, `bds-checkbox-button`)**
+
+1. Type interfaces — `IComponent.ts`, change detail types; no implementation yet
+2. Scaffold — `@Prop` and `@Event` declarations only; `render()` returns a stub `<Host />`
+3. Lifecycle + interaction — `componentDidLoad`, selection/toggle logic, click and keyboard handlers
+4. `render()` — full DOM structure replacing the stub; class map; slots; hidden `<input>`
+5. JSDoc audit — verify all `@Prop`, `@Event`, `@Method`, and the class-level block are complete
+6. SCSS — all visual states using `$boreal-*` tokens; no hardcoded values
+7. Unit tests — separate spec files per behavior area (basics, a11y, events, variants, keyboard)
+
+**Group / orchestrator component (e.g. `bds-radio-group`, `bds-checkbox-group`) — append after the leaf is complete**
+
+8. Scaffold — props, events, `@AttachInternals`, element getter; stub `render()`
+9. Child listeners — `@Listen('bdsMount')` stamps name/state; `@Listen('bdsChange')` enforces selection contract
+10. Keyboard navigation — roving tabindex, arrow key handling, wrap-around, skip-disabled _(omit if not applicable)_
+11. `@Watch` + form lifecycle — `formResetCallback`, `formAssociatedCallback`, `formDisabledCallback`, validity
+12. `componentDidLoad` + `render()` — slot wiring, layout count, full render tree
+13. JSDoc audit
+14. SCSS
+15. Unit tests
+16. Framework output targets — Vue `componentModels`, etc. _(omit if not applicable)_
+17. Storybook story
+18. MDX documentation
+
+**Key invariant:** every task must be independently committable and have a manual test that can pass before the next task begins. Never merge two steps if the result of the first cannot be manually verified on its own.
 
 ## Plan Document Header
 
@@ -33,7 +63,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -42,63 +72,71 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Tech Stack:** [Key technologies/libraries]
 
 ---
+
+## Files to create / modify
+
+| File                        | Notes                        |
+| --------------------------- | ---------------------------- |
+| `exact/path/to/file.ts`     | New — [brief description]    |
+| `exact/path/to/existing.ts` | Modify — [brief description] |
+
+---
 ```
+
+The file table is a living checklist. It gives the implementer full orientation before reading any task.
 
 ## Task Structure
 
-```markdown
-### Task N: [Component Name]
+````markdown
+### Task N: [Deliverable Layer Name]
 
 **Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
 
-**Step 1: Write the failing test**
+- `exact/path/to/file.ts` (create)
+- `exact/path/to/existing.ts` (modify)
 
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
+**Acceptance criteria:**
 
-**Step 2: Run test to verify it fails**
+- Bullet describing a prop, behavior, or constraint — not code
+- Use tables for props (name / type / default / reflect / description)
+- State which tokens, mixins, or patterns to use by name
+- Call out edge cases and guards explicitly ("when disabled, X must not happen")
+- Reference existing sibling components as the pattern to follow where applicable
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
+**Unit tests to cover** _(spec file: `__test__/component.behavior.spec.ts`)_:
 
-**Step 3: Write minimal implementation**
+- Behavior 1 — what the test must assert, not how to write it
+- Behavior 2
+- ...
 
-```python
-def function(input):
-    return expected
-```
+**Manual test _(waiveable)_:**
 
-**Step 4: Run test to verify it passes**
+Run: `pnpm dev:components` (or `pnpm storybook`)
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
+- [ ] Specific thing to verify in the browser or DevTools
+- [ ] Another verification step
+- [ ] Pass/fail criterion stated explicitly
 
-**Step 5: Commit**
+**Commit:**
 
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
+git commit -m "type(scope): TICKET-ID description"
 ```
 
 ## Remember
+
 - Exact file paths always
-- Complete code in plan (not "add validation")
-- Exact commands with expected output
-- Reference relevant skills with @ syntax
-- DRY, YAGNI, TDD, frequent commits
+- Acceptance criteria and behavior descriptions — not code blocks
+- Token names, mixin names, and pattern references by name (not by example)
+- Every implementation task has a manual test section
+- Unit test tasks describe behaviors to cover, not how to write the tests
+- DRY, YAGNI, TDD, frequent commits per task
 
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `.ai/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
@@ -107,10 +145,17 @@ After saving the plan, offer execution choice:
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+
+- **REQUIRED SUB-SKILL:** Use subagent-driven-development
 - Stay in this session
 - Fresh subagent per task + code review
 
 **If Parallel Session chosen:**
+
 - Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+- **REQUIRED SUB-SKILL:** New session uses executing-plans
+
+```
+
+```
+````

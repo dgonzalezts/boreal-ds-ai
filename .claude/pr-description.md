@@ -1,23 +1,17 @@
 # PR Title
 
-feat(web-components): EOA-12334 add radio and radio-group form components
+feat(web-components): EOA-12342 implement bds-checkbox-button component
 
 ---
 
 # PR Body
 
-Implements `bds-radio` and `bds-radio-group` as form-associated custom elements with full keyboard navigation, ARIA support, and native form integration.
+Adds `bds-checkbox-button`, a pill-shaped checkbox that toggles independently using `role="checkbox"` semantics, matching the visual language of `bds-radio-button` while supporting multi-select behaviour.
 
-The radio group component orchestrates single-selection across child `bds-radio` elements using roving tabindex, arrow key navigation, and FACE (Form-Associated Custom Elements) lifecycle callbacks. Both components integrate with native forms via `ElementInternals`, supporting `FormData`, form reset, and state restoration.
+The `bds-radio-button` SCSS was already duplicating the full selectable-button pattern. Rather than copy it a second time, this PR extracts that shared visual language into `forms/_shared/_selectable-button.scss` and replaces the `bds-radio-button` stylesheet with a single `@use` of the mixin. `bds-checkbox-button` then builds on the same foundation, adding its own checked/error state overrides. This keeps both components in sync visually without duplicated token references.
 
-Key implementation details:
+A standalone approach (`@Prop({ mutable: true }) checked`) was considered alongside a controlled approach (`@Prop() checked` + emitted event only). Mutable was chosen to allow the button to function as a fully self-contained standalone element — a future `bds-checkbox-group` can take over group coordination when it exists, at which point checked state will be driven by the parent.
 
-- **Form integration**: Uses `formAssociatedMixin` with `@AttachInternals()` on the component class. The group component registers in `componentModels` for Vue `v-model` two-way binding support.
-- **Keyboard navigation**: Arrow keys (Up/Down/Left/Right) navigate between enabled radios with automatic selection, following ARIA Authoring Practices Guide patterns.
-- **Error state management**: Supports both controlled error state (via `error` prop) and native validation error state (via `invalid` event and `isInvalid` @State), propagating error styling to all child radios.
-- **Accessibility**: Full ARIA implementation with `role="radiogroup"`, `aria-checked`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, and `aria-required`. Roving tabindex ensures only one radio is in the tab sequence at a time.
-- **Label infrastructure**: Uses `<bds-typography>` for group label and helper text, with `variant="label"` and `variant="helper"` plus dynamic `state` prop (default/error/disabled).
+The `bds-radio-group` also picks up a new `joined` prop and test corrections as foundational work aligned with EOA-12342's group-level scope. These are included here because the shared mixin refactor touched `bds-radio-button.scss`, and the group tests were already inconsistent with the component's actual behaviour.
 
-Test coverage includes five spec files per component covering accessibility, basics, variants, events, form integration, and keyboard interaction, exceeding the 90% statement coverage requirement.
-
-Refs [EOA-12334](https://telesign.atlassian.net/browse/EOA-12334)
+Refs EOA-12342

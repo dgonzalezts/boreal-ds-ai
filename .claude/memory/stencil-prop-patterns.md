@@ -48,6 +48,44 @@ If `mutable: true` is genuinely needed on a non-FACE prop (a prop only the compo
 
 In `custom-elements.json`, `mutable: true` causes Stencil to omit `"readonly": true` from the manifest entry. This is correct and intentional — it signals to consumers that the prop may change at runtime.
 
+## `@Prop()` Type Declaration and Default Value Rules
+
+When a prop has a default value, TypeScript infers its type — no explicit annotation is needed:
+
+```typescript
+@Prop({ reflect: true }) readonly disabled = false;         // inferred boolean
+@Prop({ reflect: true }) readonly orientation = 'vertical'; // inferred string, narrowed by implements
+```
+
+Even when TypeScript would widen the inferred type (e.g. `'vertical'` → `string`), the `implements IComponent` clause catches mismatches at the class level. If the interface says `orientation: Orientation` (`'horizontal' | 'vertical'`) and the class infers `string`, TypeScript errors on the `implements` clause itself — not silently. No explicit annotation is needed on the prop.
+
+When there is no default, the type cannot be inferred and must be declared explicitly:
+
+```typescript
+@Prop({ reflect: true }) readonly name!: string;   // required — no default
+@Prop({ reflect: true }) readonly formId?: string; // optional — undefined is meaningful
+```
+
+**When to use a default value:**
+
+- The prop has a sensible "off" state: `disabled = false`, `required = false`, `checked = false`.
+- There is always a valid fallback and the prop is purely behavioral.
+
+**When NOT to use a default value:**
+
+- **Identity data** (`name`, `value` on a leaf element) — these are required (`!`). A default of `''` would silently submit broken form data.
+- **Optional context** (`formId?`, `required?`) — `undefined` means "absent", which is semantically different from `false` or `''`. Defaulting them changes DOM attribute presence.
+
+| Declaration        | Meaning                                                        |
+| ------------------ | -------------------------------------------------------------- |
+| `name!: string`    | Required, no default — component cannot function without it    |
+| `formId?: string`  | Optional, no default — `undefined` is a valid meaningful value |
+| `disabled = false` | Has default — behavioral, always a valid fallback              |
+
+> For boolean props with `reflect: true` in Stencil, `false` and `undefined` produce identical DOM output (attribute omitted). The `required={false}` vs `required={undefined}` distinction that matters in plain HTML or React does not apply here — Stencil strips the attribute in both cases.
+
+---
+
 ## Never Use Indexed Access Types on `@Prop()` Declarations
 
 Do **not** write `@Prop() readonly foo: IFoo['foo'] = ''`. TypeScript's indexed access types (e.g. `IFoo['propName']`) appear to work at editor time but produce an `error`-typed result in the Stencil compiler context. This causes `@typescript-eslint/no-unsafe-assignment` errors on every read of that prop (event emitter calls, JSX attributes, class map values, etc.).

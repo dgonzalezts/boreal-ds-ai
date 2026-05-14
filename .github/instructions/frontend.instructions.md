@@ -260,12 +260,16 @@ export type ButtonSize = "small" | "medium" | "large";
   styleUrl: "bds-button.scss",
 })
 export class BdsButton {
-  // 2. Every @Prop must have: explicit type, JSDoc, and default value
+  // 2. Every @Prop must have a JSDoc block. Type and default value rules:
+  //    - Use a default when there is a sensible off-state (disabled = false, orientation = 'vertical').
+  //    - TypeScript infers the type from the default — no explicit annotation needed in that case.
+  //    - Use `!` (required) or `?` (optional) with an explicit type when there is no default.
+  //    - Never default identity props (name, value on leaf elements) to '' — broken form data.
   /** Visual variant of the button */
   @Prop() variant: ButtonVariant = "default";
 
   /** Disables the button */
-  @Prop() disabled: boolean = false;
+  @Prop() disabled = false;
 
   // 3. @Event must always set bubbles and composed so events cross shadow DOM
   /** Emitted when the button is clicked */
@@ -671,19 +675,15 @@ Both utilities are exported from `packages/boreal-web-components/src/utils/testi
 
 Create different files for the following types of component functionality when applicable:
 
-- A11y (Accessibility).
-- Basics.
-- Variants.
-- Events.
-- Slots.
+| File                             | Create when…                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bds-component.a11y.spec.ts`     | The component renders ARIA attributes, roles, or manages focus. Always required for interactive components.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `bds-component.basics.spec.ts`   | The component has props, CSS classes, or render output that can be verified in isolation. Always required.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `bds-component.variants.spec.ts` | The component has a `variant`, `size`, `color`, `type`, or equivalent enum prop that changes rendered output. Create only when the permutations are not already covered by `basics`.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `bds-component.events.spec.ts`   | The component emits one or more custom events, or reacts to DOM events from child elements.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `bds-component.slots.spec.ts`    | The slot itself has testable observable behaviour beyond what other spec files already cover. Create only when at least one of these is true: (1) the component has named slots and their presence/absence changes rendered output or state; (2) a `slotchange` handler updates component state or DOM in a way that can be asserted; (3) the slot renders conditionally based on props. **Do not create** this file for a bare unnamed passthrough slot (`<slot />`) whose only effect is a CSS layout variable — that is already exercised incidentally by any test that passes child elements. |
 
-The naming convention should follow the rule `{bds-component}.functionality.spec.ts`. Example:
-
-- `bds-component.a11y.spec.ts`
-- `bds-component.basics.spec.ts`
-- `bds-component.variants.spec.ts`
-- `bds-component.events.spec.ts`
-- `bds-component.slots.spec.ts`
+The naming convention follows the rule `{bds-component}.functionality.spec.ts`.
 
 - One `describe` block per spec file
 - One `it` per distinct behaviour (not per line of code)

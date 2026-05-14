@@ -117,6 +117,47 @@ Always run `fnm use` before executing any Node.js or pnpm command in a terminal 
 - Utilities and scripts: **Vitest** (see `vitest.config.ts` per package).
 - E2E tests: Stencil + Puppeteer.
 
+#### Spec file root element pattern
+
+Always assign `page.root` to a named variable with an explicit type cast. Never access it inline or with optional chaining.
+
+```ts
+// ✅ correct
+const root = page.root as HTMLElement;
+expect(root.classList.contains('bds-button--disabled')).toBe(true);
+
+// ❌ avoid
+expect((page.root as HTMLElement).classList.contains('bds-button--disabled')).toBe(true);
+page.root?.querySelector('button');
+```
+
+Use `HTMLElement` for DOM-only access. Use the typed element interface (e.g. `HTMLBdsRadioGroupElement`) when you need to access typed `@Prop()` values or call `@Method()` members.
+
+For `querySelectorAll`, query from `root` directly — never use the `?? []` fallback pattern. `Array.prototype.every()` on an empty array returns `true` (vacuous truth), which silently passes count or orientation assertions when the root is missing.
+
+```ts
+// ✅ correct
+const root = page.root as HTMLElement;
+const dividers = Array.from(root.querySelectorAll('bds-divider[data-injected]'));
+expect(dividers.length).toBe(2);
+
+// ❌ avoid — silent false positive if root is undefined
+const dividers = Array.from(page.root?.querySelectorAll('bds-divider[data-injected]') ?? []);
+```
+
+Use `assertExists` from `@/utils` on any queried child element that **must** exist before the assertion is meaningful:
+
+```ts
+import { assertExists } from '@/utils';
+
+const root = page.root as HTMLElement;
+const label = root.querySelector('bds-typography[variant="label"]');
+assertExists(label, 'Label typography element not found');
+expect(label.textContent).toBe('My Group');
+```
+
+Canonical reference: `packages/boreal-web-components/src/components/actions/bds-button/__test__/bds-button-basics.spec.ts`.
+
 ### Code Generation
 
 - New Stencil components: `pnpm generate:component` (Stencil's built-in generator).

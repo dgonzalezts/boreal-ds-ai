@@ -84,6 +84,7 @@ Notes:
 
 - `readonly` is mandatory for `@Prop()` declarations.
 - If `mutable: true` is used, mutate internally with a narrow cast instead of `as any`.
+- **Type annotation is only required when there is no default value.** TypeScript infers the type from the initializer (`disabled = false` → `boolean`). Explicit annotations are needed only for required props (`name!: string`) and optional props with no default (`formId?: string`). See `.ai/guidelines/stencil-best-practices.md` → `@Prop() Type Declaration and Default Value Rules` for the full decision table.
 
 ---
 
