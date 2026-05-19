@@ -187,6 +187,19 @@ When a prop has a default value, TypeScript infers its type — no explicit anno
 @Prop({ reflect: true }) readonly orientation = 'vertical'; // inferred string
 ```
 
+**Always use string literals as default values — never constant or enum references.**
+Stencil resolves `@Prop()` defaults at static analysis time (AST level). If you write `= ORIENTATIONS.VERTICAL`, the compiler records the identifier `ORIENTATIONS.VERTICAL` in `custom-elements.json` instead of the actual value `'vertical'`. This leaks internal implementation details into the CEM, Storybook ArgTypes, and consumer IDEs.
+
+```typescript
+// ✅ Correct — CEM records 'vertical'
+@Prop() readonly orientation: Orientation = 'vertical';
+
+// ❌ Wrong — CEM records 'ORIENTATIONS.VERTICAL'
+@Prop() readonly orientation: Orientation = ORIENTATIONS.VERTICAL;
+```
+
+Constants may still be used inside logic (switch cases, `validatePropValue`, class maps) — just never as the `@Prop()` initializer.
+
 When there is no default, the type cannot be inferred and must be declared explicitly:
 
 ```typescript

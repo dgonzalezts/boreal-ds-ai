@@ -21,6 +21,10 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 ## In Progress
 
+| File                                                               | Description                                                                                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| [ai-scaffold-restructure.md](ai-scaffold-restructure.md)           | Restructure AI scaffold into `.agents/`, `ai-docs/`, `ai-work/` with symlink facades for `.claude/`, `.cursor/`, `.github/`   |
+
 | File                                                                         | Description                                                                                                       |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [EOA-12342-bds-checkbox-button.md](EOA-12342-bds-checkbox-button.md)         | `bds-checkbox-button` leaf — Tasks 1–9 done; stories + MDX need updates once `bds-checkbox-group` wrapper lands  |
