@@ -1,0 +1,870 @@
+Directory structure:
+└── dgonzalezts-aqua-style-guidelines/
+    ├── readme.md
+    ├── package.json
+    ├── tsconfig.json
+    └── src/
+        ├── copyFiles.ts
+        ├── fileSystem.ts
+        ├── generate.ts
+        ├── moduleUpdater.ts
+        ├── paths.ts
+        ├── variableGenerator.ts
+        ├── assets/
+        │   └── scss/
+        │       ├── _index.scss
+        │       ├── base/
+        │       │   ├── _colors.scss
+        │       │   ├── _font.scss
+        │       │   ├── _index.scss
+        │       │   ├── _reset.scss
+        │       │   └── _spacing.scss
+        │       └── vendors/
+        │           ├── _bulma-local.scss
+        │           └── _index.scss
+        └── config/
+            ├── color.json
+            ├── extended-color.json
+            ├── layout.json
+            ├── shadow.json
+            ├── spacing copy.json
+            ├── spacing.json
+            └── typography.json
+
+================================================
+FILE: readme.md
+================================================
+# Aqua Styleguidelines
+
+It is the main package of Aqua Design System tokens.
+
+Tokens Example
+```css
+
+/* style.css */
+
+:root {
+  --color-primary-light: #08d1b0d3;
+  --color-primary-base: #00c9a7;
+  --color-primary-dark: #029b81;
+  --color-paper-lighter: #ebf7f5;
+  --color-primary-darker: #023744;
+  --color-ink-base: #0d574a;
+  --color-paper-darker: #4b5c59;
+  --color-ink-lighter: #4a6964;
+  --color-success-base: #00c9a7;
+  --color-paper-light: #dee9e7;
+  --color-ink-light: #046151;
+}
+```
+
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "@aqua-ds/style-guidelines",
+  "version": "0.0.1-b",
+  "description": "Aqua main style guidelines",
+  "main": "dist/css/aqua-ds-styleguidelines.css",
+  "unpkg": "dist/css/aqua-ds-styleguidelines.css",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean-build": "rimraf scss css",
+    "generate": "ts-node src/generate.ts",
+    "transpile": "sass --load-path=node_modules src/assets/scss/_index.scss:css/aqua-ds-styleguidelines.css",
+    "copy": "ts-node src/copyFiles.ts",
+    "build": "npm run clean-build && npm run generate && npm run copy && npm run transpile"
+  },
+  "author": "frontops@masiv.com",
+  "license": "MIT",
+  "files": [
+    "scss",
+    "css"
+  ],
+  "exports": {
+    ".": {
+      "sass": "./scss/_index.scss",
+      "default": "./css/index.css"
+    },
+    "./scss/variables": {
+      "sass": "./scss/variables/_index.scss"
+    },
+    "./scss/variables/*": {
+      "sass": "./scss/variables/_*.scss"
+    },
+    "scss": "./dist/scss/*",
+    "css": "./dist/css/*"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.13.9",
+    "fs-extra": "^11.3.0",
+    "rimraf": "^6.0.1",
+    "sass-embedded": "^1.85.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "bulma": "1.0.2"
+  }
+}
+
+
+
+================================================
+FILE: tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  }
+}
+
+
+================================================
+FILE: src/copyFiles.ts
+================================================
+import fs from "fs-extra";
+import path from "path";
+
+const sourceDir = path.join(__dirname, "assets");
+const destinationDir = path.join(__dirname, "..");
+
+// Ensure the destination folder exists
+fs.ensureDirSync(destinationDir);
+
+// Copy files
+fs.copy(sourceDir, destinationDir)
+  .then(() => console.log("Files copied successfully!"))
+  .catch((err) => console.error("Error copying files:", err));
+
+
+================================================
+FILE: src/fileSystem.ts
+================================================
+import fs from 'fs';
+import path from 'path';
+
+export function createFolder(folderPath: string): void {
+  try {
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+  } catch (err) {
+    console.error(`Creating ${folderPath} failed: `, err);
+  }
+}
+
+export function writeFile(filePath: string, fileContent: string): void {
+  fs.writeFileSync(filePath, fileContent);
+}
+
+export function appendFile(filePath: string, content: string): void {
+  fs.appendFileSync(filePath, content);
+}
+
+
+
+================================================
+FILE: src/generate.ts
+================================================
+import path from 'path';
+import { createFolder, writeFile } from './fileSystem';
+import { generateStyles } from './variableGenerator';
+import { updateModuleFile } from './moduleUpdater';
+import { paths } from './paths';
+
+import colorConfig from './config/color.json';
+import extendedColorConfig from './config/extended-color.json';
+import fontConfig from './config/typography.json';
+import spacingConfig from './config/spacing.json';
+import boxShadowConfig from './config/shadow.json';
+import layoutConfig from './config/layout.json';
+
+const CATEGORIES = [
+  { category: 'color', config: colorConfig, separateBySubproperty: false },
+  { category: 'layout', config: layoutConfig, separateBySubproperty: true },
+  { category: 'extended-color', config: extendedColorConfig, separateBySubproperty: false },
+  { category: 'font', config: fontConfig, separateBySubproperty: true },
+  { category: 'spacing', config: spacingConfig, separateBySubproperty: true },
+  { category: 'box-shadow', config: boxShadowConfig, separateBySubproperty: true },
+];
+
+CATEGORIES.forEach(({ category, config, separateBySubproperty }) => {
+  const { cssContent, scssContent, sassMapContent } = generateStyles(category, config, separateBySubproperty);
+  const sassMapContentWrapper = separateBySubproperty ? sassMapContent : `$${category}: (${sassMapContent})`;
+
+  createFolder(paths.assets);
+  createFolder(paths.scss.variables);
+  createFolder(paths.scss.maps);
+  createFolder(paths.css.variables);
+
+  writeFile(path.join(paths.css.variables, `_${category}.css`), cssContent);
+  writeFile(path.join(paths.scss.variables, `_${category}.scss`), scssContent);
+  writeFile(path.join(paths.scss.maps, `_${category}.scss`), sassMapContentWrapper);
+  updateModuleFile(paths.scss.maps, '_index.scss', `${category}`);
+  updateModuleFile(paths.scss.variables, '_index.scss', `${category}`);
+  console.log(`${category} CSS and SCSS variables generated successfully!`);
+});
+
+
+
+================================================
+FILE: src/moduleUpdater.ts
+================================================
+import fs from 'fs';
+import path from 'path';
+import { appendFile, writeFile } from './fileSystem';
+
+export function updateModuleFile(folderPath: string, outputFile: string, stylesheetFile: string): void {
+  const moduleFilePath = path.join(folderPath, outputFile);
+  const importStatement = `@forward '${stylesheetFile}';\n`;
+
+  if (fs.existsSync(moduleFilePath)) {
+    const existingContent = fs.readFileSync(moduleFilePath, 'utf-8');
+
+    if (!existingContent.includes(importStatement)) {
+      appendFile(moduleFilePath, importStatement);
+    }
+  } else {
+    writeFile(moduleFilePath, importStatement);
+  }
+}
+
+
+
+================================================
+FILE: src/paths.ts
+================================================
+import path from 'path';
+export const ROOT_DIR = path.join(__dirname);
+export const ASSETS_DIR = path.join(ROOT_DIR, 'assets');
+export const SCSS_DIR = path.join(ASSETS_DIR, 'scss');
+export const CSS_DIR = path.join(ASSETS_DIR, 'css');
+
+export const paths = {
+  root: ROOT_DIR,
+  assets: ASSETS_DIR,
+  scss: {
+    variables: path.join(SCSS_DIR, 'variables'),
+    maps: path.join(SCSS_DIR, 'maps'),
+  },
+  css: {
+    variables: path.join(CSS_DIR, 'variables'),
+  }
+}; 
+
+
+================================================
+FILE: src/variableGenerator.ts
+================================================
+type TokenValue = {
+  value: string;
+};
+
+type TokenMap = {
+  [key: string]: TokenValue | TokenMap;
+};
+
+export function generateCSSVariables(map: TokenMap, prefix: string): string {
+  let cssVariables = '';
+
+  for (const [key, value] of Object.entries(map)) {
+    if ((value as TokenValue).hasOwnProperty('value')) {
+      const tokenValue = value as TokenValue;
+      cssVariables += `  --${prefix}${key}: ${tokenValue.value};\n`;
+    } else if (typeof value === 'object') {
+      cssVariables += generateCSSVariables(value as TokenMap, `${prefix}${key}-`);
+    }
+  }
+  return cssVariables;
+}
+
+export function generateSCSSVariables(map: TokenMap, prefix: string): string {
+  let scssVariables = '';
+
+  for (const [key, value] of Object.entries(map)) {
+    if ((value as TokenValue).hasOwnProperty('value')) {
+      scssVariables += `$${prefix}${key}: var(--${prefix}${key});\n`;
+    } else if (typeof value === 'object') {
+      scssVariables += generateSCSSVariables(value as TokenMap, `${prefix}${key}-`);
+    }
+  }
+
+  return scssVariables;
+}
+
+export function generateSassMap(
+  mapName: string,
+  map: TokenMap,
+  parentKey = '',
+  useFullName = true,
+): string {
+  let sassOutput = '';
+  let currentMapContent = '';
+
+  const sassMapName = parentKey && useFullName ? mapName : mapName;
+
+  for (const [key, value] of Object.entries(map)) {
+    if (key.includes('basic') && key.includes('unit'))
+      continue;
+
+    const fullPath = `${parentKey ? `${parentKey}-` : ''}${key}`;
+    
+
+    if ((value as TokenValue).hasOwnProperty('value')) {
+      const contentKey = useFullName ? `${key}` : `${mapName}-${key}`;
+      currentMapContent += `  ${contentKey}: var(--${fullPath}),\n`;
+      
+    } else if (typeof value === 'object') {
+      sassOutput += generateSassMap(useFullName ? `${mapName}-${key}` : key, value as TokenMap, fullPath, useFullName).trim() + '\n';
+    }
+  }
+
+  if (currentMapContent && !useFullName) {
+    sassOutput += currentMapContent;
+  } else if (currentMapContent) {
+    sassOutput += `$${sassMapName}: (\n${currentMapContent});\n\n`;
+  }
+
+  return sassOutput;
+}
+
+export function generateStyles(category: string, json: TokenMap, separateByProperty: boolean): { cssContent: string, scssContent: string, sassMapContent: string } {
+  let cssContent = ':root {\n';
+  let scssContent = '';
+  let sassMapContent = '';
+
+  for (const property in json) {
+    const categoryData = json[property];
+    const prefix = `${property}-`;
+
+    cssContent += generateCSSVariables(categoryData as TokenMap, prefix);
+    scssContent += generateSCSSVariables(categoryData as TokenMap, prefix);
+    sassMapContent += generateSassMap(category, categoryData as TokenMap, property, separateByProperty);
+  }
+
+  cssContent += '}\n';
+  return { cssContent, scssContent, sassMapContent };
+}
+
+
+
+================================================
+FILE: src/assets/scss/_index.scss
+================================================
+@forward "vendors";
+@forward "variables";
+@forward "base";
+
+
+================================================
+FILE: src/assets/scss/base/_colors.scss
+================================================
+@forward "../../css/variables/_color.css";
+@forward "../../css/variables/_extended-color.css";
+
+@use "sass:map";
+@use "../maps/extended-color" as *;
+
+
+@mixin generate-styles($prefix, $property, $map) {
+  @each $key, $value in $map {
+    .#{$prefix}-#{$key} {
+      #{$property}: $value !important;
+    }
+  }
+}
+
+@include generate-styles("aq-text", "color", $extended-color);
+@include generate-styles("aq-background", "background-color", $extended-color);
+@include generate-styles("aq-border", "border-color", $extended-color);
+
+
+
+================================================
+FILE: src/assets/scss/base/_font.scss
+================================================
+@forward "../../css/variables/_font.css";
+@use '../maps/font' as *;
+
+@mixin typography-classes($prefix, $property, $map) {
+  @each $key, $value in $map {
+    .#{$prefix}-#{$key} {
+      #{$property}: $value;
+    }
+  }
+}
+
+@include typography-classes("aq-font-size", "font-size", $font-size);
+@include typography-classes("aq-font-weight", "font-weight", $font-weight);
+@include typography-classes("aq-line-height", "line-height", $font-line-height);
+
+
+================================================
+FILE: src/assets/scss/base/_index.scss
+================================================
+@forward 'reset';
+@forward 'colors';
+@forward 'font';
+@forward 'spacing';
+
+
+================================================
+FILE: src/assets/scss/base/_reset.scss
+================================================
+[Empty file]
+
+
+================================================
+FILE: src/assets/scss/base/_spacing.scss
+================================================
+@forward "../../css/variables/_spacing.css";
+
+@use "../maps/spacing" as *;
+@use "sass:map";
+
+@mixin generate-spacing-classes($prefix, $property, $map) {
+  @each $key, $value in $map {
+    .#{$prefix}-#{$key} {
+      #{$property}: $value;
+    }
+    .#{$prefix}-#{$key}-top {
+      #{$property}-top: $value;
+    }
+    .#{$prefix}-#{$key}-right {
+      #{$property}-right: $value;
+    }
+    .#{$prefix}-#{$key}-left {
+      #{$property}-left: $value;
+    }
+    .#{$prefix}-#{$key}-bottom {
+      #{$property}-bottom: $value;
+    }
+  }
+}
+
+@include generate-spacing-classes("aq-padding", "padding", $spacing-size);
+@include generate-spacing-classes("aq-margin", "margin", $spacing-size);
+
+
+================================================
+FILE: src/assets/scss/vendors/_bulma-local.scss
+================================================
+@forward 'bulma/sass/helpers/gap';
+@forward 'bulma/sass/helpers/spacing';
+@forward 'bulma/sass/base/minireset.scss';
+@forward 'bulma/sass/grid';
+@forward 'bulma/sass/layout';
+
+
+
+================================================
+FILE: src/assets/scss/vendors/_index.scss
+================================================
+@forward 'bulma-local'
+
+
+================================================
+FILE: src/config/color.json
+================================================
+{
+    "color": {
+        "ink": {
+            "base": { "value": "#272A2F" },
+            "dark": { "value": "#1C1E21" },
+            "darker": { "value": "#131316" },
+            "light": { "value": "#3B3F45" },
+            "lighter": { "value": "#595D64" }
+        },
+        "primary": {
+            "base": { "value": "#0A5BFC" },
+            "dark": { "value": "#023075" },
+            "darker": { "value": "#03152B" },
+            "light": { "value": "#9EC5FF" },
+            "lighter": { "value": "#F0F7FF" }
+        },
+        "success": {
+            "lighter": { "value": "#EEFBF4" },
+            "light": { "value": "#96DEB2" },
+            "base": { "value": "#24A852" },
+            "dark": { "value": "#004A18" },
+            "darker": { "value": "#001B07" }
+        },
+        "warning": {
+            "lighter": { "value": "#FFFDE6" },
+            "light": { "value": "#FFE180" },
+            "base": { "value": "#F2C840" },
+            "dark": { "value": "#523800" },
+            "darker": { "value": "#1F1300" }
+        },
+        "danger": {
+            "darker": { "value": "#260309" },
+            "dark": { "value": "#690713" },
+            "base": { "value": "#C7242B" },
+            "light": { "value": "#FFA3A5" },
+            "lighter": { "value": "#FFF0F1" }
+        },
+        "paper": {
+            "base": { "value": "#D3D4D9" },
+            "dark": { "value": "#B6B8BE" },
+            "darker": { "value": "#8A8E96" },
+            "light": { "value": "#E3E3E6" },
+            "lighter": { "value": "#F7F7F8" }
+        },
+        "white": { "value": "#FFFFFF" }
+    }
+}
+
+
+================================================
+FILE: src/config/extended-color.json
+================================================
+{
+    "color": {
+        "lime": {
+            "90": { "value": "#101900" },
+            "80": { "value": "#192b00" },
+            "70": { "value": "#2a4a00" },
+            "60": { "value": "#325c00" },
+            "50": { "value": "#427d07" },
+            "40": { "value": "#61a824" },
+            "30": { "value": "#8dc75f" },
+            "20": { "value": "#ace089" },
+            "10": { "value": "#d5f7c1" },
+            "5": { "value": "#eefee7" }
+        },
+        "green": {
+            "90": { "value": "#001b07" },
+            "80": { "value": "#002b0d" },
+            "70": { "value": "#004a18" },
+            "60": { "value": "#006120" },
+            "50": { "value": "#058531" },
+            "40": { "value": "#24a852" },
+            "30": { "value": "#67c98c" },
+            "20": { "value": "#96deb2" },
+            "10": { "value": "#c7f0d7" },
+            "5": { "value": "#eefbf4" }
+        },
+        "teal": {
+            "90": { "value": "#001a18" },
+            "80": { "value": "#002928" },
+            "70": { "value": "#004543" },
+            "60": { "value": "#005958" },
+            "50": { "value": "#00827d" },
+            "40": { "value": "#0ca6ab" },
+            "30": { "value": "#52c6cc" },
+            "20": { "value": "#87dee3" },
+            "10": { "value": "#bef0f4" },
+            "5": { "value": "#e8fbfc" }
+        },
+        "cyan": {
+            "90": { "value": "#05161f" },
+            "80": { "value": "#052533" },
+            "70": { "value": "#063e59" },
+            "60": { "value": "#06527a" },
+            "50": { "value": "#0a77ba" },
+            "40": { "value": "#119aeb" },
+            "30": { "value": "#5abefc" },
+            "20": { "value": "#8ad4ff" },
+            "10": { "value": "#c2e9ff" },
+            "5": { "value": "#ebf9ff" }
+        },
+        "blue": {
+            "90": { "value": "#03152b" },
+            "80": { "value": "#03204a" },
+            "70": { "value": "#023075" },
+            "60": { "value": "#0442ab" },
+            "50": { "value": "#0a5bfc" },
+            "40": { "value": "#467df7" },
+            "30": { "value": "#7ba9fe" },
+            "20": { "value": "#9ec5ff" },
+            "10": { "value": "#d1e3ff" },
+            "5": { "value": "#f0f7ff" }
+        },
+        "purple": {
+            "90": { "value": "#16042a" },
+            "80": { "value": "#29074f" },
+            "70": { "value": "#400c73" },
+            "60": { "value": "#5c1899" },
+            "50": { "value": "#892cd1" },
+            "40": { "value": "#a751e0" },
+            "30": { "value": "#cb80f2" },
+            "20": { "value": "#e698f5" },
+            "10": { "value": "#f7c6f7" },
+            "5": { "value": "#fceefc" }
+        },
+        "rose": {
+            "90": { "value": "#220716" },
+            "80": { "value": "#420a28" },
+            "70": { "value": "#630e39" },
+            "60": { "value": "#8e154f" },
+            "50": { "value": "#bf2367" },
+            "40": { "value": "#db4884" },
+            "30": { "value": "#fb74a7" },
+            "20": { "value": "#ff93c6" },
+            "10": { "value": "#ffcce4" },
+            "5": { "value": "#fceef7" }
+        },
+        "red": {
+            "90": { "value": "#260309" },
+            "80": { "value": "#45040e" },
+            "70": { "value": "#690713" },
+            "60": { "value": "#94101b" },
+            "50": { "value": "#c7242b" },
+            "40": { "value": "#e44e51" },
+            "30": { "value": "#f87c7e" },
+            "20": { "value": "#ffa3a5" },
+            "10": { "value": "#ffd1d1" },
+            "5": { "value": "#fff0f1" }
+        },
+        "orange": {
+            "90": { "value": "#240c00" },
+            "80": { "value": "#3e1600" },
+            "70": { "value": "#612500" },
+            "60": { "value": "#8a3900" },
+            "50": { "value": "#bc550b" },
+            "40": { "value": "#ec7a22" },
+            "30": { "value": "#ffa352" },
+            "20": { "value": "#ffc88a" },
+            "10": { "value": "#ffe9c7" },
+            "5": { "value": "#fff8e6" }
+        },
+        "yellow": {
+            "90": { "value": "#1f1300" },
+            "80": { "value": "#332200" },
+            "70": { "value": "#523800" },
+            "60": { "value": "#755100" },
+            "50": { "value": "#a37600" },
+            "40": { "value": "#dba70a" },
+            "30": { "value": "#f2c840" },
+            "20": { "value": "#ffe180" },
+            "10": { "value": "#fff5c2" },
+            "5": { "value": "#fffde6" }
+        }
+    }
+}
+
+
+================================================
+FILE: src/config/layout.json
+================================================
+{
+  "layout": {
+    "size": {
+      "tiny": {
+        "value": "0.5rem"
+      },
+      "compact": {
+        "value": "0.75rem"
+      },
+      "base": {
+        "value": "1rem"
+      },
+      "small": {
+        "value": "1.5rem"
+      },
+      "medium": {
+        "value": "2rem"
+      },
+      "large": {
+        "value": "3rem"
+      },
+      "extra-large": {
+        "value": "4rem"
+      },
+      "huge": {
+        "value": "6rem"
+      },
+      "expanded": {
+        "value": "7.5rem"
+      },
+      "maximum": {
+        "value": "14rem"
+      }
+    }
+  }
+}
+
+
+
+================================================
+FILE: src/config/shadow.json
+================================================
+{
+    "shadow": {
+        "basic": {
+            "value": "0 0.0625rem 0.125rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "medium": {
+            "value": "0 0.125rem 0.25rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "intermediate": {
+            "value": "0 0.25rem 0.5rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "large": {
+            "value": "0 0.5rem 0.75rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "prominent": {
+            "value": "0 0.75rem 1rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "light-inverse": {
+            "value": "0 -0.0625 0.25rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "medium-inverse": {
+            "value": "0 -0.125rem 0.25rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "intermediate-inverse": {
+            "value": "0 -0.25rem 0.5rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "large-inverse": {
+            "value": "0 -0.5rem 0.75rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "extra-large-inverse": {
+            "value": "0 -0.75rem 1rem 0 rgba(39, 42, 47, 0.15)"
+        },
+        "active": {
+            "value": "0 0 0 var(--spacing-size-basic) var(--color-white), 0 0 0 0.1875rem var(--color-primary-light), inset 0 0.0625rem 0.125rem rgba(30, 42, 47, 0.15);"
+        },
+        "focus": {
+            "value": "0 0 0 var(--spacing-size-basic) var(--color-white), 0 0 0 0.1875rem var(--color-primary-light);"
+        }
+    }
+}
+
+
+================================================
+FILE: src/config/spacing copy.json
+================================================
+{
+  "spacing": {
+    "basic-space-unit": {
+      "value": "1px"
+    },
+    "size-xxs": {
+      "value": "2px"
+    },
+    "size-xs": {
+      "value": "4px"
+    },
+    "size-s": {
+      "value": "8px"
+    },
+    "size-m": {
+      "value": "12px"
+    },
+    "size-lm": {
+      "value": "16px"
+    },
+    "size-xl": {
+      "value": "24px"
+    },
+    "size-xxl": {
+      "value": "32px"
+    },
+    "size-xxxl": {
+      "value": "40px"
+    },
+    "size-xxxxl": {
+      "value": "48px"
+    }
+  }
+}
+
+
+
+================================================
+FILE: src/config/spacing.json
+================================================
+{
+  "spacing": {
+    "size": {
+      "basic": {
+        "value": "0.0625rem"
+      },
+      "small": {
+        "value": "0.125rem"
+      },
+      "minor": {
+        "value": "0.25rem"
+      },
+      "short": {
+        "value": "0.5rem"
+      },
+      "medium": {
+        "value": "0.75rem"
+      },
+      "moderate": {
+        "value": "1rem"
+      },
+      "large": {
+        "value": "1.5rem"
+      },
+      "big": {
+        "value": "2rem"
+      },
+      "greater": {
+        "value": "2.5rem"
+      },
+      "extra": {
+        "value": "3rem"
+      }
+    } 
+  }
+}
+
+
+
+================================================
+FILE: src/config/typography.json
+================================================
+{
+  "font": {
+    "family": {
+      "basic": {"value":"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Microsoft Sans Serif', Freesans, Helvetica, Arial, sans-serif"},
+      "code": {
+        "value": "'Courier New', Courier, monospace"
+      }
+    },
+    "size": {
+      "8xl": {"value": "3.375rem"},
+      "7xl": {"value": "3rem"},
+      "6xl": {"value": "2.625rem"},
+      "5xl": {"value": "2.5rem"},
+      "4xl": {"value": "2rem"},
+      "3xl": {"value": "1.75rem"},
+      "2xl": {"value": "1.5rem"},
+      "xl": {"value": "1.25rem"},
+      "l": {"value": "1.125rem"},
+      "m": {"value": "1rem"},
+      "s": {"value": "0.875rem"},
+      "xs": {"value": "0.75rem"},
+      "2xs": {"value": "0.5rem"}
+    },
+    "line-height": {
+      "1": {"value":"4em"},
+      "2": {"value":"3.125em"},
+      "3": {"value":"2.5em"},
+      "4": {"value":"2.25em"},
+      "5": {"value":"1.75em"},
+      "6": {"value":"1.375em"},
+      "7": {"value":"1.25em"},
+      "8": {"value":"1em"}
+    },
+    "weight": {
+      "basic-unit": { "value": "200" },
+      "light": { "value": "calc(var(--font-weight-basic-unit)/2)" },
+      "regular": { "value": "calc(var(--font-weight-basic-unit)*2)" },
+      "semi-bold": { "value": "calc(var(--font-weight-basic-unit)*3)" },
+      "bold": { "value": "calc(var(--font-weight-basic-unit)*3.5)" }
+    }
+  }
+}
+
