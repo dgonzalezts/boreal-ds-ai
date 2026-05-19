@@ -84,6 +84,10 @@ Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`,
   # Switch to ai-config, restore snapshot, stage
   git -C "$root" stash
   git -C "$root" checkout ai-config
+  # Wipe tracked dirs before restoring so deletions in the snapshot are reflected
+  rm -rf "$root/.ai" "$root/.claude" "$root/.github" \
+         "$root/.agents" "$root/.cursor" \
+         "$root/ai-docs" "$root/ai-work"
   cp -rP "$tmpdir/." "$root/"
   git -C "$root" add -f .ai .claude .github .agents .cursor ai-docs ai-work
 
