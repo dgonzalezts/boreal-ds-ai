@@ -75,15 +75,16 @@ msg="chore(workspace): * <task description>"
 # Step 1 — snapshot all AI dirs to a temp location
 current=$(git branch --show-current)
 tmpdir=$(mktemp -d)
-cp -r .ai .claude .github .agents "$tmpdir/"
+cp -r .ai .claude .github .agents ai-docs ai-work "$tmpdir/"
 echo "Snapshot saved to $tmpdir — current branch: $current"
 ```
 
 ```bash
-# Step 2 — switch to ai-config and stage all dirs
+# Step 2 — stash local conflicts, switch to ai-config, and stage all dirs
+git stash
 git checkout ai-config
 cp -r "$tmpdir/." ./
-git add -f .ai .claude .github .agents
+git add -f .ai .claude .github .agents ai-docs ai-work
 ```
 
 ```bash
@@ -100,12 +101,14 @@ fi
 # Step 4 — return to feature branch and clean up
 git checkout "$current"
 cp -r "$tmpdir/." ./
-git rm --cached -r .ai .claude .github .agents 2>/dev/null
+git rm --cached -r .ai .claude .github .agents ai-docs ai-work 2>/dev/null
 rm -rf "$tmpdir"
 echo "Done — back on $current"
 ```
 
-> **Note on `git rm --cached`:** these dirs live in `.git/info/exclude` (`.agents/` will be added in Task 12) so they must be removed from git's index on the feature branch — the flag only removes index tracking, not the files on disk.
+> **Note on `git stash`:** needed because plan files edited between syncs exist on `ai-config` with different content; stash prevents checkout from aborting. The snapshot in `$tmpdir` already has the correct version, so the stash is safe to discard after the sync completes.
+>
+> **Note on `git rm --cached`:** these dirs live in `.git/info/exclude` (`.agents/`, `ai-docs/`, `ai-work/` will be added in Task 12) so they must be removed from git's index on the feature branch — the flag only removes index tracking, not the files on disk.
 
 ---
 
