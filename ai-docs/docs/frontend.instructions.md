@@ -669,6 +669,45 @@ describe("bds-[name] ...", () => {
 
 Both utilities are exported from `packages/boreal-web-components/src/utils/testing/mocks/`. Import via `@/utils` (barrel). Do not inline them in individual spec files.
 
+### Spec Root Element Pattern
+
+Always assign `page.root` to a named variable with an explicit type cast before making assertions. Never access it inline or with optional chaining.
+
+```ts
+// ✅ correct
+const root = page.root as HTMLElement;
+expect(root.classList.contains('bds-button--disabled')).toBe(true);
+
+// ❌ avoid
+expect((page.root as HTMLElement).classList.contains('bds-button--disabled')).toBe(true);
+page.root?.querySelector('button');
+```
+
+Use `HTMLElement` for DOM-only access. Use the typed element interface (e.g. `HTMLBdsRadioGroupElement`) when you need to access typed `@Prop()` values or call `@Method()` members.
+
+For `querySelectorAll`, query from `root` directly — never use the `?? []` fallback pattern. `Array.prototype.every()` on an empty array returns `true` (vacuous truth), which silently passes count or orientation assertions when the root is missing.
+
+```ts
+// ✅ correct
+const root = page.root as HTMLElement;
+const dividers = Array.from(root.querySelectorAll('bds-divider[data-injected]'));
+expect(dividers.length).toBe(2);
+
+// ❌ avoid — silent false positive if root is undefined
+const dividers = Array.from(page.root?.querySelectorAll('bds-divider[data-injected]') ?? []);
+```
+
+Use `assertExists` from `@/utils` on any queried child element that **must** exist before the assertion is meaningful:
+
+```ts
+import { assertExists } from '@/utils';
+
+const root = page.root as HTMLElement;
+const label = root.querySelector('bds-typography[variant="label"]');
+assertExists(label, 'Label typography element not found');
+expect(label.textContent).toBe('My Group');
+```
+
 ### Test Organisation
 
 #### Scaffolding: by functionality
@@ -803,6 +842,25 @@ All scripts run from the **workspace root** via Turborepo:
 | Scaffold a new story         | `pnpm generate:story`                                         |
 | Rebuild design tokens        | `pnpm rebuild:styles`                                         |
 | Conventional commit          | `pnpm commit`                                                 |
+
+### Commit Scope Reference
+
+| Scope            | Target area                          |
+| ---------------- | ------------------------------------ |
+| `web-components` | `packages/boreal-web-components`     |
+| `react`          | `packages/boreal-react`              |
+| `vue`            | `packages/boreal-vue`                |
+| `styles`         | `packages/boreal-styleguidelines`    |
+| `docs`           | `apps/boreal-docs`                   |
+| `examples`       | `examples/`                          |
+| `workspace`      | Monorepo config, tooling, root files |
+| `deps`           | Dependency updates                   |
+| `ci`             | CI/CD configuration                  |
+| `release`        | Release and publishing               |
+| `scripts`        | Build or utility scripts             |
+| `multiple`       | Changes spanning multiple packages   |
+
+For changes without a ticket ID, use `*` as the identifier: `type(scope): * description`.
 
 ### Code Quality
 

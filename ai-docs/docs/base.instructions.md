@@ -37,10 +37,10 @@ For detailed guidelines covering specific areas of the monorepo, refer to:
 
 For detailed operational runbooks, patterns, and architectural context beyond these instructions, see:
 
-- [Definition of Done Checklist](../../.ai/guidelines/DoD_checklist.md) — Comprehensive DoD criteria for production-ready changes
-- [Release Process](../../.ai/guidelines/release-process.md) — Step-by-step runbook for versioning and publishing packages
-- [Plop Generator Learnings](../../.ai/guidelines/plop-generator-learnings.md) — Code generation patterns and template development
-- [Scripts (Boreal)](../../.ai/guidelines/scripts-boreal.md) — Custom monorepo tooling and utility scripts
-- [JSDoc Template](../../.ai/guidelines/jsdoc-template.md) — Authoritative rules for JSDoc on Stencil components: what to write, where, and what the CEM plugin generates automatically
+- [Definition of Done Checklist](../../ai-docs/guidelines/DoD_checklist.md) — Comprehensive DoD criteria for production-ready changes
+- [Release Process](../../ai-docs/guidelines/release-process.md) — Step-by-step runbook for versioning and publishing packages
+- [Plop Generator Learnings](../../ai-docs/guidelines/plop-generator-learnings.md) — Code generation patterns and template development
+- [Scripts (Boreal)](../../ai-docs/guidelines/scripts-boreal.md) — Custom monorepo tooling and utility scripts
+- [JSDoc Template](../../ai-docs/guidelines/jsdoc-template.md) — Authoritative rules for JSDoc on Stencil components: what to write, where, and what the CEM plugin generates automatically
 
 These reference docs provide deep dives into specific workflows and tooling. The instruction files above remain the primary source for agent directives and coding standards.

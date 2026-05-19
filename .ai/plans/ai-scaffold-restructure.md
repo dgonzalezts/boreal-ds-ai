@@ -14,51 +14,51 @@
 
 ### Phase 1 — Relocate
 
-| File | Notes |
-| --- | --- |
-| `.agents/agents/` | New — move from `.claude/agents/` |
-| `.agents/commands/` | New — move from `.claude/commands/` |
-| `.agents/memory/` | New — move from `.claude/memory/` |
-| `.agents/scripts/aisync.sh` | New — extract from `~/.functions`, canonical versioned script |
-| `.agents/scripts/sync-symlinks.sh` | New — per-entry symlink reconciliation script |
-| `.agents/skills/` | New — merge `.claude/skills/` into existing `.agents/skills/` |
-| `.agents/skills/sync-symlinks/SKILL.md` | New — Claude skill wrapping `sync-symlinks.sh` |
-| `ai-docs/guidelines/` | New — move from `.ai/guidelines/` |
-| `ai-docs/decisions/` | New — move from `.ai/decisions/` |
-| `ai-docs/diagrams/` | New — move from `.ai/diagrams/` |
-| `ai-docs/lib/` | New — move from `.ai/lib/` |
-| `ai-docs/docs/` | New — move from `.ai/docs/` + absorb `.github/instructions/` content |
-| `ai-docs/copilot-agents/` | New — move from `.github/agents/` |
-| `ai-work/plans/` | New — move from `.ai/plans/` |
-| `ai-work/reviews/` | New — move from `.ai/reviews/` |
-| `ai-work/sessions/` | New — move from `.ai/sessions/` |
-| `ai-work/tickets/` | New — move from `.ai/tickets/` |
-| `ai-work/qa/` | New — move from `.ai/qa/` |
-| `ai-work/research/` | New — move from `.ai/research/` |
-| `.claude/agents/` | Modify — replace real files with per-entry symlinks → `../../.agents/agents/<name>` |
-| `.claude/commands/` | Modify — replace real files with per-entry symlinks → `../../.agents/commands/<name>` |
-| `.claude/memory/` | Modify — replace real files with per-entry symlinks → `../../.agents/memory/<name>` |
-| `.claude/skills/` | Modify — replace real skill dirs with per-entry symlinks → `../../.agents/skills/<name>` |
-| `.claude/CLAUDE.md` | Modify — update all path references |
-| `.cursor/` | New — real directory; per-entry symlinks for agents and skills |
-| `.github/instructions/*.instructions.md` | Modify — replace each real file with per-entry symlink → `../../ai-docs/docs/<name>` |
-| `.github/agents/` | Remove — content moved to `ai-docs/copilot-agents/` |
-| `.github/copilot-instructions.md` | Modify — slim down to a pointer to `ai-docs/docs/` |
-| `.github/prompts/sync-symlinks.prompt.md` | New — Copilot prompt equivalent of the `sync-symlinks` skill |
-| `.ai/` | Remove — all content migrated; directory deleted |
-| `~/.functions` `aisync` | Modify — thin wrapper delegating to `.agents/scripts/aisync.sh` |
-| `.git/info/exclude` | Modify — update excluded paths to match new folder names |
+| File                                      | Notes                                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `.agents/agents/`                         | New — move from `.claude/agents/`                                                        |
+| `.agents/commands/`                       | New — move from `.claude/commands/`                                                      |
+| `.agents/memory/`                         | New — move from `.claude/memory/`                                                        |
+| `.agents/scripts/aisync.sh`               | New — extract from `~/.functions`, canonical versioned script                            |
+| `.agents/scripts/sync-symlinks.sh`        | New — per-entry symlink reconciliation script                                            |
+| `.agents/skills/`                         | New — merge `.claude/skills/` into existing `.agents/skills/`                            |
+| `.agents/skills/sync-symlinks/SKILL.md`   | New — Claude skill wrapping `sync-symlinks.sh`                                           |
+| `ai-docs/guidelines/`                     | New — move from `.ai/guidelines/`                                                        |
+| `ai-docs/decisions/`                      | New — move from `.ai/decisions/`                                                         |
+| `ai-docs/diagrams/`                       | New — move from `.ai/diagrams/`                                                          |
+| `ai-docs/lib/`                            | New — move from `.ai/lib/`                                                               |
+| `ai-docs/docs/`                           | New — move from `.ai/docs/` + absorb `.github/instructions/` content                     |
+| `ai-docs/copilot-agents/`                 | New — move from `.github/agents/`                                                        |
+| `ai-work/plans/`                          | New — move from `.ai/plans/`                                                             |
+| `ai-work/reviews/`                        | New — move from `.ai/reviews/`                                                           |
+| `ai-work/sessions/`                       | New — move from `.ai/sessions/`                                                          |
+| `ai-work/tickets/`                        | New — move from `.ai/tickets/`                                                           |
+| `ai-work/qa/`                             | New — move from `.ai/qa/`                                                                |
+| `ai-work/research/`                       | New — move from `.ai/research/`                                                          |
+| `.claude/agents/`                         | Modify — replace real files with per-entry symlinks → `../../.agents/agents/<name>`      |
+| `.claude/commands/`                       | Modify — replace real files with per-entry symlinks → `../../.agents/commands/<name>`    |
+| `.claude/memory/`                         | Modify — replace real files with per-entry symlinks → `../../.agents/memory/<name>`      |
+| `.claude/skills/`                         | Modify — replace real skill dirs with per-entry symlinks → `../../.agents/skills/<name>` |
+| `.claude/CLAUDE.md`                       | Modify — update all path references                                                      |
+| `.cursor/`                                | New — real directory; per-entry symlinks for agents and skills                           |
+| `.github/instructions/*.instructions.md`  | Modify — replace each real file with per-entry symlink → `../../ai-docs/docs/<name>`     |
+| `.github/agents/`                         | Remove — content moved to `ai-docs/copilot-agents/`                                      |
+| `.github/copilot-instructions.md`         | Modify — slim down to a pointer to `ai-docs/docs/`                                       |
+| `.github/prompts/sync-symlinks.prompt.md` | New — Copilot prompt equivalent of the `sync-symlinks` skill                             |
+| `.ai/`                                    | Remove — all content migrated; directory deleted                                         |
+| `~/.functions` `aisync`                   | Modify — thin wrapper delegating to `.agents/scripts/aisync.sh`                          |
+| `.git/info/exclude`                       | Modify — update excluded paths to match new folder names                                 |
 
 ### Phase 2 — Consolidate (separate milestone, do not begin until Phase 1 is complete and verified)
 
-| File | Notes |
-| --- | --- |
-| `ai-docs/guidelines/stencil-best-practices.md` | Modify — absorb unique detail from overlapping memory entries |
-| `ai-docs/guidelines/stencil-unit-testing-patterns.md` | Modify — absorb unique detail from overlapping memory entries |
-| `ai-docs/guidelines/code-practices-&-dev-guidelines.md` | Modify — absorb unique detail from overlapping memory entries |
-| `.agents/memory/MEMORY.md` | Modify — remove entries promoted to guidelines; add pointers |
-| `.agents/memory/*.md` | Remove — entries that duplicate guideline content after promotion |
-| `.github/copilot-instructions.md` | Modify — remove sections that duplicate `ai-docs/docs/` content |
+| File                                                    | Notes                                                             |
+| ------------------------------------------------------- | ----------------------------------------------------------------- |
+| `ai-docs/guidelines/stencil-best-practices.md`          | Modify — absorb unique detail from overlapping memory entries     |
+| `ai-docs/guidelines/stencil-unit-testing-patterns.md`   | Modify — absorb unique detail from overlapping memory entries     |
+| `ai-docs/guidelines/code-practices-&-dev-guidelines.md` | Modify — absorb unique detail from overlapping memory entries     |
+| `.agents/memory/MEMORY.md`                              | Modify — remove entries promoted to guidelines; add pointers      |
+| `.agents/memory/*.md`                                   | Remove — entries that duplicate guideline content after promotion |
+| `.github/copilot-instructions.md`                       | Modify — remove sections that duplicate `ai-docs/docs/` content   |
 
 ---
 
@@ -97,8 +97,8 @@ Uses a **git worktree** so the working directory is never touched — no branch 
 )
 ```
 
-> **`git worktree`** checks out `ai-config` into a sibling directory without touching the current working tree.  
-> **`rsync --delete --links`** mirrors each directory including deletions and preserves symlinks.  
+> **`git worktree`** checks out `ai-config` into a sibling directory without touching the current working tree.
+> **`rsync --delete --links`** mirrors each directory including deletions and preserves symlinks.
 > **`trap`** ensures the worktree is always removed even if the script aborts.
 
 ---
