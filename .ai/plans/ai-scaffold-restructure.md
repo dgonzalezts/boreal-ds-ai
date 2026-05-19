@@ -64,53 +64,48 @@
 
 ## Manual Sync Procedure (Tasks 1–6)
 
-Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run these four steps to commit **and** push to the `ai` remote. Set `msg` to the task's commit message, then run each block from the repo root.
-
-> **Important:** Run Step 1 only *after* all local changes for the task are complete. The snapshot must capture the final state — running Step 1 before changes are made will cause Step 4 to restore the old state and undo the task's work.
+Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run this single script to commit **and** push to the `ai` remote. Replace the `msg` value with the task's commit message, then run the whole block at once from the repo root — all variables are local to the script so no state is lost between steps.
 
 ```bash
-# Set the commit message for this task (replace with the task-specific message)
-msg="chore(workspace): * <task description>"
+(
+  msg="chore(workspace): * <task description>"
+
+  set -e
+  root=$(git rev-parse --show-toplevel)
+  current=$(git -C "$root" branch --show-current)
+  tmpdir=$(mktemp -d)
+  trap 'rm -rf "$tmpdir"' EXIT
+
+  # Snapshot current state (run after all task changes are in place)
+  cp -rP "$root/.ai" "$root/.claude" "$root/.github" \
+         "$root/.agents" "$root/.cursor" \
+         "$root/ai-docs" "$root/ai-work" "$tmpdir/" 2>/dev/null || true
+
+  # Switch to ai-config, restore snapshot, stage
+  git -C "$root" stash
+  git -C "$root" checkout ai-config
+  cp -rP "$tmpdir/." "$root/"
+  git -C "$root" add -f .ai .claude .github .agents .cursor ai-docs ai-work
+
+  # Commit and push if anything changed
+  if git -C "$root" diff --cached --quiet; then
+    echo "aisync: nothing changed, skipping commit and push"
+  else
+    git -C "$root" commit -m "$msg"
+    git -C "$root" push ai ai-config:main
+  fi
+
+  # Return to feature branch and restore local state
+  git -C "$root" checkout "$current"
+  cp -rP "$tmpdir/." "$root/"
+  git -C "$root" rm --cached -r .ai .claude .github .agents .cursor ai-docs ai-work 2>/dev/null || true
+  echo "Done — back on $current"
+)
 ```
 
-```bash
-# Step 1 — snapshot all AI dirs to a temp location
-current=$(git branch --show-current)
-tmpdir=$(mktemp -d)
-cp -r .ai .claude .github .agents .cursor ai-docs ai-work "$tmpdir/"
-echo "Snapshot saved to $tmpdir — current branch: $current"
-```
-
-```bash
-# Step 2 — stash local conflicts, switch to ai-config, and stage all dirs
-git stash
-git checkout ai-config
-cp -r "$tmpdir/." ./
-git add -f .ai .claude .github .agents .cursor ai-docs ai-work
-```
-
-```bash
-# Step 3 — commit with the task message, then push
-if git diff --cached --quiet; then
-  echo "Nothing changed, skipping commit."
-else
-  git commit -m "$msg"
-  git push ai ai-config:main
-fi
-```
-
-```bash
-# Step 4 — return to feature branch and clean up
-git checkout "$current"
-cp -r "$tmpdir/." ./
-git rm --cached -r .ai .claude .github .agents .cursor ai-docs ai-work 2>/dev/null
-rm -rf "$tmpdir"
-echo "Done — back on $current"
-```
-
-> **Note on `git stash`:** needed because plan files edited between syncs exist on `ai-config` with different content; stash prevents checkout from aborting. The snapshot in `$tmpdir` already has the correct version, so the stash is safe to discard after the sync completes.
->
-> **Note on `git rm --cached`:** these dirs live in `.git/info/exclude` (`.agents/`, `ai-docs/`, `ai-work/` will be added in Task 12) so they must be removed from git's index on the feature branch — the flag only removes index tracking, not the files on disk.
+> **`cp -rP`** preserves symlinks without dereferencing them (`-P` = no-follow).  
+> **`set -e`** aborts immediately if any command fails, preventing partial state.  
+> **Subshell `(...)`** keeps all variables scoped — safe to paste into any terminal.
 
 ---
 
