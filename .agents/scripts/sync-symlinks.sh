@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Reconcile per-entry symlinks across all mirror surfaces.
+# For each mirror dir, every canonical entry must have a valid relative symlink;
+# orphaned or broken symlinks are removed or recreated; real files are never touched.
+#
+# Usage: sync-symlinks.sh [repo-root]
+
+root="${1:-$(git rev-parse --show-toplevel)}"
+
+if [[ -z "$root" ]]; then
+  printf "\033[31mERROR:\033[0m Not inside a git repository\n" >&2
+  exit 1
+fi
+
+added=0
+fixed=0
+removed=0
+conflicts=0
+
+# sync_surface <mirror_rel> <canonical_rel> <symlink_prefix> [glob]
+#   mirror_rel     — mirror dir path relative to repo root (e.g. .claude/agents)
+#   canonical_rel  — canonical dir path relative to repo root (e.g. .agents/agents)
+#   symlink_prefix — relative path written into the symlink target (e.g. ../../.agents/agents)
+#   glob           — optional filename pattern to restrict which canonical entries are managed
+#                    (default: *); entries NOT matching the pattern are treated as external
+sync_surface() {
+  local mirror_rel="$1"
+  local canonical_rel="$2"
+  local prefix="$3"
+  local glob="${4:-*}"
+
+  local mirror="$root/$mirror_rel"
+  local canonical="$root/$canonical_rel"
+
+  mkdir -p "$mirror"
+
+  # --- Pass 1: ensure every canonical entry has a valid symlink in the mirror ---
+  local found_any=false
+  for src in "$canonical"/$glob; do
+    [[ -e "$src" ]] || continue
+    found_any=true
+    local name
+    name=$(basename "$src")
+    local link="$mirror/$name"
+    local target="$prefix/$name"
+
+    if [[ -L "$link" ]]; then
+      local actual
+      actual=$(readlink "$link")
+      if [[ "$actual" == "$target" && -e "$link" ]]; then
+        printf "    linked:   %s\n" "$name"
+      else
+        rm -f "$link"
+        ln -s "$target" "$link"
+        printf "    fixed:    %s\n" "$name"
+        added=$((added + 1))
+        fixed=$((fixed + 1))
+      fi
+    elif [[ -e "$link" ]]; then
+      printf "    \033[33mCONFLICT:\033[0m %s — real %s exists; skipping (manual review needed)\n" \
+        "$name" "$([[ -d "$link" ]] && echo dir || echo file)"
+      conflicts=$((conflicts + 1))
+    else
+      ln -s "$target" "$link"
+      printf "    added:    %s\n" "$name"
+      added=$((added + 1))
+    fi
+  done
+
+  if [[ "$found_any" == false ]]; then
+    printf "    (canonical dir empty or no entries match '%s')\n" "$glob"
+  fi
+
+  # --- Pass 2: remove orphaned symlinks (broken link + no canonical counterpart) ---
+  for link in "$mirror"/*; do
+    # skip if glob expansion produced no matches
+    [[ -e "$link" || -L "$link" ]] || continue
+
+    local name
+    name=$(basename "$link")
+
+    # Only manage entries that match the pattern
+    case "$name" in
+      $glob) ;;
+      *) continue ;;
+    esac
+
+    [[ -L "$link" ]] || continue   # real files are external — leave alone
+    [[ ! -e "$link" ]] || continue # valid symlink — already handled in pass 1
+
+    # Broken symlink. Check if the canonical entry still exists.
+    if [[ ! -e "$canonical/$name" ]]; then
+      rm -f "$link"
+      printf "    removed:  %s (orphaned symlink)\n" "$name"
+      removed=$((removed + 1))
+    fi
+  done
+}
+
+printf "sync-symlinks: reconciling mirror surfaces\n\n"
+
+printf "── .claude/agents → .agents/agents\n"
+sync_surface ".claude/agents" ".agents/agents" "../../.agents/agents"
+
+printf "── .claude/commands → .agents/commands\n"
+sync_surface ".claude/commands" ".agents/commands" "../../.agents/commands"
+
+printf "── .claude/memory → .agents/memory\n"
+sync_surface ".claude/memory" ".agents/memory" "../../.agents/memory"
+
+printf "── .claude/skills → .agents/skills\n"
+sync_surface ".claude/skills" ".agents/skills" "../../.agents/skills"
+
+printf "── .cursor/agents → .agents/agents\n"
+sync_surface ".cursor/agents" ".agents/agents" "../../.agents/agents"
+
+printf "── .cursor/skills → .agents/skills\n"
+sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"
+
+printf "── .github/instructions → ai-docs/docs (*.instructions.md)\n"
+sync_surface ".github/instructions" "ai-docs/docs" "../../ai-docs/docs" "*.instructions.md"
+
+printf "\nsync-symlinks: done  added=%d  fixed=%d  removed=%d  conflicts=%d\n" \
+  "$added" "$fixed" "$removed" "$conflicts"
+
+if (( conflicts > 0 )); then
+  printf "\033[33mWARNING:\033[0m %d conflict(s) require manual review (see CONFLICT lines above)\n" \
+    "$conflicts" >&2
+  exit 1
+fi
