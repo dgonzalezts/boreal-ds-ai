@@ -64,48 +64,42 @@
 
 ## Manual Sync Procedure (Tasks 1–6)
 
-Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run these four steps to commit **and** push to the `ai` remote. Set `msg` to the task's commit message, then run each block from the repo root:
+Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run this single script to commit **and** push to the `ai` remote. Replace the `msg` value, then paste the whole block into one terminal run.
+
+Uses a **git worktree** so the working directory is never touched — no branch switching, no snapshot/restore step, no risk of wiping local files.
 
 ```bash
-# Set the commit message for this task (replace with the task-specific message)
-msg="chore(workspace): * <task description>"
+(
+  msg="chore(workspace): * <task description>"
+
+  set -e
+  root=$(git rev-parse --show-toplevel)
+  wt="$root/../ai-sync-worktree"
+  trap 'git -C "$root" worktree remove --force "$wt" 2>/dev/null || true' EXIT
+
+  git -C "$root" worktree add "$wt" ai-config
+
+  for d in .ai .claude .github .agents .cursor ai-docs ai-work; do
+    if [ -e "$root/$d" ]; then
+      rsync -a --delete --links "$root/$d" "$wt/"
+    else
+      rm -rf "$wt/$d"
+    fi
+  done
+
+  git -C "$wt" add -f .ai .claude .github .agents .cursor ai-docs ai-work
+  if git -C "$wt" diff --cached --quiet; then
+    echo "aisync: nothing changed, skipping commit and push"
+  else
+    git -C "$wt" commit -m "$msg"
+    git -C "$wt" push ai ai-config:main
+  fi
+)
 ```
 
-```bash
-# Step 1 — snapshot all AI dirs to a temp location
-current=$(git branch --show-current)
-tmpdir=$(mktemp -d)
-cp -r .ai .claude .github .agents "$tmpdir/"
-echo "Snapshot saved to $tmpdir — current branch: $current"
-```
-
-```bash
-# Step 2 — switch to ai-config and stage all dirs
-git checkout ai-config
-cp -r "$tmpdir/." ./
-git add -f .ai .claude .github .agents
-```
-
-```bash
-# Step 3 — commit with the task message, then push
-if git diff --cached --quiet; then
-  echo "Nothing changed, skipping commit."
-else
-  git commit -m "$msg"
-  git push ai ai-config:main
-fi
-```
-
-```bash
-# Step 4 — return to feature branch and clean up
-git checkout "$current"
-cp -r "$tmpdir/." ./
-git rm --cached -r .ai .claude .github .agents 2>/dev/null
-rm -rf "$tmpdir"
-echo "Done — back on $current"
-```
-
-> **Note on `git rm --cached`:** these dirs live in `.git/info/exclude` (`.agents/` will be added in Task 12) so they must be removed from git's index on the feature branch — the flag only removes index tracking, not the files on disk.
+> **`git worktree`** checks out `ai-config` into a sibling directory without touching the current working tree.  
+> **`rsync --delete --links`** mirrors each directory including deletions and preserves symlinks.  
+> **`trap`** ensures the worktree is always removed even if the script aborts.
 
 ---
 

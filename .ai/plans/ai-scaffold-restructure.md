@@ -64,7 +64,9 @@
 
 ## Manual Sync Procedure (Tasks 1–6)
 
-Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run this single script to commit **and** push to the `ai` remote. Replace the `msg` value with the task's commit message, then run the whole block at once from the repo root — all variables are local to the script so no state is lost between steps.
+Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run this single script to commit **and** push to the `ai` remote. Replace the `msg` value, then paste the whole block into one terminal run.
+
+Uses a **git worktree** so the working directory is never touched — no branch switching, no snapshot/restore step, no risk of wiping local files.
 
 ```bash
 (
@@ -72,44 +74,32 @@ Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`,
 
   set -e
   root=$(git rev-parse --show-toplevel)
-  current=$(git -C "$root" branch --show-current)
-  tmpdir=$(mktemp -d)
-  trap 'rm -rf "$tmpdir"' EXIT
+  wt="$root/../ai-sync-worktree"
+  trap 'git -C "$root" worktree remove --force "$wt" 2>/dev/null || true' EXIT
 
-  # Snapshot current state (run after all task changes are in place)
-  cp -rP "$root/.ai" "$root/.claude" "$root/.github" \
-         "$root/.agents" "$root/.cursor" \
-         "$root/ai-docs" "$root/ai-work" "$tmpdir/" 2>/dev/null || true
+  git -C "$root" worktree add "$wt" ai-config
 
-  # Switch to ai-config, restore snapshot, stage
-  git -C "$root" stash
-  git -C "$root" checkout ai-config
-  # Wipe tracked dirs before restoring so deletions in the snapshot are reflected
-  rm -rf "$root/.ai" "$root/.claude" "$root/.github" \
-         "$root/.agents" "$root/.cursor" \
-         "$root/ai-docs" "$root/ai-work"
-  cp -rP "$tmpdir/." "$root/"
-  git -C "$root" add -f .ai .claude .github .agents .cursor ai-docs ai-work
+  for d in .ai .claude .github .agents .cursor ai-docs ai-work; do
+    if [ -e "$root/$d" ]; then
+      rsync -a --delete --links "$root/$d" "$wt/"
+    else
+      rm -rf "$wt/$d"
+    fi
+  done
 
-  # Commit and push if anything changed
-  if git -C "$root" diff --cached --quiet; then
+  git -C "$wt" add -f .ai .claude .github .agents .cursor ai-docs ai-work
+  if git -C "$wt" diff --cached --quiet; then
     echo "aisync: nothing changed, skipping commit and push"
   else
-    git -C "$root" commit -m "$msg"
-    git -C "$root" push ai ai-config:main
+    git -C "$wt" commit -m "$msg"
+    git -C "$wt" push ai ai-config:main
   fi
-
-  # Return to feature branch and restore local state
-  git -C "$root" checkout "$current"
-  cp -rP "$tmpdir/." "$root/"
-  git -C "$root" rm --cached -r .ai .claude .github .agents .cursor ai-docs ai-work 2>/dev/null || true
-  echo "Done — back on $current"
 )
 ```
 
-> **`cp -rP`** preserves symlinks without dereferencing them (`-P` = no-follow).  
-> **`set -e`** aborts immediately if any command fails, preventing partial state.  
-> **Subshell `(...)`** keeps all variables scoped — safe to paste into any terminal.
+> **`git worktree`** checks out `ai-config` into a sibling directory without touching the current working tree.  
+> **`rsync --delete --links`** mirrors each directory including deletions and preserves symlinks.  
+> **`trap`** ensures the worktree is always removed even if the script aborts.
 
 ---
 
