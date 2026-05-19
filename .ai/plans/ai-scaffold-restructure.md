@@ -64,7 +64,9 @@
 
 ## Manual Sync Procedure (Tasks 1–6)
 
-Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run these four steps to commit **and** push to the `ai` remote. Set `msg` to the task's commit message, then run each block from the repo root:
+Until Task 7 updates `aisync` to include `.agents/`, `ai-docs/`, and `ai-work/`, run these four steps to commit **and** push to the `ai` remote. Set `msg` to the task's commit message, then run each block from the repo root.
+
+> **Important:** Run Step 1 only *after* all local changes for the task are complete. The snapshot must capture the final state — running Step 1 before changes are made will cause Step 4 to restore the old state and undo the task's work.
 
 ```bash
 # Set the commit message for this task (replace with the task-specific message)
