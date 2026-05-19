@@ -75,7 +75,7 @@ msg="chore(workspace): * <task description>"
 # Step 1 — snapshot all AI dirs to a temp location
 current=$(git branch --show-current)
 tmpdir=$(mktemp -d)
-cp -r .ai .claude .github .agents ai-docs ai-work "$tmpdir/"
+cp -r .ai .claude .github .agents .cursor ai-docs ai-work "$tmpdir/"
 echo "Snapshot saved to $tmpdir — current branch: $current"
 ```
 
@@ -84,7 +84,7 @@ echo "Snapshot saved to $tmpdir — current branch: $current"
 git stash
 git checkout ai-config
 cp -r "$tmpdir/." ./
-git add -f .ai .claude .github .agents ai-docs ai-work
+git add -f .ai .claude .github .agents .cursor ai-docs ai-work
 ```
 
 ```bash
@@ -101,7 +101,7 @@ fi
 # Step 4 — return to feature branch and clean up
 git checkout "$current"
 cp -r "$tmpdir/." ./
-git rm --cached -r .ai .claude .github .agents ai-docs ai-work 2>/dev/null
+git rm --cached -r .ai .claude .github .agents .cursor ai-docs ai-work 2>/dev/null
 rm -rf "$tmpdir"
 echo "Done — back on $current"
 ```
