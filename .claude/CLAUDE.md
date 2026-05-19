@@ -2,20 +2,20 @@
 
 ## Codebase Memory
 
-Non-obvious facts, discovered constraints, and verified patterns that have surfaced during implementation sessions are stored as topic files under `.claude/memory/`. Always read the index before starting work on a new component or infrastructure area:
+Non-obvious facts, discovered constraints, and verified patterns that have surfaced during implementation sessions are stored as topic files under `.agents/memory/`. Always read the index before starting work on a new component or infrastructure area:
 
 ```
-.claude/memory/MEMORY.md
+.agents/memory/MEMORY.md
 ```
 
 Key topic files currently available:
 
-- `.claude/memory/stencil-face-attach-internals.md` — `@AttachInternals()` must be on the component class body, never in a mixin factory
-- `.claude/memory/stencil-face-element-proxy-limits.md` — Stencil's element proxy blocks native FACE prototype members; use `@Method()` wrappers
-- `.claude/memory/stencil-face-constraint-validation-pattern.md` — how to avoid doubled validation events; `IFormValidator` / `customValidators` pattern
-- `.claude/memory/stencil-async-rendering-gotchas.md` — async DOM reflection, `formDisabledCallback` trigger conditions, naming collision gotcha
-- `.claude/memory/component-bds-typography-group-labels.md` — group components use `<bds-typography>` for `label` (variant=label, required+tooltipText) and `helperText` (variant=helper, state prop); leaf labels stay as plain spans
-- `.claude/memory/stencil-form-control-interfaces.md` — every form component with a `value` prop must register in `componentModels` in `vue-output-target.ts` for Vue v-model support; must land in the same PR as the component
+- `.agents/memory/stencil-face-attach-internals.md` — `@AttachInternals()` must be on the component class body, never in a mixin factory
+- `.agents/memory/stencil-face-element-proxy-limits.md` — Stencil's element proxy blocks native FACE prototype members; use `@Method()` wrappers
+- `.agents/memory/stencil-face-constraint-validation-pattern.md` — how to avoid doubled validation events; `IFormValidator` / `customValidators` pattern
+- `.agents/memory/stencil-async-rendering-gotchas.md` — async DOM reflection, `formDisabledCallback` trigger conditions, naming collision gotcha
+- `.agents/memory/component-bds-typography-group-labels.md` — group components use `<bds-typography>` for `label` (variant=label, required+tooltipText) and `helperText` (variant=helper, state prop); leaf labels stay as plain spans
+- `.agents/memory/stencil-form-control-interfaces.md` — every form component with a `value` prop must register in `componentModels` in `vue-output-target.ts` for Vue v-model support; must land in the same PR as the component
 
 ---
 
@@ -33,7 +33,7 @@ Fetch all required packages **in parallel** using WebFetch, extract the `"versio
 
 Apply this rule to:
 
-- Plan documents (`.ai/plans/`)
+- Plan documents (`ai-work/plans/`)
 - `package.json` files (root and per-package)
 - Installation command instructions given to the user
 - Any `pnpm add`, `npm install`, or `yarn add` commands
@@ -97,11 +97,11 @@ Do not rely on recalled API shapes or examples — they may be stale. Context7 p
 
 ## Plan Implementation Strategy
 
-These rules apply whenever an agent is executing a plan (a `.ai/plans/` document or any multi-step task).
+These rules apply whenever an agent is executing a plan (an `ai-work/plans/` document or any multi-step task).
 
 Before executing a plan, check its frontmatter `status` field:
 
-- `pending` — safe to start; update it to `in progress` and move its row in `.ai/plans/INDEX.md` before writing any code.
+- `pending` — safe to start; update it to `in progress` and move its row in `ai-work/plans/INDEX.md` before writing any code.
 - `in progress` — confirm with the user before resuming.
 - `done` — do not re-execute; inform the user the plan has already been completed.
 
