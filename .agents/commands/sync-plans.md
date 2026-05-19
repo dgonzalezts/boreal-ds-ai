@@ -1,5 +1,5 @@
 ---
-description: Scan all plans in .ai/plans/, reconcile each file's frontmatter status, and rebuild INDEX.md to reflect current reality.
+description: Scan all plans in ai-work/plans/, reconcile each file's frontmatter status, and rebuild INDEX.md to reflect current reality.
 argument-hint:
   [optional filename or status filter: pending | in progress | done]
 ---
@@ -8,7 +8,7 @@ argument-hint:
 
 ## Purpose
 
-Keep `.ai/plans/INDEX.md` accurate by reading every plan file, verifying the `status` frontmatter, and regenerating the index table. Can also be used to update the status of a single plan.
+Keep `ai-work/plans/INDEX.md` accurate by reading every plan file, verifying the `status` frontmatter, and regenerating the index table. Can also be used to update the status of a single plan.
 
 ## Input
 
@@ -22,11 +22,11 @@ Optional argument: `$ARGUMENTS`
 
 1. **Determine mode** from `$ARGUMENTS`:
    - Empty → full sync mode.
-   - Matches a filename in `.ai/plans/` → single-file update mode.
+   - Matches a filename in `ai-work/plans/` → single-file update mode.
    - Matches a status keyword → read-only list mode.
 
 2. **Read all plan files** (skip `INDEX.md` itself):
-   - For each `.md` file in `.ai/plans/`, read at minimum the first 30 lines.
+   - For each `.md` file in `ai-work/plans/`, read at minimum the first 30 lines.
    - Extract the `status` value from the YAML frontmatter block.
    - Infer the one-line description from the first `# Heading` found after the frontmatter.
 

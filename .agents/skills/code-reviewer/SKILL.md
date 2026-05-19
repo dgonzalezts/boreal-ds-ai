@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Boreal DS code review toolkit. Runs automated static analysis against Stencil/TypeScript components, maps findings to the project checklist, and saves a Markdown report to .ai/reviews/. Use when reviewing pull requests or preparing changes for peer review.
+description: Boreal DS code review toolkit. Runs automated static analysis against Stencil/TypeScript components, maps findings to the project checklist, and saves a Markdown report to ai-work/reviews/. Use when reviewing pull requests or preparing changes for peer review.
 ---
 
 # Code Reviewer
@@ -18,7 +18,7 @@ Automated review toolkit for the Boreal DS monorepo. Works by inspecting the git
    python3 .claude/skills/code-reviewer/scripts/review_report_generator.py .
    ```
 
-3. Open the generated report in `.ai/reviews/`
+3. Open the generated report in `ai-work/reviews/`
 
 The script auto-derives the output filename from today's date, the current HEAD SHA, and the branch name — matching the `YYYY-MM-DD-commit-<sha>-<branch>-review.md` convention.
 
@@ -30,7 +30,7 @@ After the script generates the report, read and apply the reference files:
 2. For every ❌ (fail) item in the checklist, add sub-bullets directly under it in the saved report:
    - The relevant standard from `coding_standards.md`
    - The antipattern explanation from `common_antipatterns.md`
-3. Edit the saved report file in `.ai/reviews/` to include these annotations inline
+3. Edit the saved report file in `ai-work/reviews/` to include these annotations inline
 
 ### Phase 3 — Memory-guided review
 
@@ -57,10 +57,10 @@ All three scripts accept a `repo_path` argument and run `git` commands with `cwd
 
 ### `review_report_generator.py` — Full pipeline (start here)
 
-Orchestrates the two scripts below, renders a Markdown checklist report, and saves it to `.ai/reviews/`.
+Orchestrates the two scripts below, renders a Markdown checklist report, and saves it to `ai-work/reviews/`.
 
 ```bash
-# Standard run — auto-saves to .ai/reviews/
+# Standard run — auto-saves to ai-work/reviews/
 python3 .claude/skills/code-reviewer/scripts/review_report_generator.py .
 
 # Diff against a branch other than main

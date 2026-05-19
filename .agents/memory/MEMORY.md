@@ -144,8 +144,8 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 | ADR                                                                              | Decision                                                                                                                                                                           |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.ai/decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md` | Full trade-off analysis for `@AttachInternals()` placement. Accepted: declare on component class, never in mixin.                                                                  |
-| `.ai/decisions/0002-iform-control-composite-interface-for-form-components.md`    | `IFormControl<T>` composite interface (`IFormAssociatedCallbacks & IFormValueEmitter<T>`) is the single type all form controls implement. Enforces FACE + event contract together. |
+| `ai-docs/decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md` | Full trade-off analysis for `@AttachInternals()` placement. Accepted: declare on component class, never in mixin.                                                                  |
+| `ai-docs/decisions/0002-iform-control-composite-interface-for-form-components.md`    | `IFormControl<T>` composite interface (`IFormAssociatedCallbacks & IFormValueEmitter<T>`) is the single type all form controls implement. Enforces FACE + event contract together. |
 
 ---
 
@@ -153,14 +153,14 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 | Plan                                     | Status                                                                                                                                                                                                                   |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.ai/plans/EOA-10099-form-foundation.md` | Form foundation architecture. Phase 1 complete. Phase 2 (SCSS partial, `textInputMixin`, `selectableMixin`) deferred to after `boreal-styleguidelines` token integration.                                                |
-| `.ai/plans/EOA-10057-bds-text-field.md`  | `bds-text-field` full implementation. Tasks 1 (types) and 2 (TSX logic) complete. Tasks 3–7 (SCSS partial, token audit, styles, tests, stories) remaining. Component lives under `src/components/forms/bds-text-field/`. |
+| `ai-work/plans/EOA-10099-form-foundation.md` | Form foundation architecture. Phase 1 complete. Phase 2 (SCSS partial, `textInputMixin`, `selectableMixin`) deferred to after `boreal-styleguidelines` token integration.                                                |
+| `ai-work/plans/EOA-10057-bds-text-field.md`  | `bds-text-field` full implementation. Tasks 1 (types) and 2 (TSX logic) complete. Tasks 3–7 (SCSS partial, token audit, styles, tests, stories) remaining. Component lives under `src/components/forms/bds-text-field/`. |
 
 ---
 
 ## Changelog
 
-- 2026-05-11 — New topic file added: `stencil-unit-testing-root-pattern.md`. Captures the `const root = page.root as HTMLElement` named-variable pattern — no inline repeated casts, no optional chaining, no `?? []` fallback on `querySelectorAll`. Also updated `.github/copilot-instructions.md` (Testing section) and `.ai/guidelines/stencil-unit-testing-patterns.md` (new canonical guide). Source: `bds-radio-group` spec file standardisation pass (EOA-12342).
+- 2026-05-11 — New topic file added: `stencil-unit-testing-root-pattern.md`. Captures the `const root = page.root as HTMLElement` named-variable pattern — no inline repeated casts, no optional chaining, no `?? []` fallback on `querySelectorAll`. Also updated `.github/copilot-instructions.md` (Testing section) and `ai-docs/guidelines/stencil-unit-testing-patterns.md` (new canonical guide). Source: `bds-radio-group` spec file standardisation pass (EOA-12342).
 - 2026-05-08 — New topic file added: `test-spec-file-organisation.md`. Covers the five spec file types (`a11y`, `basics`, `variants`, `events`, `slots`) and the criteria for when each is required. Key rule: do not create `slots.spec.ts` for a bare unnamed passthrough `<slot />` whose only side-effect is a CSS layout variable — that is already exercised incidentally by tests that pass child elements. Aligns with updated `frontend.instructions.md` guidance. Source: `bds-radio-group` test review session.
 
 - 2026-02-27 — Initial memory directory created. Four topic files added covering Stencil FACE constraints discovered during `bds-text-field` / `formAssociatedMixin` implementation (EOA-10099).

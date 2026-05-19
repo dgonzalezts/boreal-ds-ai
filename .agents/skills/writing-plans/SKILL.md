@@ -5,7 +5,7 @@ description: >
   implementation task for Boreal DS. Invoke when the user says "write a plan", "create a plan",
   "plan this component", "plan the implementation", "I want to build X", "let's plan X", or
   provides a spec, ticket, or Figma design and asks what to do next. Produces a task-by-task
-  implementation plan saved to .ai/plans/ covering files to create or modify, acceptance criteria,
+  implementation plan saved to ai-work/plans/ covering files to create or modify, acceptance criteria,
   unit test behaviors, manual test steps, and commit messages. Always use this skill before
   dispatching any implementation subagent or starting development work on a new component.
 ---
@@ -22,7 +22,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `.ai/plans/<ticket-id>-<feature-name>.md`. Pull the ticket ID from the active branch, then confirm the filename with the user before saving.
+**Save plans to:** `ai-work/plans/<ticket-id>-<feature-name>.md`. Pull the ticket ID from the active branch, then confirm the filename with the user before saving.
 
 ## Task Granularity
 
@@ -136,7 +136,7 @@ git commit -m "type(scope): TICKET-ID description"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `.ai/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `ai-work/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 

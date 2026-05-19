@@ -8,8 +8,8 @@ This folder contains the artefacts produced and consumed by the AI-assisted impl
 
 | Instance                 | File                                             | Role                                                                                                                            |
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend Developer**   | `.github/agents/frontend-developer.agent.md`     | Research & planning agent. Reads Figma and ticket context, then produces a detailed implementation plan. **Never writes code.** |
-| **plan-frontend-ticket** | `.github/prompts/plan-frontend-ticket.prompt.md` | Prompt that structures a ticket's requirements into a step-by-step plan document saved in `.ai/plans/`.                         |
+| **Frontend Developer**   | `ai-docs/copilot-agents/frontend-developer.agent.md`     | Research & planning agent. Reads Figma and ticket context, then produces a detailed implementation plan. **Never writes code.** |
+| **plan-frontend-ticket** | `.github/prompts/plan-frontend-ticket.prompt.md` | Prompt that structures a ticket's requirements into a step-by-step plan document saved in `ai-work/plans/`.                         |
 | **develop-frontend**     | `.github/prompts/develop-frontend.prompt.md`     | Prompt that reads the plan and Figma design, then writes all implementation files (Stencil, SCSS, tests, stories, MDX).         |
 
 ---
@@ -29,12 +29,12 @@ flowchart TD
     Choice -->|Agent-first| Agent[Invoke frontend-developer agent<br/>with component name + Figma URL]
     Choice -->|Prompt-first| PlanPrompt[Invoke plan-frontend-ticket<br/>with ticket ID/file path]
 
-    Agent --> Session[Agent reads/creates<br/>.ai/sessions/component.md]
+    Agent --> Session[Agent reads/creates<br/>ai-work/sessions/component.md]
     Session --> Research[Agent researches codebase<br/>+ reads instructions]
-    Research --> AgentPlan[Agent creates<br/>.ai/plans/ticket_id_frontend.md]
+    Research --> AgentPlan[Agent creates<br/>ai-work/plans/ticket_id_frontend.md]
 
     PlanPrompt --> PromptResearch[Prompt researches codebase<br/>+ reads instructions]
-    PromptResearch --> PromptPlan[Prompt creates<br/>.ai/plans/ticket_id_frontend.md]
+    PromptResearch --> PromptPlan[Prompt creates<br/>ai-work/plans/ticket_id_frontend.md]
 
     AgentPlan --> Review{Review &<br/>Approve Plan?}
     PromptPlan --> Review
@@ -46,7 +46,7 @@ flowchart TD
 
     DevPrompt --> CheckPlan{Plan file<br/>exists?}
     CheckPlan -->|No| Stop([Error: Run planning first])
-    CheckPlan -->|Yes| ReadPlan[Read plan from<br/>.ai/plans/ticket_id_frontend.md]
+    CheckPlan -->|Yes| ReadPlan[Read plan from<br/>ai-work/plans/ticket_id_frontend.md]
 
     ReadPlan --> Figma[Analyse Figma via MCP]
     Figma --> Implement[Write all files:<br/>.tsx + .scss + .spec.ts<br/>.stories.ts + .mdx]
@@ -69,9 +69,9 @@ The following sequence diagram shows the detailed message flow between participa
 sequenceDiagram
     actor Dev as Developer
     participant Agent as frontend-developer<br/>(agent)
-    participant Sessions as .ai/sessions/
-    participant Plans as .ai/plans/
-    participant Instructions as .github/instructions/
+    participant Sessions as ai-work/sessions/
+    participant Plans as ai-work/plans/
+    participant Instructions as ai-docs/docs/
     participant PlanPrompt as plan-frontend-ticket<br/>(prompt)
     participant DevPrompt as develop-frontend<br/>(prompt)
     participant Codebase as Codebase
@@ -83,7 +83,7 @@ sequenceDiagram
     Agent->>Plans: Research existing component patterns
     Agent->>Sessions: Overwrite ## Current State<br/>Append ## History entry
     Agent->>Plans: Create {ticket_id}_frontend.md
-    Agent-->>Dev: "Plan ready at .ai/plans/{ticket_id}_frontend.md"
+    Agent-->>Dev: "Plan ready at ai-work/plans/{ticket_id}_frontend.md"
 
     Dev->>PlanPrompt: Invoke with ticket ID / file path
     PlanPrompt->>Instructions: Read base.instructions.md
@@ -106,7 +106,7 @@ sequenceDiagram
 
 Only the following sub-folders are actively used by the agentic workflow:
 
-### `.ai/plans/`
+### `ai-work/plans/`
 
 Implementation plan documents produced by the **Frontend Developer** agent or the **plan-frontend-ticket** prompt and consumed by the **develop-frontend** prompt.
 
@@ -122,9 +122,9 @@ status: pending
 
 Valid values: `pending`, `in progress`, `done`. The **develop-frontend** prompt reads this field before starting — it will refuse to run against a plan marked `done` and will set the status to `in progress` once implementation begins.
 
-[`INDEX.md`](plans/INDEX.md) is the single source of truth listing all plans grouped by status. Update it whenever a plan's status changes, or run the `sync-plans` command/prompt to rebuild it automatically.
+[`INDEX.md`](../../ai-work/plans/INDEX.md) is the single source of truth listing all plans grouped by status. Update it whenever a plan's status changes, or run the `sync-plans` command/prompt to rebuild it automatically.
 
-### `.ai/sessions/`
+### `ai-work/sessions/`
 
 Per-component session state files managed exclusively by the **Frontend Developer** agent. Each file uses a strict two-zone structure:
 
@@ -133,7 +133,7 @@ Per-component session state files managed exclusively by the **Frontend Develope
 
 Naming convention: `{component_name}.md`
 
-### `.ai/guidelines/`
+### `ai-docs/guidelines/`
 
 Reference documents consulted by both the **Frontend Developer** agent and the **plan-frontend-ticket** prompt before producing a plan:
 
@@ -141,9 +141,9 @@ Reference documents consulted by both the **Frontend Developer** agent and the *
 | -------------------- | ------------------------------------------------ |
 | `release-process.md` | Release runbook executed by the Engineering Lead |
 
-> **Coding conventions** (component architecture, token rules, naming) are defined in [`.github/instructions/base.instructions.md`](../.github/instructions/base.instructions.md) and its linked instruction files, not in this folder.
+> **Coding conventions** (component architecture, token rules, naming) are defined in [`base.instructions.md`](./base.instructions.md) and its linked instruction files, not in this folder.
 
-> **Definition of Done** is defined in [`.github/instructions/workflow.instructions.md §1`](../.github/instructions/workflow.instructions.md) and must be fully satisfied before any ticket is marked complete.
+> **Definition of Done** is defined in [`workflow.instructions.md §1`](./workflow.instructions.md) and must be fully satisfied before any ticket is marked complete.
 
 ---
 
@@ -153,14 +153,14 @@ Reference documents consulted by both the **Frontend Developer** agent and the *
 
 1. Open GitHub Copilot Chat.
 2. Invoke the **Frontend Developer** agent with the component name and Figma URL.
-3. The agent reads or creates `.ai/sessions/{name}.md`, researches the codebase, and saves a plan to `.ai/plans/{ticket_id}_frontend.md`.
+3. The agent reads or creates `ai-work/sessions/{name}.md`, researches the codebase, and saves a plan to `ai-work/plans/{ticket_id}_frontend.md`.
 4. Review and approve the plan.
 5. Invoke the **develop-frontend** prompt with the ticket ID and Figma URL to implement.
 
 ### Option B — Prompt-first (for well-defined tickets)
 
 1. Invoke the **plan-frontend-ticket** prompt with the ticket ID or a local ticket file path.
-2. The prompt produces `.ai/plans/{ticket_id}_frontend.md`.
+2. The prompt produces `ai-work/plans/{ticket_id}_frontend.md`.
 3. Review and approve the plan.
 4. Invoke the **develop-frontend** prompt with the ticket ID and Figma URL to implement.
 

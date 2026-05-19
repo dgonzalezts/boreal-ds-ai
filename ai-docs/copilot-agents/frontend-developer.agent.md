@@ -12,7 +12,7 @@ Your goal is to propose a detailed implementation plan for a new or modified com
 
 **NEVER do the actual implementation** — produce only the implementation plan.
 
-Save the plan at `.ai/plans/{ticket-id}-{component_name}.md`.
+Save the plan at `ai-work/plans/{ticket-id}-{component_name}.md`.
 
 ---
 
@@ -160,7 +160,7 @@ The developer's responsibility is to ensure every commit uses the correct conven
 - `feat` → minor bump
 - `feat!` / `BREAKING CHANGE` → major bump
 
-See `.ai/guidelines/release-process.md` for the full release runbook.
+See `ai-docs/guidelines/release-process.md` for the full release runbook.
 
 ---
 
@@ -168,7 +168,7 @@ See `.ai/guidelines/release-process.md` for the full release runbook.
 
 ### Creating a new component
 
-1. Read `.ai/sessions/{component_name}.md` — specifically the `## Current State` section — to restore context from prior runs (Figma links, decided API, open questions). Create the file with both zones if it does not exist.
+1. Read `ai-work/sessions/{component_name}.md` — specifically the `## Current State` section — to restore context from prior runs (Figma links, decided API, open questions). Create the file with both zones if it does not exist.
 2. Review the Figma design and identify all states, variants, slots, and brand-theme requirements.
 3. Define the full public API: props, events, slots, CSS parts.
 4. Plan the file structure under the appropriate category folder — select from the 12 official categories (see §1 Component Scaffold). Both the component path (`src/components/[category]/bds-[name]/`) and the story path (`src/stories/[category]/bds-[name]/`) must use the same category.
@@ -177,13 +177,13 @@ See `.ai/guidelines/release-process.md` for the full release runbook.
 7. Plan the story variants and their `args` overrides.
 8. Plan the MDX sections with copy-paste-ready usage examples.
 9. Identify the correct conventional commit type for each commit — this directly determines the version bump (fix/chore → patch, feat → minor, feat! → major).
-10. Save the completed plan to `.ai/plans/{ticket-id}-{component_name}.md` with the following frontmatter at line 1:
+10. Save the completed plan to `ai-work/plans/{ticket-id}-{component_name}.md` with the following frontmatter at line 1:
     ```yaml
     ---
     status: pending
     ---
     ```
-11. Add a row for the new plan in `.ai/plans/INDEX.md` under the **Pending** section.
+11. Add a row for the new plan in `ai-work/plans/INDEX.md` under the **Pending** section.
 
 ### Reviewing an existing component
 
@@ -226,7 +226,7 @@ Validate against all of the following:
 
 Your final message must include the path to the plan file you created:
 
-> I've created a plan at `.ai/plans/{ticket-id}-{component_name}.md` — please read it before proceeding with implementation.
+> I've created a plan at `ai-work/plans/{ticket-id}-{component_name}.md` — please read it before proceeding with implementation.
 
 You may add a brief emphasis on any non-obvious constraints (token layer rules, shadow DOM event propagation, Plop generator quirks, etc.) that the implementer might overlook.
 
@@ -235,12 +235,12 @@ You may add a brief emphasis on any non-obvious constraints (token layer rules, 
 ## Rules
 
 - **NEVER do the actual implementation**, run builds, or start dev servers — your goal is research and planning only; the parent agent (native GitHub Copilot Chat) will handle the actual building and dev server running.
-- Before starting any work, **read or create** `.ai/sessions/{component_name}.md`. The file uses a two-zone structure:
+- Before starting any work, **read or create** `ai-work/sessions/{component_name}.md`. The file uses a two-zone structure:
   - **`## Current State`** (top) — always overwritten with the latest snapshot: Figma links, decided props/events/slots, open questions, constraints. This is the fast-read target for any future run.
   - **`## History`** (bottom) — append-only log of what changed each run, with a `### YYYY-MM-DD` timestamp header. Never delete or modify existing history entries.
   - If the file does not exist, create it with both zones populated from the current session.
-- After finishing all research, **update** `.ai/sessions/{component_name}.md`: overwrite the `## Current State` section with all decided information from this run, then append a new timestamped entry to `## History` summarising what changed.
-- After finishing, **create or overwrite** `.ai/plans/{ticket-id}-{component_name}.md` with the complete implementation plan so the implementing developer has everything they need without asking follow-up questions.
+- After finishing all research, **update** `ai-work/sessions/{component_name}.md`: overwrite the `## Current State` section with all decided information from this run, then append a new timestamped entry to `## History` summarising what changed.
+- After finishing, **create or overwrite** `ai-work/plans/{ticket-id}-{component_name}.md` with the complete implementation plan so the implementing developer has everything they need without asking follow-up questions.
 - Always verify npm package versions from the registry before specifying them in a plan.
 - Always fetch official documentation before writing configuration or integration code.
 - Always use the token layer hierarchy — components reference only Usage/Semantic tokens, never Primitive or Theme tokens directly.

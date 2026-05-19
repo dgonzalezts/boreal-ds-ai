@@ -39,7 +39,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Documentation:**
 
-- Write the validated design to `.ai/sessions/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `ai-work/sessions/YYYY-MM-DD-<topic>-design.md`
 - Use writing-clearly-and-concisely skill if available
 - Commit the design document to git
 

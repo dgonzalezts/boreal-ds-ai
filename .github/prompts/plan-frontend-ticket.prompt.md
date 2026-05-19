@@ -26,7 +26,7 @@ Produce a step-by-step implementation plan for the Boreal DS frontend work descr
 
 # Output Format
 
-Markdown document saved at `.ai/plans/{ticket-id}-{component_name}.md` following the template below.
+Markdown document saved at `ai-work/plans/{ticket-id}-{component_name}.md` following the template below.
 
 The file **must** begin with this frontmatter block before any other content:
 
@@ -36,7 +36,7 @@ status: pending
 ---
 ```
 
-After saving the plan, add a row for it in `.ai/plans/INDEX.md` under the **Pending** section (filename link + one-line description).
+After saving the plan, add a row for it in `ai-work/plans/INDEX.md` under the **Pending** section (filename link + one-line description).
 
 ---
 
@@ -155,7 +155,7 @@ Brief description of the component or change and which Boreal DS architectural p
      ```bash
      pnpm --filter @telesign/boreal-web-components run release -- --dry-run --preRelease=alpha
      ```
-- **Notes**: Developers do not run `pnpm release:*`. The Engineering Lead executes the release from the `release/current` branch following the runbook in `.ai/guidelines/release-process.md`.
+- **Notes**: Developers do not run `pnpm release:*`. The Engineering Lead executes the release from the `release/current` branch following the runbook in `ai-docs/guidelines/release-process.md`.
 
 #### Step 8: Update Technical Documentation
 
@@ -216,7 +216,7 @@ Table of visual properties → token variables:
 
 - Open PR targeting `release/current`
 - Request peer code review and UX/UI sign-off
-- Merge to `release/current` then follow release process in `.ai/guidelines/release-process.md`
+- Merge to `release/current` then follow release process in `ai-docs/guidelines/release-process.md`
 
 ### 12. Implementation Verification
 

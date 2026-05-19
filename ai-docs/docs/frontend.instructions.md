@@ -169,7 +169,7 @@ The `shadow` property is omitted (defaults to `false` in Stencil 4.x). This arch
 **Events:**
 
 - The `composed` flag in `@Event({ bubbles, composed, cancelable })` is irrelevant — there is no shadow boundary for events to cross.
-- Bare `@Event()` (with no options) is the accepted convention. See ADR `.ai/decisions/0003-event-options-convention.md`.
+- Bare `@Event()` (with no options) is the accepted convention. See ADR `ai-docs/decisions/0003-event-options-convention.md`.
 
 **DOM queries:**
 
@@ -182,11 +182,11 @@ The `shadow` property is omitted (defaults to `false` in Stencil 4.x). This arch
 
 **Pattern adaptation:**
 
-- Reference implementations using shadow DOM (e.g., BEEQ at `.ai/lib/endava-beeq.txt`) must be adapted before adoption. Shadow-specific patterns (`::part()`, CSS custom property tunneling, `composed: true` event options) do not apply.
+- Reference implementations using shadow DOM (e.g., BEEQ at `ai-docs/lib/endava-beeq.txt`) must be adapted before adoption. Shadow-specific patterns (`::part()`, CSS custom property tunneling, `composed: true` event options) do not apply.
 
 **Future consideration:**
 
-- If shadow DOM is ever introduced, ADR `.ai/decisions/0003-event-options-convention.md` must be revisited. Events with bare `@Event()` do not cross shadow boundaries.
+- If shadow DOM is ever introduced, ADR `ai-docs/decisions/0003-event-options-convention.md` must be revisited. Events with bare `@Event()` do not cross shadow boundaries.
 
 ### Language and Naming Conventions
 
@@ -544,7 +544,7 @@ Two partials are injected into every component stylesheet via `injectGlobalPaths
 - `src/styles/_commons.scss` — exports `%flex-center` (`display: flex; align-items: center`). Use `@extend %flex-center` instead of repeating those two declarations.
 - `src/styles/_interactions.scss` — exports `@include bds-transition-surface`, `@include bds-focus-ring(...)`, `@include bds-hover-shadow(...)`, `@include bds-active-shadow-inset(...)`, and related mixins/functions for consistent interaction feedback.
 
-Always prefer these over raw `display: flex`, `box-shadow`, or `transition` declarations. See `.ai/guidelines/stencil-best-practices.md` — _Global SCSS Utilities_ section for the full reference table and examples.
+Always prefer these over raw `display: flex`, `box-shadow`, or `transition` declarations. See `ai-docs/guidelines/stencil-best-practices.md` — _Global SCSS Utilities_ section for the full reference table and examples.
 
 ### Form Handling
 

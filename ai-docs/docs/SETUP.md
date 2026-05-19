@@ -6,23 +6,35 @@ Personal AI agent configuration, IDE instructions, and development guidelines fo
 
 ## What's in this repo
 
-This repository contains three folders that live inside the monorepo working directory:
+Three canonical directories hold all AI artefacts:
 
-| Folder     | Purpose                                                               |
-| ---------- | --------------------------------------------------------------------- |
-| `.ai/`     | Plans, decisions, guidelines, tickets, and research used by AI agents |
-| `.claude/` | Claude-specific agent configuration, skills, memory, and prompts      |
-| `.github/` | GitHub Copilot instructions, agent definitions, and prompt files      |
+| Directory    | Purpose                                                                       |
+| ------------ | ----------------------------------------------------------------------------- |
+| `.agents/`   | Canonical tooling: agent definitions, skills, commands, memory, scripts       |
+| `ai-docs/`   | Reference documentation: guidelines, decisions, diagrams, instruction files   |
+| `ai-work/`   | Working artefacts: plans, reviews, sessions, tickets, QA, research            |
+
+Three mirror facades expose content to specific tools via per-entry symlinks:
+
+| Facade                  | Points to           | Used by              |
+| ----------------------- | ------------------- | -------------------- |
+| `.claude/agents/`       | `.agents/agents/`   | Claude Code          |
+| `.claude/commands/`     | `.agents/commands/` | Claude Code          |
+| `.claude/memory/`       | `.agents/memory/`   | Claude Code          |
+| `.claude/skills/`       | `.agents/skills/`   | Claude Code          |
+| `.cursor/agents/`       | `.agents/agents/`   | Cursor               |
+| `.cursor/skills/`       | `.agents/skills/`   | Cursor               |
+| `.github/instructions/` | `ai-docs/docs/`     | GitHub Copilot / IDE |
 
 ---
 
 ## How it works
 
-These three folders are intentionally excluded from the main repository tracking via `.git/info/exclude`. This means:
+All seven directories are excluded from the main repository tracking via `.git/info/exclude`:
 
-- They never appear as untracked files in `git status` or VS Code Source Control on the main branches
+- They never appear as untracked files in `git status` on the main branches
 - They are never pushed to the `origin` remote (Bitbucket)
-- They are tracked independently on an orphan `ai-config` branch in this separate `ai` remote
+- They are tracked independently on an orphan `ai-config` branch in a separate `ai` remote
 
 ---
 
@@ -45,8 +57,8 @@ git remote add ai https://github.com/dgonzalezts/boreal-ds-ai.git
 
 ```bash
 git fetch ai
-git checkout ai/main -- .ai .claude .github
-git rm --cached -r .ai .claude .github
+git checkout ai/main -- .agents ai-docs ai-work .claude .cursor .github
+git rm --cached -r .agents ai-docs ai-work .claude .cursor .github
 ```
 
 ### 4. Exclude the folders from the main repo
@@ -55,8 +67,11 @@ Add to `.git/info/exclude` (located at `<repo-root>/.git/info/exclude`):
 
 ```
 # AI and IDE configuration — tracked in a separate private remote, not in origin
-.ai/
+.agents/
+ai-docs/
+ai-work/
 .claude/
+.cursor/
 .github/
 ```
 
@@ -65,7 +80,7 @@ Add to `.git/info/exclude` (located at `<repo-root>/.git/info/exclude`):
 Add the `aisync` function to your `~/.functions` (or equivalent shell config file):
 
 ```bash
-# Sync AI config folders (.ai, .claude, .github) to the ai-config branch and push to the ai remote
+# Sync AI scaffold dirs to the ai-config branch and push to the ai remote.
 # Usage: aisync [repo-path]   (defaults to the current git repo root)
 function aisync() {
   local root
@@ -74,20 +89,7 @@ function aisync() {
     printf "\033[31mERROR:\033[0m Not inside a git repository\n"
     return 1
   fi
-  local current
-  current=$(git -C "$root" branch --show-current)
-  local tmpdir
-  tmpdir=$(mktemp -d)
-  cp -r "$root/.ai" "$root/.claude" "$root/.github" "$tmpdir/" 2>/dev/null
-  git -C "$root" checkout ai-config
-  cp -r "$tmpdir/." "$root/"
-  git -C "$root" add -f .ai .claude .github
-  git -C "$root" commit --allow-empty -m "sync: update AI configuration $(date +%Y-%m-%d)"
-  git -C "$root" push ai ai-config:main
-  git -C "$root" checkout "$current"
-  cp -r "$tmpdir/." "$root/"
-  git -C "$root" rm --cached -r .ai .claude .github 2>/dev/null
-  rm -rf "$tmpdir"
+  bash "$root/.agents/scripts/aisync.sh" "$root"
 }
 ```
 
@@ -95,29 +97,38 @@ function aisync() {
 
 ## Daily workflow
 
-Edit any files inside `.ai/`, `.claude/`, or `.github/` freely while on any branch. When ready to save and push:
+Edit any files inside `.agents/`, `ai-docs/`, or `ai-work/` freely while on any branch. When ready to save and push:
 
 ```bash
 aisync
 ```
 
-That's it. The function:
+That's it. The script:
 
-1. Snapshots the current state of all three folders from disk
-2. Switches to `ai-config`, restores the snapshot, commits, and pushes to the `ai` remote
-3. Switches back to your original branch and restores the files on disk
+1. Adds a git worktree checked out to `ai-config` in a sibling directory
+2. Rsyncs all scaffold directories into the worktree (including deletions)
+3. Commits with a timestamped message and pushes to `ai/main`
+4. Removes the worktree — your working directory is never touched
+
+After pushing, run the symlink reconciler to keep the mirror facades in sync:
+
+```bash
+bash .agents/scripts/sync-symlinks.sh
+```
 
 ---
 
 ## Pushing manually (without `aisync`)
 
 ```bash
-git checkout ai-config
-git add -f .ai .claude .github
-git commit -m "sync: update AI configuration"
-git push ai ai-config:main
-git checkout release/current
-# Restore files on disk and unstage from main repo
-git checkout ai/main -- .ai .claude .github
-git rm --cached -r .ai .claude .github
+root=$(git rev-parse --show-toplevel)
+wt="$root/../ai-sync-worktree"
+git worktree add "$wt" ai-config
+for d in .agents ai-docs ai-work .claude .cursor .github; do
+  rsync -a --delete --links "$root/$d" "$wt/"
+done
+git -C "$wt" add -f .agents ai-docs ai-work .claude .cursor .github
+git -C "$wt" commit -m "sync: update AI configuration"
+git -C "$wt" push ai ai-config:main
+git worktree remove "$wt"
 ```

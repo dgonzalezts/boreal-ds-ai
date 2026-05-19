@@ -1,6 +1,6 @@
 ---
 name: develop-frontend
-description: Use this prompt when you are ready to implement a Boreal DS component from a Figma design and a ticket spec. It analyses the Figma file via MCP, produces a component tree, then writes all implementation files (Stencil component, SCSS, unit tests, Storybook story, MDX). Run this after plan-frontend-ticket has produced the plan in .ai/plans/.
+description: Use this prompt when you are ready to implement a Boreal DS component from a Figma design and a ticket spec. It analyses the Figma file via MCP, produces a component tree, then writes all implementation files (Stencil component, SCSS, unit tests, Storybook story, MDX). Run this after plan-frontend-ticket has produced the plan in ai-work/plans/.
 ---
 
 # Role
@@ -32,10 +32,10 @@ Implement the component from the Figma design.
    - All four brand themes (proximus, masiv, telesign, bics)
    - Exact spacing, radius, colour, and typography values — then map each to its `var(--boreal-*)` token
 
-2. **Read the implementation plan** from `.ai/plans/{ticket-id}-{component_name}.md` before writing any code.
+2. **Read the implementation plan** from `ai-work/plans/{ticket-id}-{component_name}.md` before writing any code.
    - If the plan file does not exist, stop and ask the user to run the `plan-frontend-ticket` prompt first.
    - If the plan's frontmatter `status` is `done`, stop and inform the user that this plan has already been implemented.
-   - Otherwise, update the plan's frontmatter `status` to `in progress` and move its row to the **In Progress** section of `.ai/plans/INDEX.md` before proceeding.
+   - Otherwise, update the plan's frontmatter `status` to `in progress` and move its row to the **In Progress** section of `ai-work/plans/INDEX.md` before proceeding.
 
 3. **Generate a short implementation summary** including:
    - Component API (props, events, slots, CSS parts)

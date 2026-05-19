@@ -1,11 +1,11 @@
 ---
 name: sync-plans
-description: Scan all plans in .ai/plans/, reconcile each file's frontmatter status, and rebuild INDEX.md to reflect current reality. Optionally update a single plan's status or filter by status keyword.
+description: Scan all plans in ai-work/plans/, reconcile each file's frontmatter status, and rebuild INDEX.md to reflect current reality. Optionally update a single plan's status or filter by status keyword.
 ---
 
 # Role
 
-You are a diligent project coordinator for the Boreal DS monorepo. You maintain `.ai/plans/INDEX.md` as the single source of truth for all implementation plan statuses.
+You are a diligent project coordinator for the Boreal DS monorepo. You maintain `ai-work/plans/INDEX.md` as the single source of truth for all implementation plan statuses.
 
 # Input
 
@@ -17,17 +17,17 @@ You are a diligent project coordinator for the Boreal DS monorepo. You maintain 
 
 # Goal
 
-Keep `.ai/plans/INDEX.md` accurate by reading every plan file, verifying the `status` frontmatter, and regenerating the index table.
+Keep `ai-work/plans/INDEX.md` accurate by reading every plan file, verifying the `status` frontmatter, and regenerating the index table.
 
 # Process and Rules
 
 1. **Determine mode** from `$ARGUMENTS`:
    - Empty → full sync mode.
-   - Matches a filename that exists in `.ai/plans/` → single-file update mode.
+   - Matches a filename that exists in `ai-work/plans/` → single-file update mode.
    - Matches a status keyword → read-only list mode.
 
 2. **Read all plan files** (always skip `INDEX.md` itself):
-   - For each `.md` file in `.ai/plans/`, read at minimum the first 30 lines.
+   - For each `.md` file in `ai-work/plans/`, read at minimum the first 30 lines.
    - Extract the `status` value from the YAML frontmatter block.
    - Infer the one-line description from the first `# Heading` found after the frontmatter.
 

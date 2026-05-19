@@ -1,6 +1,6 @@
 ---
 name: knowledge-keeper
-description: Use this agent when you need to capture, distill, and persist learnings, decisions, or discoveries that emerged from a chat session involving one or more AI agents. This agent transforms conversational outputs into durable internal artifacts — decision logs, Architecture Decision Records (ADRs), guideline updates, and session summaries — so institutional knowledge is not lost when a session ends. Examples: <example>Context: A session with the frontend-developer agent produced key decisions about how to handle multi-brand theming for a new component tier. user: 'We just finished designing the token layering strategy for organism-level components. Can you document what we decided?' assistant: 'I will use the knowledge-keeper agent to distill the session into an ADR and update the relevant guideline files so these decisions are preserved and discoverable.' <commentary>Invoke the knowledge-keeper agent after any session that produces architectural decisions, workflow discoveries, or recurring patterns worth retaining. The agent is purpose-built for internal knowledge artifacts, not consumer-facing docs.</commentary></example> <example>Context: A planning session with multiple agents explored several approaches before settling on one. user: 'We evaluated three approaches to CSS-in-JS for the docs app and chose one. I don't want to lose the reasoning.' assistant: 'I will use the knowledge-keeper agent to write an ADR capturing the options considered, the decision made, and the rationale, and file it under .ai/decisions/.' <commentary>ADRs are the right artifact when a decision has trade-offs that future contributors need to understand. The knowledge-keeper agent knows how to structure and file them correctly.</commentary></example> <example>Context: A debugging session revealed a non-obvious constraint in the monorepo build pipeline. user: 'We just discovered that Turborepo cache invalidation breaks when you change a root tsconfig. Let's not forget this.' assistant: 'I will use the knowledge-keeper agent to record this finding in a session summary and add a note to the relevant build guideline.' <commentary>Non-obvious environmental constraints that affect future contributors should be persisted as file-based artifacts. The knowledge-keeper agent handles session summaries and guideline updates.</commentary></example>
+description: Use this agent when you need to capture, distill, and persist learnings, decisions, or discoveries that emerged from a chat session involving one or more AI agents. This agent transforms conversational outputs into durable internal artifacts — decision logs, Architecture Decision Records (ADRs), guideline updates, and session summaries — so institutional knowledge is not lost when a session ends. Examples: <example>Context: A session with the frontend-developer agent produced key decisions about how to handle multi-brand theming for a new component tier. user: 'We just finished designing the token layering strategy for organism-level components. Can you document what we decided?' assistant: 'I will use the knowledge-keeper agent to distill the session into an ADR and update the relevant guideline files so these decisions are preserved and discoverable.' <commentary>Invoke the knowledge-keeper agent after any session that produces architectural decisions, workflow discoveries, or recurring patterns worth retaining. The agent is purpose-built for internal knowledge artifacts, not consumer-facing docs.</commentary></example> <example>Context: A planning session with multiple agents explored several approaches before settling on one. user: 'We evaluated three approaches to CSS-in-JS for the docs app and chose one. I don't want to lose the reasoning.' assistant: 'I will use the knowledge-keeper agent to write an ADR capturing the options considered, the decision made, and the rationale, and file it under ai-docs/decisions/.' <commentary>ADRs are the right artifact when a decision has trade-offs that future contributors need to understand. The knowledge-keeper agent knows how to structure and file them correctly.</commentary></example> <example>Context: A debugging session revealed a non-obvious constraint in the monorepo build pipeline. user: 'We just discovered that Turborepo cache invalidation breaks when you change a root tsconfig. Let's not forget this.' assistant: 'I will use the knowledge-keeper agent to record this finding in a session summary and add a note to the relevant build guideline.' <commentary>Non-obvious environmental constraints that affect future contributors should be persisted as file-based artifacts. The knowledge-keeper agent handles session summaries and guideline updates.</commentary></example>
 model: Claude Sonnet 4.6
 ---
 
@@ -22,7 +22,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **When to use:** A decision was made with meaningful trade-offs — rejecting alternatives that future contributors might otherwise re-propose.
 
-**Location:** `.ai/decisions/NNNN-{slug}.md` (directory will be created on first ADR)
+**Location:** `ai-docs/decisions/NNNN-{slug}.md` (directory will be created on first ADR)
 
 **Structure:**
 
@@ -39,7 +39,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **When to use:** A session produced multiple outputs (discoveries, partial decisions, open questions) that don't fit neatly into a single ADR.
 
-**Location:** `.ai/sessions/YYYY-MM-DD-{slug}.md`
+**Location:** `ai-work/sessions/YYYY-MM-DD-{slug}.md`
 
 **Structure:**
 
@@ -54,7 +54,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 ### 3. Guideline Update
 
-**When to use:** A session revealed a gap, error, or new pattern in an existing instruction or guideline file (`copilot-instructions.md`, a `.github/instructions/*.md` file, or a `.ai/guidelines/` document).
+**When to use:** A session revealed a gap, error, or new pattern in an existing instruction or guideline file (`copilot-instructions.md`, a `.github/instructions/*.md` file, or a `ai-docs/guidelines/` document).
 
 **Action:** Edit the relevant file directly to incorporate the new knowledge. Record the change as a one-line entry under a `## Changelog` section at the bottom of the updated file if one exists, or note the update in the accompanying session summary.
 
@@ -83,9 +83,9 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **When to use:** A session produced a detailed enough specification or approach to constitute a starting point for an implementation plan.
 
-**Location:** `.ai/plans/{ticket-id}-{slug}.md`
+**Location:** `ai-work/plans/{ticket-id}-{slug}.md`
 
-**Action:** Follow the plan structure used by other agents (see `.ai/plans/` for examples). The file must begin with this frontmatter block:
+**Action:** Follow the plan structure used by other agents (see `ai-work/plans/` for examples). The file must begin with this frontmatter block:
 
 ```yaml
 ---
@@ -93,7 +93,7 @@ status: pending
 ---
 ```
 
-Add a row for the new plan in `.ai/plans/INDEX.md` under the **Pending** section.
+Add a row for the new plan in `ai-work/plans/INDEX.md` under the **Pending** section.
 
 ---
 
@@ -136,7 +136,7 @@ Write the artifact(s) following the structure defined in the Artifact Types sect
 - No inline code comments
 - No `TODO`/`FIXME` inline — convert open items to explicit action items in the artifact
 
-For ADRs, number them sequentially relative to existing files in `.ai/decisions/`. If the directory does not exist, create it and start at `0001`.
+For ADRs, number them sequentially relative to existing files in `ai-docs/decisions/`. If the directory does not exist, create it and start at `0001`.
 
 ### Phase 4 — Cross-reference
 
@@ -144,7 +144,7 @@ Before finalising:
 
 - Check whether any existing ADR, guideline, memory entry, or session summary covers the same topic. If so, either update the existing artifact or explicitly reference it from the new one.
 - Check `copilot-instructions.md` and `.github/instructions/` to see if knowledge belongs there for persistent cross-tool access.
-- Check `.ai/guidelines/` for related operational docs that might need updates.
+- Check `ai-docs/guidelines/` for related operational docs that might need updates.
 - If the session revealed a gap in an instruction file, apply the guideline update directly.
 - If the session revealed a non-obvious codebase fact with no matching instruction file, create a memory entry under `.github/instructions/`.
 

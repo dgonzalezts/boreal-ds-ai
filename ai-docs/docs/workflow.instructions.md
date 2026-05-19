@@ -27,7 +27,7 @@ A change is considered **production-ready** when every item in this checklist is
 
 ### 🔧 Development
 
-- [ ] Component extends the most appropriate base layer (see [code practices](../../.ai/guidelines/code-practices-&-dev-guidelines.md))
+- [ ] Component extends the most appropriate base layer (see [code practices](../../ai-docs/guidelines/code-practices-&-dev-guidelines.md))
 - [ ] All props typed explicitly in TypeScript; no `any`
 - [ ] Design tokens used exclusively — no hard-coded colours, spacing, or radii
 - [ ] ARIA roles, labels, and keyboard interactions implemented
@@ -316,4 +316,4 @@ flowchart LR
 | `feature/[ticket]_[name]` | Feature or component branches cut from `release/current`.           |
 | `fix/[ticket]_[name]`     | Bug fix branches cut from `release/current`.                        |
 
-Releases must always run from `release/current` with a clean working directory. See [release-process.md](../../.ai/guidelines/release-process.md) for the full release runbook.
+Releases must always run from `release/current` with a clean working directory. See [release-process.md](../../ai-docs/guidelines/release-process.md) for the full release runbook.

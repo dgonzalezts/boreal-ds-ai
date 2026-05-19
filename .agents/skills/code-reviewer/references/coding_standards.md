@@ -40,7 +40,7 @@ Internal barrels (`@/services`, `@/mixins`, `@/utils`) are resolved at compile t
 ### Events
 
 - Use prefixed camelCase event names: `bds{Action}`.
-- Use bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable` options required (see ADR `.ai/decisions/0003-event-options-convention.md`).
+- Use bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable` options required (see ADR `ai-docs/decisions/0003-event-options-convention.md`).
 - Avoid native DOM event names (`click`, `change`, `input`).
 
 ### FACE (Form-Associated Custom Elements)

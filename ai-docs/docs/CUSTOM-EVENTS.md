@@ -114,7 +114,7 @@ The `onBdsSelectChange` prop — with its full `detail` type — is generated au
 
 ## Propagation Behavior
 
-Boreal DS uses bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable`. This is the same convention used by BEEQ and Aqua DS (see ADR `.ai/decisions/0003-event-options-convention.md`).
+Boreal DS uses bare `@Event()` — no explicit `bubbles`, `composed`, or `cancelable`. This is the same convention used by BEEQ and Aqua DS (see ADR `ai-docs/decisions/0003-event-options-convention.md`).
 
 **Why bare `@Event()` is safe here:**
 - Consumers attach listeners **directly to the component element** — bubbling to ancestor containers is not required.
