@@ -66,15 +66,15 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **When to use:** A non-obvious fact about the codebase, environment, or workflow surfaced that would benefit future AI agent sessions. This complements but does not replace file-based artifacts.
 
-**Primary location:** `.claude/memory/` — the project-level memory directory checked into the repository. This is the canonical store for codebase memory in this project.
+**Primary location:** `.agents/memory/` — the project-level memory directory checked into the repository. This is the canonical store for codebase memory in this project.
 
 **Action:**
-1. Write the fact as a standalone topic file under `.claude/memory/{slug}.md`.
-2. Add a one-line entry for it in `.claude/memory/MEMORY.md` under the appropriate section.
+1. Write the fact as a standalone topic file under `.agents/memory/{slug}.md`.
+2. Add a one-line entry for it in `.agents/memory/MEMORY.md` under the appropriate section.
 3. Add a dated entry to the `## Changelog` section at the bottom of `MEMORY.md`.
 4. Optionally persist to the harness auto-memory via `mcp_memory_add_observations` for cross-session recall, but the file-based record is always primary.
 
-**Cross-tool note:** File-based artifacts in `.claude/memory/` work across all tools and contributors. `mcp_memory_add_observations` is Claude Code-specific (MCP) and user-scoped — use it as a supplement, not a replacement.
+**Cross-tool note:** File-based artifacts in `.agents/memory/` work across all tools and contributors. `mcp_memory_add_observations` is Claude Code-specific (MCP) and user-scoped — use it as a supplement, not a replacement.
 
 **Good memory candidates:**
 
@@ -156,11 +156,11 @@ Before finalising:
 ### Phase 5 — Confirm and Persist
 
 - Write all file-based artifacts using the Write or Edit tools.
-- For memory entries, write to `.claude/memory/{slug}.md` and update `.claude/memory/MEMORY.md` (index row + changelog entry). This is the primary persistence target.
+- For memory entries, write to `.agents/memory/{slug}.md` and update `.agents/memory/MEMORY.md` (index row + changelog entry). This is the primary persistence target.
 - Optionally also persist memory entries using `mcp_memory_add_observations` (Claude Code only — skip if unavailable) as a supplemental cross-session store.
 - Summarise what was created and where, so the user knows exactly what was saved and can verify it.
 
-**Cross-tool compatibility:** File-based artifacts (ADRs, session summaries, guideline updates, `.claude/memory/` entries) work across all tools and contributors. `mcp_memory_add_observations` is user-scoped and Claude Code-specific — always secondary to file-based records.
+**Cross-tool compatibility:** File-based artifacts (ADRs, session summaries, guideline updates, `.agents/memory/` entries) work across all tools and contributors. `mcp_memory_add_observations` is user-scoped and Claude Code-specific — always secondary to file-based records.
 
 ---
 
