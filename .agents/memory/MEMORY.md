@@ -26,14 +26,12 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | `component-interface-file-naming.md`       | Interface files use `IComponent.ts` (e.g. `ITooltip.ts`), never `IBdsComponent.ts` — the `Bds` prefix is reserved for tag names and class names only.                                                                                                                                                                                                                                                                   |
 | `component-interface-content-rule.md`      | `IComponent.ts` contains only consumer-settable `@Prop()` members — `@Event()` outputs, group-propagated props (e.g. `name`, `showDivider`), and `@State()` mirrors are excluded.                                                                                                                                                                                                                                       |
 | `component-accessor-naming-conventions.md` | Getter accessors must not carry a `get` prefix (`placement`, not `getPlacement`); `!x \|\| false` is always redundant — use `!x`.                                                                                                                                                                                                                                                                                       |
-| `feedback_event_naming.md`                 | All custom events must use `bds{Action}` camelCase format. Never use native event names (`click`, `change`) — causes type-contract violations, duplicate dispatch, and framework binding collisions.                                                                                                                                                                                                                    |
 | `feedback_event_options_explicit.md`       | Bare `@Event()` with no options is the accepted convention. Explicit `bubbles`, `composed`, `cancelable` not required. Aligns with BEEQ and Aqua DS reference implementations. See ADR 0003.                                                                                                                                                                                                                            |
 | `component-bds-typography-group-labels.md` | Group components render `label` with `<bds-typography variant="label" required tooltipText>` and `helperText` with `<bds-typography variant="helper" state={...}>`. Individual leaf labels stay as plain `<span>`. Drop group label/helper SCSS rules; add `BdsTypography` to spec `components` arrays.                                                                                                                 |
-| `stencil-vdom-listener-pattern.md`         | vDOM inline listeners (`onKeyDown={...}` on `<Host />`) are preferred over `@Listen('keydown')` for component-scoped events — type-safe, ESLint-compliant, auto-managed. Use `@Listen` only when `target`, `capture`, or `passive` options are needed. Bare `@Listen` with no options triggers the `prefer-vdom-listener` rule.                                                                                         |
 
 **Boolean prop naming** — `@Prop()` booleans must not carry an `is`, `has`, or `show` prefix. Use single descriptive adjectives that match native HTML attribute style (`disabled`, `closable`, `required`, `counter`). Examples: `hasClear` → `clearable`; `showClose` → `closable`; `hasHeader` → `header`.
 
-**Custom event naming** — `@Event()` names follow `bds{Action}` camelCase. No component noun in the middle (`bdsClose`, not `bdsBannerClose`). Exception: `valueChange` is reserved for Vue `v-model` integration.
+**Custom event naming** — `@Event()` names follow `bds{Action}` camelCase. No component noun in the middle (`bdsClose`, not `bdsBannerClose`). Exception: `valueChange` is reserved for Vue `v-model` integration. Full failure modes for native event names: `ai-docs/guidelines/stencil-best-practices.md` § "Custom event naming".
 
 ---
 
@@ -52,15 +50,14 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ### SCSS — Globally Injected Utilities
 
-| File                                | What it covers                                                                                                                                                                                                                                                                                                                                     |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scss-global-injected-utilities.md` | `_commons.scss` and `_interactions.scss` are injected via `injectGlobalPaths` in `stencil.config.ts` — no `@use`/`@import` needed in component SCSS. `%flex-center`, `bds-transition-surface`, `bds-focus-ring`, `bds-hover-shadow`, `bds-active-shadow-inset` and related symbols are always in scope. Always prefer these over raw declarations. |
+> Canonical reference: `ai-docs/guidelines/stencil-best-practices.md` § "Global SCSS Utilities (`_commons.scss` and `_interactions.scss`)" — full symbol table, usage examples, and hover-block consolidation pattern.
 
 ### Stencil — Light DOM CSS Patterns
 
+> Architectural decision (bare light DOM for all components, no `scoped: true`, `composed` irrelevant, BEEQ adaptation note): canonical reference is `ai-docs/guidelines/stencil-best-practices.md` § "When to use neither (current project choice)".
+
 | File                                 | What it covers                                                                                                                                                                                                                                                                                                                                                                |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_no_shadow_dom.md`           | All components use light DOM only (`shadow: false` or omitted). No shadow boundaries exist. Global CSS applies directly. `composed` event flag is irrelevant. BEEQ shadow-mode patterns must be adapted before adoption. If shadow DOM is introduced, ADR 0003 must be revisited.                                                                                             |
 | `stencil-light-dom-host-vs-class.md` | **CORRECTED:** The `:host` pseudo-class does NOT work in light DOM — it requires a shadow boundary (per MDN). All Boreal DS components use direct tag name selectors: `bds-button { ... }`, `bds-checkbox:focus-visible { ... }`, etc. Reflection pattern: use `reflect: true` only when the prop is referenced in a CSS attribute selector or must be observable at runtime. |
 
 ### Stencil — Build Output and Distribution
@@ -108,6 +105,8 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ### Storybook + Vite
 
+> Story and MDX documentation patterns: canonical reference is `ai-docs/guidelines/storybook-patterns.md` — `BorealStoryMeta`/`BorealStory` types, argTypes shape, Lit template bindings, MDX subtitle order, `formatHtmlSource` transform, `@storybook/addon-docs/blocks` import path.
+
 | File                       | What it covers                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------- |
 | `storybook-vite-quirks.md` | Vite glob export limitation workaround and esm-es5 warning suppression in Storybook config. |
@@ -126,10 +125,11 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ### Unit Testing — Spec File Organisation
 
+> Query patterns (`root` cast, `querySelector`, `querySelectorAll`, AAA structure): canonical reference is `ai-docs/guidelines/stencil-unit-testing-patterns.md`.
+
 | File                                    | What it covers                                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `test-spec-file-organisation.md`        | The five spec file types (`a11y`, `basics`, `variants`, `events`, `slots`) and the exact criteria for when each is required. Includes explicit rules for when **not** to create `slots.spec.ts`: a bare unnamed passthrough `<slot />` whose only side-effect is a CSS layout variable does not warrant its own file — it is already exercised incidentally by any test that passes child elements. |
-| `stencil-unit-testing-root-pattern.md` | `const root = page.root as HTMLElement` named-variable pattern — never inline repeated casts, never optional chaining, no `?? []` on `querySelectorAll`. Use typed interface (`HTMLBds*Element`) only for `@Prop()`/`@Method()` access. `assertExists` for must-exist child queries. Canonical reference: `bds-button-basics.spec.ts`.                                                              |
 
 ### Mutation Testing
 
@@ -160,6 +160,8 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ## Changelog
 
+- 2026-05-19 — Created `ai-docs/guidelines/storybook-patterns.md`. Verified §5 of the frozen guidelines against actual story files (`bds-button`, `bds-text-field`, `bds-banner`). Key corrections from the frozen file: wrong type names (`ColibriStoryMeta`/`ColibriStory` → `BorealStoryMeta`/`BorealStory`), wrong MDX import path (`@storybook/blocks` → `@storybook/addon-docs/blocks`), wrong custom components path (`@/_storybook/components` → `@/components/docs`), and `.stories.tsx` extension should be `.stories.ts` when no JSX is used.
+- 2026-05-19 — Task 16 (memory consolidation): deleted 5 files whose content was promoted into guideline files. Deleted: `stencil-vdom-listener-pattern.md` (now in SBP § "Event Listener Placement"), `scss-global-injected-utilities.md` (now in SBP § "Global SCSS Utilities"), `stencil-unit-testing-root-pattern.md` (now in `stencil-unit-testing-patterns.md`), `feedback_event_naming.md` (failure modes now in SBP § "Custom event naming"), `project_no_shadow_dom.md` (light DOM decision now in SBP § "When to use neither"). Added guideline pointers in affected MEMORY.md sections.
 - 2026-05-11 — New topic file added: `stencil-unit-testing-root-pattern.md`. Captures the `const root = page.root as HTMLElement` named-variable pattern — no inline repeated casts, no optional chaining, no `?? []` fallback on `querySelectorAll`. Also updated `.github/copilot-instructions.md` (Testing section) and `ai-docs/guidelines/stencil-unit-testing-patterns.md` (new canonical guide). Source: `bds-radio-group` spec file standardisation pass (EOA-12342).
 - 2026-05-08 — New topic file added: `test-spec-file-organisation.md`. Covers the five spec file types (`a11y`, `basics`, `variants`, `events`, `slots`) and the criteria for when each is required. Key rule: do not create `slots.spec.ts` for a bare unnamed passthrough `<slot />` whose only side-effect is a CSS layout variable — that is already exercised incidentally by tests that pass child elements. Aligns with updated `frontend.instructions.md` guidance. Source: `bds-radio-group` test review session.
 

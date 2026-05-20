@@ -4,6 +4,69 @@ Standard patterns for `newSpecPage` spec files in `boreal-web-components`. All e
 
 ---
 
+## Spec file organisation
+
+### File naming
+
+Split each component's tests across up to five spec files — one per functional concern. The naming convention is `{bds-component}.{type}.spec.ts`:
+
+| File                              | Create when…                                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `bds-component.a11y.spec.ts`      | Component renders ARIA attributes, roles, or manages focus. Always required for interactive components. |
+| `bds-component.basics.spec.ts`    | Component has props, CSS classes, or render output that can be verified in isolation. Always required. |
+| `bds-component.variants.spec.ts`  | Component has a `variant`, `size`, `color`, or equivalent enum prop that changes rendered output — when not already covered by `basics`. |
+| `bds-component.events.spec.ts`    | Component emits custom events or reacts to DOM events from child elements.                        |
+| `bds-component.slots.spec.ts`     | Slot presence or absence changes rendered output or state. See `.agents/memory/test-spec-file-organisation.md` for the full creation criteria. |
+
+Use `.spec.tsx` instead of `.spec.ts` only when the spec file itself uses JSX syntax.
+
+> `bds-button` uses the legacy hyphen form (`bds-button-basics.spec.ts`) — that predates this convention. All components added after `bds-button-group` follow the dot form.
+
+### Describe and it structure
+
+- One `describe` block per spec file, named after the component: `describe('bds-toggle basics', () => { ... })`.
+- One `it` per distinct behaviour — not per line of code.
+- Test descriptions must read as specifications, not labels:
+
+```ts
+// ✅ reads as a specification
+it('renders as disabled when the disabled prop is true', async () => { ... });
+
+// ❌ too vague
+it('disabled test', async () => { ... });
+```
+
+---
+
+## Test structure: Arrange-Act-Assert
+
+Use the AAA pattern in every `it` block. Three labelled comments keep the phases visually distinct, making it immediately obvious which phase failed when a test breaks.
+
+```ts
+it('should emit bdsChange when value changes', async () => {
+  // Arrange
+  const page = await newSpecPage({
+    components: [BdsTextField],
+    html: `<bds-text-field></bds-text-field>`,
+  });
+  const root = page.root as HTMLBdsTextFieldElement;
+  const spy = jest.fn();
+  root.addEventListener('bdsChange', spy);
+
+  // Act
+  (root as any).value = 'hello';
+  await page.waitForChanges();
+
+  // Assert
+  expect(spy).toHaveBeenCalledTimes(1);
+  expect(spy).toHaveBeenCalledWith(expect.objectContaining({ detail: 'hello' }));
+});
+```
+
+Omit the phase comments only when the test is trivially short — a single assertion on a static default, for example.
+
+---
+
 ## Root element access
 
 Always assign `page.root` to a named variable with an explicit cast. Never access `page.root` inline with repeated casts.

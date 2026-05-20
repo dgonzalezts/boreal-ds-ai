@@ -362,10 +362,8 @@ Custom events should follow a consistent naming pattern:
 **Implementation Example:**
 
 ```typescript
-// Cancelable event (before action)
+// Cancelable event (before action) — in Stencil use @Event({ cancelable: true })
 const openingEvent = new CustomEvent("my-opening", {
-  bubbles: true,
-  composed: true,
   cancelable: true,
 });
 if (this.dispatchEvent(openingEvent)) {
@@ -373,12 +371,7 @@ if (this.dispatchEvent(openingEvent)) {
   this.isOpen = true;
 
   // Non-cancelable event (after action)
-  this.dispatchEvent(
-    new CustomEvent("my-open", {
-      bubbles: true,
-      composed: true,
-    }),
-  );
+  this.dispatchEvent(new CustomEvent("my-open"));
 }
 ```
 
@@ -660,7 +653,6 @@ import { validatePropValue } from '@/utils/helpers/validateProps';
 @Component({
   tag: 'example-button',
   styleUrl: 'example-button.scss',
-  shadow: true,
 })
 export class ExampleButton {
   // =========================================================================
@@ -814,7 +806,7 @@ In order to enforce consistent code organization across the component library, t
 | ----------------------- | ---------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **ESLint Rules**        | Automated linting rules that enforce member ordering | `"@typescript-eslint/member-ordering": ["error", {...}]` | - Automated checking in IDE and CI/CD<br/>- Auto-fix capability<br/>- Immediate feedback to developers<br/>- See Section 2.1 for details |
 | **Component Templates** | CLI generators with pre-ordered structure            | `npm run generate:component my-button`                   | - Developers start with correct structure<br/>- Includes section comments<br/>- Reduces manual setup<br/>- Consistent boilerplate        |
-| **Pre-commit Hooks**    | Run linting before commits to block violations       | `husky` + `lint-staged` on `*.ts` files                  | - Prevents bad code from being committed<br/>- Forces compliance automatically<br/>- See Section 8.1 for details                         |
+| **Pre-commit Hooks**    | Run linting before commits to block violations       | `husky` + `lint-staged` on `*.ts` files                  | - Prevents bad code from being committed<br/>- Forces compliance automatically<br/>- See Section 8.1 (Pre-commit Hooks)                         |
 | **Code Snippets**       | IDE snippets for common patterns                     | VS Code snippets for component sections                  | - Quick insertion of properly ordered sections<br/>- Low overhead, no tooling needed<br/>- Developer convenience                         |
 
 **Recommended Approach:**
@@ -947,7 +939,6 @@ The Custom Elements Manifest (CEM) analyzer extracts component metadata from JSD
 @Component({
   tag: "example-button",
   styleUrl: "example-button.scss",
-  shadow: true,
 })
 export class ExampleButton {
   /**
@@ -1429,54 +1420,42 @@ this.mySubmit.emit({
 
 #### Bubbling & Composition
 
-All custom events should bubble through the DOM and compose across shadow DOM boundaries to ensure they work in all contexts.
+Boreal DS uses **light DOM** (`shadow: false` or no `shadow` option). Because there is no shadow boundary, `composed: true` is irrelevant and `bubbles` is only needed when a parent component needs to delegate to a distant ancestor.
 
-**Event Configuration:**
+**Accepted convention: bare `@Event()`**
 
-```typescript
-// ✅ CORRECT - Always bubble and compose
-this.dispatchEvent(
-  new CustomEvent("my-change", {
-    bubbles: true, // Event bubbles up through DOM
-    composed: true, // Event crosses shadow DOM boundaries
-    detail: { value: this.value },
-  }),
-);
-
-// ❌ INCORRECT - Event won't bubble or compose
-this.dispatchEvent(
-  new CustomEvent("my-change", {
-    detail: { value: this.value },
-  }),
-);
-```
-
-**Using @Event Decorator (Stencil):**
+The project follows the same convention as BEEQ and Aqua DS — bare `@Event()` with no options. Consumers attach listeners directly to the component element; bubbling is not required. This is enforced by ADR 0003.
 
 ```typescript
-// Boreal DS uses bare @Event() — bubbles, composed, cancelable all default to false
-// Consumers attach listeners directly to the component element; bubbling is not required
-@Event() myChange: EventEmitter<string>;
+// ✅ CORRECT — bare @Event() is the Boreal DS convention
+@Event() bdsChange: EventEmitter<string>;
 
-// Emitting is simple
-this.myChange.emit('new-value');
+this.bdsChange.emit('new-value');
 
 // Equivalent to:
-this.dispatchEvent(new CustomEvent('myChange', {
+this.dispatchEvent(new CustomEvent('bdsChange', {
   bubbles: false,
   composed: false,
   detail: 'new-value'
 }));
 ```
 
-**Why Bubbling & Composition Matter:**
+**When to deviate:**
 
-| Feature                     | Reason                                                                 |
-| --------------------------- | ---------------------------------------------------------------------- |
-| **Bubbling**                | Parent elements can listen to events without direct reference to child |
-| **Composition**             | Events cross shadow DOM boundaries, enabling event delegation          |
-| **Framework compatibility** | React, Vue, Angular expect events to bubble                            |
-| **Event delegation**        | Single listener can handle events from multiple children               |
+Add explicit options only when there is a documented architectural reason (e.g., a child-to-parent delegation pattern that requires bubbling). In that case, document the reason in a JSDoc comment on the `@Event()` line.
+
+```typescript
+// Explicit bubbles only when a parent component listens via event delegation
+@Event({ bubbles: true }) bdsChange: EventEmitter<RadioChangeDetail>;
+```
+
+**Why `composed` is never needed:**
+
+| Fact                                   | Implication                                         |
+| -------------------------------------- | --------------------------------------------------- |
+| All components use light DOM           | No shadow boundary to cross; `composed` has no effect |
+| Consumers listen on the component element directly | Bubbling is unnecessary for direct listeners |
+| Framework bindings (Vue, React) wrap the element | They call `addEventListener` on the host, not a parent |
 
 #### Cancelable Events Pattern
 
@@ -1669,12 +1648,60 @@ export class MySelect {
 Proper event design ensures:
 
 1. **Predictability** — Events represent user actions, not programmatic changes
-2. **Framework Compatibility** — Bubbling/composition work across all frameworks
+2. **Framework Compatibility** — `valueChange` event wired to Vue `v-model` via `componentModels`
 3. **Type Safety** — Typed event details catch errors at compile time
 4. **Flexibility** — Cancelable events allow parent components to control behavior
 5. **Debugging** — Clear event names and documentation aid troubleshooting
 6. **Unidirectional Data Flow** — Props down, events up (standard pattern)
 7. **Testability** — Predictable emission patterns make testing straightforward
+
+---
+
+### 1.6 Developing for Output Targets
+
+Boreal DS ships framework output targets — currently **Vue** (via `@stencil/vue-output-target`) and **React** (via `@stencil/react-output-target`). Components built for the Web Components package must follow additional conventions so the generated framework wrappers work correctly.
+
+#### Vue `v-model` Support
+
+The Vue output target maps one `@Prop()` / `@Event()` pair to Vue's `v-model` directive per component. This is configured in `vue-output-target.ts` via the `componentModels` array.
+
+**Registration requirement:**
+
+Every form component that exposes a `value` prop **must** be registered in `componentModels` in the same PR as the component itself. Omitting registration means Vue consumers cannot use `v-model` on that component.
+
+```typescript
+// packages/boreal-web-components/targets/vue-output-target.ts
+componentModels: [
+  {
+    elements: ['bds-text-field', 'bds-toggle', 'bds-checkbox', 'bds-radio-group'],
+    event: 'valueChange',
+    targetAttr: 'value',
+  },
+],
+```
+
+Multiple components sharing the same `event` + `targetAttr` pair can be listed together in one entry. The Vue proxy reads `$event.detail` directly from the flat primitive payload — no `eventAttr` field is needed.
+
+**The `valueChange` event:**
+
+All form components emit a dedicated `valueChange` event for Vue `v-model`. Use bare `@Event()` — no `bubbles` or `composed` options are needed because the project uses light DOM (see §1.5 and ADR 0003).
+
+```typescript
+// ✅ correct: bare @Event() with the reserved valueChange name
+@Event() valueChange: EventEmitter<string>;
+
+// ❌ avoid: adding options that are irrelevant in light DOM
+@Event({ bubbles: true, composed: true }) valueChange: EventEmitter<string>;
+```
+
+> `valueChange` is reserved for Vue `v-model` integration. Use `bds{Action}` names for all other events (§1.2).
+
+#### React Wrapper Compatibility
+
+React wrappers are generated automatically from `@Prop()` and `@Event()` declarations. No additional registration is required; however:
+
+- All `@Prop()` names should follow camelCase (the wrapper forwards them directly).
+- `@Event()` names are forwarded as `on<EventName>` callback props (e.g., `bdsChange` → `onBdsChange`).
 
 ---
 
@@ -1692,38 +1719,66 @@ ESLint enforces code quality rules and catches common errors. The configuration 
 npm install --save-dev eslint @eslint/js typescript typescript-eslint @stencil/eslint-plugin
 ```
 
-**Base Configuration (`eslint.config.mjs`):**
+**Base Configuration (`eslint.config.ts`):**
 
 This configuration should be placed at the root of the monorepo and serves as the foundation for all packages.
 
-```javascript
-// @ts-check
-import eslint from "@eslint/js";
+```typescript
+import { defineConfig } from "eslint/config";
+import { configs } from "@eslint/js";
 import tseslint from "typescript-eslint";
 import stencil from "@stencil/eslint-plugin";
+import globals from "globals";
 
-export default [
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+export default defineConfig([
+  {
+    ignores: [
+      "dist/**",
+      "loader/**",
+      "www/**",
+      "node_modules/**",
+      "*.d.ts",
+      "**/*.config.js",
+      "**/*.config.mjs",
+      "coverage/**",
+      ".storybook/**",
+      "storybook-static/**",
+    ],
+  },
+  configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
   ...stencil.configs.flat.recommended,
   {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json",
+        projectService: true,
+        tsconfigRootDir: __dirname,
+      },
+      globals: {
+        ...globals.browser,
       },
     },
     rules: {
-      // TypeScript rules
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
 
-      // Stencil-specific rules
+      "stencil/decorators-style": "error",
+      "stencil/host-data-deprecated": "error",
+      "stencil/own-methods-must-be-private": "error",
+      "stencil/own-props-must-be-private": "error",
+      "stencil/prefer-vdom-listener": "error",
+      "stencil/props-must-be-public": "error",
+      "stencil/render-returns-host": "error",
+      "stencil/reserved-member-names": "error",
+      "stencil/single-export": "error",
+
       "@stencil/async-methods": "error",
       "@stencil/decorators-context": "error",
       "@stencil/element-type": "error",
@@ -1731,59 +1786,60 @@ export default [
       "@stencil/methods-must-be-public": "error",
       "@stencil/props-must-be-readonly": "error",
       "@stencil/required-jsdoc": "error",
-      "@stencil/strict-mutable": "error",
+      "@stencil/strict-mutable": "warn",
     },
   },
   {
-    // Test files - relaxed rules
     files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },
   },
   {
-    // Type definition files
     files: ["**/*.d.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
-];
+]);
 ```
 
 **Package-Specific Configuration:**
 
 Individual packages can extend the base configuration with package-specific rules:
 
-```javascript
-// packages/my-components/eslint.config.mjs
-import baseConfig from "../../eslint.config.mjs";
+```typescript
+// packages/my-components/eslint.config.ts
+import baseConfig from "../../eslint.config.ts";
+import { defineConfig } from "eslint/config";
 
-export default [
+export default defineConfig([
   ...baseConfig,
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
-      // Override or add package-specific rules
       "@stencil/ban-prefix": ["error", ["stencil", "stnl", "st"]],
     },
   },
-];
+]);
 ```
 
 **Key Rules Explained:**
 
-| Rule                                | Enforcement | Rationale                                        |
-| ----------------------------------- | ----------- | ------------------------------------------------ |
-| `@stencil/async-methods`            | Error       | Ensures all public methods are async             |
-| `@stencil/decorators-context`       | Error       | Validates decorators are used in correct context |
-| `@stencil/element-type`             | Error       | Ensures `@Element()` has correct type            |
-| `@stencil/no-unused-watch`          | Error       | Catches unused `@Watch()` declarations           |
-| `@stencil/methods-must-be-public`   | Error       | Methods with `@Method()` must be public          |
-| `@stencil/props-must-be-readonly`   | Error       | Props should be readonly (unless mutable)        |
-| `@stencil/required-jsdoc`           | Error       | Enforces JSDoc on public APIs                    |
-| `@stencil/strict-mutable`           | Error       | Validates mutable props are actually mutated     |
-| `@typescript-eslint/no-unused-vars` | Error       | Prevents unused variables (ignore `_` prefix)    |
+| Rule                                | Enforcement | Rationale                                                      |
+| ----------------------------------- | ----------- | -------------------------------------------------------------- |
+| `@stencil/async-methods`            | Error       | Ensures all public methods are async                           |
+| `@stencil/decorators-context`       | Error       | Validates decorators are used in correct context               |
+| `@stencil/element-type`             | Error       | Ensures `@Element()` has correct type                          |
+| `@stencil/no-unused-watch`          | Error       | Catches unused `@Watch()` declarations                         |
+| `@stencil/methods-must-be-public`   | Error       | Methods with `@Method()` must be public                        |
+| `@stencil/props-must-be-readonly`   | Error       | Props should be readonly (unless mutable)                      |
+| `@stencil/required-jsdoc`           | Error       | Enforces JSDoc on public APIs                                  |
+| `@stencil/strict-mutable`           | Warn        | Flags mutable props — allowed but discouraged in most cases    |
+| `@typescript-eslint/no-unused-vars` | Error       | Prevents unused variables (ignore `_` prefix)                  |
+| `stencil/own-methods-must-be-private` | Error     | Internal methods should be private; only `@Method()` is public |
+| `stencil/own-props-must-be-private` | Error       | Internal state props should not leak as public properties      |
+| `stencil/single-export`             | Error       | Each file exports only the component class                     |
 
 ### 2.2 Prettier Configuration
 
@@ -1793,12 +1849,15 @@ Prettier handles code formatting automatically. The configuration prioritizes re
 
 ```json
 {
+  "bracketSameLine": false,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
   "printWidth": 120,
   "tabWidth": 2,
   "useTabs": false,
   "semi": true,
   "singleQuote": true,
-  "trailingComma": "es5",
+  "trailingComma": "all",
   "bracketSpacing": true,
   "arrowParens": "avoid"
 }
@@ -1828,7 +1887,7 @@ node_modules
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "always"
   },
   "eslint.validate": ["javascript", "typescript", "tsx"]
 }
@@ -1849,8 +1908,8 @@ node_modules
 ```json
 {
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,css,scss,json}'",
     "format:check": "prettier --check 'src/**/*.{ts,tsx,css,scss,json}'"
   }
@@ -1861,11 +1920,11 @@ node_modules
 
 **Pre-commit Integration:**
 
-Linting runs automatically before commits via pre-commit hooks (see Section 8.1).
+Linting runs automatically before commits via pre-commit hooks (see Section 6 — Git & Version Control).
 
 **CI/CD Integration:**
 
-All pull requests must pass linting checks before merge (see Section 8.2).
+All pull requests must pass linting checks before merge (see Section 6 — Git & Version Control).
 
 #### CEM Validation
 
@@ -1899,7 +1958,7 @@ The CEM generation command should complete without errors. Common issues include
 **See Also:**
 
 - Section 5.6 for CEM configuration and setup
-- Section 8.2 for CI/CD integration
+- Section 8.2 (CI Pipeline & Automated Releases)
 
 #### Rationale
 
@@ -1934,54 +1993,66 @@ TypeScript compiler settings are defined in `tsconfig.json`. While Stencil has i
     "useDefineForClassFields": false,
 
     /* Modules */
-    "module": "es2020",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
 
+    /* JSX (Stencil) */
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "h.Fragment",
+
     /* Type Checking */
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "preserveConstEnums": true,
+
+    /* Types */
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
 
     /* Emit */
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
 
     /* Interop Constraints */
     "allowJs": true,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
 
     /* Path Mapping */
-    "baseUrl": ".",
+    "baseUrl": "./src/",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["scripts", "src", "__mocks__"],
   "exclude": ["node_modules", "dist"]
 }
 ```
 
 **Key Options Explained:**
 
-| Option                    | Value    | Rationale                                                                   |
-| ------------------------- | -------- | --------------------------------------------------------------------------- |
-| `experimentalDecorators`  | `true`   | **Required** for Stencil decorators (`@Component`, `@Prop`, `@State`, etc.) |
-| `useDefineForClassFields` | `false`  | Ensures decorators work correctly with class fields                         |
-| `target`                  | `es2020` | Stable ES version with broad browser support                                |
-| `moduleResolution`        | `node`   | Standard Node.js module resolution (required by Stencil)                    |
-| `strict`                  | `true`   | Enables all strict type-checking options                                    |
-| `declaration`             | `true`   | Generates `.d.ts` files for type definitions and autocomplete               |
-| `declarationMap`          | `true`   | Maps `.d.ts` files back to source for IDE navigation                        |
-| `sourceMap`               | `true`   | Enables debugging in original TypeScript source                             |
+| Option                    | Value       | Rationale                                                                   |
+| ------------------------- | ----------- | --------------------------------------------------------------------------- |
+| `experimentalDecorators`  | `true`      | **Required** for Stencil decorators (`@Component`, `@Prop`, `@State`, etc.) |
+| `useDefineForClassFields` | `false`     | Ensures decorators work correctly with class fields                         |
+| `target`                  | `es2020`    | Stable ES version with broad browser support                                |
+| `module`                  | `esnext`    | Enables top-level await and latest module features for bundlers              |
+| `moduleResolution`        | `bundler`   | Aligns with Vite/Rollup resolution; supports `exports` field in package.json |
+| `jsx`                     | `react`     | Required by Stencil — maps `h()` as the JSX factory                        |
+| `declaration`             | `true`      | Generates `.d.ts` files for type definitions and autocomplete               |
+| `declarationMap`          | `true`      | Maps `.d.ts` files back to source for IDE navigation                        |
+| `sourceMap`               | `true`      | Enables debugging in original TypeScript source                             |
+| `skipDefaultLibCheck`     | `true`      | Skips type checks on default lib `.d.ts` to reduce build time               |
 
 **Monorepo-Specific Options:**
 
@@ -2185,10 +2256,13 @@ src/
 ├── components/
 │   └── my-button/
 │       ├── my-button.tsx
-│       └── my-button.types.ts
+│       └── types/
+│           ├── IMyButton.ts
+│           ├── Enum.ts
+│           └── Types.ts
 ├── types/
-│   ├── common.ts          # Shared base types
-│   └── events.ts          # Common event detail types
+│   ├── common.ts
+│   └── events.ts
 └── utils/
 ```
 
@@ -2237,6 +2311,20 @@ import type { Size, Variant } from "../../types/common";
 import type { ButtonClickDetail } from "./my-button.types";
 ```
 
+#### Referencing Prop Types from the Component Interface
+
+When a utility, helper, or sub-component needs the type of a single prop, use indexed access on the component's interface rather than duplicating the type or importing a separate alias.
+
+```typescript
+import type { IBdsButton } from './types/IBdsButton';
+
+function applyVariant(variant: IBdsButton['variant']) {
+  // typed directly from the interface — no duplication
+}
+```
+
+This keeps prop types in one authoritative place (the `IComponent` interface) and propagates changes automatically.
+
 #### Component Props Typing
 
 Each component should define an explicit interface for its props, even when using decorators.
@@ -2269,7 +2357,6 @@ import type { Variant, Size } from '../../types';
 @Component({
   tag: 'my-button',
   styleUrl: 'my-button.css',
-  shadow: true,
 })
 export class MyButton implements MyButtonProps {
   @Prop() variant: Variant = 'primary';
@@ -2340,7 +2427,6 @@ import type { MyComponentProps, MyComponentEventDetail } from './my-component.ty
 @Component({
   tag: 'my-component',
   styleUrl: 'my-component.css',
-  shadow: true,
 })
 export class MyComponent implements MyComponentProps {
   // Props from interface
@@ -2594,7 +2680,7 @@ describe("my-button", () => {
     page.root.addEventListener("myClick", spy);
 
     // ACT
-    const button = page.root.shadowRoot.querySelector("button");
+    const button = page.root.querySelector("button");
     button.click();
     await page.waitForChanges();
 
@@ -2614,7 +2700,7 @@ describe("my-button", () => {
 | -------------------- | ------------------------------------------------------------ |
 | **Property changes** | Set prop, wait for changes, assert rendered output           |
 | **Custom events**    | Add event listener, trigger action, verify event detail      |
-| **Shadow DOM**       | Use `shadowRoot.querySelector()` to access internal elements |
+| **Child elements**   | Use `root.querySelector()` — no shadow DOM, no `shadowRoot` needed |
 | **Async behavior**   | Use `await page.waitForChanges()` after state updates        |
 | **Error states**     | Test invalid inputs and error message rendering              |
 
@@ -3053,7 +3139,7 @@ it.only('should render correctly', async () => { ... });
 
 **CI/CD Integration:**
 
-All tests must pass before merging (see Section 8.2 for CI configuration).
+All tests must pass before merging (see Section 8.2 — CI Pipeline & Automated Releases).
 
 #### Rationale
 
@@ -3124,7 +3210,6 @@ Document component source code with JSDoc/TSDoc for inline documentation and IDE
 @Component({
   tag: "my-button",
   styleUrl: "my-button.css",
-  shadow: true,
 })
 export class MyButton {
   /**
@@ -4933,7 +5018,7 @@ Add CEM generation to your build scripts:
 **See Also:**
 
 - Section 1.3.X for CEM-compliant JSDoc authoring standards
-- Section 8.2 for CI/CD integration
+- Section 8.2 (CI Pipeline & Automated Releases)
 - Section 2.4.X for CEM validation in the linting workflow
 
 ---
@@ -5120,49 +5205,235 @@ Set up alerts for outdated documentation:
 
 ## 6. GIT & VERSION CONTROL
 
-Effective version control practices enable smooth collaboration across multiple teams. This section defines branching strategies, commit message conventions, submodule workflows, and merge strategies to maintain a clean, traceable repository history.
+Effective version control practices enable smooth collaboration across multiple teams. This section defines branching strategies, commit message conventions, and merge strategies to maintain a clean, traceable repository history.
 
 ### 6.1 Branching Strategy
 
+Boreal DS follows the **GitFlow** model. It allows stricter control over merges — essential for a library aiming for an open-source contribution model — while remaining compatible with automated changelog generation and SemVer versioning.
+
+Two permanent branches exist; all development flows through short-lived branches:
+
+| Branch     | Type      | Description                                                                         |
+| ---------- | --------- | ----------------------------------------------------------------------------------- |
+| `master`   | Permanent | Production. Always reflects the latest release.                                     |
+| `develop`  | Permanent | Integration branch. Accumulates completed features ready for the next release cycle. |
+| `feature/` | Temporal  | Isolated work for a new feature or ticket.                                          |
+| `bugfix/`  | Temporal  | Fixes for errors found in `develop` or a `feature` branch before reaching production. |
+| `hotfix/`  | Temporal  | Critical fixes applied directly to `master`.                                        |
+| `release/` | Temporal  | Hardening and final testing before production.                                      |
+
+**Recommendations:**
+
+- Keep pull requests small and focused — short-lived branches minimise merge conflicts.
+- Merge feature branches promptly; do not let them diverge from `develop` for extended periods.
+
 ### 6.2 Commit Message Conventions
 
-### 6.3 Submodule Workflow
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). This standard produces a machine-readable history that drives automated changelog generation and SemVer version bumping.
 
-### 6.4 Merge Strategies
+**Core types and their SemVer impact:**
+
+| Type             | Impact                                                                                      | SemVer     |
+| ---------------- | ------------------------------------------------------------------------------------------- | ---------- |
+| `fix`            | Patch or bug fix                                                                            | **PATCH**  |
+| `feat`           | New feature                                                                                 | **MINOR**  |
+| `BREAKING CHANGE` | Incompatible public API change. Use `BREAKING CHANGE:` footer or `!` suffix on type/scope. | **MAJOR**  |
+
+**Additional types (no SemVer impact):**
+
+| Type       | Purpose                                                              |
+| ---------- | -------------------------------------------------------------------- |
+| `build`    | Build system or dependency changes                                   |
+| `chore`    | Housekeeping changes not touching production or test code            |
+| `ci`       | CI configuration changes                                             |
+| `docs`     | Documentation-only changes                                           |
+| `style`    | Formatting changes (no logic change)                                 |
+| `refactor` | Code change that neither fixes a bug nor adds a feature              |
+| `perf`     | Performance improvements                                             |
+| `test`     | Adding or correcting tests                                           |
+
+**Examples:**
+
+```
+feat: allow provided config object to extend other configs
+
+BREAKING CHANGE: `extends` key in config file is now used for extending other config files
+```
+
+```
+feat!: send an email to the customer when a product is shipped
+```
+
+### 6.3 Merge Strategies
+
+**Squash and merge** is the default for temporary branches merging into `develop`. This keeps the integration branch history clean: one commit per completed feature or bugfix, formatted as a Conventional Commit, which simplifies changelog generation and reversion.
+
+**Merge commit** is required for merges between permanent branches to preserve full history for auditing.
+
+| Source Branch        | Target Branch    | Strategy         | Purpose                                            |
+| -------------------- | ---------------- | ---------------- | -------------------------------------------------- |
+| `feature/`, `bugfix/` | `develop`       | Squash and Merge | Clean, functionally-oriented `develop` history     |
+| `release/`, `hotfix/` | `master`        | Merge Commit     | Preserves complete release/patch history           |
+| `release/`, `hotfix/` | `develop`       | Merge Commit     | Syncs production changes back to development line  |
 
 ---
 
 ## 7. PULL REQUEST STANDARDS
 
-Pull requests are the primary mechanism for code review and quality assurance. This section establishes PR template requirements, review processes, approval criteria, and merge procedures to ensure consistent, high-quality contributions.
+Pull requests are the primary mechanism for code review and quality assurance. This section establishes PR template requirements, review processes, and approval criteria.
 
 ### 7.1 PR Template
 
+The PR template communicates the purpose of the change clearly to reviewers.
+
+| Field              | Content                                                                                                     | Required                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Title              | Must follow Conventional Commits format                                                                     | Required                              |
+| Description        | Brief overview of what's added, its intended purpose (the why), and potential impact on the application     | Required                              |
+| Task correlation   | Link to the Jira ticket using auto-closing keywords (e.g., `Closes BDS-123`)                                | Required                              |
+| Testing            | Specifies tests added or modified for the affected components                                               | Required if component added/modified  |
+| Quality checklist  | Completed against the template checklist                                                                    | Required                              |
+
 ### 7.2 Review Requirements
+
+**Approval setup:**
+
+- Minimum **2 approvals** (excluding PR author) required for merges into `master` and `develop`.
+- At least **1 reviewer must be a core maintainer** (Senior front-end architect or equivalent) to ensure library stability.
+- Reviewers must inspect for gaps in accessibility, design tokens, and component adherence.
+- All comments must be resolved before merge.
+
+**Reviewer focus areas:**
+
+| Priority          | Review Area            | Key Question                                                                                  |
+| ----------------- | ---------------------- | --------------------------------------------------------------------------------------------- |
+| High (CRITICAL)   | CI/CD Integrity        | Did all checks (tests, linter, build) pass without errors?                                    |
+| High (CRITICAL)   | Testing & Regression   | Were unit/integration tests added? Does the PR break existing tests on other components?      |
+| High (CRITICAL)   | Public API / SemVer    | If a public prop or method changed or was removed, is it flagged as a `BREAKING CHANGE`?      |
+| Medium            | Component Adherence    | Are existing DS components and design tokens reused? Does code follow the design specification? |
+| Medium            | Performance / DOM      | Is the HTML/DOM markup semantic and efficient? Risk of excessive re-renders?                  |
+| Low               | Documentation          | Is the PR template complete? Is Storybook/Confluence updated if applicable?                  |
+| Low               | Style and Naming       | Does code follow naming and style standards?                                                  |
 
 ### 7.3 Approval Criteria
 
-### 7.4 Merge Process
+A PR is only eligible for merge once all of the following are satisfied:
+
+**Technical:**
+
+1. All CI checks pass: linting, unit and integration tests, quality gates, and build.
+2. No console errors or warnings during QA review (locally in Storybook or in an app).
+3. Code abides by linting and formatting rules.
+
+**Code quality:**
+
+1. All new or modified components include unit/integration tests.
+2. Bug fixes include a test that reproduces and validates the fix.
+
+**Documentation and conventions:**
+
+1. PR template is fully completed per §7.1.
+2. Storybook and user documentation are updated where applicable.
+3. All review requirements (§7.2) are met.
 
 ---
 
 ## 8. AUTOMATION & CI/CD
 
-Automation reduces manual errors and accelerates development velocity. This section covers pre-commit hooks, continuous integration pipelines, and automated release processes that enforce quality gates and streamline deployment workflows.
+Automation reduces manual errors and accelerates development velocity. This section covers pre-commit hooks and continuous integration pipelines that enforce quality gates.
 
 ### 8.1 Pre-commit Hooks
 
-### 8.2 CI Pipeline
+Three tools work together to run quality checks before a commit reaches the repository:
 
-### 8.3 Automated Releases
+| Tool          | Function                                             | Git Hook     |
+| ------------- | ---------------------------------------------------- | ------------ |
+| Husky         | Git hook manager                                     | `pre-commit`, `commit-msg` |
+| lint-staged   | Runs tasks only on staged files                      | `pre-commit` |
+| commitlint    | Validates commit messages against Conventional Commits | `commit-msg` |
+
+**Automated flow:**
+
+1. `pre-commit` — Husky runs lint-staged; only staged files pass through Prettier and ESLint.
+2. `commit-msg` — Husky runs commitlint to verify the message follows Conventional Commits.
+3. If both hooks pass, the commit completes. If either fails, the commit is aborted.
+
+**Setup:**
+
+```bash
+# packages/boreal-web-components
+npm install --save-dev husky lint-staged @commitlint/cli @commitlint/config-conventional
+npx husky init
+```
+
+Update the `prepare` script in `package.json`:
+
+```json
+{
+  "scripts": {
+    "prepare": "cd ../.. && husky packages/boreal-web-components/.husky"
+  }
+}
+```
+
+Run `npm run prepare` then verify with:
+
+```bash
+git config core.hooksPath
+# should print: packages/boreal-web-components/.husky/_
+```
+
+Replace `.husky/pre-commit`:
+
+```bash
+cd packages/boreal-web-components
+echo "Pre-commit: Checking components..."
+npm run lint-staged
+```
+
+Create `.lintstagedrc.json`:
+
+```json
+{
+  "*.{css,scss}": ["npm run format"],
+  "*.{js,jsx,ts,tsx}": ["npm run lint:fix", "npm run format", "npm run test"]
+}
+```
+
+Create `commitlint.config.mjs`:
+
+```javascript
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [
+      2,
+      'always',
+      ['feat', 'fix', 'bugfix', 'docs', 'build', 'ci', 'refactor', 'revert', 'style', 'chore', 'ticket', 'perf'],
+    ],
+  },
+};
+```
+
+Initialize the `commit-msg` hook:
+
+```bash
+echo "npx commitlint --edit .git/COMMIT_EDITMSG" > .husky/commit-msg
+```
+
+> If using VS Code, ensure `.husky/pre-commit` and `.husky/commit-msg` are saved with **UTF-8** encoding.
+
+### 8.2 CI Pipeline & Automated Releases
+
+The CI pipeline is the final mandatory quality gate after local pre-commit validations. It executes the full test suite, coverage checks, and security scans on every pull request into permanent branches.
+
+The CD workflow automates delivery of validated artifacts to development and production stages. Boreal DS manages deployment of separate packages rather than a centralized monorepo approach.
+
+For the full CI/CD pipeline specification, refer to the [CI/CD Pipeline Strategy](https://telesign.atlassian.net/wiki/spaces/SENG/pages/1303773297) Confluence page.
 
 ---
 
 ## 9. APPENDICES
-
-Supporting reference materials including configuration file locations, troubleshooting guides, tool documentation, frequently asked questions, and a glossary of terms used throughout this document.
-
-### A. Configuration Files Reference
 
 ### B. Troubleshooting Common Issues
 
@@ -5230,14 +5501,3 @@ import { IFoo } from "./types/IFoo";
 
 **See also:** [ADR 0006](./../decisions/0006-stencil-interface-files-named-exports-only.md)
 
-### C. Tools & Resources
-
-### D. FAQ for Contributors
-
-### E. Glossary of Terms
-
----
-
-## REVISION HISTORY
-
-### APPROVAL

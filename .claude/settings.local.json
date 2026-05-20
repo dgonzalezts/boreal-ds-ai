@@ -11,7 +11,8 @@
       "mcp__plugin_figma_figma__get_screenshot",
       "mcp__plugin_figma_figma__get_metadata",
       "mcp__plugin_figma_figma__get_context_for_code_connect",
-      "mcp__plugin_figma_figma__get_variable_defs"
+      "mcp__plugin_figma_figma__get_variable_defs",
+      "Bash(grep -v \"^---$\")"
     ],
     "deny": [
       "Read(./.env)"

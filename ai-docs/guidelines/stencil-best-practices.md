@@ -47,26 +47,29 @@ The compiled output at runtime looks like:
 
 Use `scoped: true` when:
 
-- The component is a **Form-Associated Custom Element (FACE)** — declares `formAssociated: true` and uses `@AttachInternals()`. Scoped keeps the inner `<input>` accessible via `el.querySelector(...)`, which is required for focus delegation patterns like:
-  ```tsx
-  onFocus={() => (this.el as HTMLElement).querySelector<HTMLInputElement>('input')?.focus()}
-  ```
 - You need to avoid Shadow DOM compatibility edge cases with browser form validation UI (native validation bubbles, autofill, password managers).
 - The component must remain accessible to the document's accessibility tree without an encapsulation boundary.
 - BEM class naming provides sufficient practical style isolation for your use case.
+
+> **Boreal DS current practice:** No component uses `scoped: true`. All components use bare light DOM (no encapsulation option). This is a deliberate decision — see "Current project choice" below.
 
 ### When to use `shadow: true`
 
 Use `shadow: true` when:
 
-- The component does **not** participate in native form submission (no FACE).
 - Full style isolation is required — external stylesheets must not be able to reach internal elements.
 - You need `::part()` or `::slotted()` for consumer customisation.
 - The component renders complex subtrees where specificity conflicts with host page styles are likely.
 
-### When to use neither
+### When to use neither (current project choice)
 
-Avoid using no encapsulation mode in production components. Reserve it for lightweight utility wrappers or cases where the component intentionally inherits all host page styles.
+**Boreal DS uses no encapsulation for all components**, including FACE components. This is an intentional architectural decision:
+
+- Global CSS and design token stylesheets apply directly to component internals — no `::part()` or CSS custom property tunnelling needed.
+- The `:host` pseudo-class has no effect without a shadow boundary (per MDN). Use direct tag selectors instead: `bds-button { ... }`, `bds-checkbox:focus-visible { ... }`.
+- `composed: true` on `@Event()` is irrelevant — there is no shadow boundary to cross. Bare `@Event()` is correct.
+- Focus delegation in FACE components works via `el.querySelector('input')` directly, without any encapsulation workaround.
+- If shadow DOM is ever introduced, ADR 0003 must be revisited.
 
 ---
 
@@ -266,18 +269,23 @@ bdsTextFieldInput;
 
 The single exception is `valueChange`, which must remain as-is — it is the framework integration contract consumed by the Vue output target for `v-model` two-way binding.
 
+**Never use a native DOM event name** (`click`, `change`, `input`, `focus`, etc.) as an `@Event()` name. Three distinct failures result:
+
+1. **Type-contract violation** — consumers who write `element.addEventListener('click', handler)` expect a `MouseEvent`. A custom event named `click` delivers a `CustomEvent`, breaking any code that reads `MouseEvent`-specific properties (`clientX`, `button`, etc.).
+2. **Duplicate dispatch** — the browser fires the native event AND Stencil fires the custom event. The listener receives two calls instead of one.
+3. **Framework binding collision** — Vue and React bind their synthetic event system to native event names. An `@Event('change')` creates an ambiguous binding that conflicts with the framework's own `onChange`/`@change` wiring.
+
 ---
 
-## FACE Components: `formAssociated: true` with `scoped: true`
+## FACE Components: `formAssociated: true`
 
-For all form-associated components in this codebase, the canonical pattern is:
+All form-associated components use bare light DOM — no `shadow` or `scoped` option. The canonical pattern is:
 
 ```tsx
 @Component({
   tag: 'bds-[name]',
   styleUrl: 'bds-[name].scss',
   formAssociated: true,
-  scoped: true,           // NOT shadow: true — see rationale above
 })
 export class Bds[Name] extends Mixin(formAssociatedMixin) implements IFormControl<string> {
   @AttachInternals() internals!: ElementInternals;
@@ -287,9 +295,84 @@ export class Bds[Name] extends Mixin(formAssociatedMixin) implements IFormContro
 
 Key rules:
 
-- `@AttachInternals()` must be declared directly on the component class body — never inside a mixin factory (see `.claude/memory/stencil-face-attach-internals.md`).
-- Native FACE prototype members are blocked by Stencil's element proxy; expose them via `@Method()` wrappers (see `.claude/memory/stencil-face-element-proxy-limits.md`).
-- Use `el.querySelector(...)` (not `el.shadowRoot.querySelector(...)`) for all inner element access.
+- `@AttachInternals()` must be declared directly on the component class body — never inside a mixin factory (see `.agents/memory/stencil-face-attach-internals.md`).
+- Native FACE prototype members are blocked by Stencil's element proxy; expose them via `@Method()` wrappers (see `.agents/memory/stencil-face-element-proxy-limits.md`).
+- Use `el.querySelector(...)` for all inner element access — no `shadowRoot` exists.
+
+---
+
+## Component Class Member Ordering
+
+All component classes must follow this 15-section member ordering. Consistent ordering improves readability, code review efficiency, and navigation.
+
+### The 15-section standard
+
+| Order | Section                          | Description                                                          | Examples                                                                 |
+| ----- | -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1     | **Static members**               | Static properties and methods                                        | `static tagName = 'bds-button'`                                          |
+| 2     | **Private non-reactive members** | Private class properties that don't trigger re-renders               | `private helperInstance: Helper`                                         |
+| 3     | **Element reference**            | Reference to the component's host element                            | `@Element() el!: HTMLElement`                                            |
+| 4     | **Internal reactive state**      | Private reactive properties                                          | `@State() private isOpen = false`                                        |
+| 5     | **Public reactive properties**   | Public props that trigger re-renders when changed                    | `@Prop() disabled = false`                                               |
+| 6     | **Property watchers**            | Handlers that run when specific properties change                    | `@Watch('disabled')`, `@Watch('value')`                                  |
+| 7     | **Event declarations**           | Custom events emitted by the component                               | `@Event() bdsChange: EventEmitter`                                       |
+| 8     | **Constructor**                  | Constructor (only if initialization logic is required)               | `constructor() { super(); }`                                             |
+| 9     | **Lifecycle methods**            | Component lifecycle hooks in execution order (see below)             | `connectedCallback()`, `componentWillLoad()`, `disconnectedCallback()`   |
+| 10    | **Event listeners**              | `@Listen` decorators                                                 | `@Listen('scroll', { target: 'window', passive: true })`                 |
+| 11    | **Event handlers**               | Private methods that handle events                                   | `private handleClick = () => { ... }`                                    |
+| 12    | **Public methods**               | `@Method()` — public API exposed to consumers                        | `async open()`, `async checkValidity()`                                  |
+| 13    | **Internal methods**             | Private helper methods                                               | `private updateState()`                                                  |
+| 14    | **Render helpers**               | Private methods returning JSX fragments                              | `private renderLabel()`                                                  |
+| 15    | **render() method**              | Main render method — always last                                     | `render() { return <Host>...</Host>; }`                                  |
+
+### Lifecycle methods ordering
+
+Lifecycle methods in section 9 must appear in their natural execution order, not alphabetically.
+
+**Initial load cycle:**
+
+| Order | Method                  | When it runs                                                                                     |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| 1     | `connectedCallback()`   | Every time the element connects to the DOM (before `componentWillLoad` on first connection)      |
+| 2     | `componentWillLoad()`   | Once, just after first connection — good for one-time async setup                                |
+| 3     | `componentWillRender()` | Before every `render()`                                                                          |
+| 4     | `render()`              | Template rendering (section 15, not here)                                                        |
+| 5     | `componentDidRender()`  | After every `render()`                                                                           |
+| 6     | `componentDidLoad()`    | Once, just after first `render()` completes                                                      |
+
+**Update cycle (triggered by prop/state changes):**
+
+| Order | Method                    | When it runs                                                               |
+| ----- | ------------------------- | -------------------------------------------------------------------------- |
+| 1     | `componentShouldUpdate()` | Returns boolean to allow/prevent the re-render                             |
+| 2     | `componentWillUpdate()`   | Before update render (never called on first render)                        |
+| 3     | `componentWillRender()`   | Before every `render()`                                                    |
+| 4     | `componentDidRender()`    | After every `render()`                                                     |
+| 5     | `componentDidUpdate()`    | After update render completes (never called on first render)               |
+
+**Disconnection:**
+
+| Method                   | When it runs                                                   |
+| ------------------------ | -------------------------------------------------------------- |
+| `disconnectedCallback()` | Every time the element disconnects from the DOM                |
+
+### Alphabetical ordering within sections
+
+Within each section (except lifecycle methods), members must be ordered alphabetically.
+
+```ts
+// ✅ Correct — alphabetical within @Prop() section
+@Prop({ reflect: true }) disabled = false;
+@Prop({ reflect: true }) required = false;
+@Prop({ reflect: true }) value!: string;
+
+// ❌ Wrong — unsorted
+@Prop({ reflect: true }) value!: string;
+@Prop({ reflect: true }) disabled = false;
+@Prop({ reflect: true }) required = false;
+```
+
+This rule applies to `@Prop()`, `@State()`, `@Event()`, event handlers, internal methods, and render helpers. Stacked `@Watch` decorators that target the same handler stay together as a unit — sort by the handler method name, not the decorator.
 
 ---
 

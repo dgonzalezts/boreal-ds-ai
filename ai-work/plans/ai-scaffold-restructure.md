@@ -676,24 +676,9 @@ git commit -m "chore(workspace): * remove redundant memory entries consolidated 
 
 ---
 
-### Task 17: Finalize `copilot-instructions.md` consolidation
+### Task 17: Finalize `copilot-instructions.md` consolidation ✅ DONE
 
-**Files:**
-
-- `.github/copilot-instructions.md` (modify — remove remaining duplicated sections)
-- `ai-docs/docs/` files (modify if needed — ensure unique content is present before removing from pointer file)
-
-**Acceptance criteria:**
-
-- `.github/copilot-instructions.md` contains only project orientation and a reference to `ai-docs/docs/`
-- All unique content present in the correct `ai-docs/docs/` file
-- Copilot answers correctly for commit format, naming conventions, and token usage
-
-**Commit:**
-
-```bash
-git commit -m "chore(workspace): * finalize copilot-instructions consolidation"
-```
+**Completed during Phase 1 Task 6.** `.github/copilot-instructions.md` is 25 lines — project orientation only, with a per-file pointer to `ai-docs/docs/` instruction files. No duplication remains.
 
 ---
 
