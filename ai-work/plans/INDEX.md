@@ -14,16 +14,11 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                               | Description                                                                                                                    |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| [EOA-10533-bds-radio-button.md](EOA-10533-bds-radio-button.md)     | `bds-radio-button` (leaf component) and extension of `bds-radio-group` to support `type="radiobutton"`                         |
 | [generator-extension-strategy.md](generator-extension-strategy.md) | Extend the Plop generator to scaffold Stencil components in `boreal-web-components` and stories in `boreal-docs` cross-package |
 
 ---
 
 ## In Progress
-
-| File                                                               | Description                                                                                                                    |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| [ai-scaffold-restructure.md](ai-scaffold-restructure.md)           | Restructure AI scaffold into `.agents/`, `ai-docs/`, `ai-work/` with symlink facades for `.claude/`, `.cursor/`, `.github/`   |
 
 | File                                                                         | Description                                                                                                       |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -39,6 +34,11 @@ All plan files in this folder carry a YAML frontmatter block with a `status` fie
 
 | File                                                                             | Description                                                                                                                                |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| [depth-shadow-tokens.md](depth-shadow-tokens.md)                                 | Depth (box-shadow) token pipeline — `assembleShadowTokens`, `filterDepthAtomics`, `black-rgb` auto-derivation, `_interactions.scss` migration |
+| [EOA-10533-bds-radio-button.md](EOA-10533-bds-radio-button.md)                   | `bds-radio-button` (leaf component) and extension of `bds-radio-group` to support `type="radiobutton"` — all 5 tasks complete               |
+| [EOA-12334-bds-radio-button.md](EOA-12334-bds-radio-button.md)                   | `bds-radio-button` implementation plan (superseded by EOA-10533)                                                                           |
+| [EOA-12334-bds-radio.md](EOA-12334-bds-radio.md)                                 | `bds-radio` + `bds-radio-group` implementation plan (superseded by EOA-12334-bds-radio-and-radio-group.md)                                 |
+| [ai-scaffold-restructure.md](ai-scaffold-restructure.md)                         | Restructure AI scaffold into `.agents/`, `ai-docs/`, `ai-work/` with symlink facades; Phase 2 memory consolidation and guideline promotion complete |
 | [EOA-12334-bds-radio-and-radio-group.md](EOA-12334-bds-radio-and-radio-group.md) | `bds-radio` (FACE) + `bds-radio-group` (orchestrator) compound component — 3 visual variants, 9 tasks                                      |
 | [EOA-12029_grid_foundational_system.md](EOA-12029_grid_foundational_system.md)   | Foundational 12-column grid system — `bds-grid` + `bds-grid-item` with 5 responsive breakpoints                                            |
 | [EOA-10057-bds-text-field.md](EOA-10057-bds-text-field.md)                       | Full implementation of `bds-text-field` — Tasks 1–6 done (types, TSX, SCSS, Vue v-model, 79 unit tests); Task 7 (Storybook docs) remaining |

@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-unit-testing-root-pattern.md

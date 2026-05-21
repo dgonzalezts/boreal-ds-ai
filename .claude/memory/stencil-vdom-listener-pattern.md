@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-vdom-listener-pattern.md
