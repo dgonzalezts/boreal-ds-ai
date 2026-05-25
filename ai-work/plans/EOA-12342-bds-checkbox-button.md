@@ -1,5 +1,5 @@
 ---
-status: in progress
+status: done
 ---
 
 # bds-checkbox-button Implementation Plan
@@ -514,49 +514,276 @@ git commit -m "docs(docs): EOA-12342 add MDX documentation for bds-checkbox-butt
 
 ---
 
-## Stories and docs: standalone-first approach
+## Stories and docs: standalone-first approach (Phase 1)
 
-Because `bds-checkbox-group` is being implemented by a teammate and is not yet available, Tasks 8 and 9 use a **standalone-first** approach. This is not a compromise — `bds-checkbox-button` is explicitly designed to work standalone _and_ inside a future group. Documenting it this way is correct for this phase.
+Tasks 8 and 9 used a standalone-first approach because `bds-checkbox-group` was not yet available. Phase 2 (Tasks 10–16 below) integrates form association and updates docs to a group-first model.
 
-### What this means for Task 8 (stories)
+---
 
-- The `renderCheckboxButton` render function wraps 3 `<bds-checkbox-button>` elements in a plain `<div style="display: inline-flex; gap: 8px;">` instead of `<bds-checkbox-group>`.
-- Each button emits its own `bdsChange` independently — this is the correct multi-select checkbox behavior.
-- The `name` arg is wired to each button directly (not via a group coordinator).
-- No group-level props (`required`, `error-message`, `helper-text`, `orientation`) are exposed in `StoryArgs` — those belong to the group.
+## Phase 2: Form Association
 
-### What this means for Task 9 (MDX)
+`bds-checkbox-button` is upgraded to a Form-Associated Custom Element so it can participate in native HTML forms both standalone and inside `bds-checkbox-group`. The implementation pattern mirrors `bds-checkbox-card` exactly.
 
-- The "How to use it" HTML snippet shows buttons inside a `<div>` wrapper.
-- A `<Callout variant="info">` states that `bds-checkbox-group` is in development and will add form association, `name` propagation, and group-level validation.
-- There is **no** Form Integration section (that belongs in the group's docs).
-- The Accessibility section documents per-button `tabindex="0"` (independent focus stops) rather than roving tabindex, which is what the group will manage.
+### Task 10: Loosen `useFormCheckbox` type to accept components without `indeterminate`
 
-### Next steps when `bds-checkbox-group` is integrated
+**File:** `packages/boreal-web-components/src/components/forms/bds-checkbox/utils/checkbox-form-association.ts`
 
-When the group wrapper lands, the following changes are needed in this package's docs:
+Replace the `ICheckbox & IFormControl<boolean>` parameter type with an inline structural type where `indeterminate` is optional. Existing callers (`bds-checkbox`, `bds-checkbox-card`) already satisfy the looser type — no changes to those components needed.
 
-1. **`bds-checkbox-button.stories.ts`**
-   - Add group-level `StoryArgs`: `required: boolean`, `helperText: string`, `errorMessage: string`, `orientation: 'horizontal' | 'vertical'`.
-   - Replace the `<div>` wrapper in `renderCheckboxButton` with `<bds-checkbox-group name={args.name} ...>`.
-   - Remove the `name` arg from each individual `<bds-checkbox-button>` (the group propagates it).
-   - Add `onValueChange` action arg for Vue `v-model` support (if the group emits it).
-   - Add stories that demonstrate form integration: `Required`, `WithHelperText`, `WithErrorMessage`, `Vertical`, and `InteractiveFormExample`.
+**Acceptance criteria:**
 
-2. **`bds-checkbox-button.mdx`**
-   - Replace the `<div>` snippet in "How to use it" with the `<bds-checkbox-group>` HTML.
-   - Remove the "coming soon" callout.
-   - Add a **Form Integration** section (analogous to the radio-button MDX) covering `name`, `required`, validation, and reset behaviour.
-   - Update the Accessibility section to describe the group's roving tabindex strategy (if the group adopts one) or confirm that individual `tabindex="0"` per button is the intended model.
-   - Add a `<Canvas of={BdsCheckboxButtonStories.InteractiveFormExample} />` block once that story exists.
+- `useFormCheckbox` compiles when called from `bds-checkbox-button` (no `indeterminate` prop).
+- Existing callers and their unit tests pass unchanged.
+
+**Commit:**
+
+```bash
+git commit -m "refactor(web-components): EOA-12342 make indeterminate optional in useFormCheckbox type"
+```
+
+---
+
+### Task 11: Add `required` to `ICheckboxButton`
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-checkbox/bds-checkbox-button/types/ICheckboxButton.ts`
+
+Add `required: boolean` to the `ICheckboxButton` interface to match the FACE public contract. Internal state fields (`el`, `internals`, `isInvalid`, `isDisabled`) are not added — they are checked structurally by the helper.
+
+**Commit:**
+
+```bash
+git commit -m "feat(web-components): EOA-12342 add required to ICheckboxButton interface"
+```
+
+---
+
+### Task 12: Upgrade `bds-checkbox-button.tsx` to FACE
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-checkbox/bds-checkbox-button/bds-checkbox-button.tsx`
+
+Reference: `bds-checkbox-card.tsx` — follow it line for line.
+
+**Changes:**
+
+- `@Component`: add `formAssociated: true`
+- Class: `extends Mixin(formAssociatedMixin) implements ICheckboxButton, IFormControl<boolean>`
+- Add on the class body: `@AttachInternals() internals`, `@State() isDisabled`, `@State() isInvalid`
+- Add `required` prop: `@Prop({ reflect: true }) readonly required: boolean = false`
+- Add `valueChange: EventEmitter<boolean>` event
+- Wire `private formCheckbox = useFormCheckbox(this, this.value)`
+- `componentWillLoad`: `this.isDisabled = this.disabled`
+- `componentDidLoad`: call `this.formCheckbox.syncFormValue()`
+- Add `@Watch('checked') onCheckedChange()` → `this.formCheckbox.syncFormValue()`
+- Update `@Watch('disabled')`: set `this.isDisabled = disabled` (replaces `setAttribute`)
+- Implement all four form callbacks delegating to `this.formCheckbox`
+- `@Listen('invalid') handleInvalid(event)`: call `event.preventDefault()` then `this.isInvalid = true` — follow `bds-checkbox`, not `bds-checkbox-card` (card omits `preventDefault`, a known oversight)
+- Add `@Method() checkValidity()` and `@Method() reportValidity()`
+- `toggle()`: guard with `isDisabled`; emit `valueChange` alongside `bdsChange`
+- Add `isError` getter: `(this.error && !this.isDisabled) || this.isInvalid`
+- Update `classMap`: use `isDisabled` and `isError`
+- Move ARIA to `<Host>` JSX (`role`, `aria-checked`, `aria-disabled`, `aria-required`, `aria-invalid`, `tabIndex`) — remove `setAttribute` calls from lifecycle hooks
+
+**Acceptance criteria:**
+
+- `pnpm build` passes with no errors.
+- Existing unit tests (Task 7) pass after updating guards from `this.disabled` to `this.isDisabled`.
+
+**Commit:**
+
+```bash
+git commit -m "feat(web-components): EOA-12342 upgrade bds-checkbox-button to form-associated custom element"
+```
+
+---
+
+### Task 13: Register `bds-checkbox-button` in `vue-output-target.ts`
+
+**File:** `packages/boreal-web-components/targets/vue-output-target.ts`
+
+Add `'bds-checkbox-button'` to the `elements` array in `componentModels`. This wires `valueChange` to `v-model` in Vue.
+
+**Commit:**
+
+```bash
+git commit -m "feat(web-components): EOA-12342 register bds-checkbox-button in Vue componentModels"
+```
+
+---
+
+### Manual QA checkpoint (after Tasks 10–13, before Task 14)
+
+Run `pnpm dev:components` from the monorepo root and open `http://localhost:3333` (or the port shown in the terminal). The playground at `packages/boreal-web-components/src/index.html` contains three QA sections:
+
+**1. Visual States** — verify BEM modifier rendering:
+
+- [x] Default: pill buttons render with default styling
+- [x] Checked: `--checked` modifier applies primary border + inverse background
+- [x] Error: `--error` modifier applies danger text/border
+- [x] Disabled: `--disabled` modifier applies muted styling; clicking has no effect
+- [x] With icon: icon slot renders; empty icon slot is hidden
+
+**2. Standalone Form** — verify FACE participation:
+
+- [x] Submit unchecked with `required` → browser/native validation blocks submission (no output)
+- [x] Check the button and submit → output shows `{ "terms": "accepted" }`
+- [x] Click Reset → button unchecks, output clears
+- [x] Fieldset-disabled variant → button renders as disabled (via `formDisabledCallback`)
+
+**3. Group Form** — verify group orchestration:
+
+- [x] Submit with no selection + `required` → group shows error message "Please select at least one feature"
+- [x] Select options and submit → output shows `{ "features": ["dark-mode", "notifications"] }` (only selected values)
+- [x] Click Reset → all buttons uncheck, error clears
+- [x] Horizontal orientation → buttons render in a row
+- [x] Disabled group → all buttons non-interactive
+- [x] Error group → all buttons show error styling
+
+---
+
+### Task 14: Extract shared group layout SCSS into `_selectable-group.scss`
+
+**Files:**
+
+- `packages/boreal-web-components/src/components/forms/_shared/_selectable-group.scss` (create)
+- `packages/boreal-web-components/src/components/forms/bds-radio-group/bds-radio-group.scss` (replace)
+- `packages/boreal-web-components/src/components/forms/bds-checkbox/bds-checkbox-group/bds-checkbox-group.scss` (replace)
+
+`bds-radio-group.scss` and `bds-checkbox-group.scss` are structurally identical — only the prefix names differ. A shared mixin eliminates the duplication, paralleling the `_selectable-button.scss` approach for leaf components.
+
+**Key constraint:** The partial must NOT include `@use '@telesign/boreal-style-guidelines/dist/stencil/_index' as *`. Both group SCSS files receive `$boreal-*` tokens via Stencil's `injectGlobalPaths`. Loading the partial with `@import` (not `@use`) shares that injected scope with the partial, making an explicit token import unnecessary.
+
+The `@prop --layout-count` JSDoc comment lives **inside the mixin**, above the `var(--layout-count, 1)` usage. Stencil scrapes `@prop` from compiled SCSS output, so it appears in both components' generated metadata from a single definition.
+
+**Mixin signature:**
+
+```scss
+@mixin selectable-group($prefix, $button-type, $child-selector) { ... }
+```
+
+**Callers:**
+
+```scss
+// bds-radio-group.scss
+@import '../_shared/selectable-group';
+@include selectable-group('bds-radio-group', 'radiobutton', 'bds-radio-button');
+
+// bds-checkbox-group.scss
+@import '../../_shared/selectable-group';
+@include selectable-group('bds-checkbox-group', 'checkboxbutton', 'bds-checkbox-button');
+```
+
+Also remove the dead `:host { display: block; }` from `bds-checkbox-group.scss` — it is a Light DOM component, so the `:host` selector has no effect. `bds-radio-group.scss` never had this rule.
+
+**Acceptance criteria:**
+
+- `_selectable-group.scss` contains only the mixin, no top-level `@use` or `@import`
+- `bds-radio-group.scss` and `bds-checkbox-group.scss` are each two lines
+- `pnpm build --filter boreal-web-components` passes with no Sass errors
+- Visual output of both group components is pixel-identical to before the refactor
+
+**Manual test _(waiveable)_:**
+
+Run: `pnpm dev:components`
+
+- [ ] Visual States section renders correctly (default, checked, error, disabled, icon slot)
+- [ ] Standalone Form section validates and submits correctly
+- [ ] Group Form section (vertical required, horizontal, disabled, error) all render correctly
+- [ ] No Sass/CSS errors in browser console
+
+**Commit:**
+
+```bash
+git commit -m "refactor(web-components): EOA-12342 extract shared selectable-group SCSS mixin"
+```
+
+---
+
+### Task 15: Unit tests — form association
+
+**File:** `packages/boreal-web-components/src/components/forms/bds-checkbox/bds-checkbox-button/__test__/bds-checkbox-button.form.spec.ts` (new)
+
+Add form-association test cases:
+
+- `formAssociatedCallback` → calls `syncFormValue`
+- `formResetCallback` → resets `checked` to `false`, clears `isInvalid`
+- `formDisabledCallback(true/false)` → sets `isDisabled` correctly
+- `@Watch('checked')` change → triggers `syncFormValue`
+- `toggle()` → emits `valueChange` with `boolean` payload alongside `bdsChange`
+- `toggle()` when `isDisabled` → no events emitted
+- `checkValidity` / `reportValidity` → delegate to `internals`
+
+Pattern reference: `bds-checkbox.spec.ts`.
+
+**Commit:**
+
+```bash
+git commit -m "test(web-components): EOA-12342 add form association unit tests for bds-checkbox-button"
+```
+
+---
+
+### Task 15: Storybook stories — relocate + group/form stories
+
+**Files:**
+
+- Move `apps/boreal-docs/src/stories/forms/bds-checkbox-button/bds-checkbox-button.stories.ts` → `apps/boreal-docs/src/stories/forms/bds-checkbox-group/bds-checkbox-button/bds-checkbox-button.stories.ts`
+- Delete the now-empty `apps/boreal-docs/src/stories/forms/bds-checkbox-button/` directory
+
+**Changes to the stories file after move:**
+
+- Import `FormDemo` (`@/components/story/FormDemo`) and `hljs`
+- Extend `StoryArgs`: add `helperText`, `errorMessage`, `orientation`, `required`, `onValueChange`
+- Add `WithinGroup` story (primary usage): wraps 3 buttons in `<bds-checkbox-group>`; group-level controls: `name`, `label`, `info`, `orientation`, `required`, `disabled`, `error`, `helperText`, `errorMessage`
+- Add `InteractiveFormExampleGroup` story (recommended): `<form-demo>` + `<bds-checkbox-group required>` with 3 buttons; demonstrates submit, required validation, and reset
+- Add `InteractiveFormExample` story (standalone, advanced): `<form-demo>` + single `<bds-checkbox-button name=... required>`
+
+Reference: `bds-checkbox.stories.ts` for `WithinGroup`, `InteractiveFormExampleGroup`, and `InteractiveFormExample` patterns.
+
+**Commit:**
+
+```bash
+git commit -m "feat(docs): EOA-12342 relocate and extend bds-checkbox-button stories with group and form examples"
+```
+
+---
+
+### Task 16: MDX documentation — group-first update
+
+**File:** `apps/boreal-docs/src/stories/forms/bds-checkbox-group/bds-checkbox-button/bds-checkbox-button.mdx` (moved from `forms/bds-checkbox-button/`)
+
+**Changes:**
+
+- Remove the outdated `<Callout>` saying "bds-checkbox-group is in development"
+- Add `WithinGroup` canvas in Component Preview as the primary usage example
+- Add **Form Integration** section (after States, before Accessibility):
+  - **Recommended: Within a Group** — `<bds-checkbox-group>` snippet + `InteractiveFormExampleGroup` canvas with note to visit Canvas tab for interactive version
+  - **Standalone (advanced)** — `<Callout variant="warning">` discouraging standalone form use; minimal standalone snippet; `InteractiveFormExample` canvas
+- Update Table of Contents to include Form Integration
+- Update Properties section to include `required`
+
+Reference: `bds-checkbox.mdx` for the Form Integration section structure.
+
+**Commit:**
+
+```bash
+git commit -m "docs(docs): EOA-12342 update bds-checkbox-button MDX with group-first documentation"
+```
 
 ---
 
 ## Verification (end-to-end)
 
-1. **Build**: `pnpm build --filter boreal-web-components` — must succeed with no Sass or TypeScript errors.
+### Phase 1
+
+1. **Build**: `pnpm build --filter boreal-web-components` — no Sass or TypeScript errors.
 2. **Type check**: `pnpm tsc --noEmit` in `packages/boreal-web-components` — zero errors.
 3. **Unit tests**: `pnpm test --filter boreal-web-components` — all spec files pass.
 4. **Storybook**: `pnpm storybook` in `apps/boreal-docs` — `Forms/Checkbox Group/Checkbox Button` sidebar entry present; all 6 stories render; Actions panel captures `bdsChange` events.
-5. **Radio-button regression**: After Task 1 refactor, `Forms/Radio Group/Radio Button` stories must be visually identical to before.
-6. **Accessibility**: Use browser DevTools Accessibility panel on a `bds-checkbox-button` — verify `role=checkbox`, `aria-checked`, `tabindex=0`.
+5. **Radio-button regression**: After Task 1 refactor, `Forms/Radio Group/Radio Button` stories are visually identical to before.
+6. **Accessibility**: DevTools Accessibility panel on a `bds-checkbox-button` — verify `role=checkbox`, `aria-checked`, `tabindex=0`.
+
+### Phase 2
+
+1. **Unit tests**: `pnpm test --filter boreal-web-components --testPathPattern=bds-checkbox-button` — all spec files pass including new form spec.
+2. **Storybook**: Navigate to `Forms / Checkbox Group / Checkbox Button` — `WithinGroup` story shows group controls working (disabled, error, required propagate); `InteractiveFormExampleGroup` canvas shows submit/validation/reset; `InteractiveFormExample` canvas shows standalone form participation.
+3. **Vue v-model**: After `pnpm build` in `packages/boreal-web-components`, confirm `bds-checkbox-button` appears in `boreal-vue/lib/components.ts` with `modelValue` / `onValueChange` binding.

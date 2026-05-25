@@ -107,9 +107,10 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 > Story and MDX documentation patterns: canonical reference is `ai-docs/guidelines/storybook-patterns.md` — `BorealStoryMeta`/`BorealStory` types, argTypes shape, Lit template bindings, MDX subtitle order, `formatHtmlSource` transform, `@storybook/addon-docs/blocks` import path.
 
-| File                       | What it covers                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `storybook-vite-quirks.md` | Vite glob export limitation workaround and esm-es5 warning suppression in Storybook config. |
+| File                                              | What it covers                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `storybook-vite-quirks.md`                        | Vite glob export limitation workaround and esm-es5 warning suppression in Storybook config.                                                                                                                                                                                      |
+| `storybook-source-snippet-non-primitive-props.md` | When a story uses Lit property binding (`.value=${[...]}`) for a non-primitive prop (array, object), override the auto-generated "Show code" snippet with `parameters.docs.source.code` — provide manual HTML + `<script>` block showing both markup and JS property assignment. |
 
 ### Chromatic Deployment
 
@@ -127,9 +128,9 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 > Query patterns (`root` cast, `querySelector`, `querySelectorAll`, AAA structure): canonical reference is `ai-docs/guidelines/stencil-unit-testing-patterns.md`.
 
-| File                                    | What it covers                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `test-spec-file-organisation.md`        | The five spec file types (`a11y`, `basics`, `variants`, `events`, `slots`) and the exact criteria for when each is required. Includes explicit rules for when **not** to create `slots.spec.ts`: a bare unnamed passthrough `<slot />` whose only side-effect is a CSS layout variable does not warrant its own file — it is already exercised incidentally by any test that passes child elements. |
+| File                             | What it covers                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test-spec-file-organisation.md` | The five spec file types (`a11y`, `basics`, `variants`, `events`, `slots`) and the exact criteria for when each is required. Includes explicit rules for when **not** to create `slots.spec.ts`: a bare unnamed passthrough `<slot />` whose only side-effect is a CSS layout variable does not warrant its own file — it is already exercised incidentally by any test that passes child elements. |
 
 ### Mutation Testing
 
@@ -142,8 +143,8 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ## Related ADRs
 
-| ADR                                                                              | Decision                                                                                                                                                                           |
-| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ADR                                                                                  | Decision                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ai-docs/decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md` | Full trade-off analysis for `@AttachInternals()` placement. Accepted: declare on component class, never in mixin.                                                                  |
 | `ai-docs/decisions/0002-iform-control-composite-interface-for-form-components.md`    | `IFormControl<T>` composite interface (`IFormAssociatedCallbacks & IFormValueEmitter<T>`) is the single type all form controls implement. Enforces FACE + event contract together. |
 
@@ -151,8 +152,8 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ## Related Plans
 
-| Plan                                     | Status                                                                                                                                                                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Plan                                         | Status                                                                                                                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ai-work/plans/EOA-10099-form-foundation.md` | Form foundation architecture. Phase 1 complete. Phase 2 (SCSS partial, `textInputMixin`, `selectableMixin`) deferred to after `boreal-styleguidelines` token integration.                                                |
 | `ai-work/plans/EOA-10057-bds-text-field.md`  | `bds-text-field` full implementation. Tasks 1 (types) and 2 (TSX logic) complete. Tasks 3–7 (SCSS partial, token audit, styles, tests, stories) remaining. Component lives under `src/components/forms/bds-text-field/`. |
 
@@ -160,6 +161,7 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 ## Changelog
 
+- 2026-05-21 — Three memory updates from `bds-checkbox-group` / `bds-checkbox-button` session. New topic file: `storybook-source-snippet-non-primitive-props.md` (Lit property binding pattern for non-primitive props requires manual `parameters.docs.source.code` override). Updated `stencil-light-dom-host-vs-class.md`: added `::slotted()` section — shadow DOM-only pseudo-element has no effect in light DOM; correct pattern is `[slot='icon']` attribute selector. Updated `stencil-form-control-interfaces.md`: added `formAssociatedMixin` zero-enforcement fact (JSDoc-only, no compile-time checks) and `name` prop pattern (must be in component interface for TypeScript enforcement; required for FACE form submission).
 - 2026-05-19 — Created `ai-docs/guidelines/storybook-patterns.md`. Verified §5 of the frozen guidelines against actual story files (`bds-button`, `bds-text-field`, `bds-banner`). Key corrections from the frozen file: wrong type names (`ColibriStoryMeta`/`ColibriStory` → `BorealStoryMeta`/`BorealStory`), wrong MDX import path (`@storybook/blocks` → `@storybook/addon-docs/blocks`), wrong custom components path (`@/_storybook/components` → `@/components/docs`), and `.stories.tsx` extension should be `.stories.ts` when no JSX is used.
 - 2026-05-19 — Task 16 (memory consolidation): deleted 5 files whose content was promoted into guideline files. Deleted: `stencil-vdom-listener-pattern.md` (now in SBP § "Event Listener Placement"), `scss-global-injected-utilities.md` (now in SBP § "Global SCSS Utilities"), `stencil-unit-testing-root-pattern.md` (now in `stencil-unit-testing-patterns.md`), `feedback_event_naming.md` (failure modes now in SBP § "Custom event naming"), `project_no_shadow_dom.md` (light DOM decision now in SBP § "When to use neither"). Added guideline pointers in affected MEMORY.md sections.
 - 2026-05-11 — New topic file added: `stencil-unit-testing-root-pattern.md`. Captures the `const root = page.root as HTMLElement` named-variable pattern — no inline repeated casts, no optional chaining, no `?? []` fallback on `querySelectorAll`. Also updated `.github/copilot-instructions.md` (Testing section) and `ai-docs/guidelines/stencil-unit-testing-patterns.md` (new canonical guide). Source: `bds-radio-group` spec file standardisation pass (EOA-12342).

@@ -1,4 +1,4 @@
-# Definition of Done Checklist for Colibri Design System Components (Medium Detail)
+# Definition of Done Checklist for Boreal Components (Medium Detail)
 
 ## 📋 **Pre-Development**
 
@@ -20,7 +20,7 @@
   - [ ] Do not follow Notion documentation to the letter on these, we are trying to make components that are both easier to use and easier to maintain
 - [ ] Uses design tokens via getThemeVar() instead of hardcoded values
 - [ ] Basic accessibility implemented (ARIA, keyboard support)
-- [ ] Events dispatched with bubbles: true, composed: true
+- [ ] Events use bare `@Event()` — no explicit `bubbles`/`composed`/`cancelable`
 - [ ] No ESLint or TypeScript errors
 
 ## 🧪 **Testing**

@@ -69,6 +69,56 @@ These selectors are **globally scoped**. To prevent collisions:
 - Inner elements follow BEM naming: `.bds-button__content`, `.bds-checkbox__box`, `.bds-grid-item__inner`
 - Modifier classes follow BEM: `.bds-button--primary`, `.bds-checkbox--checked`
 
+## The `::slotted()` Pseudo-Element Is Also Shadow DOM Only
+
+Just like `:host`, the **`::slotted()` pseudo-element requires a shadow boundary and has no effect in light DOM.**
+
+From [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/::slotted):
+
+> The `::slotted()` CSS pseudo-element represents any element that has been placed into a slot inside an HTML template.
+
+**Key constraints:**
+
+- `::slotted()` only matches elements distributed into `<slot>` elements inside a shadow root
+- In light DOM, there is no slot distribution mechanism — children are plain DOM children
+- The argument to `::slotted()` is a **compound selector**, not a slot name — `::slotted(icon)` targets a `<icon>` HTML element, not elements with `slot="icon"`
+
+### Incorrect Pattern (Found in Legacy Code)
+
+```scss
+// ❌ Wrong on two counts:
+// 1. ::slotted() has no effect in light DOM
+// 2. The argument `icon` is a tag-name selector, not a slot-name selector
+::slotted(icon) {
+  width: 16px;
+  height: 16px;
+}
+```
+
+### Correct Pattern for Light DOM
+
+Use an **attribute selector** targeting the `slot` attribute:
+
+```scss
+// ✅ Correct for light DOM
+[slot="icon"] {
+  width: 16px;
+  height: 16px;
+}
+```
+
+This selects any child element with `slot="icon"`, regardless of its tag name.
+
+### Why `slot="..."` Still Works in Light DOM
+
+Even though Boreal DS uses light DOM, the `slot` attribute is still valid and useful:
+
+- It serves as a **semantic label** for child elements (e.g. `slot="icon"`, `slot="prefix"`, `slot="suffix"`)
+- It enables CSS targeting via attribute selectors (`[slot='icon']`)
+- It maintains API compatibility with shadow DOM patterns (if a component were ever migrated to shadow DOM, the `slot` attributes would start distributing automatically)
+
+**Do not confuse the `slot` attribute with shadow DOM distribution.** In light DOM, `slot="icon"` is just a regular HTML attribute — nothing special happens at render time. The component's CSS and JS are responsible for positioning and styling slotted children.
+
 ## Reflection Pattern
 
 Props need `reflect: true` when:

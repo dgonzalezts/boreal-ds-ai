@@ -69,6 +69,98 @@ The JSDoc `@example` block on `IFormAssociatedCallbacks` in `form-associated.mix
 
 This block is the authoritative template. When building a new form component, read it before writing the class declaration.
 
+## The `formAssociatedMixin` Provides Zero Compile-Time Enforcement
+
+**Critical fact:** The `formAssociatedMixin` mixin factory does NOT enforce any API contract at compile time. Its `name` declaration and all FACE callback signatures exist only as JSDoc.
+
+```typescript
+// From form-associated.mixin.ts
+export const formAssociatedMixin = <T extends Constructor<HTMLElement>>(
+  base: T,
+) => {
+  class FormAssociatedBase extends base implements ElementInternals {
+    /** @type {string} Form control name (for submission) */
+    name?: string; // ❌ JSDoc-only — TypeScript will NOT error if a component forgets to declare @Prop() name
+
+    formDisabledCallback(disabled: boolean): void {}
+    formResetCallback(): void {}
+    formStateRestoreCallback(
+      state: string | FormData | File | null,
+      mode: "restore" | "autocomplete",
+    ): void {}
+  }
+  return FormAssociatedBase as Constructor<IFormAssociatedCallbacks> & T;
+};
+```
+
+**Why this matters:**
+
+- A component that `extends Mixin(formAssociatedMixin)` but forgets to declare `@Prop() name` will **compile successfully** — no TypeScript error
+- The forgotten `name` prop only manifests as a runtime failure: `internals.setFormValue(value, value)` submits the value with no key, and most server-side parsers silently discard it
+
+**Required pattern to enforce `name` at compile time:**
+Every FACE component must declare `name: string` in its own interface (`ICheckboxButton`, `IRadioButton`, `ITextField`, etc.), and the component class must `implements` that interface. TypeScript will then error if the `@Prop() name` declaration is missing.
+
+## The `name` Prop Pattern for FACE Components
+
+**All Form-Associated Custom Elements (FACE) must declare the `name` prop in both the component interface and the component class.**
+
+### Why `name` Matters
+
+`ElementInternals.setFormValue(value, value)` submits the form field keyed by the element's `name` attribute. Without `name`, the browser submits an **unnamed field** that most server-side parsers silently discard.
+
+**Exception:** Components used exclusively inside a group (`bds-checkbox-group`, `bds-radio-group`) do not need a functional `name` prop — the **group** owns `name` and handles submission. Child components still declare `@Prop() name` for API consistency, but its value is irrelevant at runtime.
+
+**Standalone usage:** Components used outside a group (e.g. standalone `<bds-checkbox>`, `<bds-text-field>`) **require** a `name` prop to participate in form submission.
+
+### Required Declaration Pattern
+
+```typescript
+// 1. Add `name` to the component's interface
+export interface ICheckboxButton {
+  value: string;
+  checked: boolean;
+  disabled: boolean;
+  name: string; // ✅ Enforces compile-time presence
+}
+
+// 2. Implement the interface in the component class
+export class BdsCheckboxButton
+  extends Mixin(formAssociatedMixin)
+  implements ICheckboxButton, IFormControl<string>
+{
+  @Prop() name!: string; // ✅ TypeScript errors if this line is missing
+  @Prop() value: string = "";
+  // ...
+}
+```
+
+### Components Updated
+
+The following FACE components now enforce `name` via their interface:
+
+- `bds-checkbox-button` (`ICheckboxButton`)
+- `bds-radio-button` (`IRadioButton`)
+- `bds-checkbox` (`ICheckbox`)
+- `bds-checkbox-card` (`ICheckboxCard`) — already had `name` before this pattern was established
+
+### Test Pattern for Hidden Inputs
+
+When a FACE component contains a hidden `<input>` (for progressive enhancement or legacy form compatibility), that `<input>` must **not** have a `name` attribute — `ElementInternals` handles submission, and duplicating `name` on the inner input would submit the value twice.
+
+**Test assertion:**
+
+```typescript
+it("hidden input does not have a name attribute", async () => {
+  const page = await newSpecPage({
+    components: [BdsCheckboxButton],
+    html: `<bds-checkbox-button name="group" value="option-a"></bds-checkbox-button>`,
+  });
+  const input = page.root?.querySelector('input[type="checkbox"]');
+  expect(input?.getAttribute("name")).toBeNull();
+});
+```
+
 ## ADR
 
 See `.ai/decisions/0002-iform-control-composite-interface-for-form-components.md` for full trade-off analysis of the `IFormControl<T>` composite interface decision.
