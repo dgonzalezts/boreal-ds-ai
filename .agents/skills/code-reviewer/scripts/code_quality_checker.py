@@ -253,7 +253,7 @@ def _check_event_naming(rel: str, lines: List[str]) -> List[Finding]:
 def _check_event_options(_rel: str, _lines: List[str]) -> List[Finding]:
     # Boreal DS aligns with Aqua DS and BEEQ: bare @Event() is the accepted convention.
     # All consumers attach listeners directly to the component element, so bubbles/composed
-    # are not needed. See ADR .ai/decisions/0003-event-options-convention.md.
+    # are not needed. See ADR ai-docs/decisions/0003-event-options-convention.md.
     return []
 
 

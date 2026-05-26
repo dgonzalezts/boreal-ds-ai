@@ -304,7 +304,7 @@ class ReviewReportGenerator:
         slug = re.sub(r"-+", "-", slug)
 
         filename = f"{date_str}-commit-{short_sha}-{slug}-review.md"
-        reviews_dir = self.repo_path / ".ai" / "reviews"
+        reviews_dir = self.repo_path / "ai-work" / "reviews"
         reviews_dir.mkdir(parents=True, exist_ok=True)
         return reviews_dir / filename
 
@@ -323,7 +323,7 @@ def main():
     parser.add_argument("repo_path", nargs="?", default=".", help="Path to the git repository root")
     parser.add_argument("--base", default="release/current", help="Base branch/ref to diff against (default: release/current)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose mode")
-    parser.add_argument("--no-save", action="store_true", help="Skip saving to .ai/reviews/")
+    parser.add_argument("--no-save", action="store_true", help="Skip saving to ai-work/reviews/")
     parser.add_argument("--output", "-o", help="Override output file path (implies save)")
     parser.add_argument("--json", action="store_true", help="Output structured results as JSON")
     args = parser.parse_args()
