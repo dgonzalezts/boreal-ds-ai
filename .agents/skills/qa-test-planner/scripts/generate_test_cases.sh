@@ -24,11 +24,11 @@ prompt_input() {
     local prompt_text="$1"
     local var_name="$2"
     local required="$3"
-    
+
     while true; do
         echo -e "${CYAN}${prompt_text}${NC}"
         read -r input
-        
+
         if [ -n "$input" ]; then
             eval "$var_name=\"$input\""
             break
@@ -128,13 +128,13 @@ STEP_NUM=1
 while true; do
     echo -e "${YELLOW}Step $STEP_NUM:${NC}"
     prompt_input "Action:" ACTION false
-    
+
     if [ "$ACTION" = "done" ] || [ -z "$ACTION" ]; then
         break
     fi
-    
+
     prompt_input "Expected result:" EXPECTED true
-    
+
     TEST_STEPS="${TEST_STEPS}${STEP_NUM}. ${ACTION}\n   **Expected:** ${EXPECTED}\n\n"
     ((STEP_NUM++))
 done
@@ -151,7 +151,7 @@ echo ""
 if [ "$TEST_TYPE" = "UI/Visual" ]; then
     echo -e "${MAGENTA}━━━ Step 6: Figma Design Validation ━━━${NC}"
     echo ""
-    
+
     prompt_input "Figma design URL (if applicable):" FIGMA_URL false
     prompt_input "Visual elements to validate:" VISUAL_CHECKS false
 fi
@@ -169,11 +169,12 @@ prompt_input "Notes or comments:" NOTES false
 FILENAME="${TC_ID}.md"
 FILENAME="${FILENAME//[^a-zA-Z0-9_-]/}"
 
-OUTPUT_DIR="."
+OUTPUT_DIR="ai-work/qa/test-plans"
 if [ ! -z "$1" ]; then
     OUTPUT_DIR="$1"
 fi
 
+mkdir -p "$OUTPUT_DIR"
 OUTPUT_FILE="$OUTPUT_DIR/$FILENAME"
 
 # Generate test case

@@ -23,11 +23,11 @@ prompt_input() {
     local prompt_text="$1"
     local var_name="$2"
     local required="$3"
-    
+
     while true; do
         echo -e "${CYAN}${prompt_text}${NC}"
         read -r input
-        
+
         if [ -n "$input" ]; then
             eval "$var_name=\"$input\""
             break
@@ -139,11 +139,12 @@ prompt_input "First noticed (date/build):" FIRST_NOTICED false
 
 FILENAME="${BUG_ID}.md"
 
-OUTPUT_DIR="."
+OUTPUT_DIR="ai-work/qa/bug-reports"
 if [ ! -z "$1" ]; then
     OUTPUT_DIR="$1"
 fi
 
+mkdir -p "$OUTPUT_DIR"
 OUTPUT_FILE="$OUTPUT_DIR/$FILENAME"
 
 echo ""
