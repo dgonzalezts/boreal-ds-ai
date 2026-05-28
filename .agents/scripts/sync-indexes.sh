@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+printf "sync-indexes: regenerating all index files\n\n"
+
 # sync-indexes.sh — Regenerate all AI index files (plans, bug reports, etc.)
 # Usage: ./sync-indexes.sh [repo-root]
 #
