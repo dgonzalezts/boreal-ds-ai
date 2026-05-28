@@ -1,55 +1,29 @@
 # Plans Index
 
-All plan files in this folder carry a YAML frontmatter block with a `status` field:
-
-| Value         | Meaning                            |
-| ------------- | ---------------------------------- |
-| `pending`     | Not yet started                    |
-| `in progress` | Work has begun but is not complete |
-| `done`        | Fully implemented and verified     |
-
----
-
-## Pending
-
-| File                                                               | Description                                                                                                                    |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| [generator-extension-strategy.md](generator-extension-strategy.md) | Extend the Plop generator to scaffold Stencil components in `boreal-web-components` and stories in `boreal-docs` cross-package |
-
----
-
-## In Progress
-
-| File                                                                         | Description                                                                                                       |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [alpha-release-vue-react-storybook.md](alpha-release-vue-react-storybook.md) | Vue first publish, React re-publish, and Storybook deploy to Chromatic                                            |
-| [icons-strategy.md](icons-strategy.md)                                       | Phased icon library rollout — icon font + S3 CDN for alpha, component wrappers for beta                           |
-| [integrated-monorepo-migration.md](integrated-monorepo-migration.md)         | pnpm workspaces + Turborepo + root-level git hooks + release-it migration. Missing watch mode on styleguidelines. |
-| [token-synchronization-and-cleanup.md](token-synchronization-and-cleanup.md) | Standardize tokens with Figma (sync, sort, clean $extensions) — Phase 1 baseline infrastructure done              |
-
----
-
-## Done
-
-| File                                                                             | Description                                                                                                                                |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| [depth-shadow-tokens.md](depth-shadow-tokens.md)                                 | Depth (box-shadow) token pipeline — `assembleShadowTokens`, `filterDepthAtomics`, `black-rgb` auto-derivation, `_interactions.scss` migration |
-| [EOA-10533-bds-radio-button.md](EOA-10533-bds-radio-button.md)                   | `bds-radio-button` (leaf component) and extension of `bds-radio-group` to support `type="radiobutton"` — all 5 tasks complete               |
-| [EOA-12334-bds-radio-button.md](EOA-12334-bds-radio-button.md)                   | `bds-radio-button` implementation plan (superseded by EOA-10533)                                                                           |
-| [EOA-12334-bds-radio.md](EOA-12334-bds-radio.md)                                 | `bds-radio` + `bds-radio-group` implementation plan (superseded by EOA-12334-bds-radio-and-radio-group.md)                                 |
-| [ai-scaffold-restructure.md](ai-scaffold-restructure.md)                         | Restructure AI scaffold into `.agents/`, `ai-docs/`, `ai-work/` with symlink facades; Phase 2 memory consolidation and guideline promotion complete |
-| [EOA-12334-bds-radio-and-radio-group.md](EOA-12334-bds-radio-and-radio-group.md) | `bds-radio` (FACE) + `bds-radio-group` (orchestrator) compound component — 3 visual variants, 9 tasks                                      |
-| [EOA-12029_grid_foundational_system.md](EOA-12029_grid_foundational_system.md)   | Foundational 12-column grid system — `bds-grid` + `bds-grid-item` with 5 responsive breakpoints                                            |
-| [EOA-12342-bds-checkbox-button.md](EOA-12342-bds-checkbox-button.md)             | `bds-checkbox-button` pill-shaped checkbox leaf — 16 tasks across Phase 1 (visual component) and Phase 2 (FACE upgrade, group-first stories and MDX) |
-| [EOA-10057-bds-text-field.md](EOA-10057-bds-text-field.md)                       | Full implementation of `bds-text-field` — Tasks 1–6 done (types, TSX, SCSS, Vue v-model, 79 unit tests); Task 7 (Storybook docs) remaining |
-| [EOA-10099-form-foundation.md](EOA-10099-form-foundation.md)                     | Shared FACE-based form foundation (form association, props, validation) required before any form components can be implemented             |
-| [first-alpha-release.md](first-alpha-release.md)                                 | Step-by-step runbook for the first `0.1.0-alpha.0` publish to npm — Steps 9–11 (Vue) remaining                                             |
-| [welcome-page-content-plan.md](welcome-page-content-plan.md)                     | Welcome page content and styling for the `boreal-docs` Storybook                                                                           |
-| [automated-changelog-&-release.md](automated-changelog-&-release.md)             | Replace manual Changesets with release-it + `@release-it/conventional-changelog`                                                           |
-| [code-snippetformatter.md](code-snippetformatter.md)                             | Replace `prettierFormatter` with `formatHtmlSource` in `apps/boreal-docs/src/utils/formatters.ts`                                          |
-| [integrate-vue-testapp.md](integrate-vue-testapp.md)                             | Port vue-testapp scaffold, wire validate:pack:vue pipeline, extend first-alpha-release for Vue                                             |
-| [plop-implementation-plan.md](plop-implementation-plan.md)                       | Plop.js generator for scaffolding `.stories.ts` + `.mdx` files in `apps/boreal-docs`                                                       |
-| [root-level-hooks-migration.md](root-level-hooks-migration.md)                   | Move git hooks from `packages/boreal-web-components/.husky/` to the monorepo root                                                          |
-| [shared-storybook-components.md](shared-storybook-components.md)                 | Shared React `docs/` and Lit `story/` components used in MDX and story files                                                               |
-| [storybook-chromatic-deployment.md](storybook-chromatic-deployment.md)           | Publish the Storybook to Chromatic for team access without a local dev environment                                                         |
-| [storybook-plan.md](storybook-plan.md)                                           | Baseline Storybook architecture — stories, MDX, theme-aware previews, token integration                                                    |
+| File | Status | Description |
+| --- | --- | --- |
+| [ai-scaffold-restructure.md](./ai-scaffold-restructure.md) | pending | AI Scaffold Restructure Implementation Plan |
+| [alpha-release-vue-react-storybook.md](./alpha-release-vue-react-storybook.md) | in | Alpha Release — Vue First Publish, React Re-publish, Storybook Deploy |
+| [automated-changelog-&-release.md](./automated-changelog-&-release.md) | done | Automated Changelog & Release Plan |
+| [code-snippetformatter.md](./code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
+| [depth-shadow-tokens.md](./depth-shadow-tokens.md) | done | Depth (Box-Shadow) Token Pipeline Implementation Plan |
+| [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
+| [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |
+| [EOA-10533-bds-radio-button.md](./EOA-10533-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
+| [EOA-12029_grid_foundational_system.md](./EOA-12029_grid_foundational_system.md) | done |  |
+| [EOA-12334-bds-radio-and-radio-group.md](./EOA-12334-bds-radio-and-radio-group.md) | done | bds-radio + bds-radio-group Implementation Plan |
+| [EOA-12334-bds-radio-button.md](./EOA-12334-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
+| [EOA-12334-bds-radio.md](./EOA-12334-bds-radio.md) | done | bds-radio + bds-radio-group Implementation Plan |
+| [EOA-12342-bds-checkbox-button.md](./EOA-12342-bds-checkbox-button.md) | done | bds-checkbox-button Implementation Plan |
+| [first-alpha-release.md](./first-alpha-release.md) | done | First Alpha Release — Boreal DS |
+| [generator-extension-strategy.md](./generator-extension-strategy.md) | pending | Generator Extension Strategy: Cross-Package Component Scaffolding |
+| [icons-strategy.md](./icons-strategy.md) | in | Boreal Icons Strategy & Implementation Plan |
+| [integrate-vue-testapp.md](./integrate-vue-testapp.md) | done |  |
+| [integrated-monorepo-migration.md](./integrated-monorepo-migration.md) | in | Integrated Monorepo Migration Plan |
+| [plop-implementation-plan.md](./plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
+| [root-level-hooks-migration.md](./root-level-hooks-migration.md) | done | Migration Plan: Package-Level to Root-Level Git Hooks |
+| [shared-storybook-components.md](./shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |
+| [storybook-chromatic-deployment.md](./storybook-chromatic-deployment.md) | done | Storybook Deployment — Chromatic |
+| [storybook-plan.md](./storybook-plan.md) | done | Storybook Baseline Implementation Plan |
+| [token-synchronization-and-cleanup.md](./token-synchronization-and-cleanup.md) | in | Token Synchronization and Cleanup Plan |
+| [welcome-page-content-plan.md](./welcome-page-content-plan.md) | done | Implementation Plan: Welcome Page Content for Boreal DS Storybook |
