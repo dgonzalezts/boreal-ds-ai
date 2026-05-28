@@ -1,11 +1,11 @@
 # BUG-002: `bds-select` — Popover does not close after item selection
 
-**Severity:** High  
-**Priority:** P1  
-**Type:** Functional  
-**Status:** Fixed  
-**Component:** `bds-select`  
-**Discovered during:** TC-FUNC-001 / TC-FUNC-002  
+**Severity:** High
+**Priority:** P1
+**Type:** Functional
+**Status:** Fixed
+**Component:** `bds-select`
+**Discovered during:** TC-FUNC-001 / TC-FUNC-002
 **Affects:** All consumers of `bds-select` in all interaction modes (default and searchable)
 
 ---
@@ -15,6 +15,14 @@
 - **Component:** `bds-select` (`packages/boreal-web-components/src/components/forms/bds-select/bds-select.tsx`)
 - **Story:** `Default` (Storybook — Forms → bds-select)
 - **Browser:** Chrome (latest stable)
+
+---
+
+## Resolution Record
+
+- **Resolution status:** Fixed
+- **Resolution date:** 2026-05-28
+- **Validation scope:** Popover close-on-selection behavior and non-regression of single-fire select events.
 
 ---
 

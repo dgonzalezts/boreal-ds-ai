@@ -1,11 +1,11 @@
 # BUG-001: `bds-select` — `valueChange` and `bdsChange` fire twice per selection with inconsistent `detail` values
 
-**Severity:** High  
-**Priority:** P1  
-**Type:** Functional  
-**Status:** Open  
-**Component:** `bds-select`  
-**Discovered during:** TC-FUNC-001 / TC-FUNC-011  
+**Severity:** High
+**Priority:** P1
+**Type:** Functional
+**Status:** Fixed
+**Component:** `bds-select`
+**Discovered during:** TC-FUNC-001 / TC-FUNC-011
 **Affects:** All consumers of `bds-select` that listen to `bdsChange` or `valueChange`
 
 ---
@@ -19,15 +19,23 @@
 
 ---
 
+## Resolution Record
+
+- **Resolution status:** Fixed
+- **Resolution date:** 2026-05-28
+- **Validation scope:** Event emissions verified to fire once per selection with consistent value-key payloads.
+
+---
+
 ## Description
 
 Selecting an option from `bds-select` fires each of its two public events — `bdsChange` and `valueChange` — **twice** per selection instead of once. The duplicate firings originate from the slotted child components (`bds-list-menu`, `bds-text-field`) whose events bubble up through the light DOM to the `bds-select` host alongside `bds-select`'s own re-emissions.
 
 More critically, the two `valueChange` firings carry **different `detail` values**:
 
-| Firing | `target` | `detail` |
-|--------|----------|----------|
-| 1st (from `bds-select`) | `bds-select.hydrated` | `"option2"` — **value key** |
+| Firing                               | `target`                        | `detail`                         |
+| ------------------------------------ | ------------------------------- | -------------------------------- |
+| 1st (from `bds-select`)              | `bds-select.hydrated`           | `"option2"` — **value key**      |
 | 2nd (from `bds-text-field`, bubbled) | `bds-text-field...--selectable` | `"Option 2"` — **display label** |
 
 A consumer that reads `event.detail` without checking `event.target` may silently process the display label string as the form value, corrupting state without any visible error.
@@ -42,8 +50,10 @@ A consumer that reads `event.detail` without checking `event.target` may silentl
 4. Run in Console:
    ```javascript
    let log = [];
-   ['bdsChange', 'valueChange'].forEach(n =>
-     $0.addEventListener(n, e => log.push({ type: n, detail: e.detail, from: e.target.tagName }))
+   ["bdsChange", "valueChange"].forEach((n) =>
+     $0.addEventListener(n, (e) =>
+       log.push({ type: n, detail: e.detail, from: e.target.tagName }),
+     ),
    );
    ```
 5. Click any option in the dropdown (e.g. `option2`)
@@ -91,8 +101,9 @@ The `valueChange` inconsistency arises because `bds-select.setValue()` emits `de
 - **Event-driven side effects:** Any handler that fires on `bdsChange` (e.g. triggering an API call) runs twice per user interaction.
 
 **Workaround (interim):** Consumers can guard with:
+
 ```javascript
-selectEl.addEventListener('valueChange', e => {
+selectEl.addEventListener("valueChange", (e) => {
   if (e.target !== e.currentTarget) return; // ignore bubbled child events
   handleChange(e.detail);
 });
@@ -100,27 +111,29 @@ selectEl.addEventListener('valueChange', e => {
 
 ---
 
-## Proposed Fix
+## Fix Applied
 
 All changes are in `bds-select.tsx` only. `bds-text-field` remains standalone-compatible.
 
 **1. Stop `bds-list-menu`'s `bdsChange` before re-emitting (`bds-select.tsx:151`):**
+
 ```typescript
-addElementListener(this.bdsList, 'bdsChange', (event: Event) => {
+addElementListener(this.bdsList, "bdsChange", (event: Event) => {
   event.stopPropagation();
   if (this.bdsList !== null) {
     const eventDetail = (event as CustomEvent<string | undefined>).detail;
-    this.setValue(eventDetail || '');
+    this.setValue(eventDetail || "");
   }
 });
 ```
 
 **2. Stop `bds-text-field`'s `valueChange` and `bdsChange` from leaking (add to `listenField()`):**
+
 ```typescript
-addElementListener(this.bdsField, 'valueChange', (event: Event) => {
+addElementListener(this.bdsField, "valueChange", (event: Event) => {
   event.stopPropagation();
 });
-addElementListener(this.bdsField, 'bdsChange', (event: Event) => {
+addElementListener(this.bdsField, "bdsChange", (event: Event) => {
   event.stopPropagation();
 });
 ```

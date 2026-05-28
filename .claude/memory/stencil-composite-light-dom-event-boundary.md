@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-composite-light-dom-event-boundary.md

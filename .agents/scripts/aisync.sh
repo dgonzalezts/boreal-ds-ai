@@ -22,6 +22,7 @@ trap 'git -C "$root" worktree remove --force "$wt" 2>/dev/null || true' EXIT
 
 git -C "$root" worktree add "$wt" ai-config
 
+
 for d in .claude .github .agents .cursor ai-docs ai-work; do
   if [[ -e "$root/$d" ]]; then
     rsync -a --delete --links "$root/$d" "$wt/"
@@ -29,6 +30,11 @@ for d in .claude .github .agents .cursor ai-docs ai-work; do
     rm -rf "$wt/$d"
   fi
 done
+
+# Optional: Regenerate all AI index files before commit
+if [[ -x "$root/.agents/scripts/sync-indexes.sh" ]]; then
+  bash "$root/.agents/scripts/sync-indexes.sh" "$wt"
+fi
 
 git -C "$wt" add -f .claude .github .agents .cursor ai-docs ai-work
 
@@ -39,6 +45,7 @@ else
   git -C "$wt" push ai ai-config:main
   printf "aisync: pushed to ai/main\n"
 
+  # Optional: sync symlinks if the script exists
   if [[ -x "$root/.agents/scripts/sync-symlinks.sh" ]]; then
     bash "$root/.agents/scripts/sync-symlinks.sh" "$root"
   fi
