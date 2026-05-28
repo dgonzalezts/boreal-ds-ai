@@ -56,6 +56,34 @@ Tasks follow the natural development order within each component. The reference 
 
 **Key invariant:** every task must be independently committable and have a manual test that can pass before the next task begins. Never merge two steps if the result of the first cannot be manually verified on its own.
 
+## Existing Utility Reuse Gate (Mandatory)
+
+Before planning any new behavior, verify whether the codebase already provides a reusable utility, helper, mixin, hook, or service for that behavior.
+
+- Always perform a utility discovery step for each feature area (for example: navigation, focus, validation, formatting, selection state, event handling).
+- Prefer existing shared utilities over component-local implementations.
+- Do not plan duplicate logic if an equivalent shared abstraction already exists.
+- If an existing utility is found, the task acceptance criteria must explicitly require integration with that utility.
+- If no utility is found, document the search result and justify the new implementation.
+- If a utility exists but is insufficient, require:
+  - a gap description
+  - a plan to extend the shared utility first
+  - a migration step so component-level temporary logic is removed
+
+## Utility Discovery Checklist
+
+Use this checklist during planning and include a short "utility discovery" note in each relevant task.
+
+- Feature area identified: state the behavior being planned (for example keyboard navigation, focus management, validation, or selection).
+- Search performed: list where the search happened (folders/modules) and the query terms used.
+- Candidate utilities found: name the existing reusable abstractions that appear relevant.
+- Fit assessment: decide whether each candidate fully fits, partially fits, or does not fit, with one-line rationale.
+- Reuse decision: choose one candidate to integrate, or explicitly state that no suitable utility exists.
+- Gap handling: when partially fitting, define what must be extended in the shared utility before component wiring.
+- Anti-duplication check: confirm no parallel component-local implementation is planned for the same behavior.
+- Test impact: specify which unit tests verify behavior through the shared utility integration path.
+- Migration note (if temporary fallback is used): capture when and how temporary local logic will be removed.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -102,11 +130,13 @@ The file table is a living checklist. It gives the implementer full orientation 
 - State which tokens, mixins, or patterns to use by name
 - Call out edge cases and guards explicitly ("when disabled, X must not happen")
 - Reference existing sibling components as the pattern to follow where applicable
+- Existing shared utilities for this behavior were checked; implementation reuses them when available, otherwise includes a documented gap and extension plan
 
 **Unit tests to cover** _(spec file: `__test__/component.behavior.spec.ts`)_:
 
 - Behavior 1 — what the test must assert, not how to write it
 - Behavior 2
+- Tests confirm behavior through the shared utility integration path (or validate the documented fallback path when no reusable utility exists)
 - ...
 
 **Manual test _(waiveable)_:**
@@ -130,6 +160,7 @@ git commit -m "type(scope): TICKET-ID description"
 - Token names, mixin names, and pattern references by name (not by example)
 - Every implementation task has a manual test section
 - Unit test tasks describe behaviors to cover, not how to write the tests
+- Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
 - DRY, YAGNI, TDD, frequent commits per task
 
 ## Execution Handoff

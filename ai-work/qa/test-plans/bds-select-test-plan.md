@@ -62,6 +62,7 @@ Created: 2026-05-25
 | ARIA `aria-controls` points to wrong ID after re-render | M | H | Inspect DOM after each open/close cycle |
 | Search filter misses options with special chars | L | M | Include `é`, `ñ`, `&` in test data |
 | Loading state not implemented in code | H | L | Flag as design debt if absent from stories |
+| Child events bubble up alongside host re-emissions (double-fire) | H | H | Use `monitorEvents` and count events per selection; `valueChange` carries different `detail` values from each source |
 
 ---
 
@@ -88,10 +89,23 @@ Created: 2026-05-25
    **Expected:** Dropdown opens, `option5` is highlighted/selected in the list
 
 3. Click a different option (e.g. `option2`)
-   **Expected:** Dropdown closes; text field shows `option2` label; `bdsChange` fires with `"option2"`; `valueChange` fires with `"option2"`
+   **Expected:** Dropdown closes; text field shows `option2` label
 
-4. Open browser console and confirm both events fired
-   **Expected:** Two entries: `bdsChange: "option2"` and `valueChange: "option2"`
+4. Open the Storybook **Actions panel** (bottom tab) and verify the logged entries
+   **Expected:** Two entries — `bdsChange` and `valueChange` — each showing `detail: "option2"`
+
+   > **Known behaviour (BUG-001):** Until the fix in `bds-select.tsx` is applied, the Actions panel shows **four** entries instead of two. `bds-list-menu` and `bds-text-field` are slotted into the light DOM, so their events bubble up to the host alongside `bds-select`'s own re-emissions. The second `valueChange` entry carries `detail: "Option 2"` (the display label) rather than the value key — see `ai-work/qa/bug-reports/BUG-001-bds-select-valuechange-double-fire.md`.
+
+   <details>
+   <summary>Alternative: DevTools <code>monitorEvents</code></summary>
+
+   If the Actions panel is unavailable, select `<bds-select>` in the Elements panel (`$0`) and run in Console:
+   ```javascript
+   monitorEvents($0, ['bdsChange', 'valueChange'])
+   ```
+   Interact with the component, then run `unmonitorEvents($0)` to stop. This produces the same four entries described above, but `target` and `currentTarget` on each entry reveal which component emitted versus which was reached by bubbling.
+
+   </details>
 
 ---
 
@@ -180,7 +194,7 @@ Created: 2026-05-25
 1. Select an option (e.g. `option3`)
 2. Click the field again and type partial text to filter
 3. Press `Tab` to blur without selecting
-   **Expected:** Field reverts to `option3` label text; dropdown closes; search filter resets
+   **Expected:** Field reverts to `option3` label text; search filter resets; focus moves into the list (dropdown stays open — Tab navigates into the listbox per Pattern 1)
 
 ---
 
@@ -225,6 +239,42 @@ Created: 2026-05-25
 
 2. Interact with the dropdown normally
    **Expected:** Error styling persists; selection still works; `bdsChange` fires correctly
+
+---
+
+#### TC-FUNC-011: Event emission — no double-fire per selection
+
+**Priority:** P1  
+**Story:** Default
+
+**Preconditions:**
+- [ ] Open the `Default` story
+- [ ] DevTools Console open
+
+**Steps:**
+1. Open the Storybook **Actions panel** (bottom tab) — clear any previous entries with the trash icon
+
+2. Select a single option from the dropdown
+
+3. Count the entries logged in the Actions panel
+   **Expected (pass — after BUG-001 fix):** Exactly 2 entries — `bdsChange` and `valueChange` — both showing the value key (e.g. `"option2"`)
+   **Expected (fail — current behaviour):** 4 entries — `bdsChange` ×2 and `valueChange` ×2; the fourth entry shows `"Option 2"` (the display label) instead of the value key
+
+   > If the count is more than 2, this confirms **BUG-001** is open. Reference `ai-work/qa/bug-reports/BUG-001-bds-select-valuechange-double-fire.md`.
+
+   <details>
+   <summary>Alternative: DevTools <code>addEventListener</code> log</summary>
+
+   For a precise count without Storybook, select `<bds-select>` as `$0` in the Elements panel and run:
+   ```javascript
+   let log = [];
+   ['bdsChange', 'valueChange'].forEach(n =>
+     $0.addEventListener(n, e => log.push({ type: n, detail: e.detail, from: e.target.tagName }))
+   );
+   ```
+   After selecting an option, run `log` to inspect the array. Expected: 2 entries. Actual (current): 4. Run `log = []` to reset between steps.
+
+   </details>
 
 ---
 
@@ -483,7 +533,7 @@ Use DevTools → Accessibility panel or axe DevTools extension.
 3. Press `Escape`
    **Expected:** Dropdown closes; focus returns to input
 4. Press `Tab` while dropdown is open
-   **Expected:** Dropdown closes; focus moves to next focusable element
+   **Expected:** Focus moves to the first focusable item inside the list; dropdown stays open (Pattern 1 — Tab navigates into the listbox, not past the component)
 
 ---
 

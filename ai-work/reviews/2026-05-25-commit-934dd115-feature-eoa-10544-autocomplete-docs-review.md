@@ -1,6 +1,6 @@
 # Boreal DS — Code Review Report
 
-**Generated:** 2026-05-25T19:36:23
+**Generated:** 2026-05-25T19:36:23 (updated 2026-05-26)
 **Base ref:** `release/current`
 **Repository:** `.`
 
@@ -10,15 +10,20 @@
 
 The diff against `release/current` includes files from previously merged PRs that are not part of `bds-select`. Findings are split into two groups:
 
-- **In-scope (bds-select)** — new files introduced by this PR
+- **In-scope (bds-select + KeyboardController tests)** — new test files introduced by this PR
 - **Out-of-scope (bds-list-menu, bds-text-field)** — pre-existing or unrelated to this PR's intent; flagged for awareness but not blocking
+
+The primary focus of this branch (`feature/EOA-10544-autocomplete-testing`) is adding unit tests for:
+
+1. `bds-select` — four typed spec files (basics, a11y, events, slots)
+2. `KeyboardController` utility — three spec files (controller, focus strategies, navigation)
+3. `bds-list-menu` / `bds-list-menu-item` — basics and events specs
 
 ---
 
 ## Affected Packages
 
-- **boreal-docs (Storybook)** — checklist section(s): D
-- **boreal-web-components (Stencil)** — checklist section(s): A
+- **boreal-web-components (Stencil)** — checklist section(s): A, tests
 
 ---
 
@@ -59,47 +64,35 @@ The diff against `release/current` includes files from previously merged PRs tha
 - ✅ Change has a clear purpose with minimal unrelated edits
 - ✅ No `any` usage without justification
 - ✅ Error paths and invalid inputs handled explicitly
-- ✅ New logic is covered by tests
-- ✅ Tests use `waitForChanges()` before DOM assertions
+- ✅ **New logic is covered by tests** — all four typed spec files now present _(was ❌ in prior revision)_
+- ✅ Tests use `waitForChanges()` before DOM assertions _(with one exception — see T3)_
 - ❌ Storybook/MDX/README updated when behavior or APIs change
-  > **Standard (coding_standards.md):** "Chromatic deploys and docs tooling depend on stories being up to date. Behavior changes without story updates produce stale visual tests." Every form component ships a `.stories.tsx` and `.mdx`. This component has neither. The documentation ticket `EOA-10544` is the stated intent of this branch — stories and MDX are **required before merge**. See test-spec-file-organisation.md for the expected file split.
-  >
-  > **Antipattern:** Shipping a component without Storybook stories means the component is invisible to the design team, inaccessible to visual regression, and undiscoverable in the docs site.
+  > Stories and MDX files are now present (`bds-select.stories.ts`, `bds-select.mdx`). However both files have blocking correctness errors (wrong element names in MDX, missing `menu-role` in stories). See S1, D1, D2.
 - ✅ Public APIs, events, and props follow naming conventions
 
 ### A — Stencil (boreal-web-components)
 
 - ❌ Every `@Prop()` has `readonly` and an adjacent JSDoc block
 
-  > **Standard:** `stencil/required-jsdoc` and `stencil/props-must-be-readonly` are both ESLint errors (not warnings). Every `@Prop()` must have `readonly` and a `/** */` JSDoc block directly above it. Missing descriptions degrade `custom-elements.json` and Storybook argType auto-generation.
-  >
-  > **Antipattern (`common_antipatterns.md`):** "Missing JSDoc on @Prop(): Violates `stencil/required-jsdoc` and degrades `custom-elements.json`."
-  >
-  > **In bds-select specifically:** `searchable` and `name` have JSDoc and `readonly`. However the `value` prop (`bds-select.tsx:31`) is **missing `readonly`** — this is a build-breaking ESLint error. See M10. ❌
+  > **In bds-select specifically:** `value` prop (`bds-select.tsx:31`) is **missing `readonly`** — build-breaking ESLint error. See M10.
 
 - ❌ Native form attrs (`disabled`, `checked`, `value`) use `@State()` mirror, not `mutable: true`
 
-  > **Standard:** `mutable: true` on `disabled` causes two writers on the same reflected attribute — the component and the browser via `formDisabledCallback` — which can race. Use `@State() private isDisabled` + `@Watch('disabled')` + `formDisabledCallback` writing to the state mirror.
-  >
-  > **Exception (stencil-prop-patterns.md):** "For non-FACE props that the component needs to write internally (e.g. `value` tracking internal selection state), use `@Prop({ mutable: true })` without a cast." bds-select's `value` prop is non-FACE and uses this correctly. The automated finding is a **false positive** for this component.
+  > **Exception (stencil-prop-patterns.md):** bds-select's `value` prop is non-FACE and uses this correctly. Automated finding is a **false positive** for this component.
 
 - ✅ `validatePropValue` + `componentWillLoad()` + `@Watch()` for enum-like props
 - ❌ Custom events use the `bds{Action}` prefix pattern (e.g. `bdsClose`, not `bdsBannerClose`)
 
-  > **Standard:** "Use prefixed camelCase event names: `bds{Action}`."
-  >
-  > **Exception for `valueChange`:** `valueChange` is the canonical Vue v-model event enforced by `IFormValueEmitter<T>` (see `stencil-form-control-interfaces.md`). It is registered in `vue-output-target.ts` `componentModels` and cannot be renamed. This is an accepted deviation from the `bds{Action}` rule. `bdsChange` ✅ follows the convention correctly.
+  > **Exception for `valueChange`:** canonical Vue v-model event, cannot be renamed.
 
 - ✅ Event names do not reuse native DOM events
 - ✅ `@AttachInternals()` is on the class body, not in a mixin
 - ✅ `checkValidity()` and `reportValidity()` exposed via `@Method()` — _N/A: bds-select is not a FACE component_
 - ❌ Only `ElementInternals.setValidity()` manages validity — _N/A: bds-select uses a hidden `<input>` for form submission, not FACE_
-  > The automated finding is on `bds-text-field` (out-of-scope, pre-existing). bds-select delegates form submission to a hidden `<input name={this.name} value={this.value}>`, which is a different (non-FACE) progressive enhancement pattern and does not require `ElementInternals`.
+  > The automated finding is on `bds-text-field` (out-of-scope, pre-existing).
 - ✅ `formResetCallback` and `formStateRestoreCallback` call `updateValidity()` — _N/A for this component_
 - ❌ JSDoc changes preserve `custom-elements.json` generation accuracy
 
-  > **Standard:** JSDoc descriptions on `@Prop()` feed `custom-elements.json`'s `description` field (stencil-prop-patterns.md). Missing or stale descriptions show up as empty argTypes in Storybook.
-  >
   > **In bds-select:** Props have JSDoc. The failing item is on `bds-list-menu-item` (out of scope). bds-select passes. ✅
 
 - ✅ Boolean `@Prop()` names use no `is`/`has`/`show` prefix
@@ -112,7 +105,7 @@ The diff against `release/current` includes files from previously merged PRs tha
 
 ### D — Docs (Storybook)
 
-- ✅ Component behavior changes reflected in stories and MDX — _pending; see missing-stories finding below_
+- ✅ Component behavior changes reflected in stories and MDX — _pending; see missing-stories finding_
 - ✅ Storybook aliasing intact for `@telesign/boreal-web-components/css/*`
 - ✅ Uses `dotenv --` and `--storybook-build-dir`
 
@@ -162,20 +155,336 @@ Private getters (`bdsList`, `bdsField`, `bdsInput`, `bdsPopover`) carry no `get`
 
 ---
 
-### 7. Test spec file organisation — **Issues found**
+### 7. Test spec file organisation ✅ _(was ❌ in prior revision)_
 
-Per `test-spec-file-organisation.md`, the project convention splits tests across typed spec files:
+All four required spec file types are now present:
 
-| Expected file               | Reason                                                                      |
-| --------------------------- | --------------------------------------------------------------------------- |
-| `bds-select.basics.spec.ts` | Props, render output — ✅ exists                                            |
-| `bds-select.a11y.spec.ts`   | ARIA attributes (combobox role, aria-expanded, aria-controls) — **missing** |
-| `bds-select.events.spec.ts` | `bdsChange` and `valueChange` emissions, `bdsClear` — **missing**           |
-| `bds-select.slots.spec.ts`  | Named slots (`field`, `list`) change rendered state — **missing**           |
+| Expected file               | Status                        |
+| --------------------------- | ----------------------------- |
+| `bds-select.basics.spec.ts` | ✅ Exists — 3 tests           |
+| `bds-select.a11y.spec.ts`   | ✅ Exists — 1 test (see T1)   |
+| `bds-select.events.spec.ts` | ✅ Exists — 2 tests (see T4)  |
+| `bds-select.slots.spec.ts`  | ✅ Exists — 1 test (see T5)   |
 
-Additionally, `bds-select.spec.tsx` is a single trivial render test that duplicates `basics`. It should be merged into `basics` and removed.
+`bds-select.spec.tsx` still exists as a duplicate of the basics render test. See T2 for the merge recommendation.
 
-Current `.basics.spec.ts` extension is `.ts`, not `.tsx`. Stencil spec files that use JSX (e.g. `<bds-select>`) should use `.spec.tsx`.
+---
+
+## Unit Testing Review
+
+This section covers all new test files introduced in this branch.
+
+### T1. `bds-select.a11y.spec.ts` — Good foundation, missing dynamic state
+
+The single test verifies the initial ARIA state (`aria-expanded="false"`, role, `aria-haspopup`, `aria-controls`, `aria-autocomplete`). The `aria-controls` ↔ `id` link assertion is particularly valuable.
+
+**Missing coverage:**
+
+- `aria-expanded="true"` when the popover is open (the test only covers the closed state)
+- `aria-autocomplete="list"` when `searchable=true` — the component sets a different value for searchable mode; this state is untested
+- When `searchable=true`, the input `role` may differ from the non-searchable case — not covered
+
+**Action:** Add a second test that opens the popover (via click or `bdsOpen` event) and asserts `aria-expanded="true"`, and a third test for `searchable=true` asserting `aria-autocomplete="list"`.
+
+---
+
+### T2. `bds-select.spec.tsx` — Incomplete duplicate, should be removed
+
+```typescript
+// bds-select.spec.tsx — missing BdsListMenuItem in components array
+components: [BdsSelect, BdsListMenu, BdsTextField],
+html: `...
+  <bds-list-menu-item variant="label">Group 1</bds-list-menu-item>
+  ...`
+```
+
+`BdsListMenuItem` is used in the HTML template but not registered in `components`. In Stencil's test environment, unregistered child custom elements are not upgraded — the test currently passes only because the single assertion is `assertExists(page.root, ...)`, which succeeds regardless of child rendering. The test adds no value over `bds-select.basics.spec.ts` and masks the missing registration.
+
+**Action:** Delete `bds-select.spec.tsx`. The render coverage is already provided by `bds-select.basics.spec.ts`.
+
+---
+
+### T3. `bds-select.basics.spec.ts` — Missing `waitForChanges()` before hidden input assertion
+
+```typescript
+// bds-select.basics.spec.ts:40–65 — "Should have input hidden with value"
+const { root } = await newSpecPage({ ... });
+const input = root.querySelector('input[type="hidden"]');
+expect(input.getAttribute('name')).toBe('autocomplete-selector'); // ← no waitForChanges() before this
+expect(input.getAttribute('value')).toBe('2');
+```
+
+`componentDidLoad` and `@Watch` effects run asynchronously after `newSpecPage` resolves. Assertions on rendered DOM state that depends on lifecycle effects must follow `await waitForChanges()`. The third test ("Should have selected value and option text in text field") correctly calls `waitForChanges()` before asserting on `bds-text-field` value — the second test should follow the same pattern.
+
+**Action:** Add `await waitForChanges()` after `newSpecPage` in the second test before the hidden input assertions.
+
+---
+
+### T4. `bds-select.events.spec.ts` — Import path inconsistency, missing `bdsClear` test
+
+**Import inconsistency:**
+
+```typescript
+// bds-select.events.spec.ts:7-8 — two separate import paths for the same test utilities
+import { assertExists } from '@/utils/testing/helpers';
+import { attachInternals } from '@/utils/testing/mocks/elementInternals';
+
+// bds-select.basics.spec.ts:2 — consistent barrel import
+import { assertExists, attachInternals, suppressConsoleWarn } from '@/utils';
+```
+
+`assertExists` and `attachInternals` are both re-exported from `@/utils`. Using the internal sub-paths couples the test to the internal directory layout and diverges from the pattern established in `basics.spec.ts`. Align to the barrel import `@/utils`.
+
+**Missing `bdsClear` coverage:**
+
+The original review flagged `bdsClear` as required. The event is referenced in the component but has no test. A test clicking the clear button (when the field has a value) and asserting the `bdsClear` event fires and `value` resets to `''` is needed.
+
+**Action:** Consolidate imports to `@/utils`. Add a `bdsClear` emission test.
+
+---
+
+### T5. `bds-select.slots.spec.ts` — Structural check only, not a slot behavior test
+
+```typescript
+// bds-select.slots.spec.ts — asserting that what was put into HTML exists in HTML
+const bdsSlotField = root.querySelector('bds-text-field[slot="field"]');
+assertExists(bdsSlotField, 'Slot with name "field" should be rendered');
+
+const bdsSlotList = root.querySelector('bds-list-menu[slot="list"]');
+assertExists(bdsSlotList, 'Slot with name "list" should be rendered');
+```
+
+These assertions verify that elements placed into slots via the HTML fixture are present in the DOM — which is always true because the test itself put them there. A slot spec should verify that the component **uses** the slot content correctly: that `slot="field"` content renders in the trigger area and `slot="list"` content is moved into the popover.
+
+The test does correctly check that `bds-list-menu` appears inside `bds-popover` after `waitForChanges()`, which is the valuable assertion here.
+
+**Action:** Remove the trivially-true `assertExists` checks for `bds-text-field[slot="field"]` and `bds-list-menu[slot="list"]`. Keep the popover structure assertion. Add a test verifying that the `field` slot content is rendered in the expected position relative to the popover trigger.
+
+---
+
+### T6. `KeyboardController.spec.ts` — High quality, one pattern note
+
+The three describe blocks cover key binding lifecycle, linear navigation, and grid navigation with good isolation. The `beforeAll` focus/scrollIntoView mock pattern is correct for JSDOM environments. The `dispatchKeyboard` helper is well-designed.
+
+One observation: the `'warns when navigation is configured before attach'` test uses `jest.spyOn(console, 'warn')` without `suppressConsoleWarn()` at the file level. The spy implementation correctly silences the output (`mockImplementation(() => undefined)`), so no output leaks, but the pattern is inconsistent with the component spec files which use the `suppressConsoleWarn()` utility. Minor style inconsistency, not blocking.
+
+The `grid navigation` tests cover edge cases well (null cells, irregular rows, closest-column vertical navigation). No findings.
+
+---
+
+### T7. `focus.spec.ts` — Correct isolation, one assertion gap
+
+Unit tests for the focus strategy primitives (`initRovingTabindex`, `applyRovingTabindex`, `applyAriaActiveDescendant`, grid variants, `resolveCurrentIndex`). The `afterEach(() => { document.body.innerHTML = ''; })` cleanup prevents DOM bleed between tests.
+
+**One gap:** the `applyRovingTabindex` test:
+
+```typescript
+// focus.spec.ts:62–70
+items[0].setAttribute('tabindex', '0');
+applyRovingTabindex(items, 2);
+expect(items.map(item => item.getAttribute('tabindex'))).toEqual(['-1', null, '0']);
+```
+
+`items[1].getAttribute('tabindex')` is expected to be `null`. This is correct only if `applyRovingTabindex` does not touch items that were never `tabindex="0"`. The test passes today, but if the implementation ever initializes all items to `-1` before applying the active index (a common refactor), this assertion would break. Consider whether the intent is "items[1] is untouched" (assert `null`) or "items[1] is not the active item" (assert `!= '0'`). If the former, add a comment to make the intent clear; if the latter, use `.not.toBe('0')`.
+
+---
+
+### T8. `navigation.spec.ts` — Good isolation, key-name coupling is unavoidable
+
+The file tests `setupLinearNavigation` and `setupGridNavigation` directly via mock `LinearNavigationAccess` / `GridNavigationAccess` objects. This is the right approach — it avoids spinning up a full `KeyboardController` for pure navigation logic.
+
+The `registerHandler` / `isModifier` / `keyName` helper functions in this file replicate a subset of the key-name logic from inside `KeyboardController`. This is an acceptable duplication because the access interface's `register` callback is opaque to the navigation setup functions, and the test needs to inspect what keys were registered. No action required.
+
+**Coverage gap:** The `setupLinearNavigation` test for `onNavigate` asserts that `onNavigate` is called with the next index and that `document.activeElement` is **not changed** (focus delegation is the caller's responsibility). This is the correct contract. However, the test does not cover what happens when `onNavigate` does call `applyFocus` via the controller — that path is covered in `KeyboardController.spec.ts` instead, which is the right separation.
+
+---
+
+### T9. `bds-list-menu-item.events.spec.ts` — JSDOM navigation test is fragile
+
+```typescript
+// bds-list-menu-item.events.spec.ts:101–110
+it('Should redirect when href is clicked', async () => {
+  ...
+  root.click();
+  await page.waitForChanges();
+  expect(window.location.href).toBe('https://example.com/');
+});
+```
+
+JSDOM normalizes URLs (appending `/`), which is why the assertion uses `'https://example.com/'`. However, JSDOM does not fully support navigation — `window.location.href` assignment may or may not fire page load events depending on the JSDOM version. This test is currently green but is tightly coupled to JSDOM behavior rather than the component's logic (which likely calls `window.location.href = this.href`).
+
+The `new-tab` test correctly spies on `window.open` and is the preferable pattern. For the `href` test, spying on `window.location` assignment (or extracting the navigation call into a mockable method) would make this test more reliable.
+
+**Action (non-blocking):** Refactor the `href` test to spy on `window.location` or extract the navigation to a mockable helper, matching the `new-tab` test pattern.
+
+---
+
+### T10. `bds-list-menu.basics.spec.ts` — Good coverage
+
+Nine tests cover: default props, first-item activation, selected-item activation, option role propagation for listbox mode, disabled-item edge case, checkable propagation, select-controls rendering, empty-state rendering, and `waitForChanges()` after checkable propagation.
+
+The test for `aria-multiselectable="false"` as a default is a good catch of the default ARIA state. No findings.
+
+---
+
+## Storybook Documentation Review
+
+### `bds-select.stories.ts`
+
+#### S1. `renderSelect` is missing `menu-role="listbox"` on `bds-list-menu` ❌
+
+```typescript
+// Current — Default and Searchable stories render without menu-role
+<bds-list-menu slot="list">
+
+// Required — combobox ARIA pattern requires the popup to have role="listbox"
+<bds-list-menu slot="list" menu-role="listbox">
+```
+
+The `Default` and `Searchable` stories both use the shared `renderSelect` render function. Without `menu-role="listbox"`, the list menu does not get `role="listbox"`, which breaks the combobox ARIA contract established by `aria-haspopup="listbox"` on the input. The a11y spec (`bds-select.a11y.spec.ts:49`) explicitly asserts `listMenu.getAttribute('menu-role') === 'listbox'`. The stories should match what the a11y test verifies.
+
+**Action:** Add `menu-role="listbox"` to `bds-list-menu` in `renderSelect`.
+
+---
+
+#### S2. Five stories hardcode `value="option2"` in the template, breaking the `value` Control ❌
+
+```typescript
+// Disabled story — args.value is ignored
+render: args => html`
+  <bds-select value="option2" name="combining-field-attrs">  // ← hardcoded
+```
+
+The same pattern appears in `Error`, `CombiningTextfieldAttributes`, `CombiningListMenuElements`, and `FormIntegration`. In each case the Storybook Controls panel shows a `value` input but changing it has no effect because the template uses a string literal instead of `${args.value}`. The contrast with the `Default` and `Searchable` stories (which correctly use `value=${args.value}`) makes this inconsistency visible to users.
+
+**Action:** Replace all hardcoded `value="option2"` in custom render templates with `value=${args.value}`.
+
+---
+
+#### S3. `Error` story defaults `disabled: true` — misleading showcase ⚠️
+
+```typescript
+export const Error: Story = {
+  args: {
+    disabled: true,  // ← disabled + error is an edge case, not the canonical error story
+    error: true,
+  },
+```
+
+The `Error` story should demonstrate the error validation state on an interactive (enabled) field. Disabled + error is an unusual combination that should be a separate story if needed. The current default makes the primary error visual hard to understand.
+
+**Action:** Set `disabled: false` in `Error` story args.
+
+---
+
+#### S4. `CombiningListMenuElements` uses `checkable` on a single item without `selection-mode="multiple"` ⚠️
+
+```typescript
+<bds-list-menu slot="list">   // ← no selection-mode="multiple"
+  ...
+  <bds-list-menu-item value="option6" checkable>  // ← isolated checkable
+```
+
+`bds-list-menu.basics.spec.ts` (T10) confirms that checkable rendering requires both `checkable="true"` and `selection-mode="multiple"` on the parent `bds-list-menu`. A single item with `checkable` but no parent coordination is undefined behavior and produces inconsistent rendering.
+
+**Action:** Either add `selection-mode="multiple" checkable` to the parent `bds-list-menu`, or remove `checkable` from the single item.
+
+---
+
+#### S5. `meta.args` missing defaults for `disabled` and `error` ⚠️
+
+```typescript
+args: {
+  name: '',
+  value: '',
+  searchable: false,
+  // disabled and error are absent
+},
+```
+
+Both props are declared in `argTypes` but have no default in `meta.args`. The Controls panel will show these as uncontrolled (no initial value) until a story sets them. Add `disabled: false, error: false` to `meta.args` for consistent baseline behavior.
+
+---
+
+#### S6. Story export name typo: `CombiningTexfieldAttributes` ⚠️
+
+`CombiningTexfieldAttributes` is missing the `t` in `Textfield`. This becomes the Storybook navigation label and the URL slug.
+
+**Action:** Rename to `CombiningTextfieldAttributes`.
+
+---
+
+#### S7. `FormIntegration` inline `<script>` is invisible in the Source panel ℹ️
+
+Per project memory (`storybook-js-property-bindings-invisible-in-source-panel.md`), `<script>` tags inside Lit templates are not shown in Storybook's Source panel. Users viewing "Show code" for the FormIntegration story will see the HTML template but not the form submit handler. The MDX should include the handler in a `<script>` code block so it is visible in the docs.
+
+---
+
+### `bds-select.mdx`
+
+#### D1. Code snippet uses `<bds-list-item>` — wrong element name ❌
+
+```html
+<!-- Current — bds-list-item does not exist in this design system -->
+<bds-list-menu slot="list" menu-role="listbox">
+    <bds-list-item value="1">Option 1</bds-list-item>
+    <bds-list-item value="2">Option 2</bds-list-item>
+    <bds-list-item value="3">Option 3</bds-list-item>
+</bds-list-menu>
+
+<!-- Required -->
+<bds-list-menu slot="list" menu-role="listbox">
+    <bds-list-menu-item value="1">Option 1</bds-list-menu-item>
+    <bds-list-menu-item value="2">Option 2</bds-list-menu-item>
+    <bds-list-menu-item value="3">Option 3</bds-list-menu-item>
+</bds-list-menu>
+```
+
+`bds-list-item` is not a registered component in Boreal DS. Any developer who copies this snippet will get a non-functional component with no console error (custom elements silently degrade to `HTMLElement`). This is the most critical correctness issue in the docs.
+
+---
+
+#### D2. "When to use it" references non-existent component names ❌
+
+```mdx
+<!-- Line 54 — wrong component name -->
+Use the `<bds-list-select>` always accompanied by the input component...
+
+<!-- Line 57 — wrong component name -->
+The col-select component is the standard choice for single-option dropdown selection.
+```
+
+Neither `bds-list-select` nor `col-select` exist in Boreal DS. These appear to be copy-paste artefacts from a different design system. Both should read `<bds-select>`.
+
+---
+
+#### D3. Accessibility section is an unfulfilled placeholder ⚠️
+
+```mdx
+{/* TODO: Add accessibility information */}
+The Select component is designed with accessibility in mind...
+```
+
+The TODO comment is present in the published docs. The placeholder text does not mention any specific ARIA roles, keyboard interactions, or screen reader behavior. Given that `bds-select` implements the full ARIA combobox pattern (role=`combobox`, `aria-expanded`, `aria-controls`, `aria-haspopup="listbox"`, `aria-autocomplete`), this section should document:
+
+- **Keyboard navigation:** Arrow keys open/navigate, Enter selects, Escape closes, Home/End jump
+- **ARIA roles in use:** `combobox` on the input, `listbox` on the list, `option` on each item
+- **Screen reader announcement:** what is read on open, on navigate, on select
+
+---
+
+#### D4. `FormIntegration` script handler not shown in the docs ⚠️
+
+The `FormIntegration` story's `<script>` tag (form submit handler, `FormData` extraction) is invisible in the Source panel (per memory constraint S7). The MDX "How to use it" section should include a code block showing the JavaScript needed to wire up form submission:
+
+```js
+const form = document.querySelector('#example-form');
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  console.log(Object.fromEntries(formData.entries()));
+});
+```
 
 ---
 
@@ -195,10 +504,6 @@ export class BdsSelect {
 export class BdsSelect implements ISelect {
 ```
 
-`ISelect` defines the public API contract (value, searchable, name). Without `implements ISelect`, TypeScript enforces nothing: a prop could be removed or its type changed and the build would succeed silently. The `implements` clause is the correct mechanism — the interface is the contract, the class body is the implementation.
-
----
-
 **M9. Indexed access types on `@Prop()` declarations** (`bds-select.tsx:31, 34, 37`)
 
 ```typescript
@@ -213,41 +518,13 @@ export class BdsSelect implements ISelect {
 @Prop() readonly name: string = '';
 ```
 
-Memory topic `stencil-prop-patterns.md` explicitly bans indexed access types (`IFoo['prop']`) on `@Prop()` declarations: _"TypeScript's indexed access types appear to work at editor time but produce an `error`-typed result in the Stencil compiler context. This causes `@typescript-eslint/no-unsafe-assignment` errors on every read of that prop (event emitter calls, JSX attributes, class map values, etc.)."_
-
-The `implements ISelect` clause on the class body (M8) is the correct way to enforce the interface. The prop declaration itself must use the concrete primitive (`string`, `boolean`).
-
----
-
 **M10. `value` prop missing `readonly` keyword** (`bds-select.tsx:31`)
 
-```typescript
-// Current — missing readonly; violates stencil/props-must-be-readonly (error)
-@Prop({ mutable: true, reflect: true }) value: ISelect['value'] = '';
-
-// Required
-@Prop({ mutable: true }) readonly value: string = '';
-```
-
-`readonly` and `mutable: true` are orthogonal (from `stencil-prop-patterns.md`):
-
-- `readonly` prevents **external consumers** from assigning to the prop after initialization.
-- `mutable: true` allows the **component itself** to write `this.value` internally.
-
-Omitting `readonly` violates `stencil/props-must-be-readonly`, which is configured as `'error'` — this will fail the ESLint step of the build. The other two props (`searchable`, `name`) correctly carry `readonly`, making this inconsistency more visible.
-
----
+`readonly` and `mutable: true` are orthogonal. Omitting `readonly` violates `stencil/props-must-be-readonly` (configured as `'error'`) — build-breaking.
 
 **M11. `reflect: true` on `value` is unjustified** (`bds-select.tsx:31`)
 
-`bds-select.scss` contains no CSS attribute selector referencing `value` (e.g. `bds-select[value="..."]`). Per `stencil-prop-patterns.md`: _"Add `reflect: true` only when the prop value is directly referenced by a CSS attribute selector in the component SCSS."_ Reflecting the value adds DOM overhead with no benefit unless a consumer explicitly depends on reading `getAttribute('value')` — which, if intentional, should be documented.
-
-```typescript
-// Remove reflect: true unless a CSS attribute selector is added
-@Prop({ mutable: true }) readonly value: string = '';
-```
-
----
+No CSS attribute selector in `bds-select.scss` references `[value="..."]`. Per `stencil-prop-patterns.md`: add `reflect: true` only when referenced by a CSS attribute selector.
 
 **Corrected declaration (M8–M11 combined):**
 
@@ -264,21 +541,11 @@ export class BdsSelect implements ISelect {
 
 **M1. Memory leak — missing `disconnectedCallback`** (`bds-select.tsx:111–115`)
 
-`addElementListener` registers DOM event listeners on `this.bdsList`, `this.bdsField`, `this.bdsInput`, and `this.bdsPopover` in `componentDidLoad`. There is no `disconnectedCallback` to remove them. If the component is conditionally rendered and destroyed, listeners accumulate on the next mount's children.
-
-Fix: add `disconnectedCallback` calling `removeEventListener` on each registered handler. Requires storing handler references (currently anonymous arrow functions).
+`addElementListener` registers DOM event listeners in `componentDidLoad`. No `disconnectedCallback` removes them. Fix: add `disconnectedCallback` calling `removeEventListener` on each registered handler (requires storing handler references).
 
 **M2. Dead code: `visibleOptions === undefined` guard** (`bds-select.tsx:225`)
 
-```typescript
-updateElementProp(
-  this.bdsList,
-  "empty",
-  visibleOptions === undefined || visibleOptions.length === 0,
-);
-```
-
-`querySelectorAll` always returns a `NodeList`, never `undefined`. The first operand is unreachable. Remove the `=== undefined` check.
+`querySelectorAll` always returns a `NodeList`, never `undefined`. Remove the `=== undefined` check.
 
 **M3. Silent error discard in `loadValue`** (`bds-select.tsx:270`)
 
@@ -286,7 +553,7 @@ updateElementProp(
 .catch(() => {});
 ```
 
-All `setSelectedValues()` failures are silently discarded. At minimum, add `console.warn` in development so failures surface during testing.
+Add at minimum `console.warn` in development.
 
 ---
 
@@ -302,7 +569,7 @@ updateElementProp(this.bdsField, "selectable", !this.searchable);
 
 **M5. Method name typo** (`bds-select.tsx:242`)
 
-`resetChilds` → `resetChildren`. Update JSDoc and all three call sites (`listenField`, `listenPopOver`, `listenListMenu`).
+`resetChilds` → `resetChildren`. Update JSDoc and all three call sites.
 
 **M6. Comment typos** (`bds-select.tsx:54, 142`)
 
@@ -319,39 +586,68 @@ updateElementProp(this.bdsField, "selectable", !this.searchable);
 return this.bdsField.querySelector("input");
 ```
 
-This reaches into `bds-text-field`'s rendered output to find its `<input>`. It works because Stencil defaults to light DOM. If `bds-text-field` ever opts into shadow DOM (`shadow: true`), `querySelector` will return `null` and all ARIA attributes set on the input will silently be dropped.
-
-This is the correct workaround given the current architecture — there is no other mechanism. This fragility should be acknowledged as a known dependency on `bds-text-field` remaining light DOM.
+Works because Stencil defaults to light DOM. If `bds-text-field` ever opts into shadow DOM, `querySelector` returns `null` and ARIA attributes are silently dropped. Known dependency — should be documented.
 
 ---
 
 ## Summary
 
-| Category                       | Status                                        | Count                             |
-| ------------------------------ | --------------------------------------------- | --------------------------------- |
-| Automated: errors (in-scope)   | ⚠️ False positives — see notes                | 1 real (missing-changeset)        |
-| Automated: warnings (in-scope) | ✅ False positive (mutable value on non-FACE) | —                                 |
-| Missing documentation          | ❌ Blocking                                   | Stories + MDX required            |
-| Props / interface contract     | ❌ Blocking (build error)                     | 4 (M8, M9, M10, M11)              |
-| Manual: correctness            | ❌ Should fix                                 | 3 (M1, M2, M3)                    |
-| Manual: code quality           | ⚠️ Non-blocking                               | 3 (M4, M5, M6)                    |
-| Manual: fragility              | ℹ️ Informational                              | 1 (M7)                            |
-| Test coverage                  | ❌ Should fix before merge                    | a11y, events, slots specs missing |
+| Category                                | Status                                           | Count                                               |
+| --------------------------------------- | ------------------------------------------------ | --------------------------------------------------- |
+| Automated: errors (in-scope)            | ⚠️ False positives — see notes                   | 1 real (missing-changeset)                          |
+| Automated: warnings (in-scope)          | ✅ False positive (mutable value on non-FACE)    | —                                                   |
+| Props / interface contract              | ❌ Blocking (build error)                        | 4 (M8, M9, M10, M11)                               |
+| Manual: correctness                     | ❌ Should fix                                    | 3 (M1, M2, M3)                                     |
+| Manual: code quality                    | ⚠️ Non-blocking                                  | 3 (M4, M5, M6)                                     |
+| Manual: fragility                       | ℹ️ Informational                                 | 1 (M7)                                              |
+| Test coverage — spec files present      | ✅ All four types present _(was ❌)_             | basics, a11y, events, slots                         |
+| Test quality — bds-select               | ⚠️ Should fix before merge                       | 5 (T1, T2, T3, T4, T5)                             |
+| Test quality — KeyboardController       | ✅ High quality                                  | 1 note (T6, non-blocking)                           |
+| Test quality — focus/navigation utils   | ✅ Good isolation                                | 1 minor note (T7)                                   |
+| Test quality — bds-list-menu*           | ⚠️ One fragile test (T9)                         | 1 (T9, non-blocking)                               |
+| Stories (`bds-select.stories.ts`)       | ❌ Blocking correctness errors                   | 2 blocking (S1, S2) · 4 non-blocking (S3–S6) · 1 info (S7) |
+| MDX (`bds-select.mdx`)                  | ❌ Blocking correctness errors                   | 2 blocking (D1, D2) · 2 should fix (D3, D4)        |
 
-**Result: 21 passed · 6 checklist failures (4 out-of-scope pre-existing)**
+**Result: 21 component checks passed · 6 checklist failures (4 out-of-scope pre-existing) · 10 test files reviewed · 11 docs findings**
 
 ---
 
 **Blocking before merge:**
 
 1. Fix `@Prop()` declarations: add `implements ISelect`, use concrete primitives, add `readonly` to `value`, remove `reflect: true` (M8–M11) — M10 is a build-breaking ESLint error
-2. Add Storybook stories and MDX (ticket EOA-10544)
-3. Add changeset (`pnpm changeset`)
-4. Fix memory leak (M1) — `disconnectedCallback`
-5. Add `bds-select.a11y.spec.ts`, `bds-select.events.spec.ts`
+2. Fix MDX code snippet: replace `<bds-list-item>` with `<bds-list-menu-item>` (D1)
+3. Fix MDX prose: replace `<bds-list-select>` and `col-select` with `<bds-select>` (D2)
+4. Add `menu-role="listbox"` to `bds-list-menu` in stories `renderSelect` function (S1)
+5. Replace hardcoded `value="option2"` with `${args.value}` in all custom render templates (S2)
+6. Add changeset (`pnpm changeset`)
+7. Fix memory leak (M1) — `disconnectedCallback`
 
-**Recommended (non-blocking):** 6. Remove dead `=== undefined` check (M2) 7. Add console.warn to `.catch` (M3) 8. Fix boolean negation, typos, method name (M4–M6) 9. Merge trivial `bds-select.spec.tsx` into `bds-select.basics.spec.ts`
+**Should fix (docs quality — before merge):**
+
+8. Fill in Accessibility section — ARIA roles, keyboard navigation, screen reader behavior (D3)
+9. Add `FormIntegration` script handler as a code block in MDX (D4)
+10. Set `disabled: false` in `Error` story args (S3)
+11. Fix `CombiningListMenuElements` isolated `checkable` item — add `selection-mode="multiple"` to parent (S4)
+
+**Should fix (test quality — before merge):**
+
+12. Delete `bds-select.spec.tsx` — duplicate render test with missing `BdsListMenuItem` registration (T2)
+13. Add `await waitForChanges()` in basics "Should have input hidden with value" test (T3)
+14. Consolidate event spec imports to `@/utils` barrel (T4)
+15. Add `bdsClear` emission test to events spec (T4)
+16. Remove trivially-true slot assertions; add structural slot behavior test (T5)
+17. Add `aria-expanded="true"` (open state) and `searchable=true` ARIA tests (T1)
+
+**Recommended (non-blocking):**
+
+18. Add `disabled: false, error: false` to `meta.args` (S5)
+19. Rename `CombiningTexfieldAttributes` → `CombiningTextfieldAttributes` (S6)
+20. Remove dead `=== undefined` check (M2)
+21. Add console.warn to `.catch` (M3)
+22. Fix boolean negation, typos, method name (M4–M6)
+23. Refactor `href` navigation test in `bds-list-menu-item.events.spec.ts` to spy on `window.location` (T9)
+24. Clarify `applyRovingTabindex` test intent for `null` vs `!= '0'` tabindex assertion (T7)
 
 ---
 
-_Generated by [review_report_generator.py](.claude/skills/code-reviewer/scripts/review_report_generator.py) + manual enrichment_
+_Generated by [review_report_generator.py](.claude/skills/code-reviewer/scripts/review_report_generator.py) + manual enrichment — updated 2026-05-26 with unit testing review and Storybook documentation review_

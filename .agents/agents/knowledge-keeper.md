@@ -76,6 +76,17 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 **Cross-tool note:** File-based artifacts in `.agents/memory/` work across all tools and contributors. `mcp_memory_add_observations` is Claude Code-specific (MCP) and user-scoped — use it as a supplement, not a replacement.
 
+### Division of responsibility between the two memory systems
+
+This project has two memory stores. **Never write the same content to both** — duplication creates divergence: when one copy is updated (e.g. after a bug is fixed) the other silently becomes stale and will mislead future sessions.
+
+| Content type | Write to | Reasoning |
+|---|---|---|
+| Code patterns, bugs, architecture constraints, component conventions, environment gotchas | `.agents/memory/` **only** | Team-shared, git-tracked, visible to all contributors and tools |
+| Personal workflow preferences, how a specific user wants Claude to respond, user-scoped feedback | Claude Code auto-memory (`~/.claude/projects/…/memory/`) **only** | User-scoped, not meaningful to other contributors |
+
+**Rule of thumb:** if the knowledge would be useful to a new team member or a different machine running the same repo, it belongs in `.agents/memory/`. If it describes how a specific person prefers to work, it belongs in the user-level store.
+
 **Good memory candidates:**
 
 - Environment constraints (e.g. "Turborepo cache breaks when root tsconfig changes")

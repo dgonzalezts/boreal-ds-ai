@@ -12,7 +12,12 @@
       "mcp__plugin_figma_figma__get_metadata",
       "mcp__plugin_figma_figma__get_context_for_code_connect",
       "mcp__plugin_figma_figma__get_variable_defs",
-      "Bash(grep -v \"^---$\")"
+      "Bash(grep -v \"^---$\")",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_navigate"
     ],
     "deny": [
       "Read(./.env)"
