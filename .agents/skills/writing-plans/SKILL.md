@@ -142,7 +142,11 @@ The file table is a living checklist. It gives the implementer full orientation 
 
 **Manual test _(waiveable)_:**
 
-Run: `pnpm dev:components` (or `pnpm storybook`)
+Run: `pnpm dev:components` and validate in `packages/boreal-web-components/src/index.html`.
+
+For meaningful implementation tasks (logic or styling), include task-focused playground examples for validation.
+
+Use `pnpm dev:docs` only for Storybook/MDX tasks (typically the final documentation tasks), not for component implementation tasks before docs exist.
 
 - [ ] Specific thing to verify in the browser or DevTools
 - [ ] Another verification step
@@ -160,6 +164,8 @@ git commit -m "type(scope): TICKET-ID description"
 - Acceptance criteria and behavior descriptions — not code blocks
 - Token names, mixin names, and pattern references by name (not by example)
 - Every implementation task has a manual test section
+- For pre-documentation tasks, manual tests must use `pnpm dev:components` + `packages/boreal-web-components/src/index.html`; reserve `pnpm dev:docs` for Storybook/MDX validation tasks.
+- Add playground examples only for tasks that change logic or styling, keep them scoped to the task, and remove them after validation.
 - Unit test tasks describe behaviors to cover, not how to write the tests
 - Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
 - DRY, YAGNI, TDD, frequent commits per task

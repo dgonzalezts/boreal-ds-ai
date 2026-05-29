@@ -12,29 +12,29 @@
 
 ## Files to create / modify
 
-| File | Notes |
-| ---- | ----- |
-| `packages/boreal-web-components/src/utils/form/field-form-association.ts` | New — `useFormField<T>()` factory, `IFormFieldHost<T>` interface |
-| `packages/boreal-web-components/src/utils/form/index.ts` | Modify — add `export * from './field-form-association'` |
-| `packages/boreal-web-components/src/components/forms/_shared/_form-field-shell.scss` | New — shared SCSS partial: container shell, focus ring, error/disabled/plain/outline states |
-| `packages/boreal-web-components/src/components/forms/common/form-field-types.ts` | New — `FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING` enums, `FieldVariant`, `FieldValidationTiming` types, `IFormFieldProps` interface |
-| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx` | New — `renderFieldLabel`, `renderFieldFooter`, `deriveFieldRenderState` |
-| `packages/boreal-web-components/src/components/forms/common/index.ts` | New — barrel export for `common/` |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/ITagField.ts` | New — extends `IFormFieldProps`, declares only 6 tag-specific props |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/enum.ts` | New — re-exports `FIELD_VARIANTS as TAG_FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING as TAG_FIELD_VALIDATION_TIMING` from `common/` |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/types.ts` | New — type aliases `TagFieldVariant = FieldVariant`, `TagFieldValidationTiming = FieldValidationTiming` |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/index.ts` | New — types barrel |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx` | New — component implementation |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.scss` | New — component styles |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-basics.spec.ts` | New — rendering and tag management tests |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-events.spec.ts` | New — event emission tests |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-keyboard.spec.ts` | New — keyboard interaction tests |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-validation.spec.ts` | New — built-in and custom validator tests |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-form.spec.ts` | New — FACE lifecycle tests |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-a11y.spec.ts` | New — accessibility attribute tests |
-| `packages/boreal-web-components/targets/vue-output-target.ts` | Modify — add `bds-tag-field` to `componentModels` |
-| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.stories.ts` | New — Storybook stories |
-| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.mdx` | New — MDX documentation page |
+| File                                                                                                          | Notes                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/boreal-web-components/src/utils/form/field-form-association.ts`                                     | New — `useFormField<T>()` factory, `IFormFieldHost<T>` interface                                                                    |
+| `packages/boreal-web-components/src/utils/form/index.ts`                                                      | Modify — add `export * from './field-form-association'`                                                                             |
+| `packages/boreal-web-components/src/components/forms/_shared/_form-field-shell.scss`                          | New — shared SCSS partial: container shell, focus ring, error/disabled/plain/outline states                                         |
+| `packages/boreal-web-components/src/components/forms/common/form-field-types.ts`                              | New — `FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING` enums, `FieldVariant`, `FieldValidationTiming` types, `IFormFieldProps` interface |
+| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`                             | New — `renderFieldLabel`, `renderFieldFooter`, `deriveFieldRenderState`                                                             |
+| `packages/boreal-web-components/src/components/forms/common/index.ts`                                         | New — barrel export for `common/`                                                                                                   |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/ITagField.ts`                        | New — extends `IFormFieldProps`, declares only 6 tag-specific props                                                                 |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/enum.ts`                             | New — re-exports `FIELD_VARIANTS as TAG_FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING as TAG_FIELD_VALIDATION_TIMING` from `common/`    |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/types.ts`                            | New — type aliases `TagFieldVariant = FieldVariant`, `TagFieldValidationTiming = FieldValidationTiming`                             |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/index.ts`                            | New — types barrel                                                                                                                  |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx`                         | New — component implementation                                                                                                      |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.scss`                        | New — component styles                                                                                                              |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-basics.spec.ts`     | New — rendering and tag management tests                                                                                            |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-events.spec.ts`     | New — event emission tests                                                                                                          |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-keyboard.spec.ts`   | New — keyboard interaction tests                                                                                                    |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-validation.spec.ts` | New — built-in and custom validator tests                                                                                           |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-form.spec.ts`       | New — FACE lifecycle tests                                                                                                          |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-a11y.spec.ts`       | New — accessibility attribute tests                                                                                                 |
+| `packages/boreal-web-components/targets/vue-output-target.ts`                                                 | Modify — add `bds-tag-field` to `componentModels`                                                                                   |
+| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.stories.ts`                                   | New — Storybook stories                                                                                                             |
+| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.mdx`                                          | New — MDX documentation page                                                                                                        |
 
 ---
 
@@ -110,7 +110,7 @@ git commit -m "feat(web-components): EOA-13695 add useFormField generic form-fie
 - Provides modifier rules for: `--focused` (focus ring color + border color), `--error` (danger border + focus ring), `--disabled` (disabled background + pointer-events none), `--plain` (transparent border at rest, visible on focus), `--readonly` (transparent background, no border).
 - Provides footer layout rules: flex row, gap between helper text and counter.
 - Uses only `$boreal-*` tokens — zero hardcoded color, size, or spacing values.
-- File begins with `//` SCSS comment block describing its consumers. No `@use` of the token package (tokens are globally injected via `injectGlobalPaths`; adding `@use` causes a double-import Sass error — see `.agents/memory/stencil-sass-inject-global-paths-constraint.md`).
+- File starts directly with `@use '@telesign/boreal-style-guidelines/dist/stencil/_index' as *;` and `@use '../../../styles/_interactions' as *;` — no leading comment block. SCSS partials accessed via `@use` from component SCSS exist in their own Sass module scope; they do NOT inherit `injectGlobalPaths` globals and must declare their own imports. Component SCSS files (like `bds-tag-field.scss`) must NOT add an additional `@use` of the token package — see `.agents/memory/stencil-sass-inject-global-paths-constraint.md`.
 
 **Unit tests to cover** _(no spec file — visual regression caught by manual test and Chromatic)_:
 
@@ -205,14 +205,14 @@ git commit -m "feat(web-components): EOA-13695 add shared form field render help
   - `export type TagFieldValidationTiming = FieldValidationTiming`
 - `ITagField.ts` exports `ITagField` that **extends `IFormFieldProps`** (imported from `../../common`) and declares **only the 6 tag-field-specific props**. Follow the naming convention from `ITextField.ts` (`ITagField`, not `IBdsTagField`):
 
-  | Prop | Type | Default | Reflect |
-  |------|------|---------|---------|
-  | `values` | `string[]` | `[]` | no |
-  | `allowDuplicates` | `boolean` | `false` | no |
-  | `maxTags` | `number` | `0` | no |
-  | `maxVisibleTags` | `number` | `0` | no |
-  | `maxTagLength` | `number` | `0` | no |
-  | `tagColor` | `TagColor` | `'gray'` | no |
+  | Prop              | Type       | Default  | Reflect |
+  | ----------------- | ---------- | -------- | ------- |
+  | `values`          | `string[]` | `[]`     | no      |
+  | `allowDuplicates` | `boolean`  | `false`  | no      |
+  | `maxTags`         | `number`   | `0`      | no      |
+  | `maxVisibleTags`  | `number`   | `0`      | no      |
+  | `maxTagLength`    | `number`   | `0`      | no      |
+  | `tagColor`        | `TagColor` | `'gray'` | no      |
 
   The 15 shared props (`name`, `disabled`, `required`, `error`, `errorMessage`, `label`, `helperText`, `info`, `placeholder`, `variant`, `clearable`, `customValidators`, `validationTiming`, `customWidth`) are **inherited from `IFormFieldProps`** — do not redeclare them.
 
@@ -260,9 +260,10 @@ git commit -m "feat(web-components): EOA-13695 add bds-tag-field type definition
 
 **Manual test:**
 
-Run: `pnpm dev:docs` from monorepo root (restart required — Stencil does not hot-reload).
+Run: `pnpm dev:components` from monorepo root, then use `packages/boreal-web-components/src/index.html` as the playground (restart required — Stencil does not hot-reload).
 
-- [ ] `bds-tag-field` element is registered and renders without console errors.
+- [ ] Add `<bds-tag-field></bds-tag-field>` inside the `<body>` of `packages/boreal-web-components/src/index.html`.
+- [ ] Open the playground page and verify `bds-tag-field` is registered and renders without console errors.
 - [ ] No TypeScript compilation errors in the terminal.
 
 **Commit:**
@@ -326,8 +327,9 @@ git commit -m "feat(web-components): EOA-13695 scaffold bds-tag-field with props
 
 **Manual test:**
 
-Run: `pnpm dev:docs`.
+Run: `pnpm dev:components` and validate in `packages/boreal-web-components/src/index.html`.
 
+- [ ] Update the playground markup to include one `<bds-tag-field>` instance and interact with it in the browser.
 - [ ] No new console errors after this change.
 - [ ] `pnpm --filter boreal-web-components tsc --noEmit` passes.
 
@@ -363,7 +365,9 @@ git commit -m "feat(web-components): EOA-13695 implement bds-tag-field lifecycle
 
 **Manual test:**
 
-Run: `pnpm dev:docs`.
+Run: `pnpm dev:components` and validate in `packages/boreal-web-components/src/index.html`.
+
+- [ ] In the playground, set complex props via script or browser console when needed (for example: `values`, `maxTags`, `maxVisibleTags`) to validate overflow and counter scenarios.
 
 - [ ] Empty field renders with label, empty container, placeholder text.
 - [ ] Typing a value and pressing Enter adds a tag chip; input clears.
@@ -389,12 +393,25 @@ git commit -m "feat(web-components): EOA-13695 implement bds-tag-field full rend
 
 **Acceptance criteria:**
 
-- Class-level JSDoc block covers: `@summary`, `@slot` (none for this component), `@attr` for all reflected props, `@property` for all non-reflected props, `@fires` for all events, `@cssprop --bds-tag-field-width`.
-- Every `@Prop()` has a single-line JSDoc.
-- Every `@Event()` has a single-line JSDoc describing when it fires.
-- Every `@Method()` has a JSDoc describing what it returns and any side effects.
-- JSDoc for `values` notes that the form value is serialised as `JSON.stringify(values)` because `ElementInternals.setFormValue()` accepts only `string | FormData | null`.
+- Class-level JSDoc block:
+  - **Component description**: The first paragraph describes the component's purpose and behavior, concise and clear.
+  - **@slot tags**: Only if the component exposes slots (none for this component, so omit).
+  - **No** `@attr`, `@property`, `@fires`, `@summary`, `@cssprop`, or `@method` tags at the class level (per Boreal JSDoc template).
+- Every `@Prop()` has a single-line JSDoc (`/** ... */`) directly above the decorator, describing the prop's purpose. This is required for all props, including reflected and non-reflected.
+- Every `@Event()` has a single-line JSDoc describing when it fires, placed directly above the decorator.
+- Every `@Method()` has a JSDoc describing what it does, what it returns, and any side effects, placed directly above the method.
+- JSDoc for the `values` prop must note that the form value is serialized as `JSON.stringify(values)` because `ElementInternals.setFormValue()` only accepts `string | FormData | null`.
 - No inline `//` comments anywhere in the file.
+
+**Manual test _(waiveable)_:**
+
+- [ ] `pnpm --filter boreal-web-components tsc --noEmit` passes with no new errors.
+
+**Commit:**
+
+```bash
+git commit -m "docs(web-components): EOA-13695 complete bds-tag-field JSDoc"
+```
 
 **Manual test _(waiveable)_:**
 
@@ -416,8 +433,8 @@ git commit -m "docs(web-components): EOA-13695 complete bds-tag-field JSDoc"
 
 **Acceptance criteria:**
 
-- File starts directly with the `:host` / `.bds-tag-field` selector block — no `@use` of the token package (tokens are globally injected via `injectGlobalPaths`).
-- Uses `@use '../_shared/form-field-shell'` (or `@include` the mixin/placeholder from it) to inherit container, focus ring, error/disabled/plain/outline variant rules. Do not duplicate those rules locally.
+- File starts with `@use '../_shared/form-field-shell' as *;` then `@include form-field-shell('bds-tag-field');`. No `@use` of the token package directly — tokens come via injectGlobalPaths. No leading comment block.
+- The `@use` of the shared partial pulls in the container, focus ring, error/disabled/plain/outline variant rules. Do not duplicate those rules locally.
 - Container (`.bds-tag-field__container`): `display: flex`, `flex-wrap: nowrap`, `overflow: hidden`, `align-items: center`, `gap: $boreal-spacing-2xs`, `padding: $boreal-spacing-1xs`, `min-height: $boreal-layout-l` (not fixed height — min-height allows the container to match text-field height when empty while staying single-row).
 - Input (`.bds-tag-field__control`): `min-width: 80px`, `flex: 1`, `border: none`, `outline: none`, `background: transparent`, `font-size: $boreal-typography-font-size-sm`, `font-weight: $boreal-typography-font-weight-regular`, `line-height: $boreal-typography-line-height-sm`.
 - Actions (`.bds-tag-field__actions`): `display: flex`, `align-items: center`, `gap: $boreal-spacing-3xs`, `margin-left: auto`, `flex-shrink: 0`.
@@ -427,12 +444,12 @@ git commit -m "docs(web-components): EOA-13695 complete bds-tag-field JSDoc"
 
 **Manual test:**
 
-Run: `pnpm dev:docs`.
+Run: `pnpm dev:components` and validate in `packages/boreal-web-components/src/index.html`.
 
 - [ ] `outline` variant: border visible at rest, blue focus ring on focus, red border in error state, dimmed background when disabled.
 - [ ] `plain` variant: no border at rest, border and focus ring on focus.
 - [ ] Tags and input sit on a single row; container does not grow vertically when overflow tags are present.
-- [ ] `bds-text-field` stories are visually unchanged (regression check — the SCSS partial is new, text-field is untouched).
+- [ ] Side-by-side playground check confirms `bds-text-field` remains visually unchanged (regression check — the SCSS partial is new, text-field is untouched).
 
 **Commit:**
 
