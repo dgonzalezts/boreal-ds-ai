@@ -15,6 +15,7 @@
 | [EOA-12334-bds-radio-button.md](./EOA-12334-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
 | [EOA-12334-bds-radio.md](./EOA-12334-bds-radio.md) | done | bds-radio + bds-radio-group Implementation Plan |
 | [EOA-12342-bds-checkbox-button.md](./EOA-12342-bds-checkbox-button.md) | done | bds-checkbox-button Implementation Plan |
+| [EOA-13695-bds-tag-field.md](./EOA-13695-bds-tag-field.md) | pending | `bds-tag-field` Implementation Plan |
 | [first-alpha-release.md](./first-alpha-release.md) | done | First Alpha Release — Boreal DS |
 | [generator-extension-strategy.md](./generator-extension-strategy.md) | pending | Generator Extension Strategy: Cross-Package Component Scaffolding |
 | [icons-strategy.md](./icons-strategy.md) | in | Boreal Icons Strategy & Implementation Plan |

@@ -56,18 +56,19 @@ Tasks follow the natural development order within each component. The reference 
 
 **Key invariant:** every task must be independently committable and have a manual test that can pass before the next task begins. Never merge two steps if the result of the first cannot be manually verified on its own.
 
-## Existing Utility Reuse Gate (Mandatory)
+## Existing Utility and Type Reuse Gate (Mandatory)
 
-Before planning any new behavior, verify whether the codebase already provides a reusable utility, helper, mixin, hook, or service for that behavior.
+Before planning any new behavior or type, verify whether the codebase already provides a reusable utility, helper, mixin, type definition, hook, or service for that concern.
 
-- Always perform a utility discovery step for each feature area (for example: navigation, focus, validation, formatting, selection state, event handling).
-- Prefer existing shared utilities over component-local implementations.
-- Do not plan duplicate logic if an equivalent shared abstraction already exists.
-- If an existing utility is found, the task acceptance criteria must explicitly require integration with that utility.
-- If no utility is found, document the search result and justify the new implementation.
-- If a utility exists but is insufficient, require:
+- Always perform a discovery step for each feature area (for example: navigation, focus, validation, formatting, selection state, event handling, or type definitions).
+- For types, always check the shared type definitions directory (e.g. `src/types/`) before introducing new enums, unions, or interfaces.
+- Prefer existing shared utilities and types over component-local implementations.
+- Do not plan duplicate logic or types if an equivalent shared abstraction already exists.
+- If an existing utility or type is found, the task acceptance criteria must explicitly require integration with that resource.
+- If no utility or type is found, document the search result and justify the new implementation.
+- If a utility or type exists but is insufficient, require:
   - a gap description
-  - a plan to extend the shared utility first
+  - a plan to extend the shared resource first
   - a migration step so component-level temporary logic is removed
 
 ## Utility Discovery Checklist
