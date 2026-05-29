@@ -22,8 +22,18 @@ trap 'git -C "$root" worktree remove --force "$wt" 2>/dev/null || true' EXIT
 
 git -C "$root" worktree add "$wt" ai-config
 
+targets=(
+  .claude
+  .github
+  .agents
+  .cursor
+  .rtk
+  ai-docs
+  ai-work
+  CLAUDE.md
+)
 
-for d in .claude .github .agents .cursor ai-docs ai-work; do
+for d in "${targets[@]}"; do
   if [[ -e "$root/$d" ]]; then
     rsync -a --delete --links "$root/$d" "$wt/"
   else
@@ -36,7 +46,7 @@ if [[ -x "$root/.agents/scripts/sync-indexes.sh" ]]; then
   bash "$root/.agents/scripts/sync-indexes.sh" "$wt"
 fi
 
-git -C "$wt" add -f .claude .github .agents .cursor ai-docs ai-work
+git -C "$wt" add -f "${targets[@]}"
 
 if git -C "$wt" diff --cached --quiet; then
   printf "aisync: nothing changed, skipping commit and push\n"
