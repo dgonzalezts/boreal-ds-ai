@@ -1,37 +1,19 @@
 # PR Title
 
-feat(boreal-styleguidelines): EOA-13638 add depth token pipeline with shadow assembler
+feat(web-components): EOA-13695 add bds-tag-field component
 
 ---
 
 # PR Body
 
-Adds a `depth` group to `primitives.json` and a shadow assembly layer to the token
-generator, so composite `box-shadow` CSS shorthands are produced automatically from
-Figma-native decomposed sub-tokens rather than being hardcoded in component SCSS.
+Adds `bds-tag-field`, a form-associated web component that lets users enter and manage multiple discrete string values as removable chips, with built-in validation, keyboard accessibility, and full framework integration.
 
-The design system previously had no token-driven shadow values. Component SCSS files
-hardcoded `rgba(19, 19, 22, 0.15)` and passed hex colors as arguments to SCSS functions
-in `_interactions.scss`, meaning shadow colors were never theme-aware and could not be
-updated centrally. This PR replaces that approach with 14 assembled `depth-box-shadow-*`
-tokens emitted per theme, using each theme's `black` value (auto-derived as `black-rgb`)
-to drive shadow color, and `white` and `focus` for the focus ring.
+The component is a FACE (Form-Associated Custom Element) built on `formAssociatedMixin`. It serialises its `string[]` value as JSON for native form submission, supports constraint validation (`required`, `maxTags`), and exposes `checkValidity()` / `reportValidity()` methods. Tag entry is confirmed via Enter or comma; the last tag can be removed with Backspace when the input is empty. An overflow chip (`+N`) collapses tags beyond `maxVisibleTags`. The `clearable` prop shows a clear-all button when tags are present.
 
-A key constraint discovered during implementation: depth composites reference
-`--boreal-black-rgb`, `--boreal-white`, and `--boreal-focus`, which are theme-scoped
-and only resolve inside `[data-theme]` blocks. Placing composites in `:root` caused
-CSS custom property resolution failures in the browser. Composites are therefore emitted
-per-theme only, never in the primitives pass. The `assembleShadowTokens` method accepts
-a `mode` parameter (`"css"` | `"scss"`) so each output layer uses its own variable
-syntax — CSS generators emit `rgba(var(--boreal-black-rgb), 0.15)` while SCSS generators
-emit `rgba($boreal-black-rgb, 0.15)` for consistency with the surrounding token files.
+This PR also introduces shared form-field infrastructure reused across all field components in this category: `useFormField` (validation lifecycle utility), shared render helpers (`renderFieldLabel`, `renderFieldFooter`, `renderFieldSublabel`, `renderFieldActions`), a shared SCSS partial (`_field-shell.scss`), and the `KeyboardController` utility — a fluent, type-safe API for registering key bindings on any element. `bds-tag-field` is registered in `vue-output-target.ts` `componentModels` to support Vue `v-model` two-way binding.
 
-The `_interactions.scss` migration also required `@use '@telesign/boreal-style-guidelines/dist/stencil/_index' as *`
-at the top of the partial. Stencil's `injectGlobalPaths` compiles each injected file
-standalone before prepending it to component SCSS, so `$boreal-*` variables are not in
-scope from other injected files unless explicitly imported. This follows the pattern
-established by `_selectable-button.scss` on the checkbox-button branch.
+The `KeyboardController` replaces ad-hoc `@Listen` / `addEventListener` patterns for key handling in this and future components. It manages its own listener lifecycle and is unit-tested independently.
 
-Also touches `packages/boreal-web-components` (11 component SCSS files + `_interactions.scss`).
+Reviewers should pay close attention to the `handleFocusOut` / `handleFocus` pair: focus management in a composite control (container + multiple chip buttons + input) requires a `requestAnimationFrame` guard to distinguish intra-component focus moves from genuine blur events. The `effectiveMaxVisible` logic also has a deliberate precedence — `maxVisibleTags` > `maxTags - 1` > full list — which differs from what a literal reading of the prop docs might suggest.
 
-Refs EOA-13638
+Refs EOA-13695

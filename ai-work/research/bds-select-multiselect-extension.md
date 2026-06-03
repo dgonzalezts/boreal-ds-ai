@@ -91,6 +91,43 @@ Dropdown **stays open** after each selection — closing only on Escape, click-o
 
 ---
 
+## Suffix slot: injection architecture
+
+Both `bds-text-field` and `bds-tag-field` expose a `<slot name="suffix">` as a **sibling to the actions div** inside the field container:
+
+```
+[prefix] [sublabel] [control input] [slot="suffix"] [actions: clear / iconRight]
+```
+
+The slot is always present in the render tree independently of whether any system action buttons are active. This means `bds-select` can safely inject into it at any time — including when `clearable=false` and `iconRight=''` (the loading state) — without needing to keep the actions div alive.
+
+### What the suffix slot holds
+
+| Field | Badge in suffix | Spinner in suffix |
+|---|---|---|
+| `bds-text-field` (single select) | Never — a count badge has no meaning for a single selection | Yes — async autocomplete loading |
+| `bds-tag-field` (multiselect) | Yes — selected items count (independent of loading state) | Yes — async options loading |
+
+Badge and spinner are **independent, not mutually exclusive**. A user can have 3 items already selected (badge = "3") while the dropdown options are still being fetched (spinner visible). Both conditions are true at the same time: badge reflects selection state, spinner reflects fetch state.
+
+### Injection model
+
+`bds-select` injects a single wrapper element into the suffix slot and manages badge and spinner as independent children:
+
+```html
+<!-- injected by bds-select into bds-tag-field's suffix slot -->
+<span slot="suffix" class="bds-select__suffix">
+  <span class="bds-select__badge">3</span>   <!-- shown when badge !== '' -->
+  <span class="bds-select__spinner"></span>   <!-- shown when loading=true -->
+</span>
+```
+
+`@Watch('badge')` and `@Watch('loading')` manage each child's visibility independently. The slot itself is a generic projection point — it has no knowledge of the wrapper's contents.
+
+For single-select (`bds-text-field`), the same wrapper is used but the badge child is never populated; only the spinner is relevant.
+
+---
+
 ## Internal wiring changes needed in `bds-select`
 
 The `multiselect` boolean prop on `bds-select` is still needed — not to drive UI, but to signal which **event contract** to operate under. The changes are surgical.
@@ -166,6 +203,55 @@ The serialisation strategy for multiselect should be decided at the multiselect 
 - `bds-tag-field` free-text mode vs. selection-only mode (for use inside `bds-select`, free-text entry should probably be disabled; a `freeText: boolean` prop may be needed).
 - Keyboard navigation within the open multiselect dropdown (arrow keys between checkable items).
 - "Select all / clear all" affordance inside the list.
+
+---
+
+## Usage guidance and misuse prevention
+
+The slot-based architecture delegates field type selection to the consumer. This creates a risk: pairing `bds-text-field` with `multiselect`, or `bds-tag-field` without it. Three mitigations address this.
+
+### 1. Dev-time console warning
+
+In `bds-select.tsx` `componentDidLoad`, validate that the slotted field matches the `multiselect` prop:
+
+```typescript
+componentDidLoad() {
+  const field = this.bdsField;
+  if (this.multiselect && field?.tagName === 'BDS-TEXT-FIELD') {
+    console.warn('[bds-select] multiselect=true requires <bds-tag-field> in slot="field", not <bds-text-field>.');
+  }
+  if (!this.multiselect && field?.tagName === 'BDS-TAG-FIELD') {
+    console.warn('[bds-select] multiselect=false (default) requires <bds-text-field> in slot="field", not <bds-tag-field>.');
+  }
+  // ... rest of componentDidLoad
+}
+```
+
+This fires at development time, catches misuse immediately, and has zero production cost.
+
+### 2. Storybook documentation
+
+Provide two clearly separated story variants with MDX callouts:
+
+- `Default` — `bds-text-field` in `slot="field"`, no `multiselect`
+- `Multiselect` — `bds-tag-field` in `slot="field"`, `multiselect` set
+
+Include a pairing rule admonition in the MDX docs:
+
+> **Note:** Always pair `bds-text-field` with `<bds-select>` and `bds-tag-field` with `<bds-select multiselect>`. Mixing field types produces incorrect event behavior and will log a console warning in development.
+
+### 3. JSDoc `@slot` annotation on `bds-select`
+
+Document the valid field types on the `slot="field"` entry in the component class JSDoc:
+
+```typescript
+/**
+ * @slot field - The trigger field component. Use `<bds-text-field>` for single select
+ *   and `<bds-tag-field>` for multiselect. Must match the `multiselect` prop.
+ * @slot list - The option list. Use `<bds-list-menu>` with `<bds-list-menu-item>` elements.
+ *   Add `checkable` to list items when using multiselect.
+ */
+```
 
 ---
 

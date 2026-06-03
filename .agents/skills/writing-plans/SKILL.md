@@ -116,7 +116,7 @@ The file table is a living checklist. It gives the implementer full orientation 
 
 ## Task Structure
 
-````markdown
+```markdown
 ### Task N: [Deliverable Layer Name]
 
 **Files:**
@@ -142,15 +142,20 @@ The file table is a living checklist. It gives the implementer full orientation 
 
 **Manual test _(waiveable)_:**
 
-Run: `pnpm dev:components` and validate in `packages/boreal-web-components/src/index.html`.
+For logic or styling tasks, first list the playground scenarios to implement in `packages/boreal-web-components/src/index.html`. Each entry is a short description — no code, no markup:
 
-For meaningful implementation tasks (logic or styling), include task-focused playground examples for validation.
+- Scenario 1: [component/state to render and what to set up]
+- Scenario 2: [interaction to test]
+- ...
+
+Then provide the validation checklist. Run: `pnpm dev:components` and validate each scenario:
+
+- [ ] Given <initial state>, when <user action>, then <expected result>. Pass: <observable outcome>.
+
+For non-visual tasks (types/utilities/docs-only), skip playground scenarios and validate with compiler/tests only.
 
 Use `pnpm dev:docs` only for Storybook/MDX tasks (typically the final documentation tasks), not for component implementation tasks before docs exist.
-
-- [ ] Specific thing to verify in the browser or DevTools
-- [ ] Another verification step
-- [ ] Pass/fail criterion stated explicitly
+```
 
 **Commit:**
 
@@ -165,7 +170,9 @@ git commit -m "type(scope): TICKET-ID description"
 - Token names, mixin names, and pattern references by name (not by example)
 - Every implementation task has a manual test section
 - For pre-documentation tasks, manual tests must use `pnpm dev:components` + `packages/boreal-web-components/src/index.html`; reserve `pnpm dev:docs` for Storybook/MDX validation tasks.
-- Add playground examples only for tasks that change logic or styling, keep them scoped to the task, and remove them after validation.
+- Keep manual tests scoped to the current task only
+- Prefer the smallest set of scenarios that proves behavior
+- Do not include implementation details in the plan
 - Unit test tasks describe behaviors to cover, not how to write the tests
 - Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
 - DRY, YAGNI, TDD, frequent commits per task
@@ -196,4 +203,3 @@ After saving the plan, offer execution choice:
 ```
 
 ```
-````
