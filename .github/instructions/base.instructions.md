@@ -1,0 +1,1 @@
+../../ai-docs/docs/base.instructions.md

@@ -1,0 +1,1 @@
+../../ai-docs/docs/security.instructions.md

@@ -154,15 +154,32 @@ The suffix slot is positioned as a **sibling to the actions div**, placed in the
 
 Add to `packages/boreal-web-components/src/index.html`:
 
-- Scenario A: `<bds-text-field label="No actions">` — field with no clearable, no password, no iconRight
-- Scenario B: `<bds-text-field label="With suffix + clearable" clearable value="hello">` with a `<span slot="suffix" style="font-size:12px;padding:2px 6px;background:#eee;border-radius:4px">0</span>` child
+- Scenario A: `<bds-text-field label="No actions">` — no clearable, no password, no iconRight
+- Scenario B: `<bds-text-field label="With suffix + clearable" clearable value="hello">` with a `<span slot="suffix">0</span>` child
+- Scenario C: `<bds-text-field label="Prefix slot" placeholder="Type here">` with a `<span slot="prefix">@</span>` child
+- Scenario D: `<bds-text-field label="Sublabel + icon" icon="bds-icon-settings" sublabel="USD">`
+- Scenario E: `<bds-text-field label="Password toggle" type="password" value="secret">` with a `<span slot="suffix">lock</span>` child
+- Scenario F: `<bds-text-field label="iconRight" icon-right="bds-icon-chevron-down" selectable value="Option 1">`
+- Scenario G: `<bds-text-field label="Counter" counter char-count="120" helper-text="...">`
+- Scenario H: `<bds-text-field label="Error state" error error-message="..." helper-text="..." value="bad value">`
+- Scenario I: `<bds-text-field label="Suffix + password" type="password" value="secret">` with a `<span slot="suffix">safe</span>` child
+- Scenario J: `<bds-text-field label="Suffix + iconRight" icon-right="bds-icon-chevron-down" selectable value="Combo">` with a `<span slot="suffix">3</span>` child
 
 Validation checklist (`pnpm dev:components`):
 
-- [ ] Scenario A: field renders normally; no actions div in the DOM (conditional behavior preserved — no buttons active)
-- [ ] Scenario B: the "0" badge appears **to the left of** the clear (×) button — badge is in the suffix slot sibling, clear is in the actions div
-- [ ] Scenario B: clearing the input hides the clear button (actions div may disappear); the badge remains visible in the suffix slot
-- [ ] No console errors or Stencil slot warnings in either scenario
+- [ ] Scenario A: field renders normally; no `bds-text-field__actions` div in the DOM (DevTools → Elements)
+- [ ] Scenario B: badge appears **to the left of** the × button; clearing hides the × but the badge remains
+- [ ] Scenario C: `@` prefix content appears inside the container, before the input
+- [ ] Scenario D: settings icon + "USD" sublabel appear to the left of the input inside the container
+- [ ] Scenario E: eye-toggle button inside the actions div; clicking it toggles the input type; "lock" badge is a sibling to the actions div (not inside it)
+- [ ] Scenario F: chevron icon in actions div; pointer cursor in the input (selectable)
+- [ ] Scenario G: footer shows `0/120`, counter increments as you type; inspect element — counter is `bds-typography.bds-text-field__char-count`, **not** a plain `<span>`
+- [ ] Scenario H: red border; error message shown in footer; helper text hidden; label tinted error color
+- [ ] Scenario I: "safe" badge left of the eye-toggle; both visible and independent
+- [ ] Scenario J: "3" badge left of the chevron; both visible and independent
+- [ ] No console errors or Stencil slot warnings in any scenario
+- [ ] DevTools: `<slot name="suffix">` placeholder present in DOM for Scenarios A, D, F (no suffix content slotted — slot element still exists)
+- [ ] DevTools: no `<em>` elements anywhere in the rendered output — only `<i aria-hidden="true">`
 
 **Commit:**
 
@@ -204,11 +221,21 @@ git commit -m "refactor(web-components): EOA-13696 migrate bds-text-field render
 
 **Manual test:**
 
-Use Scenario B from Task 3 (`pnpm dev:components`):
+Add to `packages/boreal-web-components/src/index.html`:
 
-- [ ] Type in the field, blur → validation runs and helper text shows if `required` and value is empty
-- [ ] Submit a parent `<form>` → `invalid` event fires; validation error state shown
-- [ ] Reset parent `<form>` → field clears, error state gone, counter resets
+- Scenario K: `<form>` wrapping a `<bds-text-field required label="Required field">` with Submit + Reset buttons
+- Scenario L: `<bds-text-field required min-length="5" validation-timing="input" label="Validate on input">` — validation fires on every keystroke; tests both `valueMissing` (empty) and `tooShort` (< 5 chars) in real time
+- Scenario M: `<bds-text-field min-length="5" label="Min 5 chars">` — validation fires on blur
+- Scenario N: `<bds-text-field counter char-count="20" label="Counter + form reset">` inside a `<form>` with a Reset button
+
+Validation checklist (`pnpm dev:components`):
+
+- [ ] Scenario K: blur an empty required field → error state shown with validation message; fill the field → error clears
+- [ ] Scenario K: click Submit → `invalid` event fires, error state shown
+- [ ] Scenario K: click Reset → field clears, error state gone, value reverts to empty
+- [ ] Scenario L: type a character then delete it → error appears immediately on each keystroke (validation-timing="input"); field is empty → valueMissing error
+- [ ] Scenario M: type 3 chars and blur → `tooShort` validation error; type 5+ chars and blur → error clears
+- [ ] Scenario N: type text, then click Reset → counter resets to `0/20`, field clears, no error state
 
 **Commit:**
 

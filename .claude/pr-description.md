@@ -1,19 +1,19 @@
 # PR Title
 
-feat(web-components): EOA-13695 add bds-tag-field component
+refactor(web-components): EOA-14257 migrate bds-text-field to shared form-field infrastructure
 
 ---
 
 # PR Body
 
-Adds `bds-tag-field`, a form-associated web component that lets users enter and manage multiple discrete string values as removable chips, with built-in validation, keyboard accessibility, and full framework integration.
+Refactor `bds-text-field` to consume the shared form-field render helpers, SCSS mixins, and the `useFormField` lifecycle helper, reducing the component's bespoke surface and aligning it with the rest of the form stack.
 
-The component is a FACE (Form-Associated Custom Element) built on `formAssociatedMixin`. It serialises its `string[]` value as JSON for native form submission, supports constraint validation (`required`, `maxTags`), and exposes `checkValidity()` / `reportValidity()` methods. Tag entry is confirmed via Enter or comma; the last tag can be removed with Backspace when the input is empty. An overflow chip (`+N`) collapses tags beyond `maxVisibleTags`. The `clearable` prop shows a clear-all button when tags are present.
+The component previously held its own copies of label, sublabel, footer, and counter rendering logic. These are now delegated to `renderFieldLabel`, `renderFieldSublabel`, `renderFieldFooter`, and `deriveFieldRenderState` from `@/components/forms/common`. The SCSS has been trimmed accordingly by pulling shared interaction and layout patterns from `_interactions.scss` — component-specific rules only remain. The `ITextField` interface and `enum.ts` types were thinned to remove entries already covered by the shared `IFormFieldProps` contract.
 
-This PR also introduces shared form-field infrastructure reused across all field components in this category: `useFormField` (validation lifecycle utility), shared render helpers (`renderFieldLabel`, `renderFieldFooter`, `renderFieldSublabel`, `renderFieldActions`), a shared SCSS partial (`_field-shell.scss`), and the `KeyboardController` utility — a fluent, type-safe API for registering key bindings on any element. `bds-tag-field` is registered in `vue-output-target.ts` `componentModels` to support Vue `v-model` two-way binding.
+A `suffix` slot was added to the input container at the same time. The slot sits between the `<input>` and the built-in actions area, allowing composite parents (e.g. `bds-select`) to inject inline content such as a loading spinner or badge without a prop-driven API.
 
-The `KeyboardController` replaces ad-hoc `@Listen` / `addEventListener` patterns for key handling in this and future components. It manages its own listener lifecycle and is unit-tested independently.
+The `bds-spinner` animation was extracted as a reusable mixin in `_interactions.scss` and consumed by `bds-button`, removing the duplicated keyframe declaration from `bds-button.scss`.
 
-Reviewers should pay close attention to the `handleFocusOut` / `handleFocus` pair: focus management in a composite control (container + multiple chip buttons + input) requires a `requestAnimationFrame` guard to distinguish intra-component focus moves from genuine blur events. The `effectiveMaxVisible` logic also has a deliberate precedence — `maxVisibleTags` > `maxTags - 1` > full list — which differs from what a literal reading of the prop docs might suggest.
+No public API removals. The `readOnly` and `counterClass` parameters added to the render helpers are additive and backward-compatible. Existing `bds-select` tests were updated to reflect the new markup structure; no behavioral changes were made to `bds-select`.
 
-Refs EOA-13695
+Refs EOA-14257

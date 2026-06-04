@@ -16,30 +16,30 @@ status: done
 
 ## Files to create / modify
 
-| File                                                                                                          | Notes                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/boreal-web-components/src/utils/form/field-form-association.ts`                                     | New — `useFormField<T>()` factory, `IFormFieldHost<T>` interface                                                                    |
-| `packages/boreal-web-components/src/utils/form/index.ts`                                                      | Modify — add `export * from './field-form-association'`                                                                             |
-| `packages/boreal-web-components/src/components/forms/_shared/_form-field-shell.scss`                          | New — shared SCSS partial: container shell, focus ring, error/disabled/plain/outline states                                         |
+| File                                                                                                          | Notes                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/boreal-web-components/src/utils/form/field-form-association.ts`                                     | New — `useFormField<T>()` factory, `IFormFieldHost<T>` interface                                                                                                                                                                                       |
+| `packages/boreal-web-components/src/utils/form/index.ts`                                                      | Modify — add `export * from './field-form-association'`                                                                                                                                                                                                |
+| `packages/boreal-web-components/src/components/forms/_shared/_form-field-shell.scss`                          | New — shared SCSS partial: container shell, focus ring, error/disabled/plain/outline states                                                                                                                                                            |
 | `packages/boreal-web-components/src/components/forms/_shared/_form-field-elements.scss`                       | New (Task 9) — opt-in element mixins: `form-field-sublabel`, `form-field-slot-prefix`, `form-field-control`, `form-field-actions`, `form-field-action`, `form-field-counter`, `form-field-disabled-sublabel`; shared `%field-inline-label` placeholder |
-| `packages/boreal-web-components/src/components/forms/common/form-field-types.ts`                              | New — `FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING` enums, `FieldVariant`, `FieldValidationTiming` types, `IFormFieldProps` interface; modified in Task 7b to add `sublabel?`, `icon?`, `iconRight?` |
-| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`                             | New — `renderFieldLabel`, `renderFieldFooter`, `deriveFieldRenderState`; modified in Task 7b to add `renderFieldSublabel`, `renderFieldActions`                                                       |
-| `packages/boreal-web-components/src/components/forms/common/index.ts`                                         | New — barrel export for `common/`                                                                                                   |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/ITagField.ts`                        | New — extends `IFormFieldProps`, declares only 6 tag-specific props                                                                 |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/enum.ts`                             | New — re-exports `FIELD_VARIANTS as TAG_FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING as TAG_FIELD_VALIDATION_TIMING` from `common/`    |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/types.ts`                            | New — type aliases `TagFieldVariant = FieldVariant`, `TagFieldValidationTiming = FieldValidationTiming`                             |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/index.ts`                            | New — types barrel                                                                                                                  |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx`                         | New — component implementation                                                                                                      |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.scss`                        | New — component styles                                                                                                              |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-basics.spec.ts`     | New — rendering and tag management tests                                                                                            |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-events.spec.ts`     | New — event emission tests                                                                                                          |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-keyboard.spec.ts`   | New — keyboard interaction tests                                                                                                    |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-validation.spec.ts` | New — built-in and custom validator tests                                                                                           |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-form.spec.ts`       | New — FACE lifecycle tests                                                                                                          |
-| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-a11y.spec.ts`       | New — accessibility attribute tests                                                                                                 |
-| `packages/boreal-web-components/targets/vue-output-target.ts`                                                 | Modify — add `bds-tag-field` to `componentModels`                                                                                   |
-| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.stories.ts`                                   | New — Storybook stories                                                                                                             |
-| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.mdx`                                          | New — MDX documentation page                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/common/form-field-types.ts`                              | New — `FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING` enums, `FieldVariant`, `FieldValidationTiming` types, `IFormFieldProps` interface; modified in Task 7b to add `sublabel?`, `icon?`, `iconRight?`                                                     |
+| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`                             | New — `renderFieldLabel`, `renderFieldFooter`, `deriveFieldRenderState`; modified in Task 7b to add `renderFieldSublabel`, `renderFieldActions`                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/common/index.ts`                                         | New — barrel export for `common/`                                                                                                                                                                                                                      |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/ITagField.ts`                        | New — extends `IFormFieldProps`, declares only 6 tag-specific props                                                                                                                                                                                    |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/enum.ts`                             | New — re-exports `FIELD_VARIANTS as TAG_FIELD_VARIANTS`, `FIELD_VALIDATION_TIMING as TAG_FIELD_VALIDATION_TIMING` from `common/`                                                                                                                       |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/types.ts`                            | New — type aliases `TagFieldVariant = FieldVariant`, `TagFieldValidationTiming = FieldValidationTiming`                                                                                                                                                |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/types/index.ts`                            | New — types barrel                                                                                                                                                                                                                                     |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx`                         | New — component implementation                                                                                                                                                                                                                         |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.scss`                        | New — component styles                                                                                                                                                                                                                                 |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-basics.spec.ts`     | New — rendering and tag management tests                                                                                                                                                                                                               |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-events.spec.ts`     | New — event emission tests                                                                                                                                                                                                                             |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-keyboard.spec.ts`   | New — keyboard interaction tests                                                                                                                                                                                                                       |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-validation.spec.ts` | New — built-in and custom validator tests                                                                                                                                                                                                              |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-form.spec.ts`       | New — FACE lifecycle tests                                                                                                                                                                                                                             |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-a11y.spec.ts`       | New — accessibility attribute tests                                                                                                                                                                                                                    |
+| `packages/boreal-web-components/targets/vue-output-target.ts`                                                 | Modify — add `bds-tag-field` to `componentModels`                                                                                                                                                                                                      |
+| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.stories.ts`                                   | New — Storybook stories                                                                                                                                                                                                                                |
+| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.mdx`                                          | New — MDX documentation page                                                                                                                                                                                                                           |
 
 ---
 
@@ -442,9 +442,9 @@ The Figma spec shows all three form field components (text field, select, tag fi
 **Acceptance criteria — `bds-tag-field.tsx`:**
 
 - Add three new `@Prop()` declarations (each with a single-line JSDoc, `readonly`, default `''`):
-  - `/** Sublabel rendered inside the container to the left of the input. */`  `@Prop() readonly sublabel: string = '';`
-  - `/** Icon font class rendered beside the sublabel inside the container (e.g. `bds-icon-settings`). */`  `@Prop() readonly icon: string = '';`
-  - `/** Icon font class rendered on the right side of the actions area. Visual affordance only — the parent container handles click for dropdown behaviour. */`  `@Prop() readonly iconRight: string = '';`
+  - `/** Sublabel rendered inside the container to the left of the input. */` `@Prop() readonly sublabel: string = '';`
+  - `/** Icon font class rendered beside the sublabel inside the container (e.g. `bds-icon-settings`). */` `@Prop() readonly icon: string = '';`
+  - `/** Icon font class rendered on the right side of the actions area. Visual affordance only — the parent container handles click for dropdown behaviour. */` `@Prop() readonly iconRight: string = '';`
 - In `render()`, replace the inline `{this.clearable && ... && <div class="bds-tag-field__actions">...</div>}` with a call to `renderFieldActions({ prefix: 'bds-tag-field', clearable: this.clearable, hasValue: this.values.length > 0, isDisabled: this.isDisabled, iconRight: this.iconRight, onClear: () => this.handleClearAll() })`.
 - After the tag chips and before the `<input>`, call `renderFieldSublabel({ prefix: 'bds-tag-field', icon: this.icon, sublabel: this.sublabel })`.
 - Import `renderFieldSublabel` and `renderFieldActions` from `@/components/forms/common`.
@@ -698,26 +698,27 @@ git commit -m "feat(web-components): EOA-13695 register bds-tag-field in Vue out
 
 Required stories (16 total):
 
-| Story | Props/slots demonstrated | Playground origin |
-|---|---|---|
-| `Default` | Empty field, no tags | Scenario 1 |
-| `WithLabel` | `label`, `helperText`, `placeholder` | Scenario 1 |
-| `WithHelperText` | `helperText` footer in isolation | Scenario 1 |
-| `WithSublabel` | `sublabel` inline inside the body | Scenarios 5, 6, 8 |
-| `Plain` | `variant="plain"` | — |
-| `WithIcon` | `icon` (left field icon, e.g. `bds-icon-search`) | Scenarios 5, 6 |
-| `WithPrefixSlot` | `slot="prefix"` with slotted content (e.g. `bds-status`) | Scenarios 5, 8 |
-| `WithTagIcon` | `tagIcon` + `tagColor` with pre-set values | Scenario 8 |
-| `WithTagColor` | `tagColor` alone (no `tagIcon`) with pre-set values | Scenario 8 |
-| `WithMaxTags` | `maxTags=4`, `maxVisibleTags=3`, tag counter in footer | Scenario 1 |
-| `WithOverflow` | 5 pre-set values, `maxVisibleTags=3` → `+2` badge visible on load | Scenario 3 |
-| `Clearable` | `clearable=true` with pre-set values | Scenario 4 |
-| `Required` | `required=true`, blur triggers validation | Scenario 2 |
-| `Error` | `error=true` with `errorMessage` | — |
-| `Disabled` | `disabled=true` with pre-set values | — |
-| `InteractiveFormExample` | Native `<form>` with submit + reset; code snippet shows `JSON.parse(formData.get('name'))` | — |
+| Story                    | Props/slots demonstrated                                                                   | Playground origin |
+| ------------------------ | ------------------------------------------------------------------------------------------ | ----------------- |
+| `Default`                | Empty field, no tags                                                                       | Scenario 1        |
+| `WithLabel`              | `label`, `helperText`, `placeholder`                                                       | Scenario 1        |
+| `WithHelperText`         | `helperText` footer in isolation                                                           | Scenario 1        |
+| `WithSublabel`           | `sublabel` inline inside the body                                                          | Scenarios 5, 6, 8 |
+| `Plain`                  | `variant="plain"`                                                                          | —                 |
+| `WithIcon`               | `icon` (left field icon, e.g. `bds-icon-search`)                                           | Scenarios 5, 6    |
+| `WithPrefixSlot`         | `slot="prefix"` with slotted content (e.g. `bds-status`)                                   | Scenarios 5, 8    |
+| `WithTagIcon`            | `tagIcon` + `tagColor` with pre-set values                                                 | Scenario 8        |
+| `WithTagColor`           | `tagColor` alone (no `tagIcon`) with pre-set values                                        | Scenario 8        |
+| `WithMaxTags`            | `maxTags=4`, `maxVisibleTags=3`, tag counter in footer                                     | Scenario 1        |
+| `WithOverflow`           | 5 pre-set values, `maxVisibleTags=3` → `+2` badge visible on load                          | Scenario 3        |
+| `Clearable`              | `clearable=true` with pre-set values                                                       | Scenario 4        |
+| `Required`               | `required=true`, blur triggers validation                                                  | Scenario 2        |
+| `Error`                  | `error=true` with `errorMessage`                                                           | —                 |
+| `Disabled`               | `disabled=true` with pre-set values                                                        | —                 |
+| `InteractiveFormExample` | Native `<form>` with submit + reset; code snippet shows `JSON.parse(formData.get('name'))` | —                 |
 
 Notes:
+
 - `WithIconRight` is **not** included as a standalone story — `iconRight` only makes semantic sense when `bds-tag-field` is embedded inside a `bds-select` multiselect (the chevron signals a dropdown). That integration is out of scope (separate ticket). Document the prop in the MDX table but do not publish a story that shows a chevron with no action.
 - `WithPrefixSlot` requires a custom render function (slot content is not expressible as a control arg); use a `slotPrefix` boolean arg like `bds-text-field` does for its `WithIcon` story.
 - `WithTagIcon` and `WithTagColor` stay as separate stories so Chromatic captures each prop independently.
@@ -816,8 +817,8 @@ N/A — the suffix slot is a pass-through projection point. No selector is neede
 
 In `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.mdx`, add a row to the slots reference table:
 
-| Slot | Description |
-|------|-------------|
+| Slot     | Description                                                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suffix` | Inline content rendered between the input and the built-in action buttons. Always present in the DOM as an independent sibling to the actions area. Intended for badges or loading indicators injected by composite parent components (e.g. `bds-select[multiselect]`). |
 
 No new Storybook story is needed — the slot is injection-only (same rationale as the `WithIconRight` story omission in Task 12: it only makes semantic sense inside a composite parent).
@@ -843,4 +844,159 @@ Playground scenarios in `packages/boreal-web-components/src/index.html`:
 
 ```bash
 git commit -m "feat(web-components): EOA-13695 add suffix slot to bds-tag-field for multiselect integration"
+```
+
+---
+
+## Addendum: FormData multiple-entries form submission
+
+> This improvement emerged from the `bds-select[multiselect]` form integration session. The form output for a standalone `bds-tag-field` currently produces `{ "tags": "[\"react\",\"vue\"]" }` — a JSON-serialised string that requires explicit parsing on the consumer side.
+
+**Goal:** Align `bds-tag-field` with native `<select multiple>` semantics so each selected value submits as a separate `FormData` entry. `formData.getAll('tags')` then returns `['react', 'vue']` natively — no parsing required.
+
+**This is a breaking change.** Consumers currently doing `JSON.parse(formData.get('tags'))` will receive `JSON.parse('react')` (first entry only) which throws a `SyntaxError`. A minor version bump and changelog entry are required when shipping this change.
+
+---
+
+### Files to change
+
+| File                                                                                  | Change                                                                |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `packages/boreal-web-components/src/utils/form/internals.ts`                          | Widen `setFormValue` parameter type                                   |
+| `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx` | `onValueChange`, `formAssociatedCallback`, `formStateRestoreCallback` |
+| `apps/boreal-docs/src/stories/forms/bds-tag-field/bds-tag-field.stories.ts`           | `InteractiveFormExample` code snippet, `value` argType description    |
+
+---
+
+### 1. Widen `setFormValue` utility (`utils/form/internals.ts`)
+
+The current signature only accepts `FormDataEntryValue | null` (`string | File | null`). The native `ElementInternals.setFormValue()` spec accepts `File | string | FormData | null`. Widen to match:
+
+```typescript
+// before
+export function setFormValue(internals: ElementInternals, value: FormDataEntryValue | null): void {
+
+// after
+export function setFormValue(internals: ElementInternals, value: File | string | FormData | null): void {
+```
+
+No logic change — the implementation `internals.setFormValue?.(value)` already works for all four types.
+
+---
+
+### 2. Update `bds-tag-field.tsx`
+
+**`onValueChange`** — build a `FormData` instead of `JSON.stringify`:
+
+```typescript
+@Watch('value')
+onValueChange(next: string[]): void {
+  const fd = new FormData();
+  next.forEach(v => fd.append(this.name, v));
+  setFormValue(this.internals, next.length > 0 ? fd : null);
+  this._field.updateValidity(this.touched || this.validationError);
+  this.valueChange.emit(next);
+}
+```
+
+Empty array passes `null` (field absent from `FormData`) — matches native `<select multiple>` with nothing selected.
+
+**`formAssociatedCallback`**:
+
+```typescript
+formAssociatedCallback(): void {
+  const fd = new FormData();
+  this.value.forEach(v => fd.append(this.name, v));
+  this._field.formAssociatedCallback(this.value.length > 0 ? fd : null);
+}
+```
+
+**`formStateRestoreCallback`** — add an `instanceof FormData` guard for browser session restore (old JSON state vs. new FormData state):
+
+```typescript
+formStateRestoreCallback(state: unknown, _mode: string): void {
+  if (state instanceof FormData) {
+    this.value = [...state.getAll(this.name)] as string[];
+  } else {
+    try {
+      this.value = JSON.parse(state as string) as string[];
+    } catch {
+      this.value = [];
+    }
+  }
+  const fd = new FormData();
+  this.value.forEach(v => fd.append(this.name, v));
+  setFormValue(this.internals, this.value.length > 0 ? fd : null);
+  this._field.updateValidity();
+}
+```
+
+The `JSON.parse` fallback handles any previously browser-cached state from before this change.
+
+Also update the JSDoc on the `value` prop — remove the `JSON.stringify` note and replace it with the `getAll()` pattern:
+
+```typescript
+/**
+ * The current list of tag values. Each entry is submitted as a separate `FormData` entry
+ * under the component's `name` — use `formData.getAll(name)` to recover the full array.
+ * An empty array contributes no entry (field absent from `FormData`).
+ */
+```
+
+---
+
+### 3. Update `bds-tag-field.stories.ts`
+
+**`value` argType description** — remove the `JSON.stringify` sentence:
+
+```typescript
+description: 'The current list of tag values.',
+```
+
+**`InteractiveFormExample` code snippet** — replace `JSON.parse(formData.get(...))` with `formData.getAll(...)`:
+
+````javascript
+// Read tags from FormData after submit
+form.addEventListener('submit', (event) => {
+  if (event.defaultPrevented) return;
+  event.preventDefault();
+
+  const formData = new FormData(form);
+
+  // Each tag submits as a separate entry — use getAll(), not get()
+  const tags = formData.getAll('tags'); // → ['React', 'Vue', 'Stencil']
+
+  console.log('Submitted tags:', tags);
+});
+```j
+
+Also update the story JSDoc comment above `InteractiveFormExample`:
+
+```typescript
+/**
+ * Interactive form demonstrating `bds-tag-field` inside a native HTML form.
+ * Each tag value is submitted as a separate `FormData` entry — use
+ * `formData.getAll(name)` to recover the full array.
+ * Resetting the form clears all chips via `formResetCallback`.
+ */
+````
+
+---
+
+### Unit tests to update (`bds-tag-field-form.spec.ts`)
+
+These assertions must change:
+
+- `setFormValue` is called with a `FormData` containing each value on `values` mutation (not `JSON.stringify`).
+- `setFormValue` is called with `null` (not `JSON.stringify([])`) when `values` is empty.
+- `setFormValue` is called with `null` on `formResetCallback`.
+- `formStateRestoreCallback` with a `FormData` instance restores `values` correctly.
+- `formStateRestoreCallback` with a legacy JSON string still restores `values` correctly (backward-compat guard).
+
+---
+
+### Commit
+
+```bash
+git commit -m "feat(web-components): EOA-13695 use FormData multiple-entries for bds-tag-field form submission"
 ```
