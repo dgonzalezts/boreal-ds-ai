@@ -96,36 +96,36 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 
 ## Rules Enforced
 
-| Rule                              | Severity | What it checks                                                                   |
-| --------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| `prop-missing-jsdoc`              | error    | `@Prop()` without a JSDoc block directly above                                   |
-| `prop-not-readonly`               | error    | `@Prop()` missing `readonly` (and not `mutable: true`)                           |
-| `event-native-collision`          | error    | `@Event()` name that matches a native DOM event                                  |
-| `fileoverview-tag`                | error    | `@fileoverview` used instead of `@file`                                          |
-| `face-missing-attach-internals`   | error    | `formAssociated: true` without `@AttachInternals()` on the class                 |
-| `face-native-constraint-on-input` | error    | Inner `<input>` carrying native constraint attributes                            |
-| `class-jsdoc-internal`            | error    | `@internal` in a component class JSDoc                                           |
-| `mutable-prop-any-cast`           | warning  | Mutable prop assigned with `as any`                                              |
-| `nodetype-check`                  | warning  | `.nodeType` used instead of `instanceof Element`                                 |
-| `unsafe-any`                      | warning  | Broad `any` usage in types or casts                                              |
-| `class-jsdoc-invalid-tags`        | warning  | `@element` or `@method` in class-level JSDoc                                     |
-| `face-reset-no-validity`          | warning  | `formResetCallback` without `updateValidity()`/`setValidity()`                   |
-| `face-restore-no-validity`        | warning  | `formStateRestoreCallback` without validity re-sync                              |
-| `spec-form-disabled-wrong`        | error    | Test uses `form.disabled` instead of `<fieldset disabled>`                       |
-| `spec-missing-wait-for-changes`   | warning  | DOM assertion after prop set with no `waitForChanges()`                          |
-| `import-order`                    | warning  | Import order violates: framework → `@/services` → `@/mixins` → `@/utils` → local |
-| `barrel-wildcard-export`          | warning  | `export * from '...'` in a barrel file; use named re-exports instead             |
-| `bool-prop-prefix`                | error    | `@Prop()` name starts with `is`, `has`, or `show`                                |
-| `event-name-format`               | error    | `@Event()` name does not follow `bds{Action}` format                             |
-| `prop-in-mixin`                   | error    | `@Prop()` declared inside a mixin factory function                               |
-| `mixin-noop-constructor`          | warning  | No-op `constructor(...args)` in a `mixins/` file                                 |
-| `aria-camel-set-attr`             | error    | `setAttribute` called with a camelCase ARIA attribute name                       |
-| `declare-global-popover`          | warning  | Dead `declare global` Popover API augmentation block                             |
-| `interface-bds-prefix`            | error    | Interface file named `IBds*.ts` instead of `I*.ts`                               |
-| `getter-get-prefix`               | warning  | Getter accessor has a redundant `get` prefix in its name                         |
+| Rule | Severity | What it checks |
+|---|---|---|
+| `prop-missing-jsdoc` | error | `@Prop()` without a JSDoc block directly above |
+| `prop-not-readonly` | error | `@Prop()` missing `readonly` (and not `mutable: true`) |
+| `event-native-collision` | error | `@Event()` name that matches a native DOM event |
+| `fileoverview-tag` | error | `@fileoverview` used instead of `@file` |
+| `face-missing-attach-internals` | error | `formAssociated: true` without `@AttachInternals()` on the class |
+| `face-native-constraint-on-input` | error | Inner `<input>` carrying native constraint attributes |
+| `class-jsdoc-internal` | error | `@internal` in a component class JSDoc |
+| `mutable-prop-any-cast` | warning | Mutable prop assigned with `as any` |
+| `nodetype-check` | warning | `.nodeType` used instead of `instanceof Element` |
+| `unsafe-any` | warning | Broad `any` usage in types or casts |
+| `class-jsdoc-invalid-tags` | warning | `@element` or `@method` in class-level JSDoc |
+| `face-reset-no-validity` | warning | `formResetCallback` without `updateValidity()`/`setValidity()` |
+| `face-restore-no-validity` | warning | `formStateRestoreCallback` without validity re-sync |
+| `spec-form-disabled-wrong` | error | Test uses `form.disabled` instead of `<fieldset disabled>` |
+| `spec-missing-wait-for-changes` | warning | DOM assertion after prop set with no `waitForChanges()` |
+| `import-order` | warning | Import order violates: framework → `@/services` → `@/mixins` → `@/utils` → local |
+| `barrel-wildcard-export` | warning | `export * from '...'` in a barrel file; use named re-exports instead |
+| `bool-prop-prefix` | error | `@Prop()` name starts with `is`, `has`, or `show` |
+| `event-name-format` | error | `@Event()` name does not follow `bds{Action}` format |
+| `prop-in-mixin` | error | `@Prop()` declared inside a mixin factory function |
+| `mixin-noop-constructor` | warning | No-op `constructor(...args)` in a `mixins/` file |
+| `aria-camel-set-attr` | error | `setAttribute` called with a camelCase ARIA attribute name |
+| `declare-global-popover` | warning | Dead `declare global` Popover API augmentation block |
+| `interface-bds-prefix` | error | Interface file named `IBds*.ts` instead of `I*.ts` |
+| `getter-get-prefix` | warning | Getter accessor has a redundant `get` prefix in its name |
 
 ## Reference Documentation
 
-- `ai-docs/guidelines/code_review_checklist.md` — full Boreal DS review checklist (sections 0–E)
-- `ai-docs/guidelines/coding_standards.md` — coding standards summary
-- `ai-docs/guidelines/common_antipatterns.md` — recurring failure patterns with explanations
+- `references/code_review_checklist.md` — full Boreal DS review checklist (sections 0–E)
+- `references/coding_standards.md` — coding standards summary
+- `references/common_antipatterns.md` — recurring failure patterns with explanations
