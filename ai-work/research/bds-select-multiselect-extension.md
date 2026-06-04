@@ -50,6 +50,7 @@ Every multiselect-specific UI concern — tag rendering, overflow badge, `maxVis
 ```
 
 Visual — closed:
+
 ```
 ┌──────────────────────────────────────┐
 │  Option 1                        [↓] │
@@ -60,7 +61,11 @@ Visual — closed:
 
 ```html
 <bds-select multiselect>
-  <bds-tag-field slot="field" placeholder="Add..." max-visible-tags="3"></bds-tag-field>
+  <bds-tag-field
+    slot="field"
+    placeholder="Add..."
+    max-visible-tags="3"
+  ></bds-tag-field>
   <bds-list-menu slot="list">
     <bds-list-menu-item value="1" checkable>Option 1</bds-list-menu-item>
     <bds-list-menu-item value="2" checkable>Option 2</bds-list-menu-item>
@@ -70,6 +75,7 @@ Visual — closed:
 ```
 
 Visual — closed (2 options selected):
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  [Option 1 ×]  [Option 2 ×]  Add...                     [↓] │
@@ -77,6 +83,7 @@ Visual — closed (2 options selected):
 ```
 
 Visual — open:
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  [Option 1 ×]  [Option 2 ×]  Add...                     [↓] │
@@ -103,10 +110,10 @@ The slot is always present in the render tree independently of whether any syste
 
 ### What the suffix slot holds
 
-| Field | Badge in suffix | Spinner in suffix |
-|---|---|---|
+| Field                            | Badge in suffix                                             | Spinner in suffix                |
+| -------------------------------- | ----------------------------------------------------------- | -------------------------------- |
 | `bds-text-field` (single select) | Never — a count badge has no meaning for a single selection | Yes — async autocomplete loading |
-| `bds-tag-field` (multiselect) | Yes — selected items count (independent of loading state) | Yes — async options loading |
+| `bds-tag-field` (multiselect)    | Yes — selected items count (independent of loading state)   | Yes — async options loading      |
 
 Badge and spinner are **independent, not mutually exclusive**. A user can have 3 items already selected (badge = "3") while the dropdown options are still being fetched (spinner visible). Both conditions are true at the same time: badge reflects selection state, spinner reflects fetch state.
 
@@ -117,8 +124,10 @@ Badge and spinner are **independent, not mutually exclusive**. A user can have 3
 ```html
 <!-- injected by bds-select into bds-tag-field's suffix slot -->
 <span slot="suffix" class="bds-select__suffix">
-  <span class="bds-select__badge">3</span>   <!-- shown when badge !== '' -->
-  <span class="bds-select__spinner"></span>   <!-- shown when loading=true -->
+  <span class="bds-select__badge">3</span>
+  <!-- shown when badge !== '' -->
+  <span class="bds-select__spinner"></span>
+  <!-- shown when loading=true -->
 </span>
 ```
 
@@ -142,6 +151,7 @@ private get bdsField(): HTMLBdsTextFieldElement | null {
 ```
 
 Must become:
+
 ```typescript
 private get bdsField(): HTMLBdsTextFieldElement | HTMLBdsTagFieldElement | null {
   return this.el.querySelector('bds-text-field, bds-tag-field');
@@ -152,31 +162,96 @@ This is the only structural change needed. All other methods already address `th
 
 ### Full change surface
 
-| Area | Change | Approx. lines |
-|---|---|---|
-| `bdsField` getter | `querySelector('bds-text-field, bds-tag-field')` | 1 |
-| `multiselect` prop | New `@Prop() readonly multiselect: boolean = false` | 1 |
-| `value` / `values` | Add `@Prop({ mutable: true }) values: string[] = []` for multiselect state | ~5 |
-| `listenListMenu` | Toggle value in `values[]` instead of replacing `value`; keep popover open | ~12 |
-| `listenClearInput` | Handle both `bdsClear` (tag-field) and existing clear path | ~5 |
-| `listenBlurInput` | Skip blur-close logic when focus moves to list (multiselect stays open) | ~5 |
-| `loadValue` | Handle `string[]` — call `bdsList.setSelectedValues` with array | ~15 |
-| New: `listenTagRemove` | On `bdsTagRemove` from tag-field, deselect the matching option in bdsList | ~8 |
-| `assignListeners` | Conditionally wire `bdsTagRemove` listener when `multiselect` is true | ~3 |
+| Area                      | Change                                                                               | Approx. lines |
+| ------------------------- | ------------------------------------------------------------------------------------ | ------------- |
+| `bdsField` getter         | `querySelector('bds-text-field, bds-tag-field')`                                     | 1             |
+| `multiselect` prop        | New `@Prop() readonly multiselect: boolean = false`                                  | 1             |
+| `value` / `values`        | Add `@Prop({ mutable: true }) values: string[] = []` for multiselect state           | ~5            |
+| `listenListMenu`          | Toggle value in `values[]` instead of replacing `value`; keep popover open           | ~12           |
+| `listenClearInput`        | Handle both `bdsClear` (tag-field) and existing clear path                           | ~5            |
+| `listenBlurInput`         | Skip blur-close logic when focus moves to list (multiselect stays open)              | ~5            |
+| `loadValue`               | Handle `string[]` — call `bdsList.setSelectedValues` with array                      | ~15           |
+| New: `listenTagRemove`    | On `bdsTagRemove` from tag-field, deselect the matching option in bdsList            | ~8            |
+| `assignListeners`         | Conditionally wire `bdsTagRemove` listener when `multiselect` is true                | ~3            |
+| `loading` prop            | New `@Prop() readonly loading: boolean = false`                                      | 1             |
+| `injectSuffix` method     | Create badge + spinner wrapper and append to field suffix slot on `componentDidLoad` | ~18           |
+| `onValuesChange` watcher  | `@Watch('values')` — update badge text and toggle its visibility                     | ~6            |
+| `onLoadingChange` watcher | `@Watch('loading')` — show/hide the spinner element                                  | ~5            |
+| `componentDidLoad`        | Call `injectSuffix()` after existing listener setup                                  | 1             |
 
-**Total: ~55 lines of change** inside `bds-select.tsx`. No changes to `bds-select.scss` or `bds-list-menu`.
+**Total: ~83 lines of change** inside `bds-select.tsx`. No changes to `bds-select.scss` or `bds-list-menu`.
+
+### Badge and spinner injection
+
+The "Injection model" section above describes the target HTML structure. The following Stencil implementation produces it.
+
+**Class-level fields** (above `componentDidLoad`):
+
+```typescript
+private suffixWrapper: HTMLSpanElement | null = null;
+private badgeEl: HTMLSpanElement | null = null;
+private spinnerEl: HTMLSpanElement | null = null;
+```
+
+**Injection method** — called once from `componentDidLoad`, after listeners are assigned:
+
+```typescript
+private injectSuffix(): void {
+  const field = this.bdsField;
+  if (!field) return;
+
+  const wrapper = document.createElement('span');
+  wrapper.setAttribute('slot', 'suffix');
+  wrapper.className = 'bds-select__suffix';
+
+  this.badgeEl = document.createElement('span');
+  this.badgeEl.className = 'bds-select__badge';
+  this.badgeEl.hidden = true;
+
+  this.spinnerEl = document.createElement('span');
+  this.spinnerEl.className = 'bds-select__spinner';
+  this.spinnerEl.hidden = true;
+
+  wrapper.appendChild(this.badgeEl);
+  wrapper.appendChild(this.spinnerEl);
+  field.appendChild(wrapper);
+  this.suffixWrapper = wrapper;
+}
+```
+
+**Watchers** — keep badge and spinner in sync with state changes:
+
+```typescript
+@Watch('values')
+onValuesChange(next: string[]): void {
+  if (!this.badgeEl) return;
+  const count = next.length;
+  this.badgeEl.textContent = String(count);
+  this.badgeEl.hidden = count === 0;
+}
+
+@Watch('loading')
+onLoadingChange(next: boolean): void {
+  if (!this.spinnerEl) return;
+  this.spinnerEl.hidden = !next;
+}
+```
+
+Note: the existing text refers to `@Watch('badge')` — this is incorrect. There is no `badge` prop; the count derives from `values.length`, so the correct watcher is `@Watch('values')` as shown above.
+
+For single-select, `injectSuffix` still runs and the same wrapper is appended. Because `values` stays `[]` in single-select mode, `onValuesChange` never makes the badge visible. Only the `loading` → spinner path is active.
 
 ---
 
 ## Event contract comparison
 
-| Event | Single select | Multiselect |
-|---|---|---|
-| User picks option | `bdsChange` → `setValue(val)` → close popover | `bdsChange` → `toggleValue(val)` → keep open |
-| User clears trigger | `bdsClear` → `setValue('')` | `bdsClear` → `setValues([])` |
-| Tag removed | N/A | `bdsTagRemove` → deselect option in list |
-| Blur trigger | Close popover if focus left component | Same |
-| Escape key | Close popover | Close popover |
+| Event               | Single select                                 | Multiselect                                  |
+| ------------------- | --------------------------------------------- | -------------------------------------------- |
+| User picks option   | `bdsChange` → `setValue(val)` → close popover | `bdsChange` → `toggleValue(val)` → keep open |
+| User clears trigger | `bdsClear` → `setValue('')`                   | `bdsClear` → `setValues([])`                 |
+| Tag removed         | N/A                                           | `bdsTagRemove` → deselect option in list     |
+| Blur trigger        | Close popover if focus left component         | Same                                         |
+| Escape key          | Close popover                                 | Close popover                                |
 
 ---
 
@@ -188,9 +263,9 @@ This is the only structural change needed. All other methods already address `th
 
 ## Form serialisation
 
-| Mode | `bds-select` emits | Submitted value |
-|---|---|---|
-| Single | `valueChange: string` | `<input type="hidden" value="option1">` |
+| Mode        | `bds-select` emits      | Submitted value                                                                              |
+| ----------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| Single      | `valueChange: string`   | `<input type="hidden" value="option1">`                                                      |
 | Multiselect | `valueChange: string[]` | `JSON.stringify(values)` in the hidden input, OR one hidden input per value using `FormData` |
 
 The serialisation strategy for multiselect should be decided at the multiselect ticket level. Both approaches are valid; the `FormData` approach matches native `<select multiple>` semantics.

@@ -128,10 +128,21 @@ The suffix slot is positioned as a **sibling to the actions div**, placed in the
   3. Icon-right span — when `iconRight !== ''`
 - The actions `<div>` renders **conditionally** — absent from the DOM when no buttons are active (existing behavior preserved; no change from pre-refactor)
 - All icon elements inside the actions div and the password toggle change from `<em class={...}>` to `<i class={...} aria-hidden="true" />` to match the shared component pattern
-- JSDoc comment on the class gains:
-  - `@slot suffix - Inline content rendered between the input and the built-in action buttons (clear, password toggle, icon-right). Exists as a sibling to the actions area and is always accessible in the render tree regardless of whether system buttons are active. Intended for single-line elements such as loading indicators or badges injected by composite parent components (e.g. bds-select).`
 - `<slot name="tags" />` is **removed** from the render — it is undocumented, unused by any known consumer, and is a legacy placeholder from an earlier iteration where tag chips were to be slotted into `bds-text-field` directly; that architecture was superseded by the standalone `bds-tag-field` component
-- The `@slot prefix` JSDoc entry is verified correct (no change needed, just audited)
+
+**Prop default value alignment** (per `.agents/memory/stencil-prop-patterns.md` — constants as `@Prop()` defaults corrupt the Custom Elements Manifest; the CEM analyzer records the identifier, not the resolved string):
+- `validationTiming` default changes from `TEXT_FIELD_VALIDATION_TIMING.BLUR` → `'blur'`
+- `type` default changes from `TEXT_FIELD_TYPES.TEXT` → `'text'`
+- `variant` default changes from `TEXT_FIELD_VARIANTS.OUTLINE` → `'outline'`
+- Constants remain valid in all logic: `validatePropValue`, switch cases, class maps — only the `@Prop()` initializer must be a string literal
+
+**Class JSDoc cleanup** (per `ai-docs/guidelines/jsdoc-template.md` — prohibited tags produce zero CEM output while creating maintenance divergence):
+- `@summary` tag — remove; not a CEM-recognized tag
+- All `@attr` entries (×8) — remove; generated from `@Prop()` decorators automatically
+- All `@property` entries (×14) — remove; generated from `@Prop()` decorators automatically
+- All `@fires` entries (×7) — remove; generated from `@Event()` decorators automatically
+- `@cssprop` entry — remove; CSS custom properties must be documented with `/** @prop */` in the SCSS file (Task 5), not in the TSX class block
+- Class JSDoc retains: one-sentence description + `@slot prefix` (verified) + `@slot suffix` (new, added above)
 
 **Unit tests to cover** _(existing spec files — add to relevant files)_:
 
@@ -241,6 +252,14 @@ git commit -m "refactor(web-components): EOA-13696 migrate bds-text-field lifecy
 - All per-element `padding-left: $boreal-spacing-xs` declarations from the old inline file are deleted — not migrated
 - The `%field-inline-label` placeholder is deleted from this file — it is already defined in `_form-field-elements.scss` and available via `@use`
 - No hardcoded color, spacing, or typography values remain — all replaced with `$boreal-*` token references
+
+**`reflect: true` audit** (per `.agents/memory/stencil-prop-patterns.md` — reflect only when the SCSS has an attribute CSS selector for that prop):
+- Read the full SCSS and verify which reflected props (`name`, `disabled`, `required`, `value`, `error`, `type`, `variant`) are referenced by an attribute selector (e.g. `bds-text-field[variant="plain"]` or `&[disabled]`)
+- Remove `reflect: true` from any prop whose value is driven purely by a CSS class modifier (e.g. `bds-text-field--plain`) rather than an attribute selector
+
+**CSS custom property documentation** (per `ai-docs/guidelines/jsdoc-template.md` — `@prop` belongs in SCSS, not in the TSX class JSDoc):
+- Add `/** @prop --bds-text-field-width: Sets a custom width for the component. */` as a `@prop` JSDoc comment in the SCSS file's component tag-selector block (e.g. `bds-text-field { ... }`)
+- This was incorrectly placed as `@cssprop` in the TSX class JSDoc; that entry was removed in Task 3
 
 **Unit tests to cover:**
 
