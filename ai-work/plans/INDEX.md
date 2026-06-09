@@ -24,6 +24,7 @@
 | [integrated-monorepo-migration.md](./integrated-monorepo-migration.md) | in | Integrated Monorepo Migration Plan |
 | [plop-implementation-plan.md](./plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
 | [root-level-hooks-migration.md](./root-level-hooks-migration.md) | done | Migration Plan: Package-Level to Root-Level Git Hooks |
+| [select-tag-field-input-mode.md](./select-tag-field-input-mode.md) | done | `bds-tag-field` `inputMode` prop — Restrict tag creation and enable searchable multiselect |
 | [shared-storybook-components.md](./shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |
 | [storybook-chromatic-deployment.md](./storybook-chromatic-deployment.md) | done | Storybook Deployment — Chromatic |
 | [storybook-plan.md](./storybook-plan.md) | done | Storybook Baseline Implementation Plan |
