@@ -1,7 +1,8 @@
 ---
 name: documentation-subagent
 description: Creates Storybook stories (.stories.ts) and MDX documentation for Boreal DS components. Use proactively after component implementation.
-model: claude-sonnet-4-5
+model: sonnet
+effort: medium
 color: purple
 skills:
   - documentation-knowledge

@@ -9,19 +9,6 @@ description: Use PROACTIVELY when checking if tests catch real bugs, assessing t
 
 This skill sets up mutation testing to evaluate test suite quality by introducing deliberate code changes (mutants) and verifying tests catch them. A high mutation score indicates tests are effective at catching real bugs.
 
-**Version:** 0.2.0
-**Status:** Updated
-
-## What This Skill Does
-
-**Mutation Testing Workflow:**
-
-1. **Analyze** codebase to identify mutation targets
-2. **Generate** mutants (deliberate code changes)
-3. **Run** test suite against each mutant
-4. **Report** mutation score and surviving mutants
-5. **Recommend** test improvements for weak spots
-
 ## When to Use This Skill
 
 **Use when:**
@@ -46,22 +33,13 @@ This skill sets up mutation testing to evaluate test suite quality by introducin
 - "Run mutation analysis" / "Mutation score"
 - "Find weak tests"
 
-## Supported Frameworks
+## Mutation Score Targets
 
-| Language              | Framework | Command                                        |
-| --------------------- | --------- | ---------------------------------------------- |
-| JavaScript/TypeScript | Stryker   | `npx stryker run`                              |
-| Java                  | PIT       | `mvn org.pitest:pitest-maven:mutationCoverage` |
-| Python                | mutmut    | `mutmut run`                                   |
-
-## Mutation Score
-
-| Score  | Interpretation                                         |
+| Score  | Verdict                                                |
 | ------ | ------------------------------------------------------ |
 | 100%   | Ship it — every mutant killed                          |
 | 90–99% | Acceptable — document surviving mutants before merging |
-| 75–89% | Add tests to cover gaps                                |
-| < 75%  | Poor — tests need major improvement                    |
+| < 90%  | Add tests before merging                               |
 
 ## Common Mutations
 
@@ -73,54 +51,109 @@ This skill sets up mutation testing to evaluate test suite quality by introducin
 | Return      | `return x` → `return null` | Null handling       |
 | Remove call | `validate()` → removed     | Missing validations |
 
-## Installation Summary
+---
 
-For JavaScript/TypeScript (Stryker) — scoped to a single package:
+## Boreal DS — Stryker Workflow (JavaScript/TypeScript)
+
+Stryker runs in an isolated git worktree so the working branch stays completely clean — no `git restore` needed, no risk of accidentally committing Stryker files.
+
+Config templates live in `.agents/skills/mutations-testing/templates/` and are always present regardless of which branch you are on.
+
+### Step 1 — Create a throwaway worktree
 
 ```bash
-pnpm add -D --filter <package-name> @stryker-mutator/core @stryker-mutator/jest-runner
+# From the workspace root, on your feature branch
+COMPONENT=bds-my-component
+git worktree add ../.worktrees/mutation-$COMPONENT HEAD
+cd ../.worktrees/mutation-$COMPONENT
+fnm use
 ```
 
-For Python (mutmut):
+### Step 2 — Copy config templates
 
 ```bash
-pip install mutmut
-mutmut run
+cp .agents/skills/mutations-testing/templates/stryker.component.config.mjs \
+   packages/boreal-web-components/stryker.$COMPONENT.config.mjs
+
+cp .agents/skills/mutations-testing/templates/jest.stryker.config.cjs \
+   packages/boreal-web-components/jest.stryker.config.cjs
 ```
 
-## Quick Start
+### Step 3 — Fill in component paths
 
-1. Ensure test suite exists and passes
-2. Install mutation testing framework
-3. Configure mutation targets (critical code paths)
-4. Run mutation analysis
-5. Review surviving mutants
-6. Add/improve tests for uncaught mutations
+Edit `packages/boreal-web-components/stryker.$COMPONENT.config.mjs` — update `mutate`:
+
+```js
+mutate: [
+  'src/components/<category>/<component>/<component>.tsx',
+],
+```
+
+Edit `packages/boreal-web-components/jest.stryker.config.cjs` — update `testMatch`:
+
+```js
+testMatch: ['<rootDir>/src/components/<category>/<component>/__test__/**/*.spec.tsx'],
+```
+
+### Step 4 — Add ESLint ignores
+
+In `packages/boreal-web-components/eslint.config.ts`, add to the `ignores` array:
+
+```ts
+'*.config.mjs',
+'*.config.cjs',
+```
+
+### Step 5 — Install Stryker (scoped to the component package)
+
+```bash
+pnpm add -D --filter boreal-web-components @stryker-mutator/core @stryker-mutator/jest-runner
+```
+
+### Step 6 — Run and capture results
+
+```bash
+cd packages/boreal-web-components
+npx stryker run stryker.$COMPONENT.config.mjs > mutation.md 2>&1
+cat mutation.md
+```
+
+### Step 7 — Review surviving mutants and improve tests
+
+Open `mutation.md`. For each surviving mutant:
+
+- **Arithmetic / conditional survivors** — add boundary-value assertions
+- **Boolean survivors** — add an explicit `false` branch test
+- **Return-value survivors** — assert on the returned value, not just side effects
+- **Absent-prop survivors** — assert that a CSS variable or attribute is absent when the prop is unset (use `not.toContain` / `toBeNull`)
+- **String-mutation survivors** — use `expect.stringContaining('propName')` instead of an exact-string assert
+
+Re-run after each fix until the score is ≥ 90%.
+
+### Step 8 — Copy results back and clean up
+
+```bash
+# From the worktree — copy mutation.md back to the main workspace if needed
+cp mutation.md ../../boreal-ds/ai-work/qa/mutation-$COMPONENT.md
+
+# Discard the worktree — all Stryker files disappear with it
+cd ../..
+git worktree remove .worktrees/mutation-$COMPONENT --force
+```
+
+The working branch is untouched. No `git restore`, no manual `pnpm remove`.
+
+---
+
+## Other Languages
+
+| Language | Framework | Command                                        |
+| -------- | --------- | ---------------------------------------------- |
+| Java     | PIT       | `mvn org.pitest:pitest-maven:mutationCoverage` |
+| Python   | mutmut    | `mutmut run`                                   |
 
 ## Performance Considerations
 
-- Mutation testing is **compute-intensive**
-- Start with critical modules only
-- Use incremental mode for CI
-- Cache results between runs
-- Consider parallel execution
-
-## Success Criteria
-
-- Mutation testing framework installed
-- Configuration targets critical code paths
-- Initial mutation run completes
-- Mutation score reported
-- Action plan for surviving mutants
-
-## Project Setup
-
-The working Stryker configuration for this monorepo lives in:
-`packages/boreal-web-components/MUTATION_TESTING.md`
-
-It covers reuse steps, config file locations, and the `local/mutation-testing` branch that holds the Stryker install without polluting feature branches.
-
-## Version History
-
-- **0.2.0** - Updated score targets, scoped install command, replaced dead resource links with project setup pointer
-- **0.1.0** - Initial release with Stryker, PIT, mutmut support
+- Mutation testing is compute-intensive. Start with the single component file, not the whole package.
+- `coverageAnalysis: 'perTest'` in the template is the most accurate mode but also the slowest. Use `'off'` for a quick first pass.
+- The `.stryker-tmp/` directory is created in the worktree and removed with it — no cleanup needed.

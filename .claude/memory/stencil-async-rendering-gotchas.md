@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-async-rendering-gotchas.md

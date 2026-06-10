@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-light-dom-host-vs-class.md

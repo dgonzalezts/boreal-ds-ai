@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-face-element-proxy-limits.md

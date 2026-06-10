@@ -1,7 +1,8 @@
 ---
 name: frontend-subagent
 description: Implements Stencil web components in Boreal DS — props, SCSS tokens, render(), lifecycle hooks, FACE, and JSDoc. Use proactively for any component implementation task.
-model: claude-sonnet-4-5
+model: sonnet
+effort: high
 color: green
 skills:
   - stencil-component-knowledge

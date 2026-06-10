@@ -1,1 +1,0 @@
-../../.agents/memory/component-accessor-naming-conventions.md

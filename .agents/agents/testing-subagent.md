@@ -1,7 +1,8 @@
 ---
 name: testing-subagent
 description: Writes and fixes unit tests for Stencil components in Boreal DS, enforces the two-phase quality gate (≥ 90% coverage then ≥ 90% mutation score). Use proactively when unit tests are needed, failing, or missing.
-model: claude-sonnet-4-5
+model: sonnet
+effort: high
 color: blue
 skills:
   - testing-knowledge

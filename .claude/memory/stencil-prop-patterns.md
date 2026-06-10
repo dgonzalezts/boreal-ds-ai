@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-prop-patterns.md

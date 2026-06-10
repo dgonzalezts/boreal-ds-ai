@@ -1,1 +1,0 @@
-../../.agents/memory/component-interface-content-rule.md

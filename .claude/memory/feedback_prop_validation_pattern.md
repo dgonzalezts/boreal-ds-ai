@@ -1,1 +1,0 @@
-../../.agents/memory/feedback_prop_validation_pattern.md

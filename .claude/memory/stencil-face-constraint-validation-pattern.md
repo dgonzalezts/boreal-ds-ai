@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-face-constraint-validation-pattern.md

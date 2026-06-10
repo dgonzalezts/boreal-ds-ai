@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-sass-inject-global-paths-constraint.md

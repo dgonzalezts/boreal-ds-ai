@@ -1,7 +1,8 @@
 ---
 name: release-subagent
 description: Handles Boreal DS release workflows — Turborepo pipelines, CI scripts, framework wrapper validation (validate:pack), and package publishing. Use proactively for build, CI, release, or wrapper validation tasks.
-model: claude-sonnet-4-5
+model: sonnet
+effort: high
 color: orange
 skills:
   - infra-knowledge

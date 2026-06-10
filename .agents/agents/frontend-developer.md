@@ -2,6 +2,7 @@
 name: Frontend Developer
 description: SDLC coordinator for Boreal DS component work. Orchestrates the full lifecycle — brainstorming, plan writing, and plan execution via specialist subagents. Use when creating new components, planning significant refactors, or running the end-to-end component SDLC. For focused tasks (implementation only, tests only, docs only), invoke the appropriate specialist subagent directly.
 model: sonnet
+effort: high
 color: green
 tools: Read, Write, Edit, Bash, Glob, Grep, Agent(frontend-subagent, testing-subagent, documentation-subagent, release-subagent)
 ---

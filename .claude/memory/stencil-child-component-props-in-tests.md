@@ -1,1 +1,0 @@
-../../.agents/memory/stencil-child-component-props-in-tests.md
