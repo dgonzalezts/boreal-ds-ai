@@ -4,7 +4,7 @@
 
 **Goal:** Restructure the AI scaffold from three ad-hoc folders (`.ai/`, `.claude/`, `.github/`) into three semantically clean canonical directories (`.agents/`, `ai-docs/`, `ai-work/`), with `.claude/`, `.cursor/`, and `.github/instructions/` as per-entry symlink facades, `aisync` promoted into a versioned shell script inside `.agents/`, and a `sync-symlinks` skill for on-demand symlink repair.
 
-**Architecture:** `.agents/` is the canonical SSoT for all AI tooling (agents, skills, commands, memory, scripts). `ai-docs/` is the canonical SSoT for persisting knowledge (guidelines, decisions, diagrams, instructions). `ai-work/` holds all temporary work artifacts (plans, reviews, sessions, tickets, qa, research). Mirror directories (`.claude/`, `.cursor/`, `.github/instructions/`) contain **per-entry relative symlinks** pointing into the canonical dirs — following the specboot pattern where each agent/skill/instruction file gets its own symlink, so unmanaged entries in mirror dirs are never touched. A `sync-symlinks` skill drives symlink repair on demand. A Phase 2 consolidation pass deduplicates memory entries against guideline files.
+**Architecture:** `.agents/` is the canonical SSoT for all AI tooling (agents, skills, commands, memory, scripts). `ai-docs/` is the canonical SSoT for persisting knowledge (guidelines, decisions, diagrams, instructions). `ai-work/` holds all temporary work artifacts (plans, reviews, sessions, tickets, qa, research). Mirror directories (`.claude/`, `.cursor/`, `.github/instructions/`) contain **per-entry relative symlinks** pointing into the canonical dirs — following the specboot pattern where each agent/skill/instruction file gets its own symlink, so unmanaged entries in mirror dirs are never touched. A `sync-symlinks` skill drives symlink repair on demand. A Phase 2 consolidation pass deduplicates memory entries against guideline files. A Phase 3 build introduces a specialist subagent architecture with four domain knowledge skills, four specialist subagent files, Node.js version management hooks, and a `create-component` SDLC entry point skill.
 
 **Tech Stack:** bash (symlinks via `ln -s`, shell scripts), zsh shell functions (`~/.functions` as thin wrapper), git (`ai-config` branch, `ai` remote), Claude Code skills (SKILL.md)
 
@@ -59,6 +59,25 @@
 | `.agents/memory/MEMORY.md`                              | Modify — remove entries promoted to guidelines; add pointers      |
 | `.agents/memory/*.md`                                   | Remove — entries that duplicate guideline content after promotion |
 | `.github/copilot-instructions.md`                       | Modify — remove sections that duplicate `ai-docs/docs/` content   |
+
+### Phase 3 — Subagents Architecture (separate milestone, do not begin until Phase 1 is complete and verified)
+
+| File                                                  | Notes                                                                                              |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `.agents/scripts/with-node.sh`                        | New — wraps commands with fnm Node.js activation; used in subagent system prompts                  |
+| `.agents/scripts/check-node-version.sh`               | New — `PreToolUse` hook; warns when `pnpm`/`node` run without `with-node.sh` wrapper               |
+| `.agents/skills/stencil-component-knowledge/SKILL.md` | New — domain knowledge skill for Stencil implementation; absorbs FACE + component API memory files |
+| `.agents/skills/testing-knowledge/SKILL.md`           | New — domain knowledge skill for unit testing; absorbs testing memory files                        |
+| `.agents/skills/documentation-knowledge/SKILL.md`     | New — domain knowledge skill for Storybook and MDX; absorbs storybook memory files                 |
+| `.agents/skills/infra-knowledge/SKILL.md`             | New — domain knowledge skill for CI/release/build; absorbs infra memory files                      |
+| `.agents/skills/create-component/SKILL.md`            | New — SDLC entry point; sequences brainstorming → writing-plans → executing-plans                  |
+| `.agents/skills/writing-plans/SKILL.md`               | Modify — add `Executor` field to task template and executor mapping table                          |
+| `.agents/skills/executing-plans/SKILL.md`             | Modify — replace `superpowers:subagent-driven-development` with local subagent dispatch protocol   |
+| `.agents/agents/frontend-subagent.md`                 | New — specialist subagent for component implementation                                             |
+| `.agents/agents/testing-subagent.md`                  | New — specialist subagent for unit tests; loads `testing-knowledge` + `mutations-testing` skills   |
+| `.agents/agents/documentation-subagent.md`            | New — specialist subagent for Storybook stories and MDX docs                                       |
+| `.agents/agents/release-subagent.md`                  | New — specialist subagent for CI/release/build/wrapper validation workflows                        |
+| `.agents/agents/frontend-developer.md`                | Modify — repurpose as coordinator; document delegation rules; remove raw implementation detail     |
 
 ---
 
@@ -723,4 +742,372 @@ git status
 
 # aisync still works
 source ~/.functions && aisync
+```
+
+---
+
+## Phase 3 Tasks (separate milestone — begin only after Phase 1 is complete and verified)
+
+---
+
+### Task 18: Create Node.js version management scripts
+
+**Files:**
+
+- `.agents/scripts/with-node.sh` (create)
+- `.agents/scripts/check-node-version.sh` (create)
+
+**Acceptance criteria:**
+
+`with-node.sh`:
+
+- Activates fnm and runs `fnm use` before exec-ing the given command
+- Executable (`chmod +x`)
+- Handles fnm not on PATH silently — does not abort the wrapped command
+- Resolves repo root via `git rev-parse --show-toplevel` to locate `.node-version`
+- Usage: `.agents/scripts/with-node.sh pnpm test`
+
+`check-node-version.sh`:
+
+- Used as a `PreToolUse` hook on `Bash` tool calls in subagent definitions
+- Reads and discards JSON from stdin (required by Claude Code hook protocol)
+- If the command contains `pnpm`, `npm`, or `node` without `.agents/scripts/with-node.sh` prefix, prints a one-line warning to stderr
+- Always exits 0 — warn-only, never blocks execution
+- Executable
+
+**Manual test:**
+
+- [ ] `.agents/scripts/with-node.sh node --version` — outputs `v22.x.x`
+- [ ] `.agents/scripts/with-node.sh pnpm --version` — outputs `11.x.x`
+- [ ] `echo '{"tool_input":{"command":"pnpm test"}}' | bash .agents/scripts/check-node-version.sh` — warning printed to stderr; exit code 0
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * add Node.js version management scripts for subagent hooks"
+```
+
+---
+
+### Task 19: Create domain knowledge skills
+
+**Files:**
+
+- `.agents/skills/stencil-component-knowledge/SKILL.md` (create)
+- `.agents/skills/testing-knowledge/SKILL.md` (create)
+- `.agents/skills/documentation-knowledge/SKILL.md` (create)
+- `.agents/skills/infra-knowledge/SKILL.md` (create)
+
+**Acceptance criteria:**
+
+Each skill has YAML frontmatter (`name`, `description`) and a markdown body. The body consolidates content from the listed memory files — include the substance inline; reference the memory file path for material better read in full.
+
+**`stencil-component-knowledge`:**
+
+- `name: stencil-component-knowledge`
+- `description:` "Domain knowledge for implementing Stencil web components in Boreal DS. Covers FACE (Form-Associated Custom Elements), component API conventions, props, events, slots, SCSS tokens, and light DOM patterns. Load proactively when implementing or reviewing Stencil components."
+- Consolidates from: `stencil-face-attach-internals.md`, `stencil-face-element-proxy-limits.md`, `stencil-face-constraint-validation-pattern.md`, `stencil-async-rendering-gotchas.md`, `feedback_prop_validation_pattern.md`, `component-interface-file-naming.md`, `component-interface-content-rule.md`, `component-accessor-naming-conventions.md`, `feedback_event_options_explicit.md`, `component-bds-typography-group-labels.md`, `stencil-composite-light-dom-event-boundary.md`, `stencil-form-control-interfaces.md`
+- References (do not duplicate): `ai-docs/guidelines/stencil-best-practices.md`, `ai-docs/guidelines/code-practices-&-dev-guidelines.md`, `ai-docs/docs/frontend.instructions.md`
+
+**`testing-knowledge`:**
+
+- `name: testing-knowledge`
+- `description:` "Domain knowledge for writing unit tests for Stencil components in Boreal DS. Covers spec file organisation, FACE test mocks, child component props in tests, and the two-phase test quality gate (conventional coverage + mutation testing). Load proactively when writing or reviewing unit tests."
+- Consolidates from: `test-spec-file-organisation.md`, `stencil-face-test-mocks.md`, `stencil-child-component-props-in-tests.md`, `mutation-testing-stryker-setup.md`, `mutation-testing-workflow-decisions.md`
+- References: `ai-docs/guidelines/stencil-unit-testing-patterns.md`
+- Must include a **Mutation Testing** section documenting the two-phase gate:
+  1. Conventional unit tests pass ≥ 90% statement coverage — required before proceeding
+  2. Invoke the `mutations-testing` skill; scope Stryker to the current component by following the reuse pattern in `packages/boreal-web-components/MUTATION_TESTING.md` (update `testMatch` and `mutate` paths, rename config, run, review surviving mutants, clean up — do not commit Stryker artefacts or `package.json` changes)
+  3. Mutation score ≥ 90% — required before marking the testing task complete; score < 90% requires additional tests targeting surviving mutants before proceeding
+- The `mutations-testing` skill is the executor for mutation runs — reference it by name, do not duplicate its content
+
+**`documentation-knowledge`:**
+
+- `name: documentation-knowledge`
+- `description:` "Domain knowledge for writing Storybook stories and MDX documentation for Boreal DS components. Covers action wiring, source snippets for non-primitive props, and Vite build quirks. Load proactively when writing stories, MDX docs, or JSDoc."
+- Consolidates from: `storybook-action-wiring-web-components.md`, `storybook-source-snippet-non-primitive-props.md`, `storybook-vite-quirks.md`
+- References: `ai-docs/guidelines/storybook-patterns.md`, `ai-docs/guidelines/jsdoc-template.md`, `ai-docs/docs/documentation.instructions.md`
+
+**`infra-knowledge`:**
+
+- `name: infra-knowledge`
+- `description:` "Domain knowledge for CI/CD, Turborepo pipelines, release workflows, build tooling, and framework wrapper validation in Boreal DS. Covers Turbo pty hang, Stencil dist copy, SCSS paths, scripts-boreal pipeline, release-it, Chromatic deployment, GitHub Actions debugging, and the validate:pack consumer simulation workflow. Load proactively for build, CI, release, or wrapper validation tasks."
+- Consolidates from: `turbo-persistent-interactive-pty-hang.md`, `stencil-dist-copy-namespace-behavior.md`, `stencil-sass-inject-global-paths-constraint.md`, `sass-paths-windows-forward-slash.md`, `scripts-boreal-pack-pipeline.md`, `release-it-pnpm-publish.md`, `chromatic-deployment.md`, `github-actions-windows-debug-technique.md`, `nodejs-signal-handler-patterns.md`
+- References: `ai-docs/guidelines/release-process.md`, `ai-docs/guidelines/scripts-boreal.md`, `ai-docs/guidelines/cicd-dependency-installation.md`
+- Must include a **Wrapper Validation** section documenting the per-component consumer simulation workflow:
+  - **Interactive validation** (`pnpm dev:pack:react`): add the new component to `examples/react-testapp/src/App.tsx` (import from `@telesign/boreal-react`; render with all key prop combinations — default state, all variants, disabled state, event binding, slot usage); run `pnpm dev:pack:react` from the monorepo root; verify in browser under all four brand themes (`data-theme` values: `connect`, `engage`, `protect`, `proximus`)
+  - **Vue validation** (`pnpm dev:pack:vue` once available): add the same component to `examples/vue-testapp/src/App.vue` (import from `@telesign/boreal-vue`; verify `v-model` binding when applicable)
+  - **CI validation**: run `pnpm validate:pack:react && pnpm validate:pack:vue` — both must succeed (exit 0) before the task is complete; these commands pack built artefacts into `.tgz` files, install them in the example apps, and run `pnpm build` to confirm the published package is consumable
+  - **Cleanup**: remove test component usage from `App.tsx` and `App.vue` before committing — example apps are blank playgrounds, not persistent demos; `package.json` and `pnpm-lock.yaml` are auto-restored on pipeline exit but verify with `git status` before committing
+  - Pipeline mechanics: `scripts-boreal/README.md` is the authoritative reference; do not duplicate its content
+
+**Manual test _(waiveable)_:**
+
+- [ ] `ls .agents/skills/{stencil-component-knowledge,testing-knowledge,documentation-knowledge,infra-knowledge}/SKILL.md` — all four exist
+- [ ] Each SKILL.md has valid YAML frontmatter with `name` and `description`
+- [ ] `bash .agents/scripts/sync-symlinks.sh` — four new skill symlinks appear in `.claude/skills/` and `.cursor/skills/`
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * add domain knowledge skills for specialist subagents"
+```
+
+---
+
+### Task 20: Create specialist subagent files
+
+**Files:**
+
+- `.agents/agents/frontend-subagent.md` (create)
+- `.agents/agents/testing-subagent.md` (create)
+- `.agents/agents/documentation-subagent.md` (create)
+- `.agents/agents/release-subagent.md` (create)
+
+**Acceptance criteria:**
+
+All four files share the same structural pattern.
+
+Required frontmatter fields in each:
+
+- `name` — matches filename without `.md`
+- `description` — one sentence with "Use proactively" phrasing (enables automatic Claude delegation)
+- `model: claude-sonnet-4-5`
+- `color` — unique per subagent (see table below)
+- `skills` — list with one domain knowledge skill name
+- `memory: project` — persistent memory stored at `.claude/agent-memory/<name>/`, versioned with the repo
+- `hooks` — `PreToolUse` on `Bash` pointing to `.agents/scripts/check-node-version.sh`:
+  ```yaml
+  hooks:
+    PreToolUse:
+      - matcher: "Bash"
+        hooks:
+          - type: command
+            command: ".agents/scripts/check-node-version.sh"
+  ```
+
+Required body sections in each:
+
+- **Node.js Environment** — instructs the agent to prefix all `pnpm`, `npm`, and `node` commands with `.agents/scripts/with-node.sh`
+- **Memory Management** — read agent memory before starting work; update memory after completing with new patterns, file paths, or architectural decisions discovered
+
+Per-subagent configuration:
+
+| Subagent                 | color  | skills                                   | description                                                                                                                                                                                                         |
+| ------------------------ | ------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend-subagent`      | green  | `[stencil-component-knowledge]`          | "Implements Stencil web components in Boreal DS — props, SCSS tokens, render(), lifecycle hooks, FACE, and JSDoc. Use proactively for any component implementation task."                                           |
+| `testing-subagent`       | blue   | `[testing-knowledge, mutations-testing]` | "Writes and fixes unit tests for Stencil components in Boreal DS, enforces the two-phase quality gate (≥ 90% coverage then ≥ 90% mutation score). Use proactively when unit tests are needed, failing, or missing." |
+| `documentation-subagent` | purple | `[documentation-knowledge]`              | "Creates Storybook stories (.stories.ts) and MDX documentation for Boreal DS components. Use proactively after component implementation."                                                                           |
+| `release-subagent`       | orange | `[infra-knowledge]`                      | "Handles Boreal DS release workflows — Turborepo pipelines, CI scripts, framework wrapper validation (validate:pack), and package publishing. Use proactively for build, CI, release, or wrapper validation tasks." |
+
+**Manual test _(waiveable)_:**
+
+- [ ] `ls .agents/agents/{frontend,testing,documentation,release}-subagent.md` — all four exist
+- [ ] Spot-check frontmatter: `head -20 .agents/agents/frontend-subagent.md` — `memory`, `skills`, `hooks` all present
+- [ ] `bash .agents/scripts/sync-symlinks.sh` — four new symlinks in `.claude/agents/` and `.cursor/agents/`
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * add specialist subagent files for component SDLC"
+```
+
+---
+
+### Task 21: Repurpose frontend-developer.md as SDLC coordinator
+
+**Files:**
+
+- `.agents/agents/frontend-developer.md` (modify)
+
+**Acceptance criteria:**
+
+Frontmatter:
+
+- `tools` field set to `Read, Write, Edit, Bash, Glob, Grep, Agent(frontend-subagent, testing-subagent, documentation-subagent, release-subagent)` — the `Agent()` whitelist only takes effect when this agent runs as the main thread via `claude --agent frontend-developer`; in all other invocations it serves as documentation
+- `skills` field removed or cleared — raw implementation knowledge now lives in the specialist knowledge skills
+
+Body rewritten to contain exactly:
+
+- **Delegation rules** — table mapping task type to the correct subagent (same executor mapping table as in `writing-plans`)
+- **Agent() restriction note** — subagents cannot spawn further subagents per Claude Code design; delegation via `Agent()` only works when `frontend-developer` is the main agent thread; in normal use the main conversation thread orchestrates
+- **SDLC workflow** — full sequence: brainstorming → writing-plans → executing-plans; reference the `create-component` skill for end-to-end component creation
+- No raw implementation details (component scaffold patterns, SCSS token usage, FACE patterns) — that knowledge belongs to `stencil-component-knowledge` loaded by `@frontend-subagent`
+
+**Manual test _(waiveable)_:**
+
+- [ ] `cat .agents/agents/frontend-developer.md` — body is delegation rules + workflow description; no raw implementation instructions
+- [ ] `.claude/agents/frontend-developer.md` symlink still resolves (`cat` shows same content)
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * repurpose frontend-developer agent as SDLC coordinator"
+```
+
+---
+
+### Task 22: Update writing-plans and executing-plans skills
+
+**Files:**
+
+- `.agents/skills/writing-plans/SKILL.md` (modify)
+- `.agents/skills/executing-plans/SKILL.md` (modify)
+
+**Acceptance criteria for `writing-plans/SKILL.md`:**
+
+Add an **Executor Mapping** table to the skill body immediately before the "Task Structure" section:
+
+| Task type                                                        | Executor                  |
+| ---------------------------------------------------------------- | ------------------------- |
+| Type interfaces, scaffold, lifecycle, render(), JSDoc, SCSS      | `@frontend-subagent`      |
+| Unit tests (all spec files)                                      | `@testing-subagent`       |
+| Storybook story, MDX documentation                               | `@documentation-subagent` |
+| Framework output targets, build scripts, CI fixes, release steps | `@release-subagent`       |
+| Utility/config tasks with no component code                      | main thread (no executor) |
+
+Add a mandatory `**Executor:**` field to the task template in "Task Structure", immediately after the `### Task N:` heading and before `**Files:**`:
+
+```markdown
+### Task N: [Deliverable Layer Name]
+
+**Executor:** @frontend-subagent
+**Files:** ...
+```
+
+The skill `description` must mention that plans must include `Executor` fields so `executing-plans` can dispatch correctly.
+
+**Acceptance criteria for `executing-plans/SKILL.md`:**
+
+Step 2 ("Execute Tasks") replaces the `superpowers:subagent-driven-development` reference with the local dispatch protocol:
+
+1. Read the `**Executor:**` field on the current task
+2. If `@<subagent>` is declared: compose a dispatch message containing task title, files, acceptance criteria, unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
+3. If no executor declared: execute the task directly on the main thread
+4. Wait for subagent output; review it against acceptance criteria; mark task done only when acceptance criteria are met
+
+The "Integration" section at the bottom removes the `superpowers:` prefix from all skill references and uses local skill names only.
+
+**Manual test _(waiveable)_:**
+
+- [ ] `grep 'Executor Mapping' .agents/skills/writing-plans/SKILL.md` — match found
+- [ ] `grep 'Executor' .agents/skills/writing-plans/SKILL.md` — appears in both the mapping table and the task template
+- [ ] `grep 'superpowers' .agents/skills/executing-plans/SKILL.md` — no matches
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * add Executor field to writing-plans; add subagent dispatch to executing-plans"
+```
+
+---
+
+### Task 23: Create create-component skill
+
+**Files:**
+
+- `.agents/skills/create-component/SKILL.md` (create)
+
+**Acceptance criteria:**
+
+- `name: create-component`
+- `description:` "Entry point for the full Boreal DS component SDLC. Sequences brainstorming → writing-plans → executing-plans for new component creation. Use when the user says 'create X component', 'implement bds-X', 'build a new Y', or provides a Figma design and asks what to do next. Do not use for bug fixes, token-only changes, or documentation-only updates — route those directly to the relevant subagent."
+
+Body sections (in order):
+
+**When to invoke** — clear trigger phrases; explicit cases where a direct subagent invocation is preferred over the full three-phase sequence (e.g. "only tests needed → invoke @testing-subagent directly")
+
+**Phase 1 — Brainstorming** — invoke the `brainstorming` skill; output is shared understanding of scope, component classification (Atom/Molecule/Organism), public API surface (props, events, slots, CSS parts), Figma coverage confirmation, and accessibility requirements; does not produce a plan file
+
+**Phase 2 — Writing the plan** — invoke the `writing-plans` skill; save to `ai-work/plans/<ticket-id>-<component-name>.md`; plan must include `Executor` fields on every task using the executor mapping table; confirm filename with the user before saving
+
+**Phase 3 — Executing the plan** — invoke the `executing-plans` skill; it reads the saved plan and dispatches each task to the declared `@<executor>` subagent; review each task output before proceeding to the next
+
+**Partial workflow** — three shortcut paths:
+
+- Plan already exists → skip to Phase 3 only
+- Only documentation needed → invoke `@documentation-subagent` directly
+- Only tests needed → invoke `@testing-subagent` directly
+
+The skill body must not duplicate content from `writing-plans` or `executing-plans` — reference them by name.
+
+**Manual test _(waiveable)_:**
+
+- [ ] `ls .agents/skills/create-component/SKILL.md` — exists
+- [ ] Valid YAML frontmatter with `name` and `description`
+- [ ] `bash .agents/scripts/sync-symlinks.sh` — appears as symlink in `.claude/skills/` and `.cursor/skills/`
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * add create-component SDLC entry point skill"
+```
+
+---
+
+### Task 24: Run sync-symlinks for all Phase 3 additions
+
+**Files:**
+
+- `.claude/agents/` (modify — new symlinks added by script)
+- `.claude/skills/` (modify — new symlinks added by script)
+- `.cursor/agents/` (modify — new symlinks added by script)
+- `.cursor/skills/` (modify — new symlinks added by script)
+
+**Acceptance criteria:**
+
+- `bash .agents/scripts/sync-symlinks.sh` runs without errors from repo root
+- All 4 new subagent files appear as valid symlinks in `.claude/agents/` and `.cursor/agents/`
+- All 5 new skill directories (`stencil-component-knowledge`, `testing-knowledge`, `documentation-knowledge`, `infra-knowledge`, `create-component`) appear as valid symlinks in `.claude/skills/` and `.cursor/skills/`
+- No `conflict` or broken entries in script output
+- All existing symlinks (including `frontend-developer.md` and all pre-existing skills) remain valid and unchanged
+
+**Manual test:**
+
+- [ ] `ls -la .claude/agents/ | grep subagent` — four entries
+- [ ] `ls -la .claude/skills/ | grep -E 'knowledge|create-component'` — five entries
+- [ ] `cat .claude/agents/frontend-subagent.md` — content readable
+- [ ] Open Claude Code — all 4 new subagents discoverable via `@` mention
+
+**Commit:**
+
+```bash
+git commit -m "chore(workspace): * sync symlinks for Phase 3 subagent architecture additions"
+```
+
+---
+
+## Verification checklist (end of Phase 3)
+
+Run these after Task 24 before declaring Phase 3 complete:
+
+```bash
+# All specialist subagents exist
+ls -la .agents/agents/{frontend,testing,documentation,release}-subagent.md
+
+# All knowledge skills and create-component exist
+ls -la .agents/skills/{stencil-component-knowledge,testing-knowledge,documentation-knowledge,infra-knowledge,create-component}/SKILL.md
+
+# Node.js scripts exist and are executable
+ls -la .agents/scripts/with-node.sh .agents/scripts/check-node-version.sh
+
+# Subagents are symlinked in mirror surfaces
+ls -la .claude/agents/ | grep subagent
+ls -la .cursor/agents/ | grep subagent
+
+# Knowledge skills are symlinked in mirror surfaces
+ls -la .claude/skills/ | grep -E 'knowledge|create-component'
+ls -la .cursor/skills/ | grep -E 'knowledge|create-component'
+
+# frontend-developer is now a coordinator (delegation rules present, no raw impl detail)
+grep 'Executor\|delegation\|SDLC' .agents/agents/frontend-developer.md
+
+# writing-plans has Executor mapping table
+grep 'Executor Mapping' .agents/skills/writing-plans/SKILL.md
+
+# executing-plans has no superpowers references
+grep 'superpowers' .agents/skills/executing-plans/SKILL.md || echo "clean"
+
+# Spot-check: subagent content readable through symlink
+cat .claude/agents/frontend-subagent.md | head -15
 ```

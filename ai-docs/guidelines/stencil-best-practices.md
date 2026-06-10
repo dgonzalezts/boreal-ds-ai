@@ -66,7 +66,7 @@ Use `shadow: true` when:
 **Boreal DS uses no encapsulation for all components**, including FACE components. This is an intentional architectural decision:
 
 - Global CSS and design token stylesheets apply directly to component internals — no `::part()` or CSS custom property tunnelling needed.
-- The `:host` pseudo-class has no effect without a shadow boundary (per MDN). Use direct tag selectors instead: `bds-button { ... }`, `bds-checkbox:focus-visible { ... }`.
+- The `:host` pseudo-class has no effect without a shadow boundary (per MDN). Use the component tag name directly as the root SCSS selector — see [Light DOM: direct tag selectors](#light-dom-direct-tag-selectors-not-host) below.
 - `composed: true` on `@Event()` is irrelevant — there is no shadow boundary to cross. Bare `@Event()` is correct.
 - Focus delegation in FACE components works via `el.querySelector('input')` directly, without any encapsulation workaround.
 - If shadow DOM is ever introduced, ADR 0003 must be revisited.
@@ -98,6 +98,41 @@ When Stencil serialises a scoped component server-side, it renders a light-DOM t
 ### CSS custom properties always cross boundaries
 
 Regardless of encapsulation mode, CSS custom properties (`var(--boreal-*)`) cross any Shadow DOM or scoped boundary. The Boreal theming system (set via `data-theme` on `<html>`) works identically with `scoped: true` and `shadow: true`.
+
+---
+
+## Light DOM: direct tag selectors, not `:host`
+
+**In Boreal DS light DOM components, `:host` does not work.** From MDN: _"`:host` has no effect when used outside a shadow DOM."_ Without a shadow root, the pseudo-class matches nothing.
+
+Use the component tag name directly as the root SCSS selector:
+
+```scss
+// ✅ Correct for light DOM
+bds-button {
+  display: inline-flex;
+}
+bds-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+bds-checkbox:focus-visible .bds-checkbox__box {
+  outline: 2px solid $boreal-stroke-focus;
+}
+bds-grid-item[col-span="full"] {
+  grid-column: 1 / -1;
+}
+
+// ❌ Wrong — :host has no effect here, even if Stencil compiles it away
+:host {
+  display: inline-flex;
+}
+:host([disabled]) {
+  cursor: not-allowed;
+}
+```
+
+While Stencil technically compiles `:host` to the tag selector in light DOM components, the browser does not recognise `:host` as functional without a shadow boundary. Use direct tag selectors to make intent explicit and avoid relying on a compilation side-effect.
 
 ---
 
@@ -178,6 +213,28 @@ When hover applies to multiple child elements, nest them under a single `&:hover
 &:hover:not(.--disabled):not(.--checked) .bds-radio__button { ... }
 &:hover:not(.--disabled):not(.--checked) .bds-radio__dot    { ... }
 ```
+
+### SCSS `@use` constraints
+
+`injectGlobalPaths` in `stencil.config.ts` prepends three files at the top of **every** component SCSS at build time: the `$boreal-*` token index, `_commons.scss`, and `_interactions.scss`. Three rules follow from this:
+
+**Rule 1 — Component SCSS files must NOT `@use` the token package.** Tokens are already injected globally; adding a `@use` of the token package in a component file causes a Sass double-import / variable redefinition error. All component SCSS files start directly with selectors — no `@use` at the top.
+
+**Rule 2 — SCSS partials `@use`d by components MUST `@use` the token package themselves.** Sass's module system gives each file its own isolated scope. `injectGlobalPaths` prepends token definitions into the component file only — it does not flow into any partials accessed via `@use`. Partials must declare their own imports:
+
+```scss
+// _selectable-button.scss (shared partial) — CORRECT
+@use "@telesign/boreal-style-guidelines/dist/stencil/_index" as *;
+@use "../../../styles/_interactions" as *;
+```
+
+```scss
+// bds-radio-button.scss (component) — CORRECT, no @use of token package
+@use "../../_shared/selectable-button" as *;
+@include selectable-button("bds-radio-button");
+```
+
+**Rule 3 — Injected files must be self-contained.** Stencil compiles each injected file standalone during watch cycles. Any `$boreal-*` reference inside an injected partial will fail with "Undefined variable" unless the token file is also loaded by that partial via `@use '@telesign/boreal-style-guidelines/dist/stencil/_index' as *;`. Sass `@use` is idempotent — no double-definition errors.
 
 ---
 
@@ -295,8 +352,58 @@ export class Bds[Name] extends Mixin(formAssociatedMixin) implements IFormContro
 
 Key rules:
 
-- `@AttachInternals()` must be declared directly on the component class body — never inside a mixin factory (see `.agents/memory/stencil-face-attach-internals.md`).
-- Native FACE prototype members are blocked by Stencil's element proxy; expose them via `@Method()` wrappers (see `.agents/memory/stencil-face-element-proxy-limits.md`).
+**`@AttachInternals()` placement — class body only, never inside a mixin factory.**
+Stencil's compiler performs static analysis on the component class. Decorators inside factory functions are not visible to this analysis for `@AttachInternals()`. The result is `this.internals === undefined` at runtime — every FACE lifecycle callback that calls `this.internals.setFormValue()` or `this.internals.setValidity()` throws a `TypeError`. Other decorators (`@Prop()`, `@State()`, `@Watch()`, `@Method()`) do work inside mixin factories; `@AttachInternals()` is the single exception.
+
+```typescript
+// ✅ Correct — @AttachInternals() on the class body
+@Component({ tag: "bds-my-field", formAssociated: true })
+export class BdsMyField extends Mixin(formAssociatedMixin) {
+  @AttachInternals() internals!: ElementInternals;
+}
+
+// ❌ Wrong — inside the mixin factory; internals === undefined at runtime
+export const formAssociatedMixin = () =>
+  class {
+    @AttachInternals() internals!: ElementInternals; // not visible to static analysis
+  };
+```
+
+**Native FACE prototype members are blocked by Stencil's element proxy — use `@Method()` wrappers.**
+The browser's FACE spec adds `checkValidity()`, `reportValidity()`, and `validity` to the element's prototype. Stencil's proxy only forwards members declared with `@Prop()`, `@State()`, or `@Method()`. Accessing `bdsTextField.checkValidity()` from outside the component returns `undefined` without a wrapper:
+
+```typescript
+@Method()
+async checkValidity(): Promise<boolean> {
+  return this.internals.checkValidity();
+}
+
+@Method()
+async reportValidity(): Promise<boolean> {
+  return this.internals.reportValidity();
+}
+```
+
+All FACE validation checks from outside the component (test harnesses, integration tests) must go through these `@Method()` wrappers.
+
+**Constraint validation — avoid doubled validation events.**
+If both `ElementInternals.setValidity()` and a native `<input required>` attribute handle validation simultaneously, the browser fires two validation events. The inner `<input>` without FACE focus handling causes an "invalid form control is not focusable" error on submit.
+
+Required pattern:
+
+1. Remove `required={this.required}` from the native `<input>` inside the component.
+2. Handle all constraint validation exclusively via `ElementInternals.setValidity()`.
+3. Add `tabIndex={this.disabled ? -1 : 0}` on `<Host>` so the browser can focus the custom element when validation fails.
+4. Add `onFocus={() => this.el.querySelector<HTMLInputElement>('input')?.focus()}` on `<Host>` to delegate focus to the inner input.
+5. Both `formResetCallback` and `formStateRestoreCallback` must call `updateValidity()` after restoring the value — failing to do so leaves validity reflecting the pre-reset state.
+
+**Async rendering — `formDisabledCallback` trigger conditions.**
+
+- `HTMLFormElement` has no native `disabled` property. Setting `form.disabled = true` does nothing.
+- `formDisabledCallback` is only triggered by a `<fieldset disabled>` ancestor being toggled.
+- In unit tests: set `component.disabled` directly. In integration tests: toggle a `<fieldset disabled>` ancestor.
+- `HTMLButtonElement.prototype.checkValidity` shadows any global function named `checkValidity` when called from an HTML `onclick` attribute. Rename manual test harness functions to avoid collision (e.g. `testValidity` instead of `checkValidity`).
+
 - Use `el.querySelector(...)` for all inner element access — no `shadowRoot` exists.
 
 ---
@@ -307,23 +414,23 @@ All component classes must follow this 15-section member ordering. Consistent or
 
 ### The 15-section standard
 
-| Order | Section                          | Description                                                          | Examples                                                                 |
-| ----- | -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 1     | **Static members**               | Static properties and methods                                        | `static tagName = 'bds-button'`                                          |
-| 2     | **Private non-reactive members** | Private class properties that don't trigger re-renders               | `private helperInstance: Helper`                                         |
-| 3     | **Element reference**            | Reference to the component's host element                            | `@Element() el!: HTMLElement`                                            |
-| 4     | **Internal reactive state**      | Private reactive properties                                          | `@State() private isOpen = false`                                        |
-| 5     | **Public reactive properties**   | Public props that trigger re-renders when changed                    | `@Prop() disabled = false`                                               |
-| 6     | **Property watchers**            | Handlers that run when specific properties change                    | `@Watch('disabled')`, `@Watch('value')`                                  |
-| 7     | **Event declarations**           | Custom events emitted by the component                               | `@Event() bdsChange: EventEmitter`                                       |
-| 8     | **Constructor**                  | Constructor (only if initialization logic is required)               | `constructor() { super(); }`                                             |
-| 9     | **Lifecycle methods**            | Component lifecycle hooks in execution order (see below)             | `connectedCallback()`, `componentWillLoad()`, `disconnectedCallback()`   |
-| 10    | **Event listeners**              | `@Listen` decorators                                                 | `@Listen('scroll', { target: 'window', passive: true })`                 |
-| 11    | **Event handlers**               | Private methods that handle events                                   | `private handleClick = () => { ... }`                                    |
-| 12    | **Public methods**               | `@Method()` — public API exposed to consumers                        | `async open()`, `async checkValidity()`                                  |
-| 13    | **Internal methods**             | Private helper methods                                               | `private updateState()`                                                  |
-| 14    | **Render helpers**               | Private methods returning JSX fragments                              | `private renderLabel()`                                                  |
-| 15    | **render() method**              | Main render method — always last                                     | `render() { return <Host>...</Host>; }`                                  |
+| Order | Section                          | Description                                              | Examples                                                               |
+| ----- | -------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1     | **Static members**               | Static properties and methods                            | `static tagName = 'bds-button'`                                        |
+| 2     | **Private non-reactive members** | Private class properties that don't trigger re-renders   | `private helperInstance: Helper`                                       |
+| 3     | **Element reference**            | Reference to the component's host element                | `@Element() el!: HTMLElement`                                          |
+| 4     | **Internal reactive state**      | Private reactive properties                              | `@State() private isOpen = false`                                      |
+| 5     | **Public reactive properties**   | Public props that trigger re-renders when changed        | `@Prop() disabled = false`                                             |
+| 6     | **Property watchers**            | Handlers that run when specific properties change        | `@Watch('disabled')`, `@Watch('value')`                                |
+| 7     | **Event declarations**           | Custom events emitted by the component                   | `@Event() bdsChange: EventEmitter`                                     |
+| 8     | **Constructor**                  | Constructor (only if initialization logic is required)   | `constructor() { super(); }`                                           |
+| 9     | **Lifecycle methods**            | Component lifecycle hooks in execution order (see below) | `connectedCallback()`, `componentWillLoad()`, `disconnectedCallback()` |
+| 10    | **Event listeners**              | `@Listen` decorators                                     | `@Listen('scroll', { target: 'window', passive: true })`               |
+| 11    | **Event handlers**               | Private methods that handle events                       | `private handleClick = () => { ... }`                                  |
+| 12    | **Public methods**               | `@Method()` — public API exposed to consumers            | `async open()`, `async checkValidity()`                                |
+| 13    | **Internal methods**             | Private helper methods                                   | `private updateState()`                                                |
+| 14    | **Render helpers**               | Private methods returning JSX fragments                  | `private renderLabel()`                                                |
+| 15    | **render() method**              | Main render method — always last                         | `render() { return <Host>...</Host>; }`                                |
 
 ### Lifecycle methods ordering
 
@@ -331,30 +438,30 @@ Lifecycle methods in section 9 must appear in their natural execution order, not
 
 **Initial load cycle:**
 
-| Order | Method                  | When it runs                                                                                     |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------------ |
-| 1     | `connectedCallback()`   | Every time the element connects to the DOM (before `componentWillLoad` on first connection)      |
-| 2     | `componentWillLoad()`   | Once, just after first connection — good for one-time async setup                                |
-| 3     | `componentWillRender()` | Before every `render()`                                                                          |
-| 4     | `render()`              | Template rendering (section 15, not here)                                                        |
-| 5     | `componentDidRender()`  | After every `render()`                                                                           |
-| 6     | `componentDidLoad()`    | Once, just after first `render()` completes                                                      |
+| Order | Method                  | When it runs                                                                                |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------- |
+| 1     | `connectedCallback()`   | Every time the element connects to the DOM (before `componentWillLoad` on first connection) |
+| 2     | `componentWillLoad()`   | Once, just after first connection — good for one-time async setup                           |
+| 3     | `componentWillRender()` | Before every `render()`                                                                     |
+| 4     | `render()`              | Template rendering (section 15, not here)                                                   |
+| 5     | `componentDidRender()`  | After every `render()`                                                                      |
+| 6     | `componentDidLoad()`    | Once, just after first `render()` completes                                                 |
 
 **Update cycle (triggered by prop/state changes):**
 
-| Order | Method                    | When it runs                                                               |
-| ----- | ------------------------- | -------------------------------------------------------------------------- |
-| 1     | `componentShouldUpdate()` | Returns boolean to allow/prevent the re-render                             |
-| 2     | `componentWillUpdate()`   | Before update render (never called on first render)                        |
-| 3     | `componentWillRender()`   | Before every `render()`                                                    |
-| 4     | `componentDidRender()`    | After every `render()`                                                     |
-| 5     | `componentDidUpdate()`    | After update render completes (never called on first render)               |
+| Order | Method                    | When it runs                                                 |
+| ----- | ------------------------- | ------------------------------------------------------------ |
+| 1     | `componentShouldUpdate()` | Returns boolean to allow/prevent the re-render               |
+| 2     | `componentWillUpdate()`   | Before update render (never called on first render)          |
+| 3     | `componentWillRender()`   | Before every `render()`                                      |
+| 4     | `componentDidRender()`    | After every `render()`                                       |
+| 5     | `componentDidUpdate()`    | After update render completes (never called on first render) |
 
 **Disconnection:**
 
-| Method                   | When it runs                                                   |
-| ------------------------ | -------------------------------------------------------------- |
-| `disconnectedCallback()` | Every time the element disconnects from the DOM                |
+| Method                   | When it runs                                    |
+| ------------------------ | ----------------------------------------------- |
+| `disconnectedCallback()` | Every time the element disconnects from the DOM |
 
 ### Alphabetical ordering within sections
 
@@ -473,3 +580,75 @@ disconnectedCallback() { this.el.removeEventListener('keydown', this.handleKeyDo
 ```
 
 Omitting the `disconnectedCallback` cleanup is a common memory leak. Prefer vDOM listeners, which are managed by Stencil's reconciler automatically.
+
+---
+
+## Composite Light DOM Event Boundary
+
+Any Stencil composite component that accepts child components via named slots and re-emits their events must call `event.stopPropagation()` before re-emitting. Without it, consumers receive each event twice — once from the bubbled child event and once from the host re-emission.
+
+This happens because slotted child elements remain in the light DOM. Their events bubble naturally up to the composite host element. When the host also listens to the same event and re-emits its own version, both reach external listeners.
+
+```typescript
+// In the host listener that re-emits — always stop the child's event first
+addElementListener(this.bdsList, "bdsChange", (event: Event) => {
+  event.stopPropagation(); // prevent bds-list-menu's event reaching consumers
+  const value = (event as CustomEvent<string | undefined>).detail ?? "";
+  this.setValue(value);
+});
+
+// For every child event the host owns but does NOT re-emit — stop-only guard
+addElementListener(this.bdsField, "valueChange", (event: Event) => {
+  event.stopPropagation();
+});
+```
+
+**Detecting duplicate events:** open the Storybook Actions panel, trigger a single interaction, and check the `from` field on each entry. Any entry where `from` is a child element name (not the host) is a leaked event — a `stopPropagation()` guard is missing.
+
+---
+
+## DOM API Gotchas
+
+### `setAttribute` requires kebab-case for ARIA attributes
+
+`setAttribute` always takes the HTML attribute name in kebab-case. Passing a camelCase property name writes a non-standard, unrecognised attribute to the DOM — no runtime error, but the attribute is invisible to screen readers.
+
+```ts
+// ✅ Correct
+trigger.setAttribute("aria-describedby", "tooltip-content");
+
+// ❌ Wrong — writes a non-standard attribute; screen readers ignore it
+trigger.setAttribute("ariaDescribedBy", "tooltip-content");
+```
+
+The confusion arises because the DOM _property_ accessor uses camelCase (`element.ariaDescribedBy`), but `setAttribute` operates on the HTML _attribute_ name, which is always kebab-case for ARIA attributes. These are two different access paths to the same underlying value.
+
+---
+
+## Accessor and Boolean Expression Conventions
+
+### Getter naming — no `get` prefix
+
+A getter property named `getPlacement` is doubly redundant: the `get` keyword already marks it as a getter, and callers read it as `this.getPlacement`. Name getters after the value they return.
+
+```ts
+// ✅ Correct
+get placement() { ... }
+get floatingContent() { ... }
+
+// ❌ Wrong
+get getPlacement() { ... }
+get getFloatingContent() { ... }
+```
+
+### `|| false` is always redundant
+
+`!x || false` always evaluates to `!x`. The `|| false` tail adds no logical effect.
+
+```ts
+// ✅ Correct
+return !this.floatingOptions.hideArrow;
+
+// ❌ Wrong — the || false is dead code
+return !this.floatingOptions.hideArrow || false;
+```

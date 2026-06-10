@@ -254,6 +254,18 @@ Consistent naming conventions across all component API surfaces ensure predictab
 | **CSS Shadow Parts**      | `kebab-case`                  | - kebab-case<br/>- Descriptive element names<br/>- No prefix needed (scoped to component)                 | `button`<br/>`input-wrapper`<br/>`label`<br/>`error-message`                            |
 | **CSS Custom Properties** | `--prefix-component-property` | - Double dash prefix<br/>- kebab-case<br/>- Include component name<br/>- Descriptive modifier             | `--my-button-bg-color`<br/>`--my-input-border-width`<br/>`--my-card-padding`            |
 
+#### Interface File Naming
+
+Component interface files must use `IComponent.ts` naming — not `IBdsComponent.ts`.
+
+| Correct       | Wrong            |
+| ------------- | ---------------- |
+| `ITooltip.ts` | `IBdsTooltip.ts` |
+| `IPopover.ts` | `IBdsPopover.ts` |
+| `IBanner.ts`  | `IBdsBanner.ts`  |
+
+The `Bds` prefix is reserved exclusively for custom element tag names (`bds-tooltip`) and Stencil component class names (`BdsTooltip`). Interface types live in a `types/` subdirectory alongside the component file.
+
 #### Boolean Property Naming
 
 Boolean properties require special attention to ensure they work correctly with HTML attributes:
@@ -806,7 +818,7 @@ In order to enforce consistent code organization across the component library, t
 | ----------------------- | ---------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **ESLint Rules**        | Automated linting rules that enforce member ordering | `"@typescript-eslint/member-ordering": ["error", {...}]` | - Automated checking in IDE and CI/CD<br/>- Auto-fix capability<br/>- Immediate feedback to developers<br/>- See Section 2.1 for details |
 | **Component Templates** | CLI generators with pre-ordered structure            | `npm run generate:component my-button`                   | - Developers start with correct structure<br/>- Includes section comments<br/>- Reduces manual setup<br/>- Consistent boilerplate        |
-| **Pre-commit Hooks**    | Run linting before commits to block violations       | `husky` + `lint-staged` on `*.ts` files                  | - Prevents bad code from being committed<br/>- Forces compliance automatically<br/>- See Section 8.1 (Pre-commit Hooks)                         |
+| **Pre-commit Hooks**    | Run linting before commits to block violations       | `husky` + `lint-staged` on `*.ts` files                  | - Prevents bad code from being committed<br/>- Forces compliance automatically<br/>- See Section 8.1 (Pre-commit Hooks)                  |
 | **Code Snippets**       | IDE snippets for common patterns                     | VS Code snippets for component sections                  | - Quick insertion of properly ordered sections<br/>- Low overhead, no tooling needed<br/>- Developer convenience                         |
 
 **Recommended Approach:**
@@ -1107,9 +1119,24 @@ export class BdsButton {
   @Watch("variant")
   @Watch("size")
   checkPropValues(): void {
-    validatePropValue(Object.values(BUTTON_TYPES) as ButtonTypes[], "button", this.el as HTMLElement, "type");
-    validatePropValue(Object.values(BUTTON_VARIANTS) as ButtonVariant[], "default", this.el as HTMLElement, "variant");
-    validatePropValue(Object.values(BUTTON_SIZES) as ButtonSizes[], "medium", this.el as HTMLElement, "size");
+    validatePropValue(
+      Object.values(BUTTON_TYPES) as ButtonTypes[],
+      "button",
+      this.el as HTMLElement,
+      "type",
+    );
+    validatePropValue(
+      Object.values(BUTTON_VARIANTS) as ButtonVariant[],
+      "default",
+      this.el as HTMLElement,
+      "variant",
+    );
+    validatePropValue(
+      Object.values(BUTTON_SIZES) as ButtonSizes[],
+      "medium",
+      this.el as HTMLElement,
+      "size",
+    );
   }
 
   // Section 9 — Lifecycle methods
@@ -1134,17 +1161,48 @@ When the current prop value is not in `acceptedValues`, the utility resets `elem
 
 **Rules:**
 
-| Rule | Detail |
-| ---- | ------ |
-| Use `Object.values(ENUM)` | Keeps the accepted-values array in sync with the enum automatically |
-| Pass `this.el as HTMLElement` | Keeps `validatePropValue` generic — avoid casting to a specific element type |
-| No inline literals | Enum values are the single source of truth; do not duplicate them as string arrays |
-| `checkPropValues` in section 6 | The method carries `@Watch()` decorators so it belongs with Property Watchers |
-| Call in `componentWillLoad()` | Required to cover the initial render — `@Watch()` alone does not fire on mount |
+| Rule                           | Detail                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| Use `Object.values(ENUM)`      | Keeps the accepted-values array in sync with the enum automatically                |
+| Pass `this.el as HTMLElement`  | Keeps `validatePropValue` generic — avoid casting to a specific element type       |
+| No inline literals             | Enum values are the single source of truth; do not duplicate them as string arrays |
+| `checkPropValues` in section 6 | The method carries `@Watch()` decorators so it belongs with Property Watchers      |
+| Call in `componentWillLoad()`  | Required to cover the initial render — `@Watch()` alone does not fire on mount     |
 
 #### Property Mutability
 
 By default, properties are immutable (read-only from within the component). Use `mutable: true` only when the component needs to modify its own prop value.
+
+**`mutable: true` on `disabled` produces a Stencil compiler warning — use a `@State()` mirror instead.**
+`disabled` is a native reflected HTML attribute with browser-managed semantics (controlled externally via `formDisabledCallback`). Marking it `mutable: true` creates two writers on the same reflected attribute — the component and the browser — which can race. The `stencil/strict-mutable` ESLint rule flags every `mutable: true` as a warning on every build; this is intentional and accepted for other props that require internal mutation, but `disabled` is the one case where the `@State()` mirror is always preferred:
+
+```typescript
+/** Whether the component is disabled. */
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+@State() private isDisabled: boolean = false;
+
+@Watch('disabled')
+onDisabledChange(next: boolean): void { this.isDisabled = next; }
+
+componentWillLoad(): void { this.isDisabled = this.disabled; }
+
+// In FACE components: also update via formDisabledCallback
+formDisabledCallback(disabled: boolean): void { this.isDisabled = disabled; }
+```
+
+Render and toggle logic reads `this.isDisabled`. `@Prop()` remains `readonly` and externally owned.
+
+**Never use constant references as `@Prop()` default values.** Stencil resolves `@Prop()` defaults at static analysis time (AST level). If you write `= ORIENTATIONS.VERTICAL`, the compiler records the identifier `ORIENTATIONS.VERTICAL` in `custom-elements.json` instead of the actual string `'vertical'`. This leaks internal implementation details into Storybook ArgTypes and consumer IDEs.
+
+```typescript
+// ✅ Correct — CEM records 'vertical'
+@Prop() readonly orientation: Orientation = 'vertical';
+
+// ❌ Wrong — CEM records 'ORIENTATIONS.VERTICAL'
+@Prop() readonly orientation: Orientation = ORIENTATIONS.VERTICAL;
+```
+
+Constants may be used in logic (switch cases, class maps, `validatePropValue`) — just never as the `@Prop()` initializer.
 
 **When to Use `mutable: true`:**
 
@@ -1287,6 +1345,33 @@ Proper property design ensures:
 5. **Maintainability** — Consistent patterns reduce cognitive load
 6. **Accessibility** — Reflected properties enable assistive technology
 7. **Framework Compatibility** — Well-designed properties work across frameworks
+
+#### Component Interface Contract
+
+`IComponent.ts` interfaces describe only what the **consumer configures** — the set of publicly settable `@Prop()` members.
+
+The following must **not** be in `IComponent.ts`:
+
+- **`@Event()` outputs** — `EventEmitter<T>` members are declared on the class body and documented via JSDoc. Adding them to the interface forces the type to reference an internal abstraction consumers never set.
+- **Group-propagated props** — props the parent group component writes imperatively (e.g. `name`, `showDivider`, `isFirst`) are parent-child coordination details, not consumer API.
+- **`@State()` mirrors** — internal reactive state (`isDisabled`, `isOpen`) is never part of the public API.
+
+**Interface members must be optional when the prop has a default value.** A required interface member implies the consumer must always supply it explicitly. With optional members, bare-attribute patterns (`<bds-radio-group disabled>`) work as expected in React and HTML.
+
+```typescript
+// ✅ Correct — props with component-side defaults are optional in the interface
+export interface IRadioGroup {
+  name: string; // no default on component — required
+  value?: string; // default = ''
+  disabled?: boolean; // default = false
+}
+
+// ❌ Wrong — disabled has a default; marking it required is misleading
+export interface IRadioGroup {
+  name: string;
+  disabled: boolean; // forces consumer to always pass disabled={false}
+}
+```
 
 ### 1.5 Custom Events
 
@@ -1451,11 +1536,11 @@ Add explicit options only when there is a documented architectural reason (e.g.,
 
 **Why `composed` is never needed:**
 
-| Fact                                   | Implication                                         |
-| -------------------------------------- | --------------------------------------------------- |
-| All components use light DOM           | No shadow boundary to cross; `composed` has no effect |
-| Consumers listen on the component element directly | Bubbling is unnecessary for direct listeners |
-| Framework bindings (Vue, React) wrap the element | They call `addEventListener` on the host, not a parent |
+| Fact                                               | Implication                                            |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| All components use light DOM                       | No shadow boundary to cross; `composed` has no effect  |
+| Consumers listen on the component element directly | Bubbling is unnecessary for direct listeners           |
+| Framework bindings (Vue, React) wrap the element   | They call `addEventListener` on the host, not a parent |
 
 #### Cancelable Events Pattern
 
@@ -1682,6 +1767,28 @@ componentModels: [
 
 Multiple components sharing the same `event` + `targetAttr` pair can be listed together in one entry. The Vue proxy reads `$event.detail` directly from the flat primitive payload — no `eventAttr` field is needed.
 
+**Form control interface layering:**
+
+Three interface levels govern all Boreal DS form controls and must be implemented together:
+
+| Interface                  | Location                   | Responsibility                                                                                         |
+| -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `IFormAssociatedCallbacks` | `form-associated.mixin.ts` | Declares `formDisabledCallback`, `formResetCallback`, `formStateRestoreCallback` signatures            |
+| `IFormValueEmitter<T>`     | `form-associated.mixin.ts` | Declares `valueChange: EventEmitter<T>` — enforces consistent event naming                             |
+| `IFormControl<T>`          | `form-associated.mixin.ts` | Composite: `IFormAssociatedCallbacks & IFormValueEmitter<T>` — the single interface a class implements |
+
+```typescript
+export class BdsTextField
+  extends Mixin(formAssociatedMixin)
+  implements ITextField, IFormControl<string>
+{
+  @AttachInternals() internals!: ElementInternals;
+  @Event() valueChange!: EventEmitter<string>;
+}
+```
+
+The `componentModels` config in `vue-output-target.ts` **must land in the same PR** as the finished component. Never add it ahead of the component being complete — the Vue output target does not auto-generate `v-model` bindings from naming conventions.
+
 **The `valueChange` event:**
 
 All form components emit a dedicated `valueChange` event for Vue `v-model`. Use bare `@Event()` — no `bubbles` or `composed` options are needed because the project uses light DOM (see §1.5 and ADR 0003).
@@ -1826,20 +1933,20 @@ export default defineConfig([
 
 **Key Rules Explained:**
 
-| Rule                                | Enforcement | Rationale                                                      |
-| ----------------------------------- | ----------- | -------------------------------------------------------------- |
-| `@stencil/async-methods`            | Error       | Ensures all public methods are async                           |
-| `@stencil/decorators-context`       | Error       | Validates decorators are used in correct context               |
-| `@stencil/element-type`             | Error       | Ensures `@Element()` has correct type                          |
-| `@stencil/no-unused-watch`          | Error       | Catches unused `@Watch()` declarations                         |
-| `@stencil/methods-must-be-public`   | Error       | Methods with `@Method()` must be public                        |
-| `@stencil/props-must-be-readonly`   | Error       | Props should be readonly (unless mutable)                      |
-| `@stencil/required-jsdoc`           | Error       | Enforces JSDoc on public APIs                                  |
-| `@stencil/strict-mutable`           | Warn        | Flags mutable props — allowed but discouraged in most cases    |
-| `@typescript-eslint/no-unused-vars` | Error       | Prevents unused variables (ignore `_` prefix)                  |
-| `stencil/own-methods-must-be-private` | Error     | Internal methods should be private; only `@Method()` is public |
-| `stencil/own-props-must-be-private` | Error       | Internal state props should not leak as public properties      |
-| `stencil/single-export`             | Error       | Each file exports only the component class                     |
+| Rule                                  | Enforcement | Rationale                                                      |
+| ------------------------------------- | ----------- | -------------------------------------------------------------- |
+| `@stencil/async-methods`              | Error       | Ensures all public methods are async                           |
+| `@stencil/decorators-context`         | Error       | Validates decorators are used in correct context               |
+| `@stencil/element-type`               | Error       | Ensures `@Element()` has correct type                          |
+| `@stencil/no-unused-watch`            | Error       | Catches unused `@Watch()` declarations                         |
+| `@stencil/methods-must-be-public`     | Error       | Methods with `@Method()` must be public                        |
+| `@stencil/props-must-be-readonly`     | Error       | Props should be readonly (unless mutable)                      |
+| `@stencil/required-jsdoc`             | Error       | Enforces JSDoc on public APIs                                  |
+| `@stencil/strict-mutable`             | Warn        | Flags mutable props — allowed but discouraged in most cases    |
+| `@typescript-eslint/no-unused-vars`   | Error       | Prevents unused variables (ignore `_` prefix)                  |
+| `stencil/own-methods-must-be-private` | Error       | Internal methods should be private; only `@Method()` is public |
+| `stencil/own-props-must-be-private`   | Error       | Internal state props should not leak as public properties      |
+| `stencil/single-export`               | Error       | Each file exports only the component class                     |
 
 ### 2.2 Prettier Configuration
 
@@ -2041,18 +2148,18 @@ TypeScript compiler settings are defined in `tsconfig.json`. While Stencil has i
 
 **Key Options Explained:**
 
-| Option                    | Value       | Rationale                                                                   |
-| ------------------------- | ----------- | --------------------------------------------------------------------------- |
-| `experimentalDecorators`  | `true`      | **Required** for Stencil decorators (`@Component`, `@Prop`, `@State`, etc.) |
-| `useDefineForClassFields` | `false`     | Ensures decorators work correctly with class fields                         |
-| `target`                  | `es2020`    | Stable ES version with broad browser support                                |
-| `module`                  | `esnext`    | Enables top-level await and latest module features for bundlers              |
-| `moduleResolution`        | `bundler`   | Aligns with Vite/Rollup resolution; supports `exports` field in package.json |
-| `jsx`                     | `react`     | Required by Stencil — maps `h()` as the JSX factory                        |
-| `declaration`             | `true`      | Generates `.d.ts` files for type definitions and autocomplete               |
-| `declarationMap`          | `true`      | Maps `.d.ts` files back to source for IDE navigation                        |
-| `sourceMap`               | `true`      | Enables debugging in original TypeScript source                             |
-| `skipDefaultLibCheck`     | `true`      | Skips type checks on default lib `.d.ts` to reduce build time               |
+| Option                    | Value     | Rationale                                                                    |
+| ------------------------- | --------- | ---------------------------------------------------------------------------- |
+| `experimentalDecorators`  | `true`    | **Required** for Stencil decorators (`@Component`, `@Prop`, `@State`, etc.)  |
+| `useDefineForClassFields` | `false`   | Ensures decorators work correctly with class fields                          |
+| `target`                  | `es2020`  | Stable ES version with broad browser support                                 |
+| `module`                  | `esnext`  | Enables top-level await and latest module features for bundlers              |
+| `moduleResolution`        | `bundler` | Aligns with Vite/Rollup resolution; supports `exports` field in package.json |
+| `jsx`                     | `react`   | Required by Stencil — maps `h()` as the JSX factory                          |
+| `declaration`             | `true`    | Generates `.d.ts` files for type definitions and autocomplete                |
+| `declarationMap`          | `true`    | Maps `.d.ts` files back to source for IDE navigation                         |
+| `sourceMap`               | `true`    | Enables debugging in original TypeScript source                              |
+| `skipDefaultLibCheck`     | `true`    | Skips type checks on default lib `.d.ts` to reduce build time                |
 
 **Monorepo-Specific Options:**
 
@@ -2316,9 +2423,9 @@ import type { ButtonClickDetail } from "./my-button.types";
 When a utility, helper, or sub-component needs the type of a single prop, use indexed access on the component's interface rather than duplicating the type or importing a separate alias.
 
 ```typescript
-import type { IBdsButton } from './types/IBdsButton';
+import type { IBdsButton } from "./types/IBdsButton";
 
-function applyVariant(variant: IBdsButton['variant']) {
+function applyVariant(variant: IBdsButton["variant"]) {
   // typed directly from the interface — no duplication
 }
 ```
@@ -2696,13 +2803,13 @@ describe("my-button", () => {
 
 **Testing Guidelines:**
 
-| Scenario             | Approach                                                     |
-| -------------------- | ------------------------------------------------------------ |
-| **Property changes** | Set prop, wait for changes, assert rendered output           |
-| **Custom events**    | Add event listener, trigger action, verify event detail      |
+| Scenario             | Approach                                                           |
+| -------------------- | ------------------------------------------------------------------ |
+| **Property changes** | Set prop, wait for changes, assert rendered output                 |
+| **Custom events**    | Add event listener, trigger action, verify event detail            |
 | **Child elements**   | Use `root.querySelector()` — no shadow DOM, no `shadowRoot` needed |
-| **Async behavior**   | Use `await page.waitForChanges()` after state updates        |
-| **Error states**     | Test invalid inputs and error message rendering              |
+| **Async behavior**   | Use `await page.waitForChanges()` after state updates              |
+| **Error states**     | Test invalid inputs and error message rendering                    |
 
 **NPM Scripts:**
 
@@ -5213,14 +5320,14 @@ Boreal DS follows the **GitFlow** model. It allows stricter control over merges 
 
 Two permanent branches exist; all development flows through short-lived branches:
 
-| Branch     | Type      | Description                                                                         |
-| ---------- | --------- | ----------------------------------------------------------------------------------- |
-| `master`   | Permanent | Production. Always reflects the latest release.                                     |
-| `develop`  | Permanent | Integration branch. Accumulates completed features ready for the next release cycle. |
-| `feature/` | Temporal  | Isolated work for a new feature or ticket.                                          |
+| Branch     | Type      | Description                                                                           |
+| ---------- | --------- | ------------------------------------------------------------------------------------- |
+| `master`   | Permanent | Production. Always reflects the latest release.                                       |
+| `develop`  | Permanent | Integration branch. Accumulates completed features ready for the next release cycle.  |
+| `feature/` | Temporal  | Isolated work for a new feature or ticket.                                            |
 | `bugfix/`  | Temporal  | Fixes for errors found in `develop` or a `feature` branch before reaching production. |
-| `hotfix/`  | Temporal  | Critical fixes applied directly to `master`.                                        |
-| `release/` | Temporal  | Hardening and final testing before production.                                      |
+| `hotfix/`  | Temporal  | Critical fixes applied directly to `master`.                                          |
+| `release/` | Temporal  | Hardening and final testing before production.                                        |
 
 **Recommendations:**
 
@@ -5233,24 +5340,24 @@ All commits must follow [Conventional Commits](https://www.conventionalcommits.o
 
 **Core types and their SemVer impact:**
 
-| Type             | Impact                                                                                      | SemVer     |
-| ---------------- | ------------------------------------------------------------------------------------------- | ---------- |
-| `fix`            | Patch or bug fix                                                                            | **PATCH**  |
-| `feat`           | New feature                                                                                 | **MINOR**  |
-| `BREAKING CHANGE` | Incompatible public API change. Use `BREAKING CHANGE:` footer or `!` suffix on type/scope. | **MAJOR**  |
+| Type              | Impact                                                                                     | SemVer    |
+| ----------------- | ------------------------------------------------------------------------------------------ | --------- |
+| `fix`             | Patch or bug fix                                                                           | **PATCH** |
+| `feat`            | New feature                                                                                | **MINOR** |
+| `BREAKING CHANGE` | Incompatible public API change. Use `BREAKING CHANGE:` footer or `!` suffix on type/scope. | **MAJOR** |
 
 **Additional types (no SemVer impact):**
 
-| Type       | Purpose                                                              |
-| ---------- | -------------------------------------------------------------------- |
-| `build`    | Build system or dependency changes                                   |
-| `chore`    | Housekeeping changes not touching production or test code            |
-| `ci`       | CI configuration changes                                             |
-| `docs`     | Documentation-only changes                                           |
-| `style`    | Formatting changes (no logic change)                                 |
-| `refactor` | Code change that neither fixes a bug nor adds a feature              |
-| `perf`     | Performance improvements                                             |
-| `test`     | Adding or correcting tests                                           |
+| Type       | Purpose                                                   |
+| ---------- | --------------------------------------------------------- |
+| `build`    | Build system or dependency changes                        |
+| `chore`    | Housekeeping changes not touching production or test code |
+| `ci`       | CI configuration changes                                  |
+| `docs`     | Documentation-only changes                                |
+| `style`    | Formatting changes (no logic change)                      |
+| `refactor` | Code change that neither fixes a bug nor adds a feature   |
+| `perf`     | Performance improvements                                  |
+| `test`     | Adding or correcting tests                                |
 
 **Examples:**
 
@@ -5270,11 +5377,11 @@ feat!: send an email to the customer when a product is shipped
 
 **Merge commit** is required for merges between permanent branches to preserve full history for auditing.
 
-| Source Branch        | Target Branch    | Strategy         | Purpose                                            |
-| -------------------- | ---------------- | ---------------- | -------------------------------------------------- |
-| `feature/`, `bugfix/` | `develop`       | Squash and Merge | Clean, functionally-oriented `develop` history     |
-| `release/`, `hotfix/` | `master`        | Merge Commit     | Preserves complete release/patch history           |
-| `release/`, `hotfix/` | `develop`       | Merge Commit     | Syncs production changes back to development line  |
+| Source Branch         | Target Branch | Strategy         | Purpose                                           |
+| --------------------- | ------------- | ---------------- | ------------------------------------------------- |
+| `feature/`, `bugfix/` | `develop`     | Squash and Merge | Clean, functionally-oriented `develop` history    |
+| `release/`, `hotfix/` | `master`      | Merge Commit     | Preserves complete release/patch history          |
+| `release/`, `hotfix/` | `develop`     | Merge Commit     | Syncs production changes back to development line |
 
 ---
 
@@ -5286,13 +5393,13 @@ Pull requests are the primary mechanism for code review and quality assurance. T
 
 The PR template communicates the purpose of the change clearly to reviewers.
 
-| Field              | Content                                                                                                     | Required                              |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Title              | Must follow Conventional Commits format                                                                     | Required                              |
-| Description        | Brief overview of what's added, its intended purpose (the why), and potential impact on the application     | Required                              |
-| Task correlation   | Link to the Jira ticket using auto-closing keywords (e.g., `Closes BDS-123`)                                | Required                              |
-| Testing            | Specifies tests added or modified for the affected components                                               | Required if component added/modified  |
-| Quality checklist  | Completed against the template checklist                                                                    | Required                              |
+| Field             | Content                                                                                                 | Required                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Title             | Must follow Conventional Commits format                                                                 | Required                             |
+| Description       | Brief overview of what's added, its intended purpose (the why), and potential impact on the application | Required                             |
+| Task correlation  | Link to the Jira ticket using auto-closing keywords (e.g., `Closes BDS-123`)                            | Required                             |
+| Testing           | Specifies tests added or modified for the affected components                                           | Required if component added/modified |
+| Quality checklist | Completed against the template checklist                                                                | Required                             |
 
 ### 7.2 Review Requirements
 
@@ -5305,15 +5412,15 @@ The PR template communicates the purpose of the change clearly to reviewers.
 
 **Reviewer focus areas:**
 
-| Priority          | Review Area            | Key Question                                                                                  |
-| ----------------- | ---------------------- | --------------------------------------------------------------------------------------------- |
-| High (CRITICAL)   | CI/CD Integrity        | Did all checks (tests, linter, build) pass without errors?                                    |
-| High (CRITICAL)   | Testing & Regression   | Were unit/integration tests added? Does the PR break existing tests on other components?      |
-| High (CRITICAL)   | Public API / SemVer    | If a public prop or method changed or was removed, is it flagged as a `BREAKING CHANGE`?      |
-| Medium            | Component Adherence    | Are existing DS components and design tokens reused? Does code follow the design specification? |
-| Medium            | Performance / DOM      | Is the HTML/DOM markup semantic and efficient? Risk of excessive re-renders?                  |
-| Low               | Documentation          | Is the PR template complete? Is Storybook/Confluence updated if applicable?                  |
-| Low               | Style and Naming       | Does code follow naming and style standards?                                                  |
+| Priority        | Review Area          | Key Question                                                                                    |
+| --------------- | -------------------- | ----------------------------------------------------------------------------------------------- |
+| High (CRITICAL) | CI/CD Integrity      | Did all checks (tests, linter, build) pass without errors?                                      |
+| High (CRITICAL) | Testing & Regression | Were unit/integration tests added? Does the PR break existing tests on other components?        |
+| High (CRITICAL) | Public API / SemVer  | If a public prop or method changed or was removed, is it flagged as a `BREAKING CHANGE`?        |
+| Medium          | Component Adherence  | Are existing DS components and design tokens reused? Does code follow the design specification? |
+| Medium          | Performance / DOM    | Is the HTML/DOM markup semantic and efficient? Risk of excessive re-renders?                    |
+| Low             | Documentation        | Is the PR template complete? Is Storybook/Confluence updated if applicable?                     |
+| Low             | Style and Naming     | Does code follow naming and style standards?                                                    |
 
 ### 7.3 Approval Criteria
 
@@ -5346,11 +5453,11 @@ Automation reduces manual errors and accelerates development velocity. This sect
 
 Three tools work together to run quality checks before a commit reaches the repository:
 
-| Tool          | Function                                             | Git Hook     |
-| ------------- | ---------------------------------------------------- | ------------ |
-| Husky         | Git hook manager                                     | `pre-commit`, `commit-msg` |
-| lint-staged   | Runs tasks only on staged files                      | `pre-commit` |
-| commitlint    | Validates commit messages against Conventional Commits | `commit-msg` |
+| Tool        | Function                                               | Git Hook                   |
+| ----------- | ------------------------------------------------------ | -------------------------- |
+| Husky       | Git hook manager                                       | `pre-commit`, `commit-msg` |
+| lint-staged | Runs tasks only on staged files                        | `pre-commit`               |
+| commitlint  | Validates commit messages against Conventional Commits | `commit-msg`               |
 
 **Automated flow:**
 
@@ -5404,12 +5511,25 @@ Create `commitlint.config.mjs`:
 
 ```javascript
 export default {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   rules: {
-    'type-enum': [
+    "type-enum": [
       2,
-      'always',
-      ['feat', 'fix', 'bugfix', 'docs', 'build', 'ci', 'refactor', 'revert', 'style', 'chore', 'ticket', 'perf'],
+      "always",
+      [
+        "feat",
+        "fix",
+        "bugfix",
+        "docs",
+        "build",
+        "ci",
+        "refactor",
+        "revert",
+        "style",
+        "chore",
+        "ticket",
+        "perf",
+      ],
     ],
   },
 };
@@ -5500,4 +5620,3 @@ import { IFoo } from "./types/IFoo";
 ```
 
 **See also:** [ADR 0006](./../decisions/0006-stencil-interface-files-named-exports-only.md)
-
