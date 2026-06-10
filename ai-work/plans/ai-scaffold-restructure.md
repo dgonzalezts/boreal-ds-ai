@@ -10,6 +10,25 @@
 
 ---
 
+## Progress
+
+| Task                 | Status         | Notes                                                                                                                                 |
+| -------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Tasks 1–13 (Phase 1) | ✅ Complete    | Canonical dirs, symlinks, aisync, sync-symlinks, CLAUDE.md                                                                            |
+| Task 14              | ✅ Complete    | Audit written to `ai-work/sessions/2026-06-10-memory-consolidation-audit.md`                                                          |
+| Task 15              | ✅ Complete    | 16 memory entries promoted into 3 guideline files (9 → stencil-best-practices, 3 → stencil-unit-testing-patterns, 4 → code-practices) |
+| Task 16              | ⏳ Deferred    | Delete redundant memory files + update MEMORY.md — do after Phase 3                                                                   |
+| Task 17              | ⏳ Deferred    | Finalize copilot-instructions consolidation — do after Phase 3                                                                        |
+| Task 18              | ⏳ Not started | Create `with-node.sh` + `check-node-version.sh`                                                                                       |
+| Tasks 19–22          | ⏳ Not started | Create 4 knowledge skills                                                                                                             |
+| Tasks 23–26          | ⏳ Not started | Create 4 specialist subagent files                                                                                                    |
+| Task 27              | ⏳ Not started | Repurpose `frontend-developer.md` as coordinator                                                                                      |
+| Task 28              | ⏳ Not started | Update `writing-plans` + `executing-plans` skills                                                                                     |
+| Task 29              | ⏳ Not started | Create `create-component` SDLC entry-point skill                                                                                      |
+| Task 30              | ⏳ Not started | Run `sync-symlinks` to propagate new agents/skills into mirror dirs                                                                   |
+
+---
+
 ## Files to create / modify
 
 ### Phase 1 — Relocate
