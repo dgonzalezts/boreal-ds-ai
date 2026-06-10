@@ -6,8 +6,9 @@ description: >
   "plan this component", "plan the implementation", "I want to build X", "let's plan X", or
   provides a spec, ticket, or Figma design and asks what to do next. Produces a task-by-task
   implementation plan saved to ai-work/plans/ covering files to create or modify, acceptance criteria,
-  unit test behaviors, manual test steps, and commit messages. Always use this skill before
-  dispatching any implementation subagent or starting development work on a new component.
+  unit test behaviors, manual test steps, and commit messages. Plans must include Executor fields on
+  every task so executing-plans can dispatch to the correct specialist subagent. Always use this skill
+  before dispatching any implementation subagent or starting development work on a new component.
 ---
 
 # Writing Plans
@@ -114,11 +115,24 @@ Use this checklist during planning and include a short "utility discovery" note 
 
 The file table is a living checklist. It gives the implementer full orientation before reading any task.
 
+## Executor Mapping
+
+Every task in a plan must declare an `**Executor:**` field. Use this table to assign the correct executor:
+
+| Task type                                                        | Executor                  |
+| ---------------------------------------------------------------- | ------------------------- |
+| Type interfaces, scaffold, lifecycle, render(), JSDoc, SCSS      | `@frontend-subagent`      |
+| Unit tests (all spec files)                                      | `@testing-subagent`       |
+| Storybook story, MDX documentation                               | `@documentation-subagent` |
+| Framework output targets, build scripts, CI fixes, release steps | `@release-subagent`       |
+| Utility/config tasks with no component code                      | main thread (no executor) |
+
 ## Task Structure
 
 ```markdown
 ### Task N: [Deliverable Layer Name]
 
+**Executor:** @frontend-subagent
 **Files:**
 
 - `exact/path/to/file.ts` (create)
@@ -191,14 +205,14 @@ After saving the plan, offer execution choice:
 
 **If Subagent-Driven chosen:**
 
-- **REQUIRED SUB-SKILL:** Use subagent-driven-development
 - Stay in this session
-- Fresh subagent per task + code review
+- Read the `**Executor:**` field on each task and dispatch: `@<subagent>: <task title, files, acceptance criteria, unit tests, manual test checklist, commit message>`
+- Review subagent output against acceptance criteria before proceeding to the next task
 
 **If Parallel Session chosen:**
 
 - Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses executing-plans
+- **REQUIRED SUB-SKILL:** New session uses `executing-plans`
 
 ```
 
