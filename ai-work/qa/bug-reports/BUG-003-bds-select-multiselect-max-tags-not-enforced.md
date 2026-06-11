@@ -3,7 +3,7 @@
 **Severity:** High
 **Priority:** P1
 **Type:** Functional
-**Status:** Open
+**Status:** Fixed (2026-06-11 — enforcement guard + derived disable layer in `bds-select`; composite-scoped input persistence, overflow derivation, and aria-live at-limit message in `bds-tag-field`; verified in Storybook via Playwright)
 **Component:** `bds-select` (multiselect composition with `bds-tag-field`)
 **Discovered during:** QA session on story `forms-select--combining-tag-field-attributes` (2026-06-11)
 **Affects:** All consumers of `bds-select multiselect` that set `max-tags` on the slotted `bds-tag-field`
@@ -23,7 +23,7 @@
 
 ## Description
 
-In multiselect mode, `bds-select` lets the user check an unlimited number of options in the list menu even when the slotted `bds-tag-field` declares `max-tags="3"`. The limit is only *flagged* after the fact (error message, red border, `4/3` counter) — it is never *enforced*. The component documentation states that selection limits "must be configured through the `max-tags` … properties exposed by `<bds-tag-field>`", so consumers reasonably expect the composition to honour it.
+In multiselect mode, `bds-select` lets the user check an unlimited number of options in the list menu even when the slotted `bds-tag-field` declares `max-tags="3"`. The limit is only _flagged_ after the fact (error message, red border, `4/3` counter) — it is never _enforced_. The component documentation states that selection limits "must be configured through the `max-tags` … properties exposed by `<bds-tag-field>`", so consumers reasonably expect the composition to honour it.
 
 All over-limit values are real state: they populate `bds-select.value`, render as hidden `<input>` elements, and would be submitted with a form (FACE validity is the only safety net blocking native submission).
 
@@ -48,21 +48,21 @@ Full behavioural specification for the `maxTags` contract in the composition (no
 **A. While the limit is reached (`value.length === maxTags`):**
 
 1. Selected items stay checked and stay interactive — unchecking one must always be possible to free a slot.
-2. All *unselected*, non-label items are disabled (`disabled` attribute → `aria-disabled`, excluded from the keyboard controller's roving tabindex, which already filters `:not([disabled])` at `bds-list-menu.tsx:155`). Clicking them produces no state change and no events.
+2. All _unselected_, non-label items are disabled (`disabled` attribute → `aria-disabled`, excluded from the keyboard controller's roving tabindex, which already filters `:not([disabled])` at `bds-list-menu.tsx:155`). Clicking them produces no state change and no events.
 3. No error state appears from list interaction — the limit can never be exceeded this way, so "Maximum of 3 tags allowed." never renders. The counter caps at `3/3`.
 4. The "Select All" control (`selectControls`) is disabled or hidden when `maxTags` is smaller than the number of selectable options; it must never select past the limit (`handleToggleSelect`, `bds-list-menu.tsx:267`, currently would).
 5. Opening the dropdown while already at the limit shows items in their disabled state from the start.
 6. The search input remains rendered and functional (filtering still works); the user can still inspect the list and their selections.
 7. The state is communicated non-visually: the limit being reached is announced to assistive technology (e.g. `aria-live` on the counter/helper region), not only shown as a visual counter.
 8. The helper line shows a neutral (non-error) message while at the limit — e.g. "Maximum of 3 selections reached" — explaining why the remaining options are dimmed. It reverts to the regular `helperText` once a slot is freed.
-9. A within-limit selection is never hidden behind the overflow chip **in the select composition**: when `entryMode !== 'free'` and `maxVisibleTags` is unset, `effectiveMaxVisible` derives from `maxTags` (not `maxTags - 1`), so all tags of a full valid selection are visible. Scope note: the current `maxTags - 1` derivation (`bds-tag-field.tsx:184-188`) is *documented standalone behaviour* (argTypes: "`0` derives from `maxTags - 1`", paired with "When the limit is reached the input is hidden") and stays untouched for `free` mode — the `-1` reserves the input's slot, a rationale that disappears in composite mode where the input remains rendered (A6). An explicit `max-visible-tags` always wins, in every mode.
+9. A within-limit selection is never hidden behind the overflow chip **in the select composition**: when `entryMode !== 'free'` and `maxVisibleTags` is unset, `effectiveMaxVisible` derives from `maxTags` (not `maxTags - 1`), so all tags of a full valid selection are visible. Scope note: the current `maxTags - 1` derivation (`bds-tag-field.tsx:184-188`) is _documented standalone behaviour_ (argTypes: "`0` derives from `maxTags - 1`", paired with "When the limit is reached the input is hidden") and stays untouched for `free` mode — the `-1` reserves the input's slot, a rationale that disappears in composite mode where the input remains rendered (A6). An explicit `max-visible-tags` always wins, in every mode.
 
 **B. Recovery — selection re-enables when a slot is freed. The disabled state is derived from the current count and recomputed on every change, never a one-way latch.** All of these paths must re-enable previously disabled items immediately:
 
 10. Removing a single tag via its chip ✕.
 11. Unchecking a selected item in the list.
 12. The clear-all button.
-13. Closing the `+N` overflow chip — this removes *several* tags in one gesture (`handleOverflowClose`, `bds-tag-field.tsx:334`, emits one `bdsTagRemove` per value); the list resync in `bds-select.listenTagRemove` must survive the burst.
+13. Closing the `+N` overflow chip — this removes _several_ tags in one gesture (`handleOverflowClose`, `bds-tag-field.tsx:334`, emits one `bdsTagRemove` per value); the list resync in `bds-select.listenTagRemove` must survive the burst.
 14. A parent form reset (`listenFormReset`).
 15. Focus is never stranded: if the input was previously removed/restored around the limit, keyboard focus must remain inside the component, not drop to `<body>`.
 

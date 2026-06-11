@@ -1,0 +1,1 @@
+../../.agents/agents/knowledge-keeper.md

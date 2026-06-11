@@ -14,7 +14,7 @@ Primary references (read before writing tests):
 
 ## Quality Gate — Two Phases (Required Order)
 
-1. **Coverage ≥ 90%** — run `pnpm test:spec` from the monorepo root; confirm statement coverage ≥ 90% before proceeding
+1. **Coverage ≥ 90%** — run `pnpm test:coverage` from the monorepo root; confirm statement coverage ≥ 90% before proceeding
 2. **Mutation score ≥ 90%** — invoke the `mutations-testing` skill; score < 90% requires additional tests targeting surviving mutants before the task is complete
 
 Do not skip or reverse this order. Coverage alone does not prove the tests catch real bugs.

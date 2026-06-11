@@ -46,7 +46,14 @@ if [[ -x "$root/.agents/scripts/sync-indexes.sh" ]]; then
   bash "$root/.agents/scripts/sync-indexes.sh" "$wt"
 fi
 
-git -C "$wt" add -f "${targets[@]}"
+existing_targets=()
+for d in "${targets[@]}"; do
+  [[ -e "$wt/$d" ]] && existing_targets+=("$d")
+done
+if [[ ${#existing_targets[@]} -gt 0 ]]; then
+  git -C "$wt" add -f "${existing_targets[@]}"
+fi
+git -C "$wt" add -u
 
 if git -C "$wt" diff --cached --quiet; then
   printf "aisync: nothing changed, skipping commit and push\n"
