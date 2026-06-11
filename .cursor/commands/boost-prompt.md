@@ -1,1 +1,0 @@
-../../.agents/commands/boost-prompt.md

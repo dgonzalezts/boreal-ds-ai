@@ -123,6 +123,26 @@ bash .agents/scripts/sync-symlinks.sh
 
 ---
 
+## Amending the last sync commit
+
+If you need to rewrite the most recent commit message on `ai-config`:
+
+```bash
+# 1. Switch to ai-config
+git checkout ai-config
+
+# 2. Amend the commit message
+git commit --amend -m "your message here"
+
+# 3. Force-push to the ai remote (rewrites the published commit)
+git push ai ai-config:main --force-with-lease
+
+# 4. Return to your working branch
+git checkout -
+```
+
+---
+
 ## Pushing manually (without `aisync`)
 
 ```bash

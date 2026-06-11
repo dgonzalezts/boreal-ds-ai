@@ -1,1 +1,0 @@
-../.agents/copilot-instructions.md
