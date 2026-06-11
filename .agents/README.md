@@ -8,8 +8,8 @@ This folder contains the artefacts produced and consumed by the AI-assisted impl
 
 | Instance                 | File                                             | Role                                                                                                                            |
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend Developer**   | `ai-docs/copilot-agents/frontend-developer.agent.md`     | Research & planning agent. Reads Figma and ticket context, then produces a detailed implementation plan. **Never writes code.** |
-| **plan-frontend-ticket** | `.github/prompts/plan-frontend-ticket.prompt.md` | Prompt that structures a ticket's requirements into a step-by-step plan document saved in `ai-work/plans/`.                         |
+| **Frontend Developer**   | `.agents/agents/frontend-developer.md`           | Research & planning agent. Reads Figma and ticket context, then produces a detailed implementation plan. **Never writes code.** |
+| **plan-frontend-ticket** | `.github/prompts/plan-frontend-ticket.prompt.md` | Prompt that structures a ticket's requirements into a step-by-step plan document saved in `ai-work/plans/`.                     |
 | **develop-frontend**     | `.github/prompts/develop-frontend.prompt.md`     | Prompt that reads the plan and Figma design, then writes all implementation files (Stencil, SCSS, tests, stories, MDX).         |
 
 ---

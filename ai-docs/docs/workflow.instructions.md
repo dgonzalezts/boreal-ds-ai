@@ -27,11 +27,11 @@ A change is considered **production-ready** when every item in this checklist is
 
 ### 🔧 Development
 
-- [ ] Component extends the most appropriate base layer (see [code practices](../../ai-docs/guidelines/code-practices-&-dev-guidelines.md))
+- [ ] Component best practices followed (see [stencil-best-practices](../../ai-docs/guidelines/stencil-best-practices.md))
 - [ ] All props typed explicitly in TypeScript; no `any`
 - [ ] Design tokens used exclusively — no hard-coded colours, spacing, or radii
 - [ ] ARIA roles, labels, and keyboard interactions implemented
-- [ ] Events dispatched with `bubbles: true, composed: true`
+- [ ] Use bare `@Event()` — no `bubbles` or `composed` unless the event must bubble to a parent `@Listen()` (see ADR 0003)
 - [ ] No ESLint or TypeScript errors (`pnpm turbo lint typecheck`)
 - [ ] Conventional commit messages used throughout (`pnpm commit`)
 

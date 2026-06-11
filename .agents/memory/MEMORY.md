@@ -16,9 +16,9 @@ This directory contains non-obvious, durable facts about the codebase, environme
 
 > Canonical references:
 >
-> - `ai-docs/guidelines/code-practices-&-dev-guidelines.md` §1.2 — interface file naming (`IComponent.ts` not `IBdsComponent.ts`)
-> - `ai-docs/guidelines/code-practices-&-dev-guidelines.md` §1.4 — `@State()` mirror for `disabled`, `mutable: true` warning, Component Interface Contract (props-only rule)
-> - `ai-docs/guidelines/code-practices-&-dev-guidelines.md` §1.6 — form control interface layering, `componentModels` registration requirement
+> - `ai-docs/guidelines/stencil-best-practices.md` §"IComponent.ts Interface Contract" — interface file naming (`IComponent.ts` not `IBdsComponent.ts`)
+> - `ai-docs/guidelines/stencil-best-practices.md` §"IComponent.ts Interface Contract" — `@State()` mirror for `disabled`, `mutable: true` warning, Component Interface Contract (props-only rule)
+> - `ai-docs/guidelines/stencil-best-practices.md` §"IFormControl<T> Interface Layering" — form control interface layering, `componentModels` registration requirement
 > - `ai-docs/guidelines/stencil-best-practices.md` §"Accessor and Boolean Expression Conventions" — no `get` prefix, `!x || false` redundancy
 > - `ai-docs/guidelines/stencil-best-practices.md` §"Composite Light DOM Event Boundary" — `stopPropagation()` in re-emitting listeners; `bds-select` BUG-001 canonical example
 
