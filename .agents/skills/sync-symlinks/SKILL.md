@@ -16,7 +16,6 @@ Run `sync-symlinks.sh` to reconcile per-entry symlinks across all mirror surface
   - `.agents/commands/` — Claude slash commands
   - `.agents/memory/` — memory entries
   - `.agents/skills/` — skill definitions
-  - `ai-docs/docs/` — instruction files (`*.instructions.md`)
 - After restoring or restructuring scaffold directories
 
 ## The Process
@@ -33,12 +32,12 @@ bash .agents/scripts/sync-symlinks.sh
 
 Each line reports one of these states for each entry:
 
-| State | Meaning |
-|-------|---------|
-| `linked` | Symlink exists and is valid — no action needed |
-| `fixed` | Broken symlink was recreated with the correct target |
-| `added` | New symlink created for a newly added canonical entry |
-| `removed` | Orphaned symlink removed (canonical entry no longer exists) |
+| State      | Meaning                                                                           |
+| ---------- | --------------------------------------------------------------------------------- |
+| `linked`   | Symlink exists and is valid — no action needed                                    |
+| `fixed`    | Broken symlink was recreated with the correct target                              |
+| `added`    | New symlink created for a newly added canonical entry                             |
+| `removed`  | Orphaned symlink removed (canonical entry no longer exists)                       |
 | `CONFLICT` | A real file (not a symlink) occupies the mirror slot — **manual review required** |
 
 ### Step 3: Resolve conflicts (if any)
@@ -60,5 +59,4 @@ aisync
 ## Notes
 
 - The script never modifies real files — only symlinks are created, fixed, or removed.
-- The `.github/instructions/` surface only manages `*.instructions.md` files; other files in that directory are left alone.
 - Mirror directories are created automatically if they do not exist.

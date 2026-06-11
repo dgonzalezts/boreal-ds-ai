@@ -56,7 +56,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 ### 3. Guideline Update
 
-**When to use:** A session revealed a gap, error, or new pattern in an existing instruction or guideline file (`copilot-instructions.md`, `CLAUDE.md`, a `.github/instructions/*.md` file).
+**When to use:** A session revealed a gap, error, or new pattern in an existing instruction or guideline file (`copilot-instructions.md`, `CLAUDE.md`, a file in `ai-docs/guidelines/`).
 
 **Action:** Edit the relevant file directly to incorporate the new knowledge. Record the change as a one-line entry under a `## Changelog` section at the bottom of the updated file if one exists, or note the update in the accompanying session summary.
 
@@ -69,6 +69,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 **Primary location:** `.agents/memory/` — the project-level memory directory checked into the repository. This is the canonical store for codebase memory in this project.
 
 **Action:**
+
 1. Write the fact as a standalone topic file under `.agents/memory/{slug}.md`.
 2. Add a one-line entry for it in `.agents/memory/MEMORY.md` under the appropriate section.
 3. Add a dated entry to the `## Changelog` section at the bottom of `MEMORY.md`.
@@ -80,10 +81,10 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 This project has two memory stores. **Never write the same content to both** — duplication creates divergence: when one copy is updated (e.g. after a bug is fixed) the other silently becomes stale and will mislead future sessions.
 
-| Content type | Write to | Reasoning |
-|---|---|---|
-| Code patterns, bugs, architecture constraints, component conventions, environment gotchas | `.agents/memory/` **only** | Team-shared, git-tracked, visible to all contributors and tools |
-| Personal workflow preferences, how a specific user wants Claude to respond, user-scoped feedback | Claude Code auto-memory (`~/.claude/projects/…/memory/`) **only** | User-scoped, not meaningful to other contributors |
+| Content type                                                                                     | Write to                                                          | Reasoning                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------- |
+| Code patterns, bugs, architecture constraints, component conventions, environment gotchas        | `.agents/memory/` **only**                                        | Team-shared, git-tracked, visible to all contributors and tools |
+| Personal workflow preferences, how a specific user wants Claude to respond, user-scoped feedback | Claude Code auto-memory (`~/.claude/projects/…/memory/`) **only** | User-scoped, not meaningful to other contributors               |
 
 **Rule of thumb:** if the knowledge would be useful to a new team member or a different machine running the same repo, it belongs in `.agents/memory/`. If it describes how a specific person prefers to work, it belongs in the user-level store.
 
@@ -160,7 +161,7 @@ For ADRs, number them sequentially relative to existing files in `ai-docs/decisi
 Before finalising:
 
 - Check whether any existing ADR, guideline, or memory entry covers the same topic. If so, either update the existing artifact or explicitly reference it from the new one.
-- Check `CLAUDE.md` and `.github/instructions/` to see if knowledge belongs there for persistent cross-tool access.
+- Check `CLAUDE.md` and `.github/copilot-instructions.md` to see if knowledge belongs there for persistent cross-tool access.
 - Check `ai-docs/guidelines/` for related operational docs that might need updates.
 - If the session revealed a gap in an instruction file, apply the guideline update directly.
 

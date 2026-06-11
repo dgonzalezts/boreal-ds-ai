@@ -61,7 +61,7 @@ sequenceDiagram
     actor Dev as Developer
     participant Coord as Frontend Developer<br/>(agent)
     participant Plans as ai-work/plans/
-    participant Instructions as ai-docs/docs/
+    participant Instructions as .github/copilot-instructions.md
     participant ImplAgent as frontend-subagent
     participant TestAgent as testing-subagent
     participant DocsAgent as documentation-subagent
@@ -131,9 +131,9 @@ Reference documents consulted by the **Frontend Developer** agent and specialist
 | -------------------- | ------------------------------------------------ |
 | `release-process.md` | Release runbook executed by the Engineering Lead |
 
-> **Coding conventions** (component architecture, token rules, naming) are defined in [`base.instructions.md`](../ai-docs/docs/base.instructions.md) and its linked instruction files, not in this folder.
+> **Coding conventions** (component architecture, token rules, naming) are defined in `.github/copilot-instructions.md` and the linked skill files, not in this folder.
 
-> **Definition of Done** is defined in [`workflow.instructions.md §1`](../ai-docs/docs/workflow.instructions.md) and must be fully satisfied before any ticket is marked complete.
+> **Definition of Done** is defined in `ai-docs/guidelines/code-review-checklist.md` and must be fully satisfied before any ticket is marked complete.
 
 ---
 

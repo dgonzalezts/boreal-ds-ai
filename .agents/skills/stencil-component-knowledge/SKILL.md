@@ -8,7 +8,7 @@ description: Domain knowledge for implementing Stencil web components in Boreal 
 Primary references (read before implementing):
 
 - `ai-docs/guidelines/stencil-best-practices.md` — canonical implementation patterns (mixin architecture, FACE, SCSS, `IFormControl<T>` interface layering, API conventions)
-- `ai-docs/docs/frontend.instructions.md` — ESLint rules, token usage, JSDoc requirements
+- `ai-docs/guidelines/stencil-best-practices.md` — ESLint rules, token usage, JSDoc requirements
 
 ---
 

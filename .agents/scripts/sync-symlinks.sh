@@ -119,9 +119,6 @@ sync_surface ".cursor/agents" ".agents/agents" "../../.agents/agents"
 printf "── .cursor/skills → .agents/skills\n"
 sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"
 
-printf "── .github/instructions → ai-docs/docs (*.instructions.md)\n"
-sync_surface ".github/instructions" "ai-docs/docs" "../../ai-docs/docs" "*.instructions.md"
-
 printf "\nsync-symlinks: done  added=%d  fixed=%d  removed=%d  conflicts=%d\n" \
   "$added" "$fixed" "$removed" "$conflicts"
 

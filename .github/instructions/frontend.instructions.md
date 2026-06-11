@@ -1,1 +1,0 @@
-../../ai-docs/docs/frontend.instructions.md

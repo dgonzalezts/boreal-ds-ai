@@ -38,7 +38,7 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 - Load `documentation-knowledge` before writing any story or MDX file — it contains the authoritative Boreal DS action wiring pattern, source snippet override requirements, and Vite quirk suppressions.
 - Read `ai-docs/guidelines/storybook-patterns.md` for canonical argTypes structure and story organisation.
 - Read `ai-docs/guidelines/jsdoc-template.md` before adding or modifying JSDoc — JSDoc placement follows strict rules and CEM generates parts of the docs automatically.
-- Follow `ai-docs/docs/documentation.instructions.md` for the two-type docs/story component rule and required MDX sections.
+- Follow `ai-docs/guidelines/storybook-patterns.md` for the two-type docs/story component rule and required MDX sections.
 - All code examples in MDX must be copy-paste ready and accurate.
 - Every public prop and event must be described in the story argTypes and the MDX props table.
 - The accessibility section in MDX must be actionable: keyboard navigation steps, ARIA roles, screen reader behaviour — not generic platitudes.

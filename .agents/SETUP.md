@@ -8,23 +8,22 @@ Personal AI agent configuration, IDE instructions, and development guidelines fo
 
 Three canonical directories hold all AI artefacts:
 
-| Directory  | Purpose                                                                     |
-| ---------- | --------------------------------------------------------------------------- |
-| `.agents/` | Canonical tooling: agent definitions, skills, commands, memory, scripts     |
-| `ai-docs/` | Reference documentation: guidelines, decisions, diagrams, instruction files |
-| `ai-work/` | Working artefacts: plans, reviews, sessions, tickets, QA, research          |
+| Directory  | Purpose                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `.agents/` | Canonical tooling: agent definitions, skills, commands, memory, scripts |
+| `ai-docs/` | Reference documentation: guidelines, decisions, diagrams                |
+| `ai-work/` | Working artefacts: plans, reviews, sessions, tickets, QA, research      |
 
-Three mirror facades expose content to specific tools via per-entry symlinks:
+Two mirror facades expose content to specific tools via per-entry symlinks:
 
-| Facade                  | Points to           | Used by              |
-| ----------------------- | ------------------- | -------------------- |
-| `.claude/agents/`       | `.agents/agents/`   | Claude Code          |
-| `.claude/commands/`     | `.agents/commands/` | Claude Code          |
-| `.claude/memory/`       | `.agents/memory/`   | Claude Code          |
-| `.claude/skills/`       | `.agents/skills/`   | Claude Code          |
-| `.cursor/agents/`       | `.agents/agents/`   | Cursor               |
-| `.cursor/skills/`       | `.agents/skills/`   | Cursor               |
-| `.github/instructions/` | `ai-docs/docs/`     | GitHub Copilot / IDE |
+| Facade              | Points to           | Used by     |
+| ------------------- | ------------------- | ----------- |
+| `.claude/agents/`   | `.agents/agents/`   | Claude Code |
+| `.claude/commands/` | `.agents/commands/` | Claude Code |
+| `.claude/memory/`   | `.agents/memory/`   | Claude Code |
+| `.claude/skills/`   | `.agents/skills/`   | Claude Code |
+| `.cursor/agents/`   | `.agents/agents/`   | Cursor      |
+| `.cursor/skills/`   | `.agents/skills/`   | Cursor      |
 
 ---
 
