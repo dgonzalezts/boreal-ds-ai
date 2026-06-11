@@ -8,11 +8,11 @@ Personal AI agent configuration, IDE instructions, and development guidelines fo
 
 Three canonical directories hold all AI artefacts:
 
-| Directory    | Purpose                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| `.agents/`   | Canonical tooling: agent definitions, skills, commands, memory, scripts       |
-| `ai-docs/`   | Reference documentation: guidelines, decisions, diagrams, instruction files   |
-| `ai-work/`   | Working artefacts: plans, reviews, sessions, tickets, QA, research            |
+| Directory  | Purpose                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
+| `.agents/` | Canonical tooling: agent definitions, skills, commands, memory, scripts     |
+| `ai-docs/` | Reference documentation: guidelines, decisions, diagrams, instruction files |
+| `ai-work/` | Working artefacts: plans, reviews, sessions, tickets, QA, research          |
 
 Three mirror facades expose content to specific tools via per-entry symlinks:
 
@@ -30,7 +30,7 @@ Three mirror facades expose content to specific tools via per-entry symlinks:
 
 ## How it works
 
-All seven directories are excluded from the main repository tracking via `.git/info/exclude`:
+All six directories are excluded from the main repository tracking via `.git/info/exclude`:
 
 - They never appear as untracked files in `git status` on the main branches
 - They are never pushed to the `origin` remote (Bitbucket)

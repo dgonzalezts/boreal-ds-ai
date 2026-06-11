@@ -122,7 +122,7 @@ status: pending
 
 Valid values: `pending`, `in progress`, `done`. The **develop-frontend** prompt reads this field before starting — it will refuse to run against a plan marked `done` and will set the status to `in progress` once implementation begins.
 
-[`INDEX.md`](../../ai-work/plans/INDEX.md) is the single source of truth listing all plans grouped by status. Update it whenever a plan's status changes, or run the `sync-plans` command/prompt to rebuild it automatically.
+[`INDEX.md`](../ai-work/plans/INDEX.md) is the single source of truth listing all plans grouped by status. Update it whenever a plan's status changes, or run the `sync-plans` command/prompt to rebuild it automatically.
 
 ### `ai-work/sessions/`
 
@@ -141,9 +141,9 @@ Reference documents consulted by both the **Frontend Developer** agent and the *
 | -------------------- | ------------------------------------------------ |
 | `release-process.md` | Release runbook executed by the Engineering Lead |
 
-> **Coding conventions** (component architecture, token rules, naming) are defined in [`base.instructions.md`](./base.instructions.md) and its linked instruction files, not in this folder.
+> **Coding conventions** (component architecture, token rules, naming) are defined in [`base.instructions.md`](../ai-docs/docs/base.instructions.md) and its linked instruction files, not in this folder.
 
-> **Definition of Done** is defined in [`workflow.instructions.md §1`](./workflow.instructions.md) and must be fully satisfied before any ticket is marked complete.
+> **Definition of Done** is defined in [`workflow.instructions.md §1`](../ai-docs/docs/workflow.instructions.md) and must be fully satisfied before any ticket is marked complete.
 
 ---
 
