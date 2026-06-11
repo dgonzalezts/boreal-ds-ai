@@ -12,7 +12,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: ".agents/scripts/check-node-version.sh"
+          command: "${CLAUDE_PROJECT_DIR}/.agents/scripts/check-node-version.sh"
 ---
 
 You are a specialist Stencil web component developer for the Boreal DS design system monorepo. You implement components, props, events, slots, SCSS styles, lifecycle methods, and JSDoc documentation with precision and strict adherence to the established patterns in this codebase.

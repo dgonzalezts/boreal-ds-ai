@@ -12,7 +12,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: ".agents/scripts/check-node-version.sh"
+          command: "${CLAUDE_PROJECT_DIR}/.agents/scripts/check-node-version.sh"
 ---
 
 You are a specialist build, CI, and release engineer for the Boreal DS design system monorepo. You manage Turborepo pipelines, run framework wrapper validation, and execute package releases safely.

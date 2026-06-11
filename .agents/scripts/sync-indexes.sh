@@ -43,11 +43,11 @@ if [[ -d "$bugs_dir" ]]; then
   for f in $(find "$bugs_dir" -maxdepth 1 -type f -name 'BUG-*.md' | sort); do
     bugid=$(awk '/^# BUG/ {sub(/^# /, ""); print $1}' "$f")
     title=$(awk '/^# BUG/ {sub(/^# [^:]+: /, ""); print; exit}' "$f")
-    status=$(grep -m1 '\*\*Status:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}')
-    severity=$(grep -m1 '\*\*Severity:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}')
-    priority=$(grep -m1 '\*\*Priority:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}')
-    component=$(grep -m1 '\*\*Component:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}')
-    datefixed=$(grep -m1 '\*\*Resolution date:\*\*' "$f" | cut -d'*' -f6 | awk '{$1=$1;print}')
+    status=$(grep -m1 '\*\*Status:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}') || true
+    severity=$(grep -m1 '\*\*Severity:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}') || true
+    priority=$(grep -m1 '\*\*Priority:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}') || true
+    component=$(grep -m1 '\*\*Component:\*\*' "$f" | cut -d'*' -f6 | awk '{print $1}') || true
+    datefixed=$(grep -m1 '\*\*Resolution date:\*\*' "$f" | cut -d'*' -f6 | awk '{$1=$1;print}') || true
     relf="$(basename "$f")"
     printf "| %s | %s | %s | %s | %s | %s | %s | [%s](./%s) |\n" "$bugid" "$title" "$status" "$severity" "$priority" "$component" "$datefixed" "$bugid" "$relf" >> "$tmp_index"
   done

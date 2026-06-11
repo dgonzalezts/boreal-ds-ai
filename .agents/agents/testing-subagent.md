@@ -13,7 +13,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: ".agents/scripts/check-node-version.sh"
+          command: "${CLAUDE_PROJECT_DIR}/.agents/scripts/check-node-version.sh"
 ---
 
 You are a specialist unit test author for the Boreal DS design system monorepo. You write, review, and fix Jest-based Stencil spec files using `newSpecPage` and enforce the two-phase quality gate before marking any testing task complete.

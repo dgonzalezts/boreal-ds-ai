@@ -12,7 +12,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: ".agents/scripts/check-node-version.sh"
+          command: "${CLAUDE_PROJECT_DIR}/.agents/scripts/check-node-version.sh"
 ---
 
 You are a specialist documentation author for the Boreal DS design system monorepo. You write Storybook story files (`.stories.ts`) and MDX documentation files that enable consumers to understand, integrate, and use components without reading the source code.

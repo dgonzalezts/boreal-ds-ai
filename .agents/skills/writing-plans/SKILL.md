@@ -1,14 +1,7 @@
 ---
 name: writing-plans
 description: >
-  Use BEFORE writing any code when planning a new Stencil component, feature, or multi-step
-  implementation task for Boreal DS. Invoke when the user says "write a plan", "create a plan",
-  "plan this component", "plan the implementation", "I want to build X", "let's plan X", or
-  provides a spec, ticket, or Figma design and asks what to do next. Produces a task-by-task
-  implementation plan saved to ai-work/plans/ covering files to create or modify, acceptance criteria,
-  unit test behaviors, manual test steps, and commit messages. Plans must include Executor fields on
-  every task so executing-plans can dispatch to the correct specialist subagent. Always use this skill
-  before dispatching any implementation subagent or starting development work on a new component.
+  Use BEFORE writing any code when planning a new Stencil component, feature, or multi-step implementation task for Boreal DS. Invoke when the user says "write a plan", "create a plan", "plan this component", "plan the implementation", "I want to build X", "let's plan X", or provides a spec, ticket, or Figma design and asks what to do next. Produces a task-by-task implementation plan saved to ai-work/plans/ covering files to create or modify, acceptance criteria, unit test behaviors, manual test steps, and commit messages. Plans must include Executor fields on every task so executing-plans can dispatch to the correct specialist subagent. Always use this skill before dispatching any implementation subagent or starting development work on a new component.
 ---
 
 # Writing Plans
