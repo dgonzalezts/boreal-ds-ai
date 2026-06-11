@@ -7,8 +7,7 @@ description: Domain knowledge for implementing Stencil web components in Boreal 
 
 Primary references (read before implementing):
 
-- `ai-docs/guidelines/stencil-best-practices.md` — canonical implementation patterns
-- `ai-docs/guidelines/code-practices-&-dev-guidelines.md` — §1.2–§1.6 API conventions
+- `ai-docs/guidelines/stencil-best-practices.md` — canonical implementation patterns (mixin architecture, FACE, SCSS, `IFormControl<T>` interface layering, API conventions)
 - `ai-docs/docs/frontend.instructions.md` — ESLint rules, token usage, JSDoc requirements
 
 ---
@@ -110,7 +109,7 @@ Key details:
 
 For the full FACE implementation guide (attach-internals placement, proxy limits, constraint validation, formDisabledCallback, async rendering gotchas) see `ai-docs/guidelines/stencil-best-practices.md` §"FACE Components".
 
-**Form control interface layering** — see `ai-docs/guidelines/code-practices-&-dev-guidelines.md` §1.6:
+**Form control interface layering** — see `ai-docs/guidelines/stencil-best-practices.md` §"IFormControl<T> Interface Layering":
 
 ```typescript
 export class BdsTextField

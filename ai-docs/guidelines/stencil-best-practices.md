@@ -652,3 +652,85 @@ return !this.floatingOptions.hideArrow;
 // ❌ Wrong — the || false is dead code
 return !this.floatingOptions.hideArrow || false;
 ```
+
+---
+
+## Mixin Architecture
+
+Components extend at most one mixin using the `Mixin()` factory from `@stencil/core`. Plain components that need no shared behavior are bare Stencil classes.
+
+| Mixin                 | Purpose                                                                                                                         | Components using it                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `formAssociatedMixin` | FACE lifecycle callbacks (`formAssociatedCallback`, `formResetCallback`, `formStateRestoreCallback`), `ElementInternals` wiring | `BdsTextField`, `BdsCheckbox`, `BdsCheckboxButton`, `BdsCheckboxCard`, `BdsCheckboxGroup`, `BdsRadioGroup`, `BdsSlider`, `BdsTagField`, `BdsToggle` |
+| `anchoredMixin`       | Floating UI positioning and anchor element resolution                                                                           | `BdsPopover`, `BdsTooltip`                                                                                                                          |
+| `backdropMixin`       | Backdrop overlay management and focus trapping                                                                                  | `BdsDialog`                                                                                                                                         |
+| `floatingMixin`       | Base floating positioning — used internally by `anchoredMixin`, not consumed directly                                           | (internal)                                                                                                                                          |
+| `WithLinks`           | Renders `<a>` or `<button>` depending on `href` presence                                                                        | `BdsListMenuItem`                                                                                                                                   |
+
+### When to add a new mixin
+
+Create a new mixin **only when two or more components share identical lifecycle logic that cannot be extracted into a utility function**. Typical qualifying cases:
+
+- Browser API setup/teardown that must hook into Stencil lifecycle callbacks (`connectedCallback`, `disconnectedCallback`).
+- DOM side effects that must run at a specific component lifecycle moment.
+
+**Anti-patterns — do not create a mixin for:**
+
+- ❌ Shared types or interfaces — use `types/` files instead.
+- ❌ Pure utility logic — use `@/utils/` instead.
+- ❌ Behavior required by only one component.
+
+**`@AttachInternals()` placement rule:** The `@AttachInternals()` decorator must appear on the component class body, never inside a mixin factory. Stencil resolves it at registration time; placing it inside a mixin factory produces a silent runtime failure. See [ADR 0001](../decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md).
+
+---
+
+## `IComponent.ts` Interface Contract
+
+`IComponent.ts` interfaces describe only what the **consumer configures** — the set of publicly settable `@Prop()` members.
+
+**Must NOT be in `IComponent.ts`:**
+
+- `@Event()` outputs — `EventEmitter<T>` members are declared on the class body. Adding them to the interface forces the type to reference an internal abstraction consumers never set.
+- Group-propagated props — props the parent group component writes imperatively (e.g. `name`, `showDivider`, `isFirst`) are parent-child coordination details, not consumer API.
+- `@State()` mirrors — internal reactive state (`isDisabled`, `isOpen`) is never part of the public API.
+
+**Interface members must be optional when the prop has a default value.** A required interface member implies the consumer must always supply it. With optional members, bare-attribute patterns (`<bds-radio-group disabled>`) work correctly in React and HTML.
+
+```typescript
+// ✅ Correct — props with component-side defaults are optional
+export interface IRadioGroup {
+  name: string; // no default on the component — required
+  value?: string; // default = ''
+  disabled?: boolean; // default = false
+}
+
+// ❌ Wrong — disabled has a default; marking it required is misleading
+export interface IRadioGroup {
+  name: string;
+  disabled: boolean; // forces consumer to always pass disabled={false}
+}
+```
+
+---
+
+## `IFormControl<T>` Interface Layering
+
+Three interface levels govern all Boreal DS form controls and must be implemented together:
+
+| Interface                  | Location                   | Responsibility                                                                                            |
+| -------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `IFormAssociatedCallbacks` | `form-associated.mixin.ts` | Declares `formDisabledCallback`, `formResetCallback`, `formStateRestoreCallback` signatures               |
+| `IFormValueEmitter<T>`     | `form-associated.mixin.ts` | Declares `valueChange: EventEmitter<T>` — enforces consistent event naming across all form controls       |
+| `IFormControl<T>`          | `form-associated.mixin.ts` | Composite: `IFormAssociatedCallbacks & IFormValueEmitter<T>` — the single interface a form class declares |
+
+```typescript
+export class BdsTextField
+  extends Mixin(formAssociatedMixin)
+  implements ITextField, IFormControl<string>
+{
+  @AttachInternals() internals!: ElementInternals;
+  @Event() valueChange!: EventEmitter<string>;
+}
+```
+
+**`valueChange` is reserved for Vue `v-model` integration.** Every form component that exposes a `value` prop must emit `valueChange` and register in `componentModels` in `vue-output-target.ts` in the same PR. Use bare `@Event()` — no `bubbles` or `composed` options are needed in light DOM. Use `bds{Action}` names for all other events.

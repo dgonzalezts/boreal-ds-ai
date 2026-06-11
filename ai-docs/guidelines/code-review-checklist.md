@@ -134,4 +134,23 @@ Apply the sections below only when the change touches the corresponding package.
 
 ---
 
+## F) Component API Design (`boreal-web-components`)
+
+### Property reflection
+
+- [ ] **Reflect only primitives used for a11y or CSS**: `disabled`, `variant`, `size`, `open`, `selected`, `active`.
+- [ ] **Do not reflect**: complex objects/arrays, frequently changing values (`value`, `progress`), or internal implementation state.
+
+### Controlled vs. uncontrolled pattern
+
+- [ ] **Controlled components** emit a change event and do not update the prop themselves — the parent owns the value. Verify the `@Watch()` does not call `this.bdsChange.emit()`.
+- [ ] **Uncontrolled components** manage internal `@State()` and may expose a `defaultValue` prop for initial seeding. Confirm there is no external mutation of internal state.
+
+### TypeScript API surface
+
+- [ ] **No `Omit<>` on component props**: each `@Prop()` is declared individually. `Omit<>` breaks Stencil's CEM generation and IDE autocomplete.
+- [ ] **No regular enums**: use string union types (`type Variant = 'primary' | 'secondary'`) or `const` enums. Regular enums generate runtime code that cannot be tree-shaken.
+
+---
+
 _This checklist is intentionally framework-agnostic in the Universal section and only calls out framework-specific requirements in the relevant addenda._

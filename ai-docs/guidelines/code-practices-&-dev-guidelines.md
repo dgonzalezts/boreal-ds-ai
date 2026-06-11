@@ -17,222 +17,93 @@ Component development guidelines establish the foundational patterns and naming 
 
 ### 1.1 Component Architecture & Inheritance
 
-Component architecture defines how components are organized through inheritance and composition. A well-structured inheritance system centralizes common functionality—such as theming, form behavior, and validation logic—while keeping components modular and preventing unnecessary complexity. This layered approach ensures consistency, reduces code duplication, and makes components easier to maintain and extend.
+Component architecture defines how shared behavior is distributed across components. Boreal DS uses **mixin-based composition** via Stencil's `Mixin()` factory rather than class inheritance chains. This keeps components flat and avoids the fragility of deep prototype hierarchies.
 
-#### Base Layer Hierarchy
+#### Mixin Architecture
 
-The component library uses a layered inheritance model where each layer provides specific capabilities. Components should extend the lowest suitable base class that provides the required functionality.
+Components extend at most one mixin using the `Mixin()` factory from `@stencil/core`. Plain components that need no shared behavior are bare Stencil classes.
 
-| Layer                  | Purpose                                                                                     | Use When                                                                                                                          | Examples                                            |
-| ---------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **Base Layer**         | Foundation for all components. Provides theming, design tokens, and shared visual behavior. | Every component must extend this base.                                                                                            | Toast, Button, Card, Icon                           |
-| **Form Layer**         | Adds form association and value management.                                                 | Component manages a `value`, handles selection, or interacts with form-like logic.                                                | Select, Radio, Dropdown                             |
-| **Selectable Layer**   | Extends form layer with selection/toggle behavior.                                          | Component can be selected, toggled, or checked.                                                                                   | Toggle, Checkbox, Switch, Radio                     |
-| **Input Layer**        | Extends form layer with input validation and labels.                                        | Component is an input with validation, placeholder, helper text, or labels.                                                       | TextArea, TextField, Slider                         |
-| **Text Input Layer**   | Extends input layer with text-specific features.                                            | Component handles text-based input behavior (pattern validation, character count, clear button).                                  | NumberField, EmailField, SearchField, PasswordField |
-| **Notification Layer** | Provides notification/message display patterns.                                             | Component displays messages or notifications with variants, optional title/content/actions, dismissal, and accessibility support. | Banner, Toast, Alert, Notification                  |
+| Mixin                 | Purpose                                                                                                                                             | Components using it                                                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `formAssociatedMixin` | FACE lifecycle callbacks (`formAssociatedCallback`, `formResetCallback`, `formStateRestoreCallback`), `ElementInternals` wiring, form participation | `BdsTextField`, `BdsCheckbox`, `BdsCheckboxButton`, `BdsCheckboxCard`, `BdsCheckboxGroup`, `BdsRadioGroup`, `BdsSlider`, `BdsTagField`, `BdsToggle` |
+| `anchoredMixin`       | Floating UI positioning, anchor element resolution                                                                                                  | `BdsPopover`, `BdsTooltip`                                                                                                                          |
+| `backdropMixin`       | Backdrop overlay management and focus trapping                                                                                                      | `BdsDialog`                                                                                                                                         |
+| `floatingMixin`       | Base floating positioning (used internally by `anchoredMixin`)                                                                                      | Not used directly                                                                                                                                   |
+| `WithLinks`           | Renders `<a>` or `<button>` depending on `href` presence                                                                                            | `BdsListMenuItem`                                                                                                                                   |
 
-#### Core Principles
-
-**1. All Components Must Extend the Base Layer**
-
-Every component in the library must extend the base layer. This ensures:
-
-- Consistent access to design tokens and theming variables
-- Shared visual behavior across the component library
-- Unified approach to CSS custom properties and styling
-
-**2. Extend the Lowest Suitable Layer**
-
-Choose the minimal layer that provides the required functionality:
-
-- ✅ **DO**: Extend the form layer for a simple dropdown that manages a value
-- ❌ **DON'T**: Extend the input layer if your component doesn't require validation or labels
-- ❌ **DON'T**: Use the form layer for components that don't interact with forms (e.g., Card, Badge, Icon)
-
-**3. Single Responsibility Per Layer**
-
-Each layer should have a clear, focused purpose:
-
-- Base layer: theming, CSS tokens, slot detection
-- Form layer: value management and form association
-- Input layer: input validation and text-handling
-- Notification layer: standardized notification structure
-
-Avoid creating base classes with overlapping responsibilities or vague purposes.
-
-**4. Avoid Over-Engineering**
-
-Only use higher-layer abstractions when they're genuinely needed:
-
-- Don't extend the input layer just because it "might need validation later"
-- Don't use the text input layer for non-text inputs
-- Keep the inheritance chain as short as practical
-
-#### Decision-Making Guide
-
-Use this flowchart to determine which layer to extend:
-
-```mermaid
-flowchart TD
-    Start([New Component]) --> Q1{"Does component need theming/tokens?"}
-
-    Q1 -->|No| Warning["⚠️ Reconsider: All components should extend base layer"]
-    Q1 -->|Yes| Layer1["Extend Base Layer\n<i>Examples: Button, Card, Icon</i>"]
-
-    Layer1 --> Q2{"Does component manage a value or interact with forms?"}
-
-    Q2 -->|No| Q3{"Does it display notifications/messages?"}
-    Q2 -->|Yes| Layer2["Extend Form Layer\n<i>Examples: Select, Radio, Dropdown</i>"]
-
-    Q3 -->|Yes| Layer6["Extend Notification Layer\n<i>Examples: Banner, Toast, Alert</i>"]
-    Q3 -->|No| Stop1["✅ Use Base Layer"]
-
-    Layer2 --> Q4{"Does component have selection/toggle behavior?"}
-
-    Q4 -->|Yes| Layer3["Extend Selectable Layer\n<i>Examples: Toggle, Checkbox, Switch</i>"]
-    Q4 -->|No| Q5{"Does component need validation/labels/helper text?"}
-
-    Q5 -->|No| Stop2["✅ Use Form Layer"]
-    Q5 -->|Yes| Q6{"Is it text-based input?"}
-
-    Q6 -->|Yes| Layer5["Extend Text Input Layer\n<i>Examples: NumberField, EmailField</i>"]
-    Q6 -->|No| Layer4["Extend Input Layer\n<i>Examples: TextArea, TextField, Slider</i>"]
-
-    style Start fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style Layer1 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Layer2 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Layer3 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Layer4 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Layer5 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Layer6 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Stop1 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Stop2 fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Warning fill:#fff3cd,stroke:#ffc107,stroke-width:2px
-
-```
-
-#### When to Create a New Base Layer
-
-Create a new base component **only when multiple components need to share the same logic or lifecycle behavior**. Typical cases include:
-
-- **Theming and design tokens** — Shared token access, CSS custom properties
-- **Form behavior** — Value handling, validation, form association
-- **Selection or toggling logic** — Checked/selected state management
-- **Reusable input patterns** — Labels, placeholders, helper text, error states
-- **Shared accessibility patterns** — ARIA attributes, keyboard navigation
-- **Common event patterns** — Standardized event emission and handling
-
-**Anti-patterns (Don't create base layers for):**
-
-- ❌ Single-use logic that only one component needs
-- ❌ Visual styling without shared behavior
-- ❌ Component-specific business logic
-
-#### How to Create a New Base Layer
-
-**1. Extend the Right Abstraction**
-
-Always start from the **lowest suitable layer**:
-
-- Use the base layer for token or style management
-- Use the form layer for form fields or inputs
-- Use the selectable layer or input layer for specialized behavior
-
-**2. Keep It Abstract and Focused**
-
-A base layer should not render templates or be registered as a custom element. Its purpose is to encapsulate logic that child components can inherit, such as:
-
-- Property syncing and reactive updates
-- Event dispatching and handling
-- Lifecycle hooks and state management
-- Shared validation or computation logic
-
-Keep responsibilities narrow and reusable; don't include component-specific logic.
-
-**3. Define a Clear Responsibility and Scope**
-
-Each base component should serve a **single, well-defined purpose**. Document:
-
-- **What it provides**: Specific properties, methods, or behaviors
-- **What it doesn't provide**: Boundaries and limitations
-- **When to use it**: Clear criteria for extending this base
-- **When not to use it**: Common misuse scenarios
-
-**4. Use Consistent Naming**
-
-Follow the naming convention:
-
-- Use **PascalCase** for base class names
-- Choose names that reflect **behavior, not appearance**
-  - ✅ Good: `FormBase`, `SelectableFormBase`, `NotificationBase`, `TextInputBase`
-  - ❌ Bad: `BlueButton`, `BigCard`, `UtilityClass`
-- Use descriptive suffixes like `Base`, `Component`, or `Layer` to indicate abstraction level
-
-**5. Document the Layer**
-
-Every new base class must include comprehensive documentation:
+**Form component pattern:**
 
 ```typescript
-/**
- * Base class for components that display notifications or alerts.
- *
- * Provides:
- * - Variant support (info, success, warning, error)
- * - Optional title, content, and actions slots
- * - Automatic or manual dismissal
- * - Accessible attributes (role, aria-live)
- *
- * @example
- * class MyBanner extends NotificationBase {
- *   // Custom banner implementation
- * }
- */
+import {
+  AttachInternals,
+  Component,
+  Event,
+  EventEmitter,
+  Mixin,
+  Prop,
+  State,
+  Watch,
+} from "@stencil/core";
+import { formAssociatedMixin, type IFormControl } from "@/mixins";
+
+@Component({
+  tag: "bds-my-field",
+  styleUrl: "bds-my-field.scss",
+  formAssociated: true,
+})
+export class BdsMyField
+  extends Mixin(formAssociatedMixin)
+  implements IMyField, IFormControl<string>
+{
+  @AttachInternals() internals!: ElementInternals;
+
+  @Prop({ reflect: true }) readonly disabled: boolean = false;
+  @State() private isDisabled: boolean = false;
+
+  @Watch("disabled")
+  onDisabledChange(next: boolean) {
+    this.isDisabled = next;
+  }
+
+  @Prop({ mutable: true, reflect: true }) value: string = "";
+  @Event() valueChange!: EventEmitter<string>;
+
+  public formResetCallback(): void {
+    this.value = "";
+  }
+}
 ```
 
-Include:
+**Plain component (no mixin):**
 
-- **Purpose**: What it provides and why it exists
-- **Required properties or expected behavior**: What child components must implement
-- **Usage examples**: When to use this base vs. others
-- **Inheritance chain**: What it extends and what should extend it
+```typescript
+@Component({ tag: "bds-button", styleUrl: "bds-button.scss" })
+export class BdsButton implements IButton {
+  // No extends — plain Stencil class
+}
+```
 
-#### Framework-Agnostic Considerations
+#### When to Add a New Mixin
 
-These inheritance principles apply to any component framework:
+Create a new mixin **only when two or more components share identical lifecycle logic that cannot be extracted into a utility function**. Typical cases:
 
-**Universal Patterns:**
+- Browser API setup/teardown that must hook into Stencil lifecycle callbacks (`connectedCallback`, `disconnectedCallback`)
+- DOM side effects that must run at specific component lifecycle moments
 
-- Base classes provide shared functionality through inheritance
-- Components extend the minimal base needed for their functionality
-- Theming/styling is centralized in a common ancestor
-- Form-related behavior is separated from presentational behavior
-- Validation and input handling are distinct concerns
+**Anti-patterns — do not create a mixin for:**
 
-**Framework-Specific Implementation:**
+- ❌ Shared types or interfaces — use `types/` files instead
+- ❌ Pure utility logic — use `@/utils/` instead
+- ❌ Single-component behavior
 
-- **Stencil**: Uses class-based inheritance with decorators (`@Component`, `@Prop`, `@Event`)
-- **Lit**: Uses class-based inheritance with decorators (`@customElement`, `@property`, `@state`)
-- **React**: Uses composition (Higher-Order Components or Hooks) instead of inheritance
-- **Vue**: Uses mixins or composables instead of class inheritance
-
-**Recommendation:** Regardless of framework, maintain clear separation of concerns:
-
-- **Theming layer** — Design tokens, CSS variables
-- **Form behavior layer** — Value management, validation
-- **Component-specific logic** — Unique functionality
+**`@AttachInternals()` placement rule:** The `@AttachInternals()` decorator must appear on the component class body — never inside a mixin factory. Stencil resolves it at component registration time; placing it in a mixin factory produces a silent runtime failure. See [ADR 0001](../decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md).
 
 #### Rationale
 
-This layered inheritance model provides several benefits:
-
-1. **Code Reusability** — Common functionality is written once and inherited by all components
-2. **Consistency** — All components share the same theming, form behavior, and validation patterns
-3. **Maintainability** — Changes to base behavior automatically propagate to all child components
-4. **Predictability** — Developers can reason about component behavior based on its base class
-5. **Modularity** — Each layer has a single, well-defined responsibility
-6. **Flexibility** — Components only inherit what they need, avoiding bloated base classes
-7. **Testability** — Base behavior can be tested independently from component-specific logic
+1. **Flat prototype chain** — At most one level of shared behavior; no hidden ancestor logic to trace.
+2. **No base class coupling** — Non-form components are plain classes with no shared ancestor.
+3. **Explicit contracts** — `IFormControl<T>` and `IFormAssociatedCallbacks` are interface types, not base classes; TypeScript enforces the contract without dictating implementation.
+4. **Stencil compatibility** — Stencil decorators are resolved at compile time from the class body; deep inheritance chains cause decorator resolution failures.
 
 ### 1.2 Component Naming Conventions
 
@@ -240,19 +111,19 @@ Consistent naming conventions across all component API surfaces ensure predictab
 
 #### Naming Convention Reference
 
-| Element                   | Format                        | Rules                                                                                                     | Examples                                                                                |
-| ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Custom Element Tag**    | `prefix-component-name`       | - kebab-case<br/>- Must contain hyphen<br/>- Prefix to avoid conflicts<br/>- Lowercase only               | `my-button`<br/>`app-dropdown`<br/>`ui-card`                                            |
-| **Component Class**       | `PascalCase`                  | - PascalCase<br/>- Align with tag name<br/>- Descriptive, not generic                                     | `MyButton`<br/>`AppDropdown`<br/>`UiCard`                                               |
-| **Properties (JS)**       | `camelCase`                   | - camelCase<br/>- Boolean prefix: `is*`, `has*`, `should*`, `can*`<br/>- Avoid negative booleans          | `disabled`<br/>`isOpen`<br/>`hasError`<br/>`maxLength`                                  |
-| **Attributes (HTML)**     | `kebab-case`                  | - kebab-case (auto-mapped from camelCase)<br/>- Explicit mapping for HTML standards                       | `disabled`<br/>`is-open`<br/>`has-error`<br/>`max-length`                               |
-| **Public Methods**        | `camelCase`                   | - camelCase<br/>- Start with descriptive verb<br/>- Clear action intent                                   | `open()`<br/>`close()`<br/>`validate()`<br/>`reset()`                                   |
-| **Private Methods**       | `camelCase` or `#private`     | - Prefix with `_` or use `#` private fields<br/>- Not part of public API                                  | `_handleClick()`<br/>`#updateState()`                                                   |
-| **Event Handlers**        | `handle*` or `on*`            | - Prefix: `handle*` or `on*`<br/>- Describe what is being handled                                         | `handleClick()`<br/>`onInputChange()`<br/>`handleKeyDown()`                             |
-| **Custom Events**         | `prefix-event-name`           | - Prefix + kebab-case or camelCase<br/>- Descriptive action<br/>- Lifecycle: `-ing` suffix for cancelable | `my-change`<br/>`mySubmit`<br/>`my-opening` (cancelable)<br/>`my-open` (non-cancelable) |
-| **Slots**                 | `kebab-case`                  | - Default slot: unnamed<br/>- Named slots: kebab-case, descriptive                                        | (unnamed default)<br/>`header`<br/>`footer`<br/>`prefix-icon`                           |
-| **CSS Shadow Parts**      | `kebab-case`                  | - kebab-case<br/>- Descriptive element names<br/>- No prefix needed (scoped to component)                 | `button`<br/>`input-wrapper`<br/>`label`<br/>`error-message`                            |
-| **CSS Custom Properties** | `--prefix-component-property` | - Double dash prefix<br/>- kebab-case<br/>- Include component name<br/>- Descriptive modifier             | `--my-button-bg-color`<br/>`--my-input-border-width`<br/>`--my-card-padding`            |
+| Element                   | Format                        | Rules                                                                                                                                                                                   | Examples                                                                                |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Custom Element Tag**    | `prefix-component-name`       | - kebab-case<br/>- Must contain hyphen<br/>- Prefix to avoid conflicts<br/>- Lowercase only                                                                                             | `my-button`<br/>`app-dropdown`<br/>`ui-card`                                            |
+| **Component Class**       | `PascalCase`                  | - PascalCase<br/>- Align with tag name<br/>- Descriptive, not generic                                                                                                                   | `MyButton`<br/>`AppDropdown`<br/>`UiCard`                                               |
+| **Properties (JS)**       | `camelCase`                   | - camelCase<br/>- `@Prop()` booleans: plain adjectives, no prefix (`disabled`, not `isDisabled`)<br/>- `@State()` mirrors use `is*` prefix (`isDisabled`)<br/>- Avoid negative booleans | `disabled`<br/>`closable`<br/>`required`<br/>`maxLength`                                |
+| **Attributes (HTML)**     | `kebab-case`                  | - kebab-case (auto-mapped from camelCase)<br/>- Explicit mapping for HTML standards                                                                                                     | `disabled`<br/>`max-length`<br/>`readonly` (explicit)                                   |
+| **Public Methods**        | `camelCase`                   | - camelCase<br/>- Start with descriptive verb<br/>- Clear action intent                                                                                                                 | `open()`<br/>`close()`<br/>`validate()`<br/>`reset()`                                   |
+| **Private Methods**       | `camelCase` or `#private`     | - Prefix with `_` or use `#` private fields<br/>- Not part of public API                                                                                                                | `_handleClick()`<br/>`#updateState()`                                                   |
+| **Event Handlers**        | `handle*` or `on*`            | - Prefix: `handle*` or `on*`<br/>- Describe what is being handled                                                                                                                       | `handleClick()`<br/>`onInputChange()`<br/>`handleKeyDown()`                             |
+| **Custom Events**         | `bds{Action}` (camelCase)     | - `bds` prefix + PascalCase action<br/>- Descriptive action<br/>- Lifecycle: `Opening`/`Closing` suffix for cancelable<br/>- `valueChange` reserved for Vue v-model                     | `bdsChange`<br/>`bdsClose`<br/>`bdsOpening` (cancelable)<br/>`bdsOpen` (non-cancelable) |
+| **Slots**                 | `kebab-case`                  | - Default slot: unnamed<br/>- Named slots: kebab-case, descriptive                                                                                                                      | (unnamed default)<br/>`header`<br/>`footer`<br/>`prefix-icon`                           |
+| **CSS Parts**             | `kebab-case`                  | - Not applicable — Boreal DS uses light DOM (`shadow: false`). CSS `::part()` selectors only work with shadow DOM; consumers style components directly via class selectors.             | N/A                                                                                     |
+| **CSS Custom Properties** | `--prefix-component-property` | - Double dash prefix<br/>- kebab-case<br/>- Include component name<br/>- Descriptive modifier                                                                                           | `--my-button-bg-color`<br/>`--my-input-border-width`<br/>`--my-card-padding`            |
 
 #### Interface File Naming
 
@@ -270,22 +141,29 @@ The `Bds` prefix is reserved exclusively for custom element tag names (`bds-tool
 
 Boolean properties require special attention to ensure they work correctly with HTML attributes:
 
-| Pattern                                              | Status           | Reasoning                                                                 | Example                                             |
-| ---------------------------------------------------- | ---------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
-| Positive boolean defaulting to `false`               | ✅ **Correct**   | Attribute presence = `true`. Can be set to `false` by omitting attribute. | `disabled`, `readonly`, `required`                  |
-| Negative boolean defaulting to `true`                | ❌ **Incorrect** | Cannot be set to `false` from HTML (attribute presence always = `true`).  | ~~`enabled`~~, ~~`editable`~~                       |
-| Boolean with `is*`, `has*`, `should*`, `can*` prefix | ✅ **Preferred** | Self-documenting, clear intent.                                           | `isOpen`, `hasError`, `shouldValidate`, `canSubmit` |
+| Pattern                                     | Status           | Reasoning                                                                                                        | Example                                              |
+| ------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Positive boolean defaulting to `false`      | ✅ **Correct**   | Attribute presence = `true`. Can be set to `false` by omitting attribute.                                        | `disabled`, `readonly`, `required`                   |
+| Negative boolean defaulting to `true`       | ❌ **Incorrect** | Cannot be set to `false` from HTML (attribute presence always = `true`).                                         | ~~`enabled`~~, ~~`editable`~~                        |
+| `@Prop()` boolean with `is*`, `has*` prefix | ❌ **Not used**  | Boreal DS follows native HTML style (`disabled`, `required`). Prefixes are reserved for `@State()` mirrors only. | `isDisabled` (state mirror), `isOpen` (state mirror) |
 
 **Example:**
 
 ```typescript
-// ✅ CORRECT
-@property({ type: Boolean }) disabled = false;
-@property({ type: Boolean }) isOpen = false;
-@property({ type: Boolean }) hasError = false;
+// ✅ CORRECT — @Prop() booleans use plain adjectives (native HTML style)
+@Prop({ reflect: true }) readonly disabled: boolean = false;
+@Prop({ reflect: true }) readonly closable: boolean = false;
+@Prop({ reflect: true }) readonly required: boolean = false;
 
-// ❌ INCORRECT
-@property({ type: Boolean }) enabled = true;  // Can't set to false in HTML
+// ✅ CORRECT — @State() mirrors for internal tracking use is* prefix
+@State() private isDisabled: boolean = false;
+
+// ❌ INCORRECT — don't add is*/has* prefix on @Prop() booleans
+@Prop() isOpen: boolean = false;   // should be `open`
+@Prop() hasError: boolean = false; // should be `error`
+
+// ❌ INCORRECT — negative booleans can't be set to false via HTML attributes
+@Prop() enabled: boolean = true;
 ```
 
 #### Custom Element Tag Naming
@@ -329,7 +207,6 @@ Properties (JavaScript) and attributes (HTML) should map predictably:
 | Property (JavaScript) | Attribute (HTML) | Explicit Mapping Needed?   |
 | --------------------- | ---------------- | -------------------------- |
 | `disabled`            | `disabled`       | No (single word)           |
-| `isOpen`              | `is-open`        | No (auto-converted)        |
 | `maxLength`           | `max-length`     | No (auto-converted)        |
 | `readOnly`            | `readonly`       | ✅ **Yes** (HTML standard) |
 | `tabIndex`            | `tabindex`       | ✅ **Yes** (HTML standard) |
@@ -338,15 +215,12 @@ Properties (JavaScript) and attributes (HTML) should map predictably:
 **Explicit Mapping Example:**
 
 ```typescript
-// Explicit mapping for HTML standard attributes
-@property({ attribute: 'readonly' })
-readOnly: boolean = false;
+// Explicit mapping for HTML standard attributes (Stencil syntax)
+@Prop({ attribute: 'readonly', reflect: true }) readonly readOnly: boolean = false;
 
-@property({ attribute: 'tabindex' })
-tabIndex: number = 0;
+@Prop({ attribute: 'tabindex' }) readonly tabIndex: number = 0;
 
-@property({ attribute: 'aria-label' })
-ariaLabel: string;
+@Prop({ attribute: 'aria-label', reflect: true }) readonly ariaLabel: string;
 ```
 
 #### Event Naming Patterns
@@ -356,34 +230,41 @@ Custom events should follow a consistent naming pattern:
 **Format:**
 
 ```
-<prefix>-<action>        // Non-cancelable
-<prefix>-<action>-ing    // Cancelable (lifecycle events)
+bds{Action}        // Non-cancelable  e.g. bdsChange, bdsClose, bdsSelect
+bds{Action}ing     // Cancelable lifecycle  e.g. bdsOpening, bdsClosing
 ```
+
+All custom events in Boreal DS use the `bds` prefix followed by a PascalCase action verb. This makes event names instantly recognisable in consumer code and avoids collisions with native DOM events.
+
+> **`valueChange` is reserved** for Vue `v-model` integration (see §1.6). Use `bds{Action}` names for all other events.
 
 **Examples:**
 
 | Event Type   | Event Name   | Cancelable | Usage                                |
 | ------------ | ------------ | ---------- | ------------------------------------ |
-| Value change | `my-change`  | No         | Fired after value changes            |
-| Form submit  | `my-submit`  | No         | Fired after form submits             |
-| Opening      | `my-opening` | ✅ Yes     | Fired before opening (can prevent)   |
-| Opened       | `my-open`    | No         | Fired after opening (cannot prevent) |
-| Closing      | `my-closing` | ✅ Yes     | Fired before closing (can prevent)   |
-| Closed       | `my-close`   | No         | Fired after closing (cannot prevent) |
+| Value change | `bdsChange`  | No         | Fired after value changes            |
+| Form submit  | `bdsSubmit`  | No         | Fired after form submits             |
+| Opening      | `bdsOpening` | ✅ Yes     | Fired before opening (can prevent)   |
+| Opened       | `bdsOpen`    | No         | Fired after opening (cannot prevent) |
+| Closing      | `bdsClosing` | ✅ Yes     | Fired before closing (can prevent)   |
+| Closed       | `bdsClose`   | No         | Fired after closing (cannot prevent) |
 
 **Implementation Example:**
 
 ```typescript
-// Cancelable event (before action) — in Stencil use @Event({ cancelable: true })
-const openingEvent = new CustomEvent("my-opening", {
-  cancelable: true,
-});
-if (this.dispatchEvent(openingEvent)) {
-  // Not prevented, proceed with opening
-  this.isOpen = true;
+// Non-cancelable event
+@Event() bdsChange: EventEmitter<string>;
 
-  // Non-cancelable event (after action)
-  this.dispatchEvent(new CustomEvent("my-open"));
+this.bdsChange.emit(newValue);
+
+// Cancelable lifecycle event
+@Event({ cancelable: true }) bdsOpening: EventEmitter<void>;
+@Event() bdsOpen: EventEmitter<void>;
+
+const evt = this.bdsOpening.emit();
+if (!evt.defaultPrevented) {
+  this.open = true;
+  this.bdsOpen.emit();
 }
 ```
 
@@ -476,23 +357,23 @@ Consistent code organization within component classes improves readability, main
 
 All component classes must follow this member ordering:
 
-| Order | Section                          | Description                                                          | Examples                                                                 |
-| ----- | -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 1     | **Static members**               | Static properties and methods, including element tag name and styles | `static tagName = 'my-button'`<br/>`static styles = css\`...\``          |
-| 2     | **Private non-reactive members** | Private class properties that don't trigger re-renders               | `private helperInstance: Helper`<br/>`private cacheData: Map<>`          |
-| 3     | **Element reference**            | Reference to the component's host element                            | `@Element() el!: HTMLElement`                                            |
-| 4     | **Internal reactive state**      | Private reactive properties (internal state)                         | `@State() private isOpen = false`<br/>`@State() private count = 0`       |
-| 5     | **Public reactive properties**   | Public properties that trigger re-renders when changed               | `@Prop() disabled = false`<br/>`@Prop() value: string`                   |
-| 6     | **Property watchers**            | Handlers that run when specific properties change                    | `@Watch('disabled')`<br/>`@Watch('value')`                               |
-| 7     | **Event declarations**           | Custom events emitted by the component                               | `@Event() myChange: EventEmitter`<br/>`@Event() mySubmit: EventEmitter`  |
-| 8     | **Constructor**                  | Constructor (only if initialization logic is required)               | `constructor() { super(); }`                                             |
-| 9     | **Lifecycle methods**            | Component lifecycle hooks in execution order                         | `connectedCallback()`<br/>`componentWillLoad()`<br/>`componentDidLoad()` |
-| 10    | **Event listeners**              | Decorators for listening to DOM or custom events                     | `@Listen('click')`<br/>`@Listen('myCustomEvent')`                        |
-| 11    | **Event handlers**               | Private methods that handle events                                   | `private handleClick()`<br/>`private onInputChange()`                    |
-| 12    | **Public methods**               | Public API methods exposed to consumers                              | `async open()`<br/>`async close()`<br/>`async validate()`                |
-| 13    | **Internal methods**             | Private/protected helper methods                                     | `private updateState()`<br/>`private calculateValue()`                   |
-| 14    | **Render helpers**               | Private methods returning template fragments                         | `private renderHeader()`<br/>`private renderFooter()`                    |
-| 15    | **render() method**              | Main render method (always last)                                     | `render() { return <Host>...</Host>; }`                                  |
+| Order | Section                          | Description                                              | Examples                                                                  |
+| ----- | -------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 1     | **Static members**               | Static properties and methods, including style constants | `static styles = css\`...\``                                              |
+| 2     | **Private non-reactive members** | Private class properties that don't trigger re-renders   | `private helperInstance: Helper`<br/>`private cacheData: Map<>`           |
+| 3     | **Element reference**            | Reference to the component's host element                | `@Element() el!: HTMLElement`                                             |
+| 4     | **Internal reactive state**      | Private reactive properties (internal state)             | `@State() private isOpen = false`<br/>`@State() private count = 0`        |
+| 5     | **Public reactive properties**   | Public properties that trigger re-renders when changed   | `@Prop() disabled = false`<br/>`@Prop() value: string`                    |
+| 6     | **Property watchers**            | Handlers that run when specific properties change        | `@Watch('disabled')`<br/>`@Watch('value')`                                |
+| 7     | **Event declarations**           | Custom events emitted by the component                   | `@Event() bdsChange: EventEmitter`<br/>`@Event() bdsSubmit: EventEmitter` |
+| 8     | **Constructor**                  | Constructor (only if initialization logic is required)   | `constructor() { super(); }`                                              |
+| 9     | **Lifecycle methods**            | Component lifecycle hooks in execution order             | `connectedCallback()`<br/>`componentWillLoad()`<br/>`componentDidLoad()`  |
+| 10    | **Event listeners**              | Decorators for listening to DOM or custom events         | `@Listen('click')`<br/>`@Listen('myCustomEvent')`                         |
+| 11    | **Event handlers**               | Private methods that handle events                       | `private handleClick()`<br/>`private onInputChange()`                     |
+| 12    | **Public methods**               | Public API methods exposed to consumers                  | `async open()`<br/>`async close()`<br/>`async validate()`                 |
+| 13    | **Internal methods**             | Private/protected helper methods                         | `private updateState()`<br/>`private calculateValue()`                    |
+| 14    | **Render helpers**               | Private methods returning template fragments             | `private renderHeader()`<br/>`private renderFooter()`                     |
+| 15    | **render() method**              | Main render method (always last)                         | `render() { return <Host>...</Host>; }`                                   |
 
 #### Lifecycle Methods Ordering
 
@@ -553,15 +434,16 @@ Within each section (except lifecycle methods), members should be ordered alphab
 
 #### Section Comments
 
+Section comments are **optional** but encouraged for large components (more than ~150 lines). They make it easier to scan the file and locate specific member groups during code review.
+
 Use clear section comments to separate major sections:
 
 ```typescript
 @Component({ tag: "my-component" })
 export class MyComponent {
   // =========================================================================
-  // 1. Static members
+  // 1. Static members (e.g. static style constants, if any)
   // =========================================================================
-  static tagName = "my-component";
 
   // =========================================================================
   // 2. Private non-reactive members
@@ -595,7 +477,7 @@ export class MyComponent {
   // =========================================================================
   // 7. Event declarations
   // =========================================================================
-  @Event() myChange: EventEmitter;
+  @Event() bdsChange: EventEmitter;
 
   // =========================================================================
   // 8. Constructor (only if needed)
@@ -670,7 +552,7 @@ export class ExampleButton {
   // =========================================================================
   // 1. Static members
   // =========================================================================
-  static tagName = 'example-button';
+  // (none for this component)
 
   // =========================================================================
   // 2. Private non-reactive members
@@ -713,10 +595,10 @@ export class ExampleButton {
   // 7. Event declarations
   // =========================================================================
   /** Emitted when button is clicked */
-  @Event() myClick: EventEmitter<HTMLElement>;
+  @Event() bdsClick: EventEmitter<HTMLElement>;
 
   /** Emitted when button receives focus */
-  @Event() myFocus: EventEmitter<HTMLElement>;
+  @Event() bdsFocus: EventEmitter<HTMLElement>;
 
   // =========================================================================
   // 8. Constructor (only if needed)
@@ -745,7 +627,7 @@ export class ExampleButton {
   // =========================================================================
   @Listen('focus')
   onFocus() {
-    this.myFocus.emit(this.el);
+    this.bdsFocus.emit(this.el);
   }
 
   // =========================================================================
@@ -756,7 +638,7 @@ export class ExampleButton {
       event.preventDefault();
       return;
     }
-    this.myClick.emit(this.el);
+    this.bdsClick.emit(this.el);
   }
 
   private handleMouseDown = () => {
@@ -817,7 +699,7 @@ In order to enforce consistent code organization across the component library, t
 | Approach                | Description                                          | Example                                                  | Benefits                                                                                                                                 |
 | ----------------------- | ---------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **ESLint Rules**        | Automated linting rules that enforce member ordering | `"@typescript-eslint/member-ordering": ["error", {...}]` | - Automated checking in IDE and CI/CD<br/>- Auto-fix capability<br/>- Immediate feedback to developers<br/>- See Section 2.1 for details |
-| **Component Templates** | CLI generators with pre-ordered structure            | `npm run generate:component my-button`                   | - Developers start with correct structure<br/>- Includes section comments<br/>- Reduces manual setup<br/>- Consistent boilerplate        |
+| **Component Templates** | CLI generators with pre-ordered structure            | `pnpm generate:component`                                | - Developers start with correct structure<br/>- Reduces manual setup<br/>- Consistent boilerplate                                        |
 | **Pre-commit Hooks**    | Run linting before commits to block violations       | `husky` + `lint-staged` on `*.ts` files                  | - Prevents bad code from being committed<br/>- Forces compliance automatically<br/>- See Section 8.1 (Pre-commit Hooks)                  |
 | **Code Snippets**       | IDE snippets for common patterns                     | VS Code snippets for component sections                  | - Quick insertion of properly ordered sections<br/>- Low overhead, no tooling needed<br/>- Developer convenience                         |
 
@@ -849,18 +731,16 @@ Component generators ensure CEM-compliant boilerplate from the start, reduce man
 
 **Recommended Tools:**
 
-| Tool                        | Template Engine | Customization                | Setup | Maintenance             | Best For                                  |
-| --------------------------- | --------------- | ---------------------------- | ----- | ----------------------- | ----------------------------------------- |
-| **Plop.js** (Recommended)   | Handlebars      | High (custom helpers)        | ~5h   | Active (2025)           | CEM-compliant templates, custom workflows |
-| **Hygen** (Alternative)     | EJS             | Medium (32 built-in helpers) | ~3.5h | Last update 2 years ago | Simpler setup, standard transformations   |
-| **Stencil CLI** (Reference) | N/A             | None                         | 0 min | Active                  | Basic scaffolding only                    |
+| Tool                  | Template Engine | Customization         | Maintenance   | Best For                                  |
+| --------------------- | --------------- | --------------------- | ------------- | ----------------------------------------- |
+| **Plop.js** (Current) | Handlebars      | High (custom helpers) | Active (2025) | CEM-compliant templates, custom workflows |
 
 **Plop.js Setup (Recommended):**
 
 Plop.js offers the most flexibility with custom helpers and has active maintenance. It's ideal for creating CEM-compliant component templates.
 
 ```bash
-npm install --save-dev plop
+pnpm add -D plop
 ```
 
 **`plopfile.mjs`:**
@@ -890,25 +770,10 @@ export default function (plop) {
 **Usage:**
 
 ```bash
-npm run plop component
-# or with name: npm run plop component my-button
+pnpm generate:component
 ```
 
-**Hygen Setup (Alternative):**
-
-Hygen is simpler and faster to set up with 32 built-in text transformations, though it lacks custom helper support and hasn't been updated since 2023.
-
-```bash
-npm install --save-dev hygen
-hygen init self
-hygen generator new component
-```
-
-Templates live in `_templates/component/new/` directory. Usage:
-
-```bash
-hygen component new --name my-button
-```
+The generator prompts for the component name, then scaffolds the full file structure: `*.tsx`, `*.scss`, `*.spec.tsx`, `*.stories.ts`, `*.mdx`, and type files. Run from the workspace root.
 
 **Benefits:**
 
@@ -987,15 +852,15 @@ export class ExampleButton {
 
 **CEM JSDoc Best Practices:**
 
-| Tag         | Usage                                               | Example                                                       |
-| ----------- | --------------------------------------------------- | ------------------------------------------------------------- |
-| `@element`  | Document component tag name (required)              | `@element my-button`                                          |
-| `@slot`     | Document all slots including default                | `@slot - Default content`<br/>`@slot header - Header area`    |
-| `@csspart`  | Document all exportable shadow parts                | `@csspart button - The native button element`                 |
-| `@cssprop`  | Document all CSS custom properties with description | `@cssprop --button-color - Text color of the button`          |
-| `@fires`    | Document custom events with event detail structure  | `@fires myChange - Fired on change. Detail: { value: string}` |
-| `@default`  | Document default values for props                   | `@default 'primary'`                                          |
-| `@internal` | Mark internal/private implementation details        | `@internal`                                                   |
+| Tag         | Usage                                               | Example                                                           |
+| ----------- | --------------------------------------------------- | ----------------------------------------------------------------- |
+| `@element`  | Document component tag name (required)              | `@element my-button`                                              |
+| `@slot`     | Document all slots including default                | `@slot - Default content`<br/>`@slot header - Header area`        |
+| `@csspart`  | Document all exportable shadow parts                | Not applicable — Boreal DS uses light DOM; there are no CSS parts |
+| `@cssprop`  | Document all CSS custom properties with description | `@cssprop --button-color - Text color of the button`              |
+| `@fires`    | Document custom events with event detail structure  | `@fires bdsChange - Fired on change. Detail: { value: string}`    |
+| `@default`  | Document default values for props                   | `@default 'primary'`                                              |
+| `@internal` | Mark internal/private implementation details        | `@internal`                                                       |
 
 **See Also:** Section 5.6 for complete CEM setup, configuration, and integration with Storybook and IDEs.
 
@@ -1271,7 +1136,7 @@ export class MyComponent {
   @Watch("value")
   handleValueChange(newValue: string, oldValue: string) {
     // Emit change event
-    this.myChange.emit({ value: newValue, previousValue: oldValue });
+    this.bdsChange.emit({ value: newValue, previousValue: oldValue });
 
     // Validate new value
     this.validateValue(newValue);
@@ -1296,11 +1161,11 @@ export class MyComponent {
 ```typescript
 // Controlled component (value managed externally)
 @Prop() value: string;
-@Event() myChange: EventEmitter<string>;
+@Event() bdsChange: EventEmitter<string>;
 
 private handleInput(event: InputEvent) {
   const newValue = (event.target as HTMLInputElement).value;
-  this.myChange.emit(newValue);  // Emit, don't update prop
+  this.bdsChange.emit(newValue);  // Emit, don't update prop
 }
 
 // Uncontrolled component (internal state)
@@ -1383,21 +1248,21 @@ Events should only be emitted in response to **user interactions**, not programm
 
 **When to Emit Events:**
 
-| Scenario                        | Emit Event? | Reason                      | Example                                 |
-| ------------------------------- | ----------- | --------------------------- | --------------------------------------- |
-| User clicks button              | ✅ Yes      | Direct user interaction     | `myClick` event on button click         |
-| User types in input             | ✅ Yes      | Direct user interaction     | `myInput` event on keystroke            |
-| User selects option             | ✅ Yes      | Direct user interaction     | `myChange` event on selection           |
-| Component opens via user action | ✅ Yes      | User-triggered state change | `myOpen` event after user clicks toggle |
+| Scenario                        | Emit Event? | Reason                      | Example                                  |
+| ------------------------------- | ----------- | --------------------------- | ---------------------------------------- |
+| User clicks button              | ✅ Yes      | Direct user interaction     | `bdsClick` event on button click         |
+| User types in input             | ✅ Yes      | Direct user interaction     | `bdsInput` event on keystroke            |
+| User selects option             | ✅ Yes      | Direct user interaction     | `bdsChange` event on selection           |
+| Component opens via user action | ✅ Yes      | User-triggered state change | `bdsOpen` event after user clicks toggle |
 
 **When NOT to Emit Events:**
 
-| Scenario                          | Emit Event? | Reason                               | Example                                         |
-| --------------------------------- | ----------- | ------------------------------------ | ----------------------------------------------- |
-| Property changed programmatically | ❌ No       | Not user-initiated                   | Don't emit `myChange` when `value` prop changes |
-| Public method called              | ❌ No       | API call, not user action            | Don't emit `myOpen` when `open()` method called |
-| Internal state update             | ❌ No       | Implementation detail                | Don't emit on internal state changes            |
-| Initialization/lifecycle          | ❌ No       | Framework lifecycle, not user action | Don't emit on `componentWillLoad`               |
+| Scenario                          | Emit Event? | Reason                               | Example                                          |
+| --------------------------------- | ----------- | ------------------------------------ | ------------------------------------------------ |
+| Property changed programmatically | ❌ No       | Not user-initiated                   | Don't emit `bdsChange` when `value` prop changes |
+| Public method called              | ❌ No       | API call, not user action            | Don't emit `bdsOpen` when `open()` method called |
+| Internal state update             | ❌ No       | Implementation detail                | Don't emit on internal state changes             |
+| Initialization/lifecycle          | ❌ No       | Framework lifecycle, not user action | Don't emit on `componentWillLoad`                |
 
 **Implementation:**
 
@@ -1405,12 +1270,12 @@ Events should only be emitted in response to **user interactions**, not programm
 import { Event, EventEmitter, Method } from "@stencil/core";
 
 export class MyComponent {
-  @Event() myChange: EventEmitter<string>;
+  @Event() bdsChange: EventEmitter<string>;
 
   // ✅ GOOD - Emit on user interaction
   private handleInputChange(event: InputEvent) {
     const value = (event.target as HTMLInputElement).value;
-    this.myChange.emit(value);
+    this.bdsChange.emit(value);
   }
 
   // ❌ BAD - Don't emit on property change
@@ -1419,7 +1284,7 @@ export class MyComponent {
   @Watch("value")
   handleValueChange(newValue: string) {
     // ❌ Don't do this
-    // this.myChange.emit(newValue);
+    // this.bdsChange.emit(newValue);
   }
 
   // ❌ BAD - Don't emit on public method call
@@ -1427,7 +1292,7 @@ export class MyComponent {
   async setValue(value: string) {
     this.value = value;
     // ❌ Don't do this
-    // this.myChange.emit(value);
+    // this.bdsChange.emit(value);
   }
 }
 ```
@@ -1451,43 +1316,43 @@ Event detail payloads should be strongly typed to provide clear contracts and en
 import { Event, EventEmitter } from '@stencil/core';
 
 // Pattern 1: Simple value
-@Event() myChange: EventEmitter<string>;
+@Event() bdsChange: EventEmitter<string>;
 
-this.myChange.emit('new-value');
+this.bdsChange.emit('new-value');
 
 // Pattern 2: Object with multiple values
-@Event() mySelect: EventEmitter<{ id: string; label: string }>;
+@Event() bdsSelect: EventEmitter<{ id: string; label: string }>;
 
-this.mySelect.emit({ id: '123', label: 'Option 1' });
+this.bdsSelect.emit({ id: '123', label: 'Option 1' });
 
 // Pattern 3: Event with metadata
-@Event() myValidate: EventEmitter<{
+@Event() bdsValidate: EventEmitter<{
   value: string;
   isValid: boolean;
   errors: string[];
 }>;
 
-this.myValidate.emit({
+this.bdsValidate.emit({
   value: 'test@example.com',
   isValid: true,
   errors: []
 });
 
 // Pattern 4: Element reference
-@Event() myClick: EventEmitter<HTMLElement>;
+@Event() bdsClick: EventEmitter<HTMLElement>;
 
-this.myClick.emit(this.el);
+this.bdsClick.emit(this.el);
 
 // Pattern 5: Custom type
 interface SubmitDetail {
-  formData: Record<string, any>;
+  formData: Record<string, unknown>;
   timestamp: number;
   source: 'user' | 'api';
 }
 
-@Event() mySubmit: EventEmitter<SubmitDetail>;
+@Event() bdsSubmit: EventEmitter<SubmitDetail>;
 
-this.mySubmit.emit({
+this.bdsSubmit.emit({
   formData: { name: 'John' },
   timestamp: Date.now(),
   source: 'user'
@@ -1551,22 +1416,21 @@ Cancelable events allow parent components to prevent default behavior. Use the `
 ```typescript
 import { Event, EventEmitter } from "@stencil/core";
 
-export class MyComponent {
+export class BdsDialog {
   @State() private isOpen = false;
 
   // Cancelable event (before action)
-  @Event() myOpening: EventEmitter<void>;
+  @Event({ cancelable: true }) bdsOpening: EventEmitter<void>;
 
   // Non-cancelable event (after action)
-  @Event() myOpen: EventEmitter<void>;
+  @Event() bdsOpen: EventEmitter<void>;
 
   async open() {
     // Emit cancelable event before action
-    const event = this.myOpening.emit();
+    const event = this.bdsOpening.emit();
 
     // Check if event was prevented
     if (event.defaultPrevented) {
-      console.log("Opening was prevented by parent");
       return; // Don't proceed
     }
 
@@ -1574,7 +1438,7 @@ export class MyComponent {
     this.isOpen = true;
 
     // Emit non-cancelable event after action
-    this.myOpen.emit();
+    this.bdsOpen.emit();
   }
 }
 ```
@@ -1582,35 +1446,35 @@ export class MyComponent {
 **Consumer Usage:**
 
 ```html
-<my-component id="modal"></my-component>
+<bds-dialog id="modal"></bds-dialog>
 
 <script>
   const modal = document.getElementById("modal");
 
   // Prevent opening
-  modal.addEventListener("myOpening", (event) => {
+  modal.addEventListener("bdsOpening", (event) => {
     if (someCondition) {
       event.preventDefault(); // Cancel the opening
     }
   });
 
   // React to opening (cannot prevent)
-  modal.addEventListener("myOpen", () => {
-    console.log("Modal opened");
+  modal.addEventListener("bdsOpen", () => {
+    console.log("Dialog opened");
   });
 </script>
 ```
 
 **Cancelable Event Patterns:**
 
-| Event Type     | Cancelable? | Suffix | When Emitted                          |
-| -------------- | ----------- | ------ | ------------------------------------- |
-| `myOpening`    | ✅ Yes      | `-ing` | Before action (can be prevented)      |
-| `myOpen`       | ❌ No       | None   | After action (already happened)       |
-| `myClosing`    | ✅ Yes      | `-ing` | Before action (can be prevented)      |
-| `myClose`      | ❌ No       | None   | After action (already happened)       |
-| `mySubmitting` | ✅ Yes      | `-ing` | Before form submit (can be prevented) |
-| `mySubmit`     | ❌ No       | None   | After form submit (already happened)  |
+| Event Type      | Cancelable? | Suffix | When Emitted                          |
+| --------------- | ----------- | ------ | ------------------------------------- |
+| `bdsOpening`    | ✅ Yes      | `ing`  | Before action (can be prevented)      |
+| `bdsOpen`       | ❌ No       | None   | After action (already happened)       |
+| `bdsClosing`    | ✅ Yes      | `ing`  | Before action (can be prevented)      |
+| `bdsClose`      | ❌ No       | None   | After action (already happened)       |
+| `bdsSubmitting` | ✅ Yes      | `ing`  | Before form submit (can be prevented) |
+| `bdsSubmit`     | ❌ No       | None   | After form submit (already happened)  |
 
 #### Event Declaration Best Practices
 
@@ -1620,22 +1484,22 @@ export class MyComponent {
 export class MyComponent {
   /**
    * Emitted when the component value changes due to user interaction.
-   * @event myChange
+   * @event bdsChange
    */
-  @Event() myChange: EventEmitter<string>;
+  @Event() bdsChange: EventEmitter<string>;
 
   /**
    * Emitted before the component opens. Can be prevented by calling
    * `event.preventDefault()` to cancel the opening action.
-   * @event myOpening
+   * @event bdsOpening
    */
-  @Event() myOpening: EventEmitter<void>;
+  @Event({ cancelable: true }) bdsOpening: EventEmitter<void>;
 
   /**
    * Emitted when a selection is made.
-   * @event mySelect
+   * @event bdsSelect
    */
-  @Event() mySelect: EventEmitter<{
+  @Event() bdsSelect: EventEmitter<{
     /** The ID of the selected item */
     id: string;
     /** The label of the selected item */
@@ -1648,29 +1512,29 @@ export class MyComponent {
 
 | Practice                   | Description                              | Example                                        |
 | -------------------------- | ---------------------------------------- | ---------------------------------------------- |
-| **Document all events**    | Include JSDoc with clear description     | `@event myChange` tag                          |
+| **Document all events**    | Include JSDoc with clear description     | `@event bdsChange` tag                         |
 | **Describe event detail**  | Explain payload structure and properties | Document each field in detail object           |
 | **Note cancelable events** | Mention if/how event can be prevented    | "Can be prevented by calling preventDefault()" |
 | **Specify trigger**        | Clarify what user action triggers event  | "Emitted when user clicks button"              |
-| **Use consistent naming**  | Follow prefix + action pattern           | `myClick`, `myChange`, `mySubmit`              |
+| **Use consistent naming**  | Follow the `bds{Action}` pattern         | `bdsClick`, `bdsChange`, `bdsSubmit`           |
 
 #### Common Event Patterns
 
 **Form Events:**
 
 ```typescript
-export class MyInput {
-  @Event() myInput: EventEmitter<string>; // On each keystroke
-  @Event() myChange: EventEmitter<string>; // On blur/enter
-  @Event() myFocus: EventEmitter<void>; // On focus
-  @Event() myBlur: EventEmitter<void>; // On blur
+export class BdsTextField {
+  @Event() bdsInput: EventEmitter<string>; // On each keystroke
+  @Event() bdsChange: EventEmitter<string>; // On blur/enter
+  @Event() bdsFocus: EventEmitter<void>; // On focus
+  @Event() bdsBlur: EventEmitter<void>; // On blur
 
   private handleInput(event: InputEvent) {
-    this.myInput.emit((event.target as HTMLInputElement).value);
+    this.bdsInput.emit((event.target as HTMLInputElement).value);
   }
 
   private handleChange(event: Event) {
-    this.myChange.emit((event.target as HTMLInputElement).value);
+    this.bdsChange.emit((event.target as HTMLInputElement).value);
   }
 }
 ```
@@ -1678,23 +1542,23 @@ export class MyInput {
 **Lifecycle Events:**
 
 ```typescript
-export class MyDialog {
-  @Event() myOpening: EventEmitter<void>; // Cancelable
-  @Event() myOpen: EventEmitter<void>; // Non-cancelable
-  @Event() myClosing: EventEmitter<void>; // Cancelable
-  @Event() myClose: EventEmitter<void>; // Non-cancelable
+export class BdsDialog {
+  @Event({ cancelable: true }) bdsOpening: EventEmitter<void>; // Cancelable
+  @Event() bdsOpen: EventEmitter<void>; // Non-cancelable
+  @Event({ cancelable: true }) bdsClosing: EventEmitter<void>; // Cancelable
+  @Event() bdsClose: EventEmitter<void>; // Non-cancelable
 
   async open() {
-    if (!this.myOpening.emit().defaultPrevented) {
+    if (!this.bdsOpening.emit().defaultPrevented) {
       this.isOpen = true;
-      this.myOpen.emit();
+      this.bdsOpen.emit();
     }
   }
 
   async close() {
-    if (!this.myClosing.emit().defaultPrevented) {
+    if (!this.bdsClosing.emit().defaultPrevented) {
       this.isOpen = false;
-      this.myClose.emit();
+      this.bdsClose.emit();
     }
   }
 }
@@ -1703,13 +1567,13 @@ export class MyDialog {
 **Action Events:**
 
 ```typescript
-export class MyButton {
-  @Event() myClick: EventEmitter<MouseEvent>;
-  @Event() myFocus: EventEmitter<void>;
+export class BdsButton {
+  @Event() bdsClick: EventEmitter<MouseEvent>;
+  @Event() bdsFocus: EventEmitter<void>;
 
   private handleClick(event: MouseEvent) {
     if (!this.disabled) {
-      this.myClick.emit(event);
+      this.bdsClick.emit(event);
     }
   }
 }
@@ -1718,12 +1582,12 @@ export class MyButton {
 **Selection Events:**
 
 ```typescript
-export class MySelect {
-  @Event() mySelect: EventEmitter<{ id: string; label: string }>;
-  @Event() myDeselect: EventEmitter<{ id: string }>;
+export class BdsSelect {
+  @Event() bdsSelect: EventEmitter<{ id: string; label: string }>;
+  @Event() bdsDeselect: EventEmitter<{ id: string }>;
 
   private handleSelect(item: Item) {
-    this.mySelect.emit({ id: item.id, label: item.label });
+    this.bdsSelect.emit({ id: item.id, label: item.label });
   }
 }
 ```
@@ -1823,51 +1687,91 @@ ESLint enforces code quality rules and catches common errors. The configuration 
 **Required Dependencies:**
 
 ```bash
-npm install --save-dev eslint @eslint/js typescript typescript-eslint @stencil/eslint-plugin
+pnpm add -D @eslint/js typescript typescript-eslint @stencil/eslint-plugin eslint-plugin-jsdoc
 ```
 
-**Base Configuration (`eslint.config.ts`):**
+**Package-Level Configuration (`packages/boreal-web-components/eslint.config.ts`):**
 
-This configuration should be placed at the root of the monorepo and serves as the foundation for all packages.
+Each package carries its own `eslint.config.ts`. The web-components config below is the canonical reference.
 
 ```typescript
-import { defineConfig } from "eslint/config";
+// @ts-check
 import { configs } from "@eslint/js";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 import stencil from "@stencil/eslint-plugin";
-import globals from "globals";
+import jsdoc from "eslint-plugin-jsdoc";
 
-export default defineConfig([
-  {
-    ignores: [
-      "dist/**",
-      "loader/**",
-      "www/**",
-      "node_modules/**",
-      "*.d.ts",
-      "**/*.config.js",
-      "**/*.config.mjs",
-      "coverage/**",
-      ".storybook/**",
-      "storybook-static/**",
-    ],
-  },
+export default defineConfig(
   configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  ...stencil.configs.flat.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  stencil.configs.flat.recommended,
   {
     files: ["src/**/*.{ts,tsx}"],
+  },
+  {
+    ignores: [
+      "dist/",
+      "www/",
+      "coverage/",
+      "targets",
+      "components-build/",
+      "loader",
+      "scripts/",
+      "eslint.config.ts",
+      "stencil.config.ts",
+      "src/**/*.d.ts",
+      "*.config.ts",
+      "*.config.mjs",
+      "*.config.cjs",
+    ],
+  },
+  {
     languageOptions: {
-      parser: tseslint.parser,
+      ecmaVersion: "latest",
+      sourceType: "module",
       parserOptions: {
         projectService: true,
         tsconfigRootDir: __dirname,
       },
-      globals: {
-        ...globals.browser,
+    },
+  },
+  {
+    plugins: { jsdoc },
+    settings: {
+      jsdoc: {
+        tagNamePreference: {
+          internal: false,
+          ignore: false,
+          function: "method",
+          template: "typeParam",
+        },
       },
     },
     rules: {
+      "jsdoc/check-tag-names": [
+        "error",
+        {
+          definedTags: [
+            "slot",
+            "csspart",
+            "cssprop",
+            "cssproperty",
+            "cssState",
+            "summary",
+            "attr",
+            "attribute",
+            "fires",
+            "event",
+            "tag",
+            "tagname",
+            "default",
+            "typeParam",
+          ],
+        },
+      ],
+
+      // TypeScript rules
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
@@ -1875,84 +1779,119 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/no-unused-expressions": [
+        "warn",
+        { allowTernary: true },
+      ],
 
-      "stencil/decorators-style": "error",
+      // Stencil-specific rules
+      "stencil/async-methods": "error",
+      "stencil/ban-prefix": ["error", ["stencil", "stnl", "st"]],
+      "stencil/decorators-context": "error",
+      "stencil/decorators-style": [
+        "error",
+        {
+          prop: "inline",
+          state: "inline",
+          element: "inline",
+          event: "inline",
+          method: "multiline",
+          watch: "multiline",
+          listen: "multiline",
+        },
+      ],
+      "stencil/element-type": "error",
       "stencil/host-data-deprecated": "error",
+      "stencil/methods-must-be-public": "error",
+      "stencil/no-unused-watch": "error",
       "stencil/own-methods-must-be-private": "error",
       "stencil/own-props-must-be-private": "error",
       "stencil/prefer-vdom-listener": "error",
       "stencil/props-must-be-public": "error",
+      "stencil/props-must-be-readonly": "error",
       "stencil/render-returns-host": "error",
+      "stencil/required-jsdoc": "error",
       "stencil/reserved-member-names": "error",
       "stencil/single-export": "error",
-
-      "@stencil/async-methods": "error",
-      "@stencil/decorators-context": "error",
-      "@stencil/element-type": "error",
-      "@stencil/no-unused-watch": "error",
-      "@stencil/methods-must-be-public": "error",
-      "@stencil/props-must-be-readonly": "error",
-      "@stencil/required-jsdoc": "error",
-      "@stencil/strict-mutable": "warn",
+      "stencil/strict-mutable": "warn",
+      "stencil/strict-boolean-conditions": "warn",
+      "react/jsx-no-bind": "off",
     },
   },
   {
+    // Test files — relaxed rules
     files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "stencil/strict-boolean-conditions": "off",
     },
   },
   {
+    // Type definition files
     files: ["**/*.d.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
+      "stencil/strict-boolean-conditions": "off",
     },
   },
-]);
-```
-
-**Package-Specific Configuration:**
-
-Individual packages can extend the base configuration with package-specific rules:
-
-```typescript
-// packages/my-components/eslint.config.ts
-import baseConfig from "../../eslint.config.ts";
-import { defineConfig } from "eslint/config";
-
-export default defineConfig([
-  ...baseConfig,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    // Mixin files — constructors require `...args: any[]` to forward to the base class
+    files: ["**/mixins/**/*.ts"],
     rules: {
-      "@stencil/ban-prefix": ["error", ["stencil", "stnl", "st"]],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
     },
   },
-]);
+  {
+    // Component type files — enforce named exports only
+    files: ["src/**/types/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportDefaultDeclaration",
+          message:
+            "Default exports are forbidden in component type files. Use named exports so Stencil's declaration generator can resolve them in components.d.ts.",
+        },
+      ],
+    },
+  },
+);
 ```
 
 **Key Rules Explained:**
 
-| Rule                                  | Enforcement | Rationale                                                      |
-| ------------------------------------- | ----------- | -------------------------------------------------------------- |
-| `@stencil/async-methods`              | Error       | Ensures all public methods are async                           |
-| `@stencil/decorators-context`         | Error       | Validates decorators are used in correct context               |
-| `@stencil/element-type`               | Error       | Ensures `@Element()` has correct type                          |
-| `@stencil/no-unused-watch`            | Error       | Catches unused `@Watch()` declarations                         |
-| `@stencil/methods-must-be-public`     | Error       | Methods with `@Method()` must be public                        |
-| `@stencil/props-must-be-readonly`     | Error       | Props should be readonly (unless mutable)                      |
-| `@stencil/required-jsdoc`             | Error       | Enforces JSDoc on public APIs                                  |
-| `@stencil/strict-mutable`             | Warn        | Flags mutable props — allowed but discouraged in most cases    |
-| `@typescript-eslint/no-unused-vars`   | Error       | Prevents unused variables (ignore `_` prefix)                  |
-| `stencil/own-methods-must-be-private` | Error       | Internal methods should be private; only `@Method()` is public |
-| `stencil/own-props-must-be-private`   | Error       | Internal state props should not leak as public properties      |
-| `stencil/single-export`               | Error       | Each file exports only the component class                     |
+| Rule                                  | Enforcement | Rationale                                                                                       |
+| ------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `stencil/async-methods`               | Error       | Ensures all public `@Method()` are async                                                        |
+| `stencil/ban-prefix`                  | Error       | Prevents `stencil`, `stnl`, `st` prefixes on component tags                                     |
+| `stencil/decorators-context`          | Error       | Validates decorators are used in the correct context                                            |
+| `stencil/decorators-style`            | Error       | Enforces inline style for `@Prop`/`@State`/`@Event`; multiline for `@Watch`/`@Listen`/`@Method` |
+| `stencil/element-type`                | Error       | Ensures `@Element()` has correct host element type                                              |
+| `stencil/no-unused-watch`             | Error       | Catches unused `@Watch()` declarations                                                          |
+| `stencil/methods-must-be-public`      | Error       | Methods with `@Method()` must be public                                                         |
+| `stencil/props-must-be-readonly`      | Error       | Props should be readonly (unless `mutable: true`)                                               |
+| `stencil/required-jsdoc`              | Error       | Enforces JSDoc on public APIs                                                                   |
+| `stencil/strict-mutable`              | Warn        | Flags `mutable: true` props — allowed but discouraged in most cases                             |
+| `stencil/strict-boolean-conditions`   | Warn        | Warns about non-boolean conditions in JSX                                                       |
+| `stencil/own-methods-must-be-private` | Error       | Internal methods should be private; only `@Method()` is public                                  |
+| `stencil/own-props-must-be-private`   | Error       | Internal state props should not leak as public properties                                       |
+| `stencil/single-export`               | Error       | Each file exports only the component class                                                      |
+| `@typescript-eslint/no-unused-vars`   | Error       | Prevents unused variables (ignore `_` prefix)                                                   |
+| `@typescript-eslint/no-explicit-any`  | Warn        | Treat as error during review — no `any` on exported APIs                                        |
+| `jsdoc/check-tag-names`               | Error       | Validates custom JSDoc tags (`@slot`, `@fires`, `@cssprop`, etc.)                               |
 
 ### 2.2 Prettier Configuration
 
 Prettier handles code formatting automatically. The configuration prioritizes readability and consistency.
 
-**Configuration (`.prettierrc`):**
+**Configuration (`.prettierrc.json`):**
 
 ```json
 {
@@ -1970,7 +1909,7 @@ Prettier handles code formatting automatically. The configuration prioritizes re
 }
 ```
 
-**Ignore Patterns (`.prettierignore`):**
+**Ignore Patterns (`.prettierignore` — per package):**
 
 ```
 # Build outputs
@@ -2010,7 +1949,7 @@ node_modules
 
 ### 2.4 Running Linters
 
-**NPM Scripts (`package.json`):**
+**Scripts (`packages/boreal-web-components/package.json`):**
 
 ```json
 {
@@ -2023,15 +1962,29 @@ node_modules
 }
 ```
 
-**Note:** With flat config, ESLint automatically processes files based on the `files` patterns in your config. The `--ext` flag is no longer needed.
+**Root workspace commands (delegate via Turborepo):**
+
+```bash
+# Run lint across all packages
+pnpm lint
+
+# Auto-fix lint violations
+pnpm lint:fix
+
+# Check formatting
+pnpm format:check
+
+# Auto-format
+pnpm format
+```
 
 **Pre-commit Integration:**
 
-Linting runs automatically before commits via pre-commit hooks (see Section 6 — Git & Version Control).
+Linting runs automatically before commits via `lefthook` (see Section 8 — Automation & CI/CD).
 
 **CI/CD Integration:**
 
-All pull requests must pass linting checks before merge (see Section 6 — Git & Version Control).
+All pull requests must pass linting checks before merge (see Section 8 — Automation & CI/CD).
 
 #### CEM Validation
 
@@ -2040,11 +1993,8 @@ The Custom Elements Manifest (CEM) generation serves as a documentation quality 
 **Validation Commands:**
 
 ```bash
-# Generate CEM and validate
-npm run cem
-
-# Verify the file exists and is valid JSON
-test -f custom-elements.json && echo "CEM exists" || echo "CEM missing"
+# Run from web-components package to check for undocumented CEM changes
+pnpm --filter boreal-web-components check:cem
 ```
 
 **What to Validate:**
@@ -2086,9 +2036,9 @@ TypeScript provides type safety and better tooling support for the component lib
 
 ### 3.1 Compiler Configuration
 
-TypeScript compiler settings are defined in `tsconfig.json`. While Stencil has its own compiler and build system (configured in `stencil.config.ts`), it respects the TypeScript configuration for type checking, IDE support, and code analysis.
+TypeScript compiler settings are defined in `tsconfig.json`. The monorepo root carries a minimal legacy `tsconfig.json` (from the Stencil starter template). The authoritative configuration for the web-components package is at `packages/boreal-web-components/tsconfig.json`.
 
-**Required Configuration (`tsconfig.json`):**
+\*\*Package Configuration (`packages/boreal-web-components/tsconfig.json`):
 
 ```json
 {
@@ -2161,40 +2111,26 @@ TypeScript compiler settings are defined in `tsconfig.json`. While Stencil has i
 | `sourceMap`               | `true`    | Enables debugging in original TypeScript source                              |
 | `skipDefaultLibCheck`     | `true`    | Skips type checks on default lib `.d.ts` to reduce build time                |
 
-**Monorepo-Specific Options:**
+**Monorepo Note:**
 
-For monorepo projects with package references, add:
-
-```json
-{
-  "compilerOptions": {
-    "composite": true,
-    "incremental": true
-  }
-}
-```
-
-| Option        | Purpose                                                  |
-| ------------- | -------------------------------------------------------- |
-| `composite`   | Enables project references for faster incremental builds |
-| `incremental` | Caches build information to speed up subsequent builds   |
+`composite` and `incremental` project reference options are not currently used in this monorepo. Turborepo handles incremental build caching at the pipeline level instead.
 
 **Path Aliases:**
 
-Path aliases improve import readability and refactoring:
+The `@/` alias maps to the package `src/` root via `baseUrl`:
 
 ```json
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./src/",
     "paths": {
-      "@/*": ["src/*"],
-      "@/components/*": ["src/components/*"],
-      "@/utils/*": ["src/utils/*"]
+      "@/*": ["./*"]
     }
   }
 }
 ```
+
+With `baseUrl: "./src/"`, the alias `@/*` resolves to `./src/*`.
 
 **Usage:**
 
@@ -2213,9 +2149,9 @@ import { formatDate } from "@/utils/date";
 Proper TypeScript configuration ensures:
 
 1. **Decorator Support** — `experimentalDecorators` enables Stencil's core functionality
-2. **Type Safety** — Strict mode catches errors at compile time
+2. **Explicit error detection** — `noUnusedLocals`, `noImplicitReturns`, etc. catch common mistakes without requiring `strict: true`
 3. **Developer Experience** — Source maps and declaration maps enable debugging and IDE navigation
-4. **Build Performance** — Incremental and composite builds speed up monorepo development
+4. **No implicit `any`** — The root `tsconfig.json` has `noImplicitAny: false` for legacy reasons; treat it as an error in code review. All exported API surfaces must have explicit types.
 5. **Code Quality** — Unused variable checks prevent dead code
 
 ### 3.2 Type Safety Requirements
@@ -2311,9 +2247,9 @@ export interface ButtonClickDetail {
   value: string;
 }
 
-@Component({ tag: "my-button" })
-export class MyButton {
-  @Event() myClick: EventEmitter<ButtonClickDetail>;
+@Component({ tag: "bds-button" })
+export class BdsButton {
+  @Event() bdsClick: EventEmitter<ButtonClickDetail>;
 }
 ```
 
@@ -2323,8 +2259,8 @@ export class MyButton {
 // Consumer's code
 import type { ButtonClickDetail } from "your-library";
 
-const button = document.querySelector("my-button");
-button.addEventListener("myClick", (event: CustomEvent<ButtonClickDetail>) => {
+const button = document.querySelector("bds-button");
+button.addEventListener("bdsClick", (event: CustomEvent<ButtonClickDetail>) => {
   console.log(event.detail.timestamp);
 });
 ```
@@ -2356,21 +2292,22 @@ Strict type safety provides:
 
 Shared types should be organized in a dedicated `types` directory for reusability and consistency.
 
-**Directory Structure:**
+**Directory Structure (Boreal DS convention):**
 
 ```
 src/
 ├── components/
-│   └── my-button/
-│       ├── my-button.tsx
+│   └── bds-button/
+│       ├── bds-button.tsx
+│       ├── bds-button.scss
+│       ├── bds-button.spec.tsx
 │       └── types/
-│           ├── IMyButton.ts
-│           ├── Enum.ts
-│           └── Types.ts
-├── types/
-│   ├── common.ts
-│   └── events.ts
+│           ├── IButton.ts       ← interface (public props)
+│           ├── enum.ts          ← BUTTON_VARIANTS, BUTTON_SIZES, …
+│           └── types.ts         ← ButtonVariant, ButtonSize, …
 └── utils/
+    └── helpers/
+        └── validateProps.ts
 ```
 
 **Common Types (`src/types/common.ts`):**
@@ -2436,45 +2373,47 @@ This keeps prop types in one authoritative place (the `IComponent` interface) an
 
 Each component should define an explicit interface for its props, even when using decorators.
 
-**Component-Specific Types (`my-button.types.ts`):**
+**Component-Specific Types (`types/IButton.ts` + `types/types.ts`):**
 
 ```typescript
 import type { Variant, Size } from "../../types";
 
-export interface MyButtonProps {
-  variant: Variant;
-  size: Size;
-  disabled: boolean;
-  label: string;
+export interface IButton {
+  variant?: Variant;
+  size?: Size;
+  disabled?: boolean;
+  label?: string;
 }
 
-export interface MyButtonClickDetail {
+export interface ButtonClickDetail {
   buttonId: string;
   timestamp: number;
 }
 ```
 
-**Component Implementation (`my-button.tsx`):**
+**Component Implementation (`bds-button.tsx`):**
 
 ```typescript
-import { Component, Prop, Event, EventEmitter, h } from '@stencil/core';
-import type { MyButtonProps, MyButtonClickDetail } from './my-button.types';
+import { Component, Element, Prop, Event, EventEmitter, h } from '@stencil/core';
+import type { IButton, ButtonClickDetail } from './types/IButton';
 import type { Variant, Size } from '../../types';
 
 @Component({
-  tag: 'my-button',
-  styleUrl: 'my-button.css',
+  tag: 'bds-button',
+  styleUrl: 'bds-button.scss',
 })
-export class MyButton implements MyButtonProps {
-  @Prop() variant: Variant = 'primary';
-  @Prop() size: Size = 'medium';
-  @Prop() disabled: boolean = false;
-  @Prop() label: string;
+export class BdsButton implements IButton {
+  @Element() el!: HTMLBdsButtonElement;
 
-  @Event() myClick: EventEmitter<MyButtonClickDetail>;
+  @Prop({ reflect: true }) readonly variant: Variant = 'primary';
+  @Prop({ reflect: true }) readonly size: Size = 'medium';
+  @Prop({ reflect: true }) readonly disabled: boolean = false;
+  @Prop() readonly label: string;
+
+  @Event() bdsClick: EventEmitter<ButtonClickDetail>;
 
   private handleClick = () => {
-    this.myClick.emit({
+    this.bdsClick.emit({
       buttonId: this.el.id,
       timestamp: Date.now(),
     });
@@ -2496,52 +2435,54 @@ export class MyButton implements MyButtonProps {
 
 **Benefits:**
 
-| Practice                   | Benefit                                       |
-| -------------------------- | --------------------------------------------- |
-| Separate `.types.ts` files | Clear separation of types from implementation |
-| `implements` interface     | Ensures all props are declared                |
-| Explicit prop types        | Better IDE support and autocomplete           |
-| Barrel exports             | Single import point for consumers             |
+| Practice                | Benefit                                       |
+| ----------------------- | --------------------------------------------- |
+| Separate `types/` files | Clear separation of types from implementation |
+| `implements` interface  | Ensures all props are declared                |
+| Explicit prop types     | Better IDE support and autocomplete           |
+| Direct imports          | Tree-shakeable; no barrel file overhead       |
 
 #### Type Scaffolding Template
 
-Use this template for new components:
+Use this template for new components (generated by `pnpm generate:component`):
 
 ```typescript
-// src/components/my-component/my-component.types.ts
-import type { Size, Variant } from '../../types';
+// src/components/bds-my-component/types/IMyComponent.ts
 
 /**
- * Props for MyComponent
+ * Public props interface for BdsMyComponent
  */
-export interface MyComponentProps {
-  // Add props here
-  variant: Variant;
-  size: Size;
+export interface IMyComponent {
+  variant?: 'primary' | 'secondary';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+  label?: string;
 }
 
 /**
- * Event detail emitted by MyComponent
+ * Event detail emitted by BdsMyComponent
  */
-export interface MyComponentEventDetail {
-  // Add event detail here
+export interface MyComponentChangeDetail {
+  value: string;
 }
 
-// src/components/my-component/my-component.tsx
-import { Component, Prop, Event, EventEmitter, h } from '@stencil/core';
-import type { MyComponentProps, MyComponentEventDetail } from './my-component.types';
+// src/components/bds-my-component/bds-my-component.tsx
+import { Component, Element, Prop, Event, EventEmitter, h } from '@stencil/core';
+import type { IMyComponent, MyComponentChangeDetail } from './types/IMyComponent';
 
 @Component({
-  tag: 'my-component',
-  styleUrl: 'my-component.css',
+  tag: 'bds-my-component',
+  styleUrl: 'bds-my-component.scss',
 })
-export class MyComponent implements MyComponentProps {
-  // Props from interface
-  @Prop() variant!: Variant;
-  @Prop() size!: Size;
+export class BdsMyComponent implements IMyComponent {
+  @Element() el!: HTMLBdsMyComponentElement;
 
-  // Events
-  @Event() myEvent: EventEmitter<MyComponentEventDetail>;
+  @Prop({ reflect: true }) readonly variant: IMyComponent['variant'] = 'primary';
+  @Prop({ reflect: true }) readonly size: IMyComponent['size'] = 'medium';
+  @Prop({ reflect: true }) readonly disabled: boolean = false;
+  @Prop() readonly label: string;
+
+  @Event() bdsChange: EventEmitter<MyComponentChangeDetail>;
 
   render() {
     return <div>Component content</div>;
@@ -2639,27 +2580,23 @@ Comprehensive testing ensures components work reliably across different scenario
 
 **Test Runner**
 
-Use Stencil's built-in test runner (Jest + Puppeteer) for unit and end-to-end testing:
+Use Stencil's built-in test runner (Jest) for unit tests:
 
-- **Zero configuration** — Pre-configured for Stencil projects created with `npm init stencil`
-- **Integrated tooling** — Works seamlessly with Stencil compiler and build pipeline
-- **Chrome-based testing** — Aligns with Chromatic free tier (Chrome-only visual testing)
-- **Stencil-optimized helpers** — `newSpecPage()` for unit tests, `newE2EPage()` for E2E tests
+- **Integrated tooling** — Works seamlessly with the Stencil compiler and build pipeline
+- **Chrome-based testing** — Aligns with Chromatic (Chrome-only visual testing)
+- **Stencil-optimized helpers** — `newSpecPage()` for unit tests
 
 **Commands:**
 
 ```bash
-# Run unit tests
-npm run test --spec
+# Run unit tests (from workspace root)
+pnpm test
 
 # Run unit tests in watch mode
-npm run test --spec --watchAll
-
-# Run E2E tests
-npm run test --e2e
+pnpm --filter boreal-web-components test:watch
 
 # Run with coverage
-npm run test --spec --coverage
+pnpm --filter boreal-web-components test:coverage
 ```
 
 **Note on Multi-Browser Testing:**
@@ -2707,12 +2644,12 @@ Use the **Arrange-Act-Assert (AAA)** pattern for all test types. This structure 
 it("should emit event when button clicked", async () => {
   // ARRANGE - Set up the test environment
   const page = await newSpecPage({
-    components: [MyButton],
-    html: `<my-button label="Click me"></my-button>`,
+    components: [BdsButton],
+    html: `<bds-button label="Click me"></bds-button>`,
   });
   const button = page.root;
   const eventSpy = jest.fn();
-  button.addEventListener("buttonClick", eventSpy);
+  button.addEventListener("bdsClick", eventSpy);
 
   // ACT - Perform the action being tested
   button.click();
@@ -2759,32 +2696,32 @@ The naming convention should follow the rule `{bds-component}.functionality.spec
 
 ```typescript
 import { newSpecPage } from "@stencil/core/testing";
-import { MyButton } from "./my-button";
+import { BdsButton } from "./bds-button";
 
-describe("my-button", () => {
+describe("bds-button", () => {
   it("should render with default props", async () => {
     const page = await newSpecPage({
-      components: [MyButton],
-      html: `<my-button>Click me</my-button>`,
+      components: [BdsButton],
+      html: `<bds-button>Click me</bds-button>`,
     });
 
     expect(page.root).toEqualHtml(`
-      <my-button>
+      <bds-button>
         <button class="button button--primary">
           Click me
         </button>
-      </my-button>
+      </bds-button>
     `);
   });
 
   it("should emit custom event on click", async () => {
     // ARRANGE
     const page = await newSpecPage({
-      components: [MyButton],
-      html: `<my-button>Click me</my-button>`,
+      components: [BdsButton],
+      html: `<bds-button>Click me</bds-button>`,
     });
     const spy = jest.fn();
-    page.root.addEventListener("myClick", spy);
+    page.root.addEventListener("bdsClick", spy);
 
     // ACT
     const button = page.root.querySelector("button");
@@ -2811,7 +2748,7 @@ describe("my-button", () => {
 | **Async behavior**   | Use `await page.waitForChanges()` after state updates              |
 | **Error states**     | Test invalid inputs and error message rendering                    |
 
-**NPM Scripts:**
+**Package scripts (`packages/boreal-web-components/package.json`):**
 
 ```json
 {
@@ -2844,20 +2781,20 @@ describe("form integration", () => {
     // ARRANGE
     const page = await newE2EPage();
     await page.setContent(`
-      <my-form>
-        <my-input name="email" required></my-input>
-        <my-button type="submit">Submit</my-button>
-      </my-form>
+      <bds-form>
+        <bds-text-field name="email" required></bds-text-field>
+        <bds-button type="submit">Submit</bds-button>
+      </bds-form>
     `);
-    const input = await page.find("my-input");
-    const button = await page.find("my-button");
+    const input = await page.find("bds-text-field");
+    const button = await page.find("bds-button");
 
     // ACT - Submit without filling (should show error)
     await button.click();
     await page.waitForChanges();
 
     // ASSERT
-    const error = await page.find("my-input >>> .error");
+    const error = await page.find("bds-text-field .error");
     expect(error).not.toBeNull();
 
     // ACT - Fill input (error should clear)
@@ -2865,7 +2802,7 @@ describe("form integration", () => {
     await page.waitForChanges();
 
     // ASSERT
-    const errorAfter = await page.find("my-input >>> .error");
+    const errorAfter = await page.find("bds-text-field .error");
     expect(errorAfter).toBeNull();
   });
 });
@@ -2882,7 +2819,7 @@ Chromatic automatically captures screenshots of all Storybook stories and compar
 **Setup:**
 
 ```bash
-npm install --save-dev chromatic
+pnpm add -D chromatic
 ```
 
 **Configuration (`package.json`):**
@@ -2906,10 +2843,11 @@ export default {
   component: "my-button",
 };
 
-export const Primary = () => `<my-button variant="primary">Primary</my-button>`;
+export const Primary = () =>
+  `<bds-button variant="primary">Primary</bds-button>`;
 export const Secondary = () =>
-  `<my-button variant="secondary">Secondary</my-button>`;
-export const Disabled = () => `<my-button disabled>Disabled</my-button>`;
+  `<bds-button variant="secondary">Secondary</bds-button>`;
+export const Disabled = () => `<bds-button disabled>Disabled</bds-button>`;
 ```
 
 **Snapshot Calculation & Cost Planning:**
@@ -2996,9 +2934,9 @@ describe("visual regression", () => {
     const page = await newE2EPage();
     await page.setContent(`
       <div>
-        <my-button variant="primary">Primary</my-button>
-        <my-button variant="secondary">Secondary</my-button>
-        <my-button variant="danger">Danger</my-button>
+        <bds-button variant="primary">Primary</bds-button>
+        <bds-button variant="secondary">Secondary</bds-button>
+        <bds-button variant="danger">Danger</bds-button>
       </div>
     `);
 
@@ -3086,7 +3024,7 @@ Accessibility testing ensures components work for all users, including those usi
 No additional test code required if Chromatic is integrated. Ensure Storybook A11y addon is installed:
 
 ```bash
-npm install --save-dev @storybook/addon-a11y
+pnpm add -D @storybook/addon-a11y
 ```
 
 **.storybook/main.ts:**
@@ -3190,8 +3128,8 @@ describe("accessibility", () => {
   it("should have no axe violations", async () => {
     // ARRANGE
     const page = await newSpecPage({
-      components: [MyButton],
-      html: `<my-button>Click me</my-button>`,
+      components: [BdsButton],
+      html: `<bds-button>Click me</bds-button>`,
     });
 
     // ACT
@@ -3225,20 +3163,17 @@ describe("accessibility", () => {
 **Command Reference:**
 
 ```bash
-# Run all tests
-npm test
+# Run all tests (from workspace root)
+pnpm test
 
 # Run specific test file
-npm test -- src/components/my-button/my-button.spec.ts
+pnpm --filter boreal-web-components test -- --testPathPattern=bds-button
 
 # Watch mode
-npm run test:watch
+pnpm --filter boreal-web-components test:watch
 
 # Coverage report
-npm run test:coverage
-
-# E2E tests
-npm run test:e2e
+pnpm --filter boreal-web-components test:coverage
 
 # Single test case (use .only in test file)
 it.only('should render correctly', async () => { ... });
@@ -3315,10 +3250,10 @@ Document component source code with JSDoc/TSDoc for inline documentation and IDE
  * @slot icon-end - Optional icon displayed after button text
  */
 @Component({
-  tag: "my-button",
-  styleUrl: "my-button.css",
+  tag: "bds-button",
+  styleUrl: "bds-button.scss",
 })
-export class MyButton {
+export class BdsButton {
   /**
    * The visual style variant of the button.
    * @default 'primary'
@@ -3333,7 +3268,7 @@ export class MyButton {
   /**
    * Emitted when the button is clicked.
    */
-  @Event() buttonClick: EventEmitter<{ timestamp: number }>;
+  @Event() bdsClick: EventEmitter<{ timestamp: number }>;
 
   /**
    * Programmatically focuses the button.
@@ -3356,14 +3291,14 @@ export class MyButton {
 
 #### JSDoc Best Practices
 
-| Practice            | Example                                           |
-| ------------------- | ------------------------------------------------- |
-| **Use `@default`**  | `@default 'primary'` for prop defaults            |
-| **Document slots**  | `@slot icon-start - Icon before text`             |
-| **Event details**   | `@event buttonClick - Emitted with { timestamp }` |
-| **Mark internals**  | `@internal` for private implementation details    |
-| **Parameter types** | `@param {string} value - The input value`         |
-| **Return types**    | `@returns {Promise<boolean>} Validation result`   |
+| Practice            | Example                                         |
+| ------------------- | ----------------------------------------------- |
+| **Use `@default`**  | `@default 'primary'` for prop defaults          |
+| **Document slots**  | `@slot icon-start - Icon before text`           |
+| **Event details**   | `@event bdsClick - Emitted with { timestamp }`  |
+| **Mark internals**  | `@internal` for private implementation details  |
+| **Parameter types** | `@param {string} value - The input value`       |
+| **Return types**    | `@returns {Promise<boolean>} Validation result` |
 
 ---
 
@@ -3374,7 +3309,7 @@ Storybook provides interactive component documentation for developers with live 
 #### Setup
 
 ```bash
-npm install --save-dev @storybook/web-components @storybook/addon-docs @storybook/addon-a11y
+pnpm add -D @storybook/web-components @storybook/addon-docs @storybook/addon-a11y
 ```
 
 #### Story Structure
@@ -3385,15 +3320,15 @@ Each component should have its own directory containing both story definitions (
 
 ```
 components/
-├── my-button/
-│   ├── my-button.stories.tsx    # Story definitions and interactive examples
-│   └── my-button.mdx            # Documentation narrative and layout
-├── my-input/
-│   ├── my-input.stories.tsx
-│   └── my-input.mdx
-└── my-dropdown/
-    ├── my-dropdown.stories.tsx
-    └── my-dropdown.mdx
+├── bds-button/
+│   ├── bds-button.stories.ts    # Story definitions and interactive examples
+│   └── bds-button.mdx            # Documentation narrative and layout
+├── bds-text-field/
+│   ├── bds-text-field.stories.ts
+│   └── bds-text-field.mdx
+└── bds-select/
+    ├── bds-select.stories.ts
+    └── bds-select.mdx
 ```
 
 **Why This Structure?**
@@ -3591,7 +3526,7 @@ Story files define interactive examples and control configurations for component
 // my-button.stories.tsx
 
 // Import custom Storybook types for type safety
-import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
+import type { BorealStoryMeta, BorealStory } from "@/types/stories";
 
 // Import Lit for rendering templates
 import { html, nothing } from "lit";
@@ -3606,7 +3541,7 @@ type StoryArgs = {
 // Meta configuration - applies to all stories in this file
 const meta = {
   title: "Components/Actions/Button", // Storybook sidebar location
-  component: "my-button", // Web component tag name
+  component: "bds-button", // Web component tag name
 
   // Define controls for the Storybook UI
   argTypes: {
@@ -3637,19 +3572,19 @@ const meta = {
     variant: "primary",
     disabled: false,
   },
-} satisfies ColibriStoryMeta<StoryArgs>;
+} satisfies BorealStoryMeta<StoryArgs>;
 
 export default meta;
-type Story = ColibriStory<StoryArgs>;
+type Story = BorealStory<StoryArgs>;
 
 /**
  * Default button story - appears first in Storybook
  */
 export const Default: Story = {
   render: (args) => html`
-    <my-button variant=${args.variant} ?disabled=${args.disabled}>
+    <bds-button variant=${args.variant} ?disabled=${args.disabled}>
       Click me
-    </my-button>
+    </bds-button>
   `,
 };
 
@@ -3664,7 +3599,7 @@ export const WithEvent: Story = {
     };
 
     return html`
-      <my-button @buttonClick=${handleClick}> Click to see event </my-button>
+      <bds-button @bdsClick=${handleClick}> Click to see event </bds-button>
     `;
   },
   parameters: {
@@ -3672,7 +3607,7 @@ export const WithEvent: Story = {
       description: {
         // Additional context shown in the docs
         story:
-          "Demonstrates the `buttonClick` event emission. Check browser console.",
+          "Demonstrates the `bdsClick` event emission. Check browser console.",
       },
     },
   },
@@ -3708,7 +3643,7 @@ Create comprehensive stories covering all component states and use cases:
 Use custom Storybook types for enhanced type checking and consistency:
 
 ```typescript
-import type { ColibriStoryMeta, ColibriStory } from "@/types/storybook";
+import type { BorealStoryMeta, BorealStory } from "@/types/stories";
 
 // Define story arguments type
 type StoryArgs = {
@@ -3718,9 +3653,9 @@ type StoryArgs = {
 };
 
 // Type-safe meta object
-const meta: ColibriStoryMeta<StoryArgs> = {
+const meta: BorealStoryMeta<StoryArgs> = {
   title: "Components/Actions/Button",
-  component: "my-button",
+  component: "bds-button",
   argTypes: {
     // Fully typed argTypes
   },
@@ -3729,7 +3664,7 @@ const meta: ColibriStoryMeta<StoryArgs> = {
 export default meta;
 
 // Type-safe story definition
-type Story = ColibriStory<StoryArgs>;
+type Story = BorealStory<StoryArgs>;
 ```
 
 **Benefits:**
@@ -3919,7 +3854,7 @@ const preview = {
 // Component level (in meta)
 const meta: Meta = {
   title: "Organisms/Site Menu",
-  component: "site-menu",
+  component: "bds-site-menu",
   parameters: {
     layout: "fullscreen", // Override for this component
   },
@@ -3948,17 +3883,17 @@ For components with `reflect: true` properties, use **HTML attribute syntax** in
 ```typescript
 // ✅ CORRECT - Shows in generated code snippets
 const renderComponent: Story["render"] = (args) => html`
-  <my-select value=${args.value || nothing} label=${args.label || nothing}>
-  </my-select>
+  <bds-select value=${args.value || nothing} label=${args.label || nothing}>
+  </bds-select>
 `;
 
 // ❌ INCORRECT - Doesn't appear in code snippets
 const renderComponent: Story["render"] = (args) => html`
-  <my-select
+  <bds-select
     .value=${args.value}      // Property binding hidden from docs
     .label=${args.label}      // Property binding hidden from docs
   >
-  </my-select>
+  </bds-select>
 `;
 ```
 
@@ -4010,7 +3945,7 @@ Use `excludeStories` to prevent template functions and utilities from being trea
 ```typescript
 const meta: Meta = {
   title: "Components/Grid",
-  component: "my-grid",
+  component: "bds-grid",
   excludeStories: [
     "GridTemplates", // Template functions
     "MockData", // Mock data objects
@@ -4100,14 +4035,14 @@ export const FormIntegration: Story = {
 
     return html`
       <form @submit=${handleSubmit}>
-        <my-text-field
+        <bds-text-field
           name="username"
           label="Username"
           required
           .value=${args.value}
-        ></my-text-field>
+        ></bds-text-field>
 
-        <button type="submit">Submit</button>
+        <bds-button type="submit">Submit</bds-button>
       </form>
     `;
   },
@@ -4185,7 +4120,7 @@ export const InteractiveFormExample: Story = {
         code-theme="dark"
       >
         <form slot="form" id="${formId}" class="form-container">
-          <my-text-field
+          <bds-text-field
             id="username"
             name="username"
             label="Username"
@@ -4194,9 +4129,9 @@ export const InteractiveFormExample: Story = {
             required
             min-length="3"
             custom-width="100%"
-          ></my-text-field>
+          ></bds-text-field>
 
-          <my-text-field
+          <bds-text-field
             id="password"
             name="password"
             label="Password"
@@ -4206,9 +4141,9 @@ export const InteractiveFormExample: Story = {
             min-length="8"
             helper="Must be at least 8 characters long."
             custom-width="100%"
-          ></my-text-field>
+          ></bds-text-field>
 
-          <my-text-field
+          <bds-text-field
             id="email"
             name="email"
             label="Email (Optional)"
@@ -4219,13 +4154,13 @@ export const InteractiveFormExample: Story = {
             validation-timing="input"
             helper="We will use this to contact you."
             custom-width="100%"
-          ></my-text-field>
+          ></bds-text-field>
 
-          <my-group>
+          <bds-button-group>
             <!-- Disable buttons in docs mode to prevent form submission -->
-            <my-button type="submit" ?disabled=${isInDocs}>Submit</my-button>
-            <my-button type="reset" ?disabled=${isInDocs}>Reset</my-button>
-          </my-group>
+            <bds-button type="submit" ?disabled=${isInDocs}>Submit</bds-button>
+            <bds-button type="reset" ?disabled=${isInDocs}>Reset</bds-button>
+          </bds-button-group>
         </form>
       </form-demo>
     `;
@@ -4346,9 +4281,9 @@ const renderGrid = (args: GridArgs, items: TemplateResult[]) => html`
 
   <!-- Use CSS classes defined above -->
   <div class="demo-container">
-    <my-grid cols=${args.cols} gap=${args.gap}>
+    <bds-grid cols=${args.cols} gap=${args.gap}>
       ${items.map((item) => html`<div class="grid-item">${item}</div>`)}
-    </my-grid>
+    </bds-grid>
   </div>
 `;
 
@@ -5046,10 +4981,10 @@ CEM is a [community standard](https://github.com/webcomponents/custom-elements-m
 
 ```bash
 # Install the core analyzer and type expansion plugin
-npm install --save-dev @custom-elements-manifest/analyzer cem-plugin-expanded-types
+pnpm add -D @custom-elements-manifest/analyzer cem-plugin-expanded-types
 
 # Optional: IDE integration helpers
-npm install --save-dev custom-element-vs-code-integration custom-element-jet-brains-integration
+pnpm add -D custom-element-vs-code-integration custom-element-jet-brains-integration
 ```
 
 #### Configuration
@@ -5116,8 +5051,8 @@ Add CEM generation to your build scripts:
   "scripts": {
     "cem": "cem analyze --config cem.config.mjs",
     "cem:watch": "cem analyze --config cem.config.mjs --watch",
-    "build": "npm run cem && stencil build",
-    "start": "concurrently \"npm:cem:watch\" \"npm:dev\""
+    "build": "pnpm cem && stencil build",
+    "start": "concurrently \"pnpm cem:watch\" \"pnpm dev\""
   }
 }
 ```
@@ -5316,23 +5251,24 @@ Effective version control practices enable smooth collaboration across multiple 
 
 ### 6.1 Branching Strategy
 
-Boreal DS follows the **GitFlow** model. It allows stricter control over merges — essential for a library aiming for an open-source contribution model — while remaining compatible with automated changelog generation and SemVer versioning.
+Boreal DS uses a simplified **trunk-based** model with a single permanent integration and release branch. All development flows through short-lived branches that target `release/current`:
 
-Two permanent branches exist; all development flows through short-lived branches:
+| Branch            | Type      | Description                                                           |
+| ----------------- | --------- | --------------------------------------------------------------------- |
+| `release/current` | Permanent | Default branch. Reflects the latest published or in-progress release. |
+| `feature/`        | Temporal  | Isolated work for a new feature or ticket.                            |
+| `fix/`            | Temporal  | Bug fixes.                                                            |
+| `bugfix/`         | Temporal  | Fixes for errors found before reaching production.                    |
+| `docs/`           | Temporal  | Documentation-only changes.                                           |
+| `chore/`          | Temporal  | Housekeeping and non-production changes.                              |
 
-| Branch     | Type      | Description                                                                           |
-| ---------- | --------- | ------------------------------------------------------------------------------------- |
-| `master`   | Permanent | Production. Always reflects the latest release.                                       |
-| `develop`  | Permanent | Integration branch. Accumulates completed features ready for the next release cycle.  |
-| `feature/` | Temporal  | Isolated work for a new feature or ticket.                                            |
-| `bugfix/`  | Temporal  | Fixes for errors found in `develop` or a `feature` branch before reaching production. |
-| `hotfix/`  | Temporal  | Critical fixes applied directly to `master`.                                          |
-| `release/` | Temporal  | Hardening and final testing before production.                                        |
+**Branch naming convention:** `type/TICKET-ID_short-description` — e.g. `feature/EOA-10057_add-text-field`.
 
 **Recommendations:**
 
+- All PRs target `release/current`.
 - Keep pull requests small and focused — short-lived branches minimise merge conflicts.
-- Merge feature branches promptly; do not let them diverge from `develop` for extended periods.
+- Merge feature branches promptly; do not let them diverge from `release/current` for extended periods.
 
 ### 6.2 Commit Message Conventions
 
@@ -5373,15 +5309,11 @@ feat!: send an email to the customer when a product is shipped
 
 ### 6.3 Merge Strategies
 
-**Squash and merge** is the default for temporary branches merging into `develop`. This keeps the integration branch history clean: one commit per completed feature or bugfix, formatted as a Conventional Commit, which simplifies changelog generation and reversion.
+**Squash and merge** is the default for all PRs merging into `release/current`. This keeps the branch history clean: one commit per completed feature or bugfix, formatted as a Conventional Commit, which simplifies changelog generation and reversion.
 
-**Merge commit** is required for merges between permanent branches to preserve full history for auditing.
-
-| Source Branch         | Target Branch | Strategy         | Purpose                                           |
-| --------------------- | ------------- | ---------------- | ------------------------------------------------- |
-| `feature/`, `bugfix/` | `develop`     | Squash and Merge | Clean, functionally-oriented `develop` history    |
-| `release/`, `hotfix/` | `master`      | Merge Commit     | Preserves complete release/patch history          |
-| `release/`, `hotfix/` | `develop`     | Merge Commit     | Syncs production changes back to development line |
+| Source Branch                          | Target Branch     | Strategy         | Purpose                              |
+| -------------------------------------- | ----------------- | ---------------- | ------------------------------------ |
+| `feature/`, `fix/`, `bugfix/`, `docs/` | `release/current` | Squash and Merge | Clean, functionally-oriented history |
 
 ---
 
@@ -5405,7 +5337,7 @@ The PR template communicates the purpose of the change clearly to reviewers.
 
 **Approval setup:**
 
-- Minimum **2 approvals** (excluding PR author) required for merges into `master` and `develop`.
+- Minimum **2 approvals** (excluding PR author) required for merges into `release/current`.
 - At least **1 reviewer must be a core maintainer** (Senior front-end architect or equivalent) to ensure library stability.
 - Reviewers must inspect for gaps in accessibility, design tokens, and component adherence.
 - All comments must be resolved before merge.
@@ -5467,81 +5399,42 @@ Three tools work together to run quality checks before a commit reaches the repo
 
 **Setup:**
 
-```bash
-# packages/boreal-web-components
-npm install --save-dev husky lint-staged @commitlint/cli @commitlint/config-conventional
-npx husky init
-```
+Husky and lint-staged are already configured at the workspace root. No per-package setup is needed.
 
-Update the `prepare` script in `package.json`:
-
-```json
-{
-  "scripts": {
-    "prepare": "cd ../.. && husky packages/boreal-web-components/.husky"
-  }
-}
-```
-
-Run `npm run prepare` then verify with:
+**Workspace root `.husky/pre-commit`:**
 
 ```bash
-git config core.hooksPath
-# should print: packages/boreal-web-components/.husky/_
+pnpm lint-staged
 ```
 
-Replace `.husky/pre-commit`:
+**Workspace root `.husky/commit-msg`:**
 
 ```bash
-cd packages/boreal-web-components
-echo "Pre-commit: Checking components..."
-npm run lint-staged
+pnpm commitlint --edit "$1"
 ```
 
-Create `.lintstagedrc.json`:
-
-```json
-{
-  "*.{css,scss}": ["npm run format"],
-  "*.{js,jsx,ts,tsx}": ["npm run lint:fix", "npm run format", "npm run test"]
-}
-```
-
-Create `commitlint.config.mjs`:
+**Workspace root `.lintstagedrc.js`:**
 
 ```javascript
 export default {
-  extends: ["@commitlint/config-conventional"],
-  rules: {
-    "type-enum": [
-      2,
-      "always",
-      [
-        "feat",
-        "fix",
-        "bugfix",
-        "docs",
-        "build",
-        "ci",
-        "refactor",
-        "revert",
-        "style",
-        "chore",
-        "ticket",
-        "perf",
-      ],
-    ],
-  },
+  "packages/boreal-web-components/src/**/*.{ts,tsx}": [
+    () => "pnpm --filter @telesign/boreal-web-components run lint:fix",
+    () => "pnpm --filter @telesign/boreal-web-components run format",
+  ],
+  "packages/boreal-web-components/src/**/*.{css,scss}": [
+    () => "pnpm --filter @telesign/boreal-web-components run format",
+  ],
+  "apps/boreal-docs/**/*.{ts,tsx}": [
+    () => "pnpm --filter @telesign/boreal-docs run lint:fix",
+    () => "pnpm --filter @telesign/boreal-docs run format",
+  ],
+  "apps/boreal-docs/**/*.{js,json,css,md,mdx}": [
+    () => "pnpm --filter @telesign/boreal-docs run format",
+  ],
 };
 ```
 
-Initialize the `commit-msg` hook:
-
-```bash
-echo "npx commitlint --edit .git/COMMIT_EDITMSG" > .husky/commit-msg
-```
-
-> If using VS Code, ensure `.husky/pre-commit` and `.husky/commit-msg` are saved with **UTF-8** encoding.
+> **Note:** Functions (not plain strings) are used as lint-staged task values to prevent lint-staged from appending matched file paths to `pnpm --filter` commands, which would produce invalid CLI syntax.
 
 ### 8.2 CI Pipeline & Automated Releases
 

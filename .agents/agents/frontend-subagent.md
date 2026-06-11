@@ -37,9 +37,8 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 
 - Read the target component file(s) before editing — never modify without understanding the existing structure.
 - Load `stencil-component-knowledge` before writing any implementation code — it contains the authoritative Boreal DS patterns for FACE, composite event boundaries, prop validation, and interface contracts.
-- Consult `ai-docs/guidelines/code-practices-&-dev-guidelines.md` for base-layer inheritance model and token architecture.
-- Use `ai-docs/guidelines/stencil-best-practices.md` for light DOM patterns, SCSS `@use` rules, and accessor conventions.
+- Consult `ai-docs/guidelines/stencil-best-practices.md` for mixin architecture, `IFormControl<T>` interface layering, light DOM patterns, SCSS `@use` rules, and accessor conventions.
 - All props must have explicit TypeScript types. No `any`. No inferred prop types.
 - All tokens from `@telesign/boreal-style-guidelines/stencil` — no hard-coded colours, spacing, or radii.
-- Events must set `bubbles: true, composed: true` unless explicitly scoped.
+- Use bare `@Event()` — no `bubbles` or `composed` options unless the event must bubble to a parent `@Listen()` handler (see ADR 0003).
 - Only implement what is in the current task. Do not refactor surrounding code or add features outside scope.

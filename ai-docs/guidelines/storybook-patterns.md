@@ -114,19 +114,19 @@ argTypes: {
 
 **Category conventions:**
 
-| Category | Contains |
-|---|---|
-| `Core` | Primary component props that affect behaviour or appearance |
-| `Slots` | Slot controls injected into the rendered template |
-| `Events` | Event callback handlers |
-| `a11y` | Accessibility-only props (`label`, `aria-*`) |
+| Category | Contains                                                    |
+| -------- | ----------------------------------------------------------- |
+| `Core`   | Primary component props that affect behaviour or appearance |
+| `Slots`  | Slot controls injected into the rendered template           |
+| `Events` | Event callback handlers                                     |
+| `a11y`   | Accessibility-only props (`label`, `aria-*`)                |
 
 ### 4. Shared render function
 
 Extract the render logic into a named arrow function typed as `Story['render']`. Every story that renders the component the same way can then share it:
 
 ```ts
-const renderButton: Story['render'] = args => html`
+const renderButton: Story["render"] = (args) => html`
   <bds-button
     variant=${args.variant}
     ?disabled=${args.disabled}
@@ -142,13 +142,13 @@ Stories override only the `args` they differ on:
 ```ts
 /** Button default variant. */
 export const Default: Story = {
-  args: { variant: 'default' },
+  args: { variant: "default" },
   render: renderButton,
 };
 
 /** Button with outline variant. */
 export const OutlineButton: Story = {
-  args: { variant: 'outline' },
+  args: { variant: "outline" },
   render: renderButton,
 };
 ```
@@ -161,17 +161,17 @@ Add a JSDoc comment to every named story export — it becomes the story's descr
 
 Stories use Lit's `html` tagged template literal. The component element is a standard web component — no framework wrapper needed.
 
-| Binding | Syntax | Use for |
-|---|---|---|
-| String / enum | `variant=${args.variant}` | Reflected string props |
-| Boolean attribute | `?disabled=${args.disabled}` | Props that map to boolean HTML attributes |
-| JS property | `.options=${args.options}` | Objects, arrays, non-reflected props |
-| Event listener | `@bdsClick=${args.onBdsClick}` | Custom events (the `@` prefix equals `addEventListener`) |
+| Binding           | Syntax                         | Use for                                                  |
+| ----------------- | ------------------------------ | -------------------------------------------------------- |
+| String / enum     | `variant=${args.variant}`      | Reflected string props                                   |
+| Boolean attribute | `?disabled=${args.disabled}`   | Props that map to boolean HTML attributes                |
+| JS property       | `.options=${args.options}`     | Objects, arrays, non-reflected props                     |
+| Event listener    | `@bdsClick=${args.onBdsClick}` | Custom events (the `@` prefix equals `addEventListener`) |
 
 **Conditional slot content:**
 
 ```ts
-import { nothing } from 'lit';
+import { nothing } from "lit";
 
 html`
   <bds-button>
@@ -180,7 +180,7 @@ html`
       : nothing}
     ${args.slotDefault}
   </bds-button>
-`
+`;
 ```
 
 Use `nothing` (not `undefined` or `''`) to suppress a slot — Lit renders `nothing` as an empty text node with no HTML output.
@@ -190,14 +190,16 @@ Use `nothing` (not `undefined` or `''`) to suppress a slot — Lit renders `noth
 When a story needs the icon font, inject it via a Lit `css` tagged template inside the template:
 
 ```ts
-import { html, css } from 'lit';
+import { html, css } from "lit";
 
 const styles = css`
-  @import url('https://resources-borealds.s3.us-east-1.amazonaws.com/icons/current/boreal-styles.css');
+  @import url("https://resources-borealds.s3.us-east-1.amazonaws.com/icons/current/boreal-styles.css");
 `;
 
-const renderButton: Story['render'] = args => html`
-  <style>${styles}</style>
+const renderButton: Story["render"] = (args) => html`
+  <style>
+    ${styles}
+  </style>
   <bds-button>${args.slotDefault}</bds-button>
 `;
 ```
@@ -212,11 +214,16 @@ Each `.mdx` file is the primary documentation page for the component. Import fro
 
 ```mdx
 import {
-  Meta, Title, Subtitle, Canvas, ArgTypes, Description,
-} from '@storybook/addon-docs/blocks';
-import LinkTo from '@storybook/addon-links/react';
-import { Callout, StoryName, DocsLinkTo } from '@/components/docs';
-import * as BdsButtonStories from './bds-button.stories';
+  Meta,
+  Title,
+  Subtitle,
+  Canvas,
+  ArgTypes,
+  Description,
+} from "@storybook/addon-docs/blocks";
+import LinkTo from "@storybook/addon-links/react";
+import { Callout, StoryName, DocsLinkTo } from "@/components/docs";
+import * as BdsButtonStories from "./bds-button.stories";
 
 <Meta of={BdsButtonStories} />
 
@@ -229,16 +236,16 @@ One or two sentences describing what the component is and its primary purpose.
 
 Use this sequence. Omit sections that do not apply to the component.
 
-| Subtitle | Required | Notes |
-|---|---|---|
-| `How to use it` | Always | Numbered steps: register, add tag, minimal HTML snippet |
-| `When to use it` | Always | Bullet list of use cases; optional "Avoid when:" |
-| `Component preview` | Always | Tip Callout + `<Canvas>` blocks for main variants |
-| **`## States`** (H2) | When component has multiple states | Disabled, error, loading, readonly |
-| **`## Form integration`** (H2) | Form components only | Association, validation timing, interactive example |
-| `Accessibility` | Always | ARIA attributes, keyboard navigation, screen reader notes |
-| `Properties` | Always | `<ArgTypes of={BdsXxxStories} />` |
-| `Interact with the component` | Always | `<LinkTo>` pointing to the Default canvas story |
+| Subtitle                       | Required                           | Notes                                                     |
+| ------------------------------ | ---------------------------------- | --------------------------------------------------------- |
+| `How to use it`                | Always                             | Numbered steps: register, add tag, minimal HTML snippet   |
+| `When to use it`               | Always                             | Bullet list of use cases; optional "Avoid when:"          |
+| `Component preview`            | Always                             | Tip Callout + `<Canvas>` blocks for main variants         |
+| **`## States`** (H2)           | When component has multiple states | Disabled, error, loading, readonly                        |
+| **`## Form integration`** (H2) | Form components only               | Association, validation timing, interactive example       |
+| `Accessibility`                | Always                             | ARIA attributes, keyboard navigation, screen reader notes |
+| `Properties`                   | Always                             | `<ArgTypes of={BdsXxxStories} />`                         |
+| `Interact with the component`  | Always                             | `<LinkTo>` pointing to the Default canvas story           |
 
 > Note: "Component preview" and "States" sometimes use `<Subtitle>` and sometimes `## H2` headings depending on how prominent the section needs to be. Follow the precedent of the nearest existing component in the same category.
 
@@ -248,10 +255,15 @@ Reference story exports by name. Optionally add `<Description of={...} />` befor
 
 ```mdx
 ### Default
+
 <Description of={BdsButtonStories.Default} />
-<Canvas className='bds-doc__canvas--with-background' of={BdsButtonStories.Default} />
+<Canvas
+  className="bds-doc__canvas--with-background"
+  of={BdsButtonStories.Default}
+/>
 
 ### Outline
+
 <Description of={BdsButtonStories.OutlineButton} />
 <Canvas of={BdsButtonStories.OutlineButton} />
 ```
@@ -262,11 +274,16 @@ Use `className='bds-doc__canvas--with-background'` on the first story Canvas whe
 
 ```mdx
 <Callout variant="tip" icon="💡">
-  Click the **Show code** button in the bottom-right corner of the Canvas to copy the snippet.
+  Click the **Show code** button in the bottom-right corner of the Canvas to
+  copy the snippet.
 </Callout>
 
 <Callout variant="info" icon="ℹ️">
-  Using React or Vue? See the <DocsLinkTo title="Framework Integration">Framework Integration guide</DocsLinkTo>.
+  Using React or Vue? See the{" "}
+  <DocsLinkTo title="Framework Integration">
+    Framework Integration guide
+  </DocsLinkTo>
+  .
 </Callout>
 ```
 
@@ -299,3 +316,33 @@ Omit the table of contents for simple components with fewer than four sections.
 - **Never import from `@storybook/blocks`** — use `@storybook/addon-docs/blocks` (this is what the project installs).
 - **Never use `ColibriStoryMeta` / `ColibriStory`** — these are from a predecessor design system; the correct types are `BorealStoryMeta` / `BorealStory` from `@/types/stories`.
 - **Never omit `parameters` from the meta** — `BorealStoryMeta` makes it required; always include the `docs.source` block with `formatHtmlSource`.
+
+---
+
+## Hiding stories from navigation
+
+Use `tags: ['!dev']` to exclude a story from the sidebar while keeping it accessible for embedding in an MDX `<Canvas>` block:
+
+```ts
+export const InternalExample: Story = {
+  args: {
+    variant: "internal",
+  },
+  render: renderComponent,
+  tags: ["!dev"], // Hidden from sidebar, still reachable from MDX
+};
+```
+
+Apply `tags: ['!dev']` when:
+
+- The story is only meant to be embedded in an MDX `<Canvas>` block.
+- It represents an edge case or internal usage that would clutter the component's navigation entry.
+- It is a template or rendering helper that isn't useful as a standalone interactive story.
+
+**Embedding in MDX:**
+
+```mdx
+import * as ButtonStories from "./bds-button.stories";
+
+<Canvas of={ButtonStories.InternalExample} />
+```

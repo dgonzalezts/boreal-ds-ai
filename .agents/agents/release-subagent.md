@@ -38,6 +38,7 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 - Load `infra-knowledge` before any build, CI, or release task — it contains the authoritative Boreal DS patterns for Turbo PTY hang fixes, Stencil dist copy behaviour, SCSS path normalization, release-it configuration, Chromatic deployment, and the validate:pack consumer simulation workflow.
 - Read `ai-docs/guidelines/release-process.md` before running any release — follow the dry-run → real-run sequence without exception.
 - Read `ai-docs/guidelines/scripts-boreal.md` for monorepo tooling commands.
+- Read `ai-docs/guidelines/publishing-and-deployment.md` for the full alpha release workflow and Storybook/Chromatic deployment process.
 - Always run `--dry-run` first to preview version bump and changelog before publishing.
 - Release sequence: `release:styles → release:wc → validate:all → release:react → release:vue`. Never skip or reorder.
 - Releases must run from `release/current` branch with a clean working directory.

@@ -9,6 +9,7 @@ Primary references (read before writing docs):
 
 - `ai-docs/guidelines/storybook-patterns.md` — canonical story structure and argTypes rules
 - `ai-docs/guidelines/jsdoc-template.md` — JSDoc on Stencil components: what to write, where, and what the CEM plugin generates automatically
+- `ai-docs/guidelines/plop-generator-learnings.md` — Plop.js story generator: critical issues, Handlebars template patterns, and common pitfalls
 - `ai-docs/docs/documentation.instructions.md` — two-type docs/story component rule, MDX section requirements
 
 ---

@@ -103,6 +103,62 @@ Rules:
 - **Exception:** events caught by a parent component via `@Listen()` must use `@Event({ bubbles: true })`. `@Listen()` relies on bubbling — without it the event never reaches the parent's listener.
 - Do not reuse native DOM event names (`click`, `change`, `input`, etc.).
 
+### Event emission rules
+
+Events must only be emitted in response to **user interactions**, not programmatic changes. This prevents infinite loops and keeps data flow predictable.
+
+| Scenario                          | Emit? | Reason                                    |
+| --------------------------------- | ----- | ----------------------------------------- |
+| User clicks / types / selects     | ✅    | Direct user interaction                   |
+| Property changed programmatically | ❌    | Not user-initiated; emitting causes loops |
+| Public `@Method()` called         | ❌    | API call, not a user action               |
+| Internal state update             | ❌    | Implementation detail                     |
+| Initialization / lifecycle hooks  | ❌    | Framework lifecycle, not a user action    |
+
+### Cancelable events
+
+Cancelable events use the `-ing` suffix (before the action) paired with a plain name (after the action).
+
+```ts
+/** Emitted before the dialog opens. Call `event.preventDefault()` to cancel. */
+@Event({ cancelable: true })
+bdsOpening!: EventEmitter<void>;
+
+/** Emitted after the dialog has opened. */
+@Event()
+bdsOpen!: EventEmitter<void>;
+```
+
+Inside the handler, check `defaultPrevented` before proceeding:
+
+```ts
+async open() {
+  const event = this.bdsOpening.emit();
+  if (event.defaultPrevented) return;
+  this.isOpen = true;
+  this.bdsOpen.emit();
+}
+```
+
+| Event pair   | Cancelable | Suffix | When emitted                   |
+| ------------ | ---------- | ------ | ------------------------------ |
+| `bdsOpening` | ✅         | `ing`  | Before action (can be stopped) |
+| `bdsOpen`    | ❌         | —      | After action (already done)    |
+| `bdsClosing` | ✅         | `ing`  | Before action (can be stopped) |
+| `bdsClose`   | ❌         | —      | After action (already done)    |
+
+### Event detail typing
+
+| Pattern             | When to use                 | Example                                                                            |
+| ------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| Simple primitive    | Single scalar value         | `EventEmitter<string>`                                                             |
+| Inline object       | Two or three related fields | `EventEmitter<{ id: string; label: string }>`                                      |
+| Named interface     | Reusable or complex payload | `EventEmitter<SelectDetail>`                                                       |
+| Element reference   | Exposing the source element | `EventEmitter<HTMLElement>`                                                        |
+| Discriminated union | Multiple event variants     | `EventEmitter<{ type: 'success'; data: T } \| { type: 'error'; message: string }>` |
+
+Only include relevant data in the detail — do not serialize the entire component state.
+
 ---
 
 ## Method JSDoc (Place on the method)

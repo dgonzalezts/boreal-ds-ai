@@ -126,6 +126,4 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 
 ## Reference Documentation
 
-- `ai-docs/guidelines/code_review_checklist.md` — full Boreal DS review checklist (sections 0–E)
-- `ai-docs/guidelines/coding_standards.md` — coding standards summary
-- `ai-docs/guidelines/common_antipatterns.md` — recurring failure patterns with explanations
+- `ai-docs/guidelines/code-review-checklist.md` — full Boreal DS review checklist (sections 0–F)

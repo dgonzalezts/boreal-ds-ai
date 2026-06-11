@@ -2,6 +2,8 @@
 
 Standard patterns for `newSpecPage` spec files in `boreal-web-components`. All examples reference `bds-button-basics.spec.ts` as the canonical source.
 
+**Coverage target:** every component must reach ≥ 90% statement coverage before a PR is merged.
+
 ---
 
 ## Spec file organisation
