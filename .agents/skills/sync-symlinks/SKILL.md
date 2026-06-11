@@ -15,6 +15,7 @@ Run `sync-symlinks.sh` to reconcile per-entry symlinks across all mirror surface
   - `.agents/CLAUDE.md` — project memory file (mirror: `.claude/CLAUDE.md`)
   - `.agents/agents/` — agent definitions (mirrors: `.claude/agents/`, `.cursor/agents/`)
   - `.agents/commands/` — slash commands (mirrors: `.claude/commands/`, `.cursor/commands/`, `.github/prompts/` as `*.prompt.md`)
+  - `.agents/copilot-instructions.md` — GitHub Copilot always-on context (mirror: `.github/copilot-instructions.md`)
   - `.agents/memory/` — memory entries (mirror: `.claude/memory/`)
   - `.agents/rules/` — always-on rule files (mirrors: `.claude/rules/` as `*.md`, `.cursor/rules/` as `*.mdc`)
   - `.agents/skills/` — skill definitions (mirrors: `.claude/skills/`, `.cursor/skills/`)

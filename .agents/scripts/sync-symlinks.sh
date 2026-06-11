@@ -149,6 +149,9 @@ sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"
 printf "── .github/prompts → .agents/commands (*.prompt.md)\n"
 sync_surface ".github/prompts" ".agents/commands" "../../.agents/commands" "*.md" ".prompt.md"
 
+printf "── .github/copilot-instructions.md → .agents/copilot-instructions.md\n"
+sync_surface ".github" ".agents" "../.agents" "copilot-instructions.md"
+
 printf "\nsync-symlinks: done  added=%d  fixed=%d  removed=%d  conflicts=%d\n" \
   "$added" "$fixed" "$removed" "$conflicts"
 
