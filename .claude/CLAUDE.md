@@ -10,12 +10,22 @@ Non-obvious facts, discovered constraints, and verified patterns that have surfa
 
 Key topic files currently available:
 
-- `.agents/memory/stencil-face-attach-internals.md` — `@AttachInternals()` must be on the component class body, never in a mixin factory
-- `.agents/memory/stencil-face-element-proxy-limits.md` — Stencil's element proxy blocks native FACE prototype members; use `@Method()` wrappers
-- `.agents/memory/stencil-face-constraint-validation-pattern.md` — how to avoid doubled validation events; `IFormValidator` / `customValidators` pattern
-- `.agents/memory/stencil-async-rendering-gotchas.md` — async DOM reflection, `formDisabledCallback` trigger conditions, naming collision gotcha
 - `.agents/memory/component-bds-typography-group-labels.md` — group components use `<bds-typography>` for `label` (variant=label, required+tooltipText) and `helperText` (variant=helper, state prop); leaf labels stay as plain spans
-- `.agents/memory/stencil-form-control-interfaces.md` — every form component with a `value` prop must register in `componentModels` in `vue-output-target.ts` for Vue v-model support; must land in the same PR as the component
+- `.agents/memory/mouseleave-relatedtarget-vs-target.md` — `mouseleave` hover logic must use `e.relatedTarget`, not `e.target`
+- `.agents/memory/typescript-popover-api-declare-global-redundant.md` — `declare global { interface HTMLElement { showPopover()... } }` is dead code since TS 5.2
+- `.agents/memory/nodejs-signal-handler-patterns.md` — `spawnSync` for SIGINT/SIGTERM cleanup; async handlers don't complete during teardown
+- `.agents/memory/stencil-dist-copy-namespace-behavior.md` — Stencil `dist` copy entries land in `dist/<namespace>/`; `postbuild.js` promotes them; always `rm -rf dist` before testing
+- `.agents/memory/scripts-boreal-pack-pipeline.md` — `publish.js` doesn't build; Turborepo `dependsOn` provides the build guarantee; per-framework script suffix convention
+- `.agents/memory/turbo-persistent-interactive-pty-hang.md` — `persistent: true` implies `interactive: true`; add `"interactive": false` explicitly to avoid CI deadlocks
+- `.agents/memory/sass-paths-windows-forward-slash.md` — all Sass paths must use forward slashes; apply `.replace(/\\/g, '/')` on `injectGlobalPaths`/`includePaths`
+- `.agents/memory/github-actions-windows-debug-technique.md` — temporary `workflow_dispatch` workflows for platform-specific bug reproduction
+- `.agents/memory/storybook-vite-quirks.md` — Vite glob export limitation workaround and esm-es5 warning suppression
+- `.agents/memory/storybook-source-snippet-non-primitive-props.md` — override auto-generated "Show code" with `parameters.docs.source.code` for non-primitive Lit property bindings
+- `.agents/memory/storybook-action-wiring-web-components.md` — four-level action wiring pattern; why direct `@event=${fn}` binding fails
+- `.agents/memory/chromatic-deployment.md` — `dotenv-cli` required for pnpm; `--storybook-build-dir` vs `--build-script-name`; Turborepo output caching
+- `.agents/memory/release-it-pnpm-publish.md` — `publishCommand` silently ignored; use `publishPackageManager: "pnpm"` and `publishArgs` instead
+- `.agents/memory/mutation-testing-stryker-setup.md` — three non-obvious Stryker setup constraints; test patterns for killing surviving mutants
+- `.agents/memory/mutation-testing-workflow-decisions.md` — Stryker kept local-only; one config per component; 100% score required
 
 ---
 
@@ -163,7 +173,7 @@ If a piece of logic genuinely requires explanation, that is a signal to simplify
 
 ### 9. No Co-Authored-By trailer in commit messages
 
-Do not append `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>` (or any Claude authorship trailer) to git commit messages. Use only the commit message itself — no trailers, footers, or attribution lines.
+Do not append `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` (or any Claude authorship trailer) to git commit messages. Use only the commit message itself — no trailers, footers, or attribution lines.
 
 ### 7. Keep scope tight
 
