@@ -119,11 +119,17 @@ printf "sync-symlinks: reconciling mirror surfaces\n\n"
 printf "── .claude/agents → .agents/agents\n"
 sync_surface ".claude/agents" ".agents/agents" "../../.agents/agents"
 
+printf "── .claude/CLAUDE.md → .agents/CLAUDE.md\n"
+sync_surface ".claude" ".agents" "../.agents" "CLAUDE.md"
+
 printf "── .claude/commands → .agents/commands\n"
 sync_surface ".claude/commands" ".agents/commands" "../../.agents/commands"
 
 printf "── .claude/memory → .agents/memory\n"
 sync_surface ".claude/memory" ".agents/memory" "../../.agents/memory"
+
+printf "── .claude/rules → .agents/rules\n"
+sync_surface ".claude/rules" ".agents/rules" "../../.agents/rules"
 
 printf "── .claude/skills → .agents/skills\n"
 sync_surface ".claude/skills" ".agents/skills" "../../.agents/skills"
@@ -133,6 +139,9 @@ sync_surface ".cursor/agents" ".agents/agents" "../../.agents/agents"
 
 printf "── .cursor/commands → .agents/commands\n"
 sync_surface ".cursor/commands" ".agents/commands" "../../.agents/commands"
+
+printf "── .cursor/rules → .agents/rules (*.mdc)\n"
+sync_surface ".cursor/rules" ".agents/rules" "../../.agents/rules" "*.md" ".mdc"
 
 printf "── .cursor/skills → .agents/skills\n"
 sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"

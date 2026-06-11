@@ -91,6 +91,10 @@ Use this checklist during planning and include a short "utility discovery" note 
 **Every plan MUST start with this header:**
 
 ```markdown
+---
+status: pending
+---
+
 # [Feature Name] Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.

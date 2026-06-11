@@ -18,12 +18,15 @@ Three mirror facades expose content to specific tools via per-entry symlinks:
 
 | Facade              | Points to           | Used by                               |
 | ------------------- | ------------------- | ------------------------------------- |
+| `.claude/CLAUDE.md` | `.agents/CLAUDE.md` | Claude Code                           |
 | `.claude/agents/`   | `.agents/agents/`   | Claude Code                           |
 | `.claude/commands/` | `.agents/commands/` | Claude Code                           |
 | `.claude/memory/`   | `.agents/memory/`   | Claude Code                           |
+| `.claude/rules/`    | `.agents/rules/`    | Claude Code                           |
 | `.claude/skills/`   | `.agents/skills/`   | Claude Code                           |
 | `.cursor/agents/`   | `.agents/agents/`   | Cursor                                |
 | `.cursor/commands/` | `.agents/commands/` | Cursor                                |
+| `.cursor/rules/`    | `.agents/rules/`    | Cursor (renamed \\\*.mdc)             |
 | `.cursor/skills/`   | `.agents/skills/`   | Cursor                                |
 | `.github/prompts/`  | `.agents/commands/` | GitHub Copilot (renamed \*.prompt.md) |
 
@@ -31,7 +34,7 @@ Three mirror facades expose content to specific tools via per-entry symlinks:
 
 ## How it works
 
-All eight directories are excluded from the main repository tracking via `.git/info/exclude`:
+All eleven entries are excluded from the main repository tracking via `.git/info/exclude`:
 
 - They never appear as untracked files in `git status` on the main branches
 - They are never pushed to the `origin` remote (Bitbucket)
