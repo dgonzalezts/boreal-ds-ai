@@ -11,7 +11,7 @@ Boreal DS is a multi-brand design system monorepo for Proximus Group (brands: Pr
 
 **Tooling constraints:**
 
-- Node.js 22+ via fnm — run `fnm use` before any Node/pnpm command
+- Node.js 22+ via fnm — **never call `pnpm`/`npm`/`node` directly**; always wrap with `.agents/scripts/with-node.sh` (e.g. `.agents/scripts/with-node.sh pnpm install`). `fnm use` does not work in non-interactive shells.
 - pnpm 10+ only; always install from the workspace root (`pnpm add -D -w`)
 - All commits must follow `type(scope): TICKET-ID description` via `pnpm commit`
 - Never edit `pnpm-lock.yaml` manually
