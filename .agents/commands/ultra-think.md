@@ -1,6 +1,6 @@
 ---
 description: Deep analysis and problem solving with multi-dimensional thinking
-argument-hint: [problem or question to analyze]
+argument-hint: "[problem or question to analyze]"
 ---
 
 # Deep Analysis and Problem Solving Mode

@@ -19,17 +19,20 @@ fixed=0
 removed=0
 conflicts=0
 
-# sync_surface <mirror_rel> <canonical_rel> <symlink_prefix> [glob]
+# sync_surface <mirror_rel> <canonical_rel> <symlink_prefix> [glob] [link_suffix]
 #   mirror_rel     — mirror dir path relative to repo root (e.g. .claude/agents)
 #   canonical_rel  — canonical dir path relative to repo root (e.g. .agents/agents)
 #   symlink_prefix — relative path written into the symlink target (e.g. ../../.agents/agents)
 #   glob           — optional filename pattern to restrict which canonical entries are managed
 #                    (default: *); entries NOT matching the pattern are treated as external
+#   link_suffix    — optional suffix appended to the symlink name but NOT the target
+#                    (e.g. ".prompt.md" → link "foo.prompt.md" points to "prefix/foo.md")
 sync_surface() {
   local mirror_rel="$1"
   local canonical_rel="$2"
   local prefix="$3"
   local glob="${4:-*}"
+  local link_suffix="${5:-}"
 
   local mirror="$root/$mirror_rel"
   local canonical="$root/$canonical_rel"
@@ -43,28 +46,34 @@ sync_surface() {
     found_any=true
     local name
     name=$(basename "$src")
-    local link="$mirror/$name"
+    local link_name
+    if [[ -n "$link_suffix" ]]; then
+      link_name="${name%.md}${link_suffix}"
+    else
+      link_name="$name"
+    fi
+    local link="$mirror/$link_name"
     local target="$prefix/$name"
 
     if [[ -L "$link" ]]; then
       local actual
       actual=$(readlink "$link")
       if [[ "$actual" == "$target" && -e "$link" ]]; then
-        printf "    linked:   %s\n" "$name"
+        printf "    linked:   %s\n" "$link_name"
       else
         rm -f "$link"
         ln -s "$target" "$link"
-        printf "    fixed:    %s\n" "$name"
+        printf "    fixed:    %s\n" "$link_name"
         added=$((added + 1))
         fixed=$((fixed + 1))
       fi
     elif [[ -e "$link" ]]; then
       printf "    \033[33mCONFLICT:\033[0m %s — real %s exists; skipping (manual review needed)\n" \
-        "$name" "$([[ -d "$link" ]] && echo dir || echo file)"
+        "$link_name" "$([[ -d "$link" ]] && echo dir || echo file)"
       conflicts=$((conflicts + 1))
     else
       ln -s "$target" "$link"
-      printf "    added:    %s\n" "$name"
+      printf "    added:    %s\n" "$link_name"
       added=$((added + 1))
     fi
   done
@@ -78,11 +87,17 @@ sync_surface() {
     # skip if glob expansion produced no matches
     [[ -e "$link" || -L "$link" ]] || continue
 
-    local name
-    name=$(basename "$link")
+    local link_name
+    link_name=$(basename "$link")
 
-    # Only manage entries that match the pattern
-    case "$name" in
+    # Derive canonical name by stripping link_suffix and restoring .md (if any)
+    local canon_name="$link_name"
+    if [[ -n "$link_suffix" && "$link_name" == *"$link_suffix" ]]; then
+      canon_name="${link_name%"$link_suffix"}.md"
+    fi
+
+    # Only manage entries whose canonical name matches the pattern
+    case "$canon_name" in
       $glob) ;;
       *) continue ;;
     esac
@@ -91,9 +106,9 @@ sync_surface() {
     [[ ! -e "$link" ]] || continue # valid symlink — already handled in pass 1
 
     # Broken symlink. Check if the canonical entry still exists.
-    if [[ ! -e "$canonical/$name" ]]; then
+    if [[ ! -e "$canonical/$canon_name" ]]; then
       rm -f "$link"
-      printf "    removed:  %s (orphaned symlink)\n" "$name"
+      printf "    removed:  %s (orphaned symlink)\n" "$link_name"
       removed=$((removed + 1))
     fi
   done
@@ -116,8 +131,14 @@ sync_surface ".claude/skills" ".agents/skills" "../../.agents/skills"
 printf "── .cursor/agents → .agents/agents\n"
 sync_surface ".cursor/agents" ".agents/agents" "../../.agents/agents"
 
+printf "── .cursor/commands → .agents/commands\n"
+sync_surface ".cursor/commands" ".agents/commands" "../../.agents/commands"
+
 printf "── .cursor/skills → .agents/skills\n"
 sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"
+
+printf "── .github/prompts → .agents/commands (*.prompt.md)\n"
+sync_surface ".github/prompts" ".agents/commands" "../../.agents/commands" "*.md" ".prompt.md"
 
 printf "\nsync-symlinks: done  added=%d  fixed=%d  removed=%d  conflicts=%d\n" \
   "$added" "$fixed" "$removed" "$conflicts"

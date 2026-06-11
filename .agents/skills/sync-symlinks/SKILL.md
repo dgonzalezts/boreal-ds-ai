@@ -12,10 +12,10 @@ Run `sync-symlinks.sh` to reconcile per-entry symlinks across all mirror surface
 ## When to invoke
 
 - A file was added to or removed from any of:
-  - `.agents/agents/` — agent definitions
-  - `.agents/commands/` — Claude slash commands
-  - `.agents/memory/` — memory entries
-  - `.agents/skills/` — skill definitions
+  - `.agents/agents/` — agent definitions (mirrors: `.claude/agents/`, `.cursor/agents/`)
+  - `.agents/commands/` — slash commands (mirrors: `.claude/commands/`, `.cursor/commands/`, `.github/prompts/` as `*.prompt.md`)
+  - `.agents/memory/` — memory entries (mirror: `.claude/memory/`)
+  - `.agents/skills/` — skill definitions (mirrors: `.claude/skills/`, `.cursor/skills/`)
 - After restoring or restructuring scaffold directories
 
 ## The Process

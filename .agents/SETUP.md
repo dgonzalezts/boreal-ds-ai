@@ -14,22 +14,24 @@ Three canonical directories hold all AI artefacts:
 | `ai-docs/` | Reference documentation: guidelines, decisions, diagrams                |
 | `ai-work/` | Working artefacts: plans, reviews, sessions, tickets, QA, research      |
 
-Two mirror facades expose content to specific tools via per-entry symlinks:
+Three mirror facades expose content to specific tools via per-entry symlinks:
 
-| Facade              | Points to           | Used by     |
-| ------------------- | ------------------- | ----------- |
-| `.claude/agents/`   | `.agents/agents/`   | Claude Code |
-| `.claude/commands/` | `.agents/commands/` | Claude Code |
-| `.claude/memory/`   | `.agents/memory/`   | Claude Code |
-| `.claude/skills/`   | `.agents/skills/`   | Claude Code |
-| `.cursor/agents/`   | `.agents/agents/`   | Cursor      |
-| `.cursor/skills/`   | `.agents/skills/`   | Cursor      |
+| Facade              | Points to           | Used by                               |
+| ------------------- | ------------------- | ------------------------------------- |
+| `.claude/agents/`   | `.agents/agents/`   | Claude Code                           |
+| `.claude/commands/` | `.agents/commands/` | Claude Code                           |
+| `.claude/memory/`   | `.agents/memory/`   | Claude Code                           |
+| `.claude/skills/`   | `.agents/skills/`   | Claude Code                           |
+| `.cursor/agents/`   | `.agents/agents/`   | Cursor                                |
+| `.cursor/commands/` | `.agents/commands/` | Cursor                                |
+| `.cursor/skills/`   | `.agents/skills/`   | Cursor                                |
+| `.github/prompts/`  | `.agents/commands/` | GitHub Copilot (renamed \*.prompt.md) |
 
 ---
 
 ## How it works
 
-All six directories are excluded from the main repository tracking via `.git/info/exclude`:
+All eight directories are excluded from the main repository tracking via `.git/info/exclude`:
 
 - They never appear as untracked files in `git status` on the main branches
 - They are never pushed to the `origin` remote (Bitbucket)

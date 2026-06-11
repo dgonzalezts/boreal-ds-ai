@@ -1,7 +1,6 @@
 ---
 description: Scan all plans in ai-work/plans/, reconcile each file's frontmatter status, and rebuild INDEX.md to reflect current reality.
-argument-hint:
-  [optional filename or status filter: pending | in progress | done]
+argument-hint: "[optional filename or status filter: pending | in progress | done]"
 ---
 
 # Sync Plans Index
