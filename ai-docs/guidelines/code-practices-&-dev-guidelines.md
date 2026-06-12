@@ -1908,9 +1908,9 @@ ESLint enforces code quality rules and catches common errors. The configuration 
 
 **Required Dependencies:**
 
-```bash
+````bash
 pnpm add -D @eslint/js typescript typescript-eslint @stencil/eslint-plugin eslint-plugin-jsdoc
-```
+```-
 
 **Package-Level Configuration (`packages/boreal-web-components/eslint.config.ts`):**
 
@@ -2085,7 +2085,7 @@ export default defineConfig(
     },
   },
 );
-```
+````
 
 **Key Rules Explained:**
 
