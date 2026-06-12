@@ -98,6 +98,48 @@ Create a new mixin **only when two or more components share identical lifecycle 
 
 **`@AttachInternals()` placement rule:** The `@AttachInternals()` decorator must appear on the component class body — never inside a mixin factory. Stencil resolves it at component registration time; placing it in a mixin factory produces a silent runtime failure. See [ADR 0001](../decisions/0001-attach-internals-must-be-on-component-class-not-in-mixin.md).
 
+#### Why Base Class Architecture Doesn't Work in Stencil
+
+Traditional object-oriented inheritance patterns using base classes are fundamentally incompatible with Stencil's decorator resolution model. This is not a design preference — it is a **technical constraint** imposed by Stencil's compile-time architecture.
+
+**The Problem: Compile-Time Decorator Resolution**
+
+Stencil decorators (`@Component`, `@Prop`, `@State`, `@Event`, `@Watch`, etc.) are resolved at **compile time** through static analysis of the component class body, not at runtime. The Stencil compiler reads the Abstract Syntax Tree (AST) to extract metadata directly from the decorated class before TypeScript transpiles it to JavaScript.
+
+When decorators are placed in a base class:
+
+1. **Decorator metadata is lost** — The compiler only analyzes the immediate class body annotated with `@Component()`. It does not traverse the prototype chain to collect decorators from parent classes.
+2. **Props and state are not registered** — `@Prop()` and `@State()` decorators in base classes are invisible to the compiler's metadata collection phase.
+3. **Silent runtime failures** — The component compiles without errors, but props and events defined in the base class simply don't work at runtime.
+
+**Historical Context**
+
+Between Stencil v0.12 and v0.13 (2018-2019), the Stencil team [explicitly disabled class inheritance for components](https://github.com/stenciljs/core/issues/1060) and made it a **compiler error**. While later versions relaxed this restriction, [the underlying limitation remains](https://github.com/stenciljs/core/issues/1127): decorators in base classes are not processed, making traditional inheritance patterns unreliable and error-prone.
+
+**Why Mixins Are the Solution**
+
+The `Mixin()` factory pattern works because it operates at the **class definition level**, not the prototype chain level:
+
+```typescript
+// ❌ DOESN'T WORK — decorators in BaseComponent are ignored
+class BaseComponent {
+  @Prop() value: string; // Never registered
+}
+
+@Component({ tag: "my-field" })
+class MyField extends BaseComponent {}
+
+// ✅ WORKS — mixin injects members into the component class body
+const myMixin = () => ({ value: "" });
+
+@Component({ tag: "my-field" })
+class MyField extends Mixin(myMixin) {
+  @Prop() value: string; // Registered correctly
+}
+```
+
+The `Mixin()` factory **copies properties directly into the component class** before the `@Component` decorator is processed. This ensures all lifecycle hooks, methods, and properties are visible to Stencil's compile-time analyzer as if they were written directly in the component class.
+
 #### Rationale
 
 1. **Flat prototype chain** — At most one level of shared behavior; no hidden ancestor logic to trace.
@@ -790,77 +832,249 @@ The generator prompts for the component name, then scaffolds the full file struc
 
 The Custom Elements Manifest (CEM) analyzer extracts component metadata from JSDoc comments to generate machine-readable documentation. All components must include comprehensive JSDoc annotations to ensure accurate manifest generation.
 
-**Required CEM JSDoc Tags:**
+**Reference:** [Stencil — Generating Documentation in CEM format](https://stenciljs.com/docs/docs-custom-elements-manifest)
+
+##### How the CEM is Generated
+
+Stencil uses the `docs-custom-elements-manifest` output target (configured in `stencil.config.ts`). This runs the CEM analyzer with the Stencil plugin, which reads decorators directly from the TypeScript AST.
+
+| Source                         | What the plugin generates automatically                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@Prop()` decorator            | `attributes[]` entry (kebab-case name) + `members[]` entry (camelCase name), with type, default, `readonly`, and cross-reference |
+| Inline `/** */` on `@Prop()`   | `description` field in both entries                                                                                              |
+| `@Event()` decorator           | `events[]` entry                                                                                                                 |
+| Inline `/** */` on `@Event()`  | `description` field in the event entry                                                                                           |
+| `@Method()` decorator          | `members[]` method entry                                                                                                         |
+| Inline `/** */` on `@Method()` | `description` field                                                                                                              |
+| `@slot` in class JSDoc         | `slots[]` entry                                                                                                                  |
+| `@prop` comment in SCSS        | `cssProperties[]` entry                                                                                                          |
+
+##### Core Rules
+
+- **Every `@Prop()` must have inline JSDoc** (`/** */`) directly above the decorator — this is enforced by `stencil/required-jsdoc: 'error'`.
+- **Do not use `@attr`, `@property`, `@fires`, `@summary`, `@method`, or `@element`** in the class-level JSDoc block. The Stencil plugin generates all of these from decorators. These tags are redundant and produce no additional output.
+- **Do not use `@cssprop` in the TSX class JSDoc.** CSS custom properties must be documented with `@prop` comments in the SCSS file instead — that is where Stencil reads them from.
+- **Do not use `@internal` on a component class JSDoc.** It silently removes the entire component from `custom-elements.json` and from generated React/Vue wrappers.
+- **Use `@file` (not `@fileoverview`)** for module-level documentation.
+- **Do not use `@part` (CSS Shadow Parts).** This project uses light DOM — there is no shadow boundary and no `part` attribute.
+
+##### What Belongs in the Class JSDoc Block
+
+The class-level JSDoc block has exactly two responsibilities:
+
+1. **Component description** — the first paragraph becomes the `description` field in the manifest. Keep it concise.
+2. **`@slot` tags** — the only tag the Stencil plugin cannot infer from the render function. Document every slot.
 
 ```typescript
 /**
- * A customizable button component with multiple variants and states.
- * Supports icons, loading states, and accessibility features.
+ * Banner component for displaying important messages with status variants.
  *
- * @element example-button
- *
- * @slot - Default slot for button text
- * @slot icon-start - Icon displayed before button text
- * @slot icon-end - Icon displayed after button text
- *
- * @csspart button - The native button element
- * @csspart label - The button text container
- *
- * @cssprop --button-background - Background color of the button
- * @cssprop --button-color - Text color of the button
- * @cssprop --button-padding - Inner padding of the button
- *
- * @fires buttonClick - Fired when button is clicked. Detail: { timestamp: number }
- * @fires buttonFocus - Fired when button receives focus
+ * @slot - Default slot for the banner body content.
+ * @slot title - Slot for the banner title text.
+ * @slot actions - Slot for action buttons or links.
  */
 @Component({
-  tag: "example-button",
-  styleUrl: "example-button.scss",
+  tag: "bds-banner",
+  styleUrl: "bds-banner.scss",
 })
-export class ExampleButton {
-  /**
-   * Visual style variant of the button
-   * @default 'primary'
-   */
-  @Prop({ reflect: true }) variant: "primary" | "secondary" | "danger" =
-    "primary";
+export class BdsBanner { ... }
+```
 
-  /**
-   * Disables the button and prevents interaction
-   */
-  @Prop({ reflect: true }) disabled: boolean = false;
+Nothing else. No `@attr`, `@property`, `@cssprop`, `@fires`, `@summary`, `@method`.
 
-  /**
-   * Shows a loading spinner and disables interaction
-   */
-  @Prop() loading: boolean = false;
+##### Module-Level JSDoc
 
-  /**
-   * Emitted when the button is clicked
-   */
-  @Event() buttonClick: EventEmitter<{ timestamp: number }>;
+```typescript
+/**
+ * @file Entry point for the component package.
+ *
+ * Use this file to export utilities and types only.
+ */
+```
 
-  /**
-   * Programmatically focuses the button
-   */
-  @Method()
-  async setFocus() {
-    this.buttonElement?.focus();
-  }
+##### Prop JSDoc
+
+**Required for every `@Prop()`.** Place inline JSDoc directly above the decorator:
+
+```typescript
+/** Visual style variant. */
+@Prop({ reflect: true }) readonly variant: BannerVariant = 'info';
+
+/** Shows a close button that allows users to dismiss the banner. */
+@Prop() readonly enableClose: boolean = false;
+
+/** Internal mutable prop for component-controlled state. */
+@Prop({ mutable: true }) idComponent: string = '';
+```
+
+**Notes:**
+
+- `readonly` is mandatory for `@Prop()` declarations.
+- If `mutable: true` is used, mutate internally with a narrow cast instead of `as any`.
+- **Type annotation is only required when there is no default value.** TypeScript infers the type from the initializer (`disabled = false` → `boolean`). Explicit annotations are needed only for required props (`name!: string`) and optional props with no default (`formId?: string`).
+
+##### Event JSDoc
+
+**Required for every `@Event()`.** Place inline JSDoc directly above the decorator:
+
+```typescript
+/** Emitted when the user closes the banner. */
+@Event()
+bdsClose!: EventEmitter<void>;
+```
+
+**Event Naming Rules:**
+
+- Use the `bds{Action}` prefixed camelCase naming convention.
+- Use bare `@Event()` for consumer-facing events — no explicit options required (see ADR 0003).
+- **Exception:** events caught by a parent component via `@Listen()` must use `@Event({ bubbles: true })`. `@Listen()` relies on bubbling — without it the event never reaches the parent's listener.
+- Do not reuse native DOM event names (`click`, `change`, `input`, etc.).
+
+**Event Emission Rules:**
+
+Events must only be emitted in response to **user interactions**, not programmatic changes. This prevents infinite loops and keeps data flow predictable.
+
+| Scenario                          | Emit? | Reason                                    |
+| --------------------------------- | ----- | ----------------------------------------- |
+| User clicks / types / selects     | ✅    | Direct user interaction                   |
+| Property changed programmatically | ❌    | Not user-initiated; emitting causes loops |
+| Public `@Method()` called         | ❌    | API call, not a user action               |
+| Internal state update             | ❌    | Implementation detail                     |
+| Initialization / lifecycle hooks  | ❌    | Framework lifecycle, not a user action    |
+
+**Cancelable Events:**
+
+Cancelable events use the `-ing` suffix (before the action) paired with a plain name (after the action).
+
+```typescript
+/** Emitted before the dialog opens. Call `event.preventDefault()` to cancel. */
+@Event({ cancelable: true })
+bdsOpening!: EventEmitter<void>;
+
+/** Emitted after the dialog has opened. */
+@Event()
+bdsOpen!: EventEmitter<void>;
+```
+
+Inside the handler, check `defaultPrevented` before proceeding:
+
+```typescript
+async open() {
+  const event = this.bdsOpening.emit();
+  if (event.defaultPrevented) return;
+  this.isOpen = true;
+  this.bdsOpen.emit();
 }
 ```
 
-**CEM JSDoc Best Practices:**
+| Event pair   | Cancelable | Suffix | When emitted                   |
+| ------------ | ---------- | ------ | ------------------------------ |
+| `bdsOpening` | ✅         | `ing`  | Before action (can be stopped) |
+| `bdsOpen`    | ❌         | —      | After action (already done)    |
+| `bdsClosing` | ✅         | `ing`  | Before action (can be stopped) |
+| `bdsClose`   | ❌         | —      | After action (already done)    |
 
-| Tag         | Usage                                               | Example                                                           |
-| ----------- | --------------------------------------------------- | ----------------------------------------------------------------- |
-| `@element`  | Document component tag name (required)              | `@element my-button`                                              |
-| `@slot`     | Document all slots including default                | `@slot - Default content`<br/>`@slot header - Header area`        |
-| `@csspart`  | Document all exportable shadow parts                | Not applicable — Boreal DS uses light DOM; there are no CSS parts |
-| `@cssprop`  | Document all CSS custom properties with description | `@cssprop --button-color - Text color of the button`              |
-| `@fires`    | Document custom events with event detail structure  | `@fires bdsChange - Fired on change. Detail: { value: string}`    |
-| `@default`  | Document default values for props                   | `@default 'primary'`                                              |
-| `@internal` | Mark internal/private implementation details        | `@internal`                                                       |
+**Event Detail Typing:**
+
+| Pattern             | When to use                 | Example                                                                            |
+| ------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| Simple primitive    | Single scalar value         | `EventEmitter<string>`                                                             |
+| Inline object       | Two or three related fields | `EventEmitter<{ id: string; label: string }>`                                      |
+| Named interface     | Reusable or complex payload | `EventEmitter<SelectDetail>`                                                       |
+| Element reference   | Exposing the source element | `EventEmitter<HTMLElement>`                                                        |
+| Discriminated union | Multiple event variants     | `EventEmitter<{ type: 'success'; data: T } \| { type: 'error'; message: string }>` |
+
+Only include relevant data in the detail — do not serialize the entire component state.
+
+##### Method JSDoc
+
+**Required for every `@Method()`.** Place inline JSDoc directly above the decorator:
+
+```typescript
+/**
+ * Programmatically close the banner and emit `bdsBannerClose`.
+ */
+@Method()
+async closeBanner(): Promise<void> {
+  this.handleClose();
+}
+```
+
+Do not add `@method` tags at the class level.
+
+##### CSS Custom Properties — Document in SCSS, Not in TSX
+
+Stencil reads CSS custom property documentation from `@prop` JSDoc comments **in the SCSS file**, not from `@cssprop` tags in the component class JSDoc. The comment must appear above the variable **declaration** inside the component's tag selector block.
+
+```scss
+/* ✅ Correct — Stencil reads this and generates cssProperties[] in the manifest */
+bds-dialog {
+  /**
+   * @prop --bds-dialog-width: Custom width when no preset size is active.
+   * @prop --bds-dialog-height: Custom height when no preset size is active.
+   */
+  --bds-dialog-width: auto;
+  --bds-dialog-height: auto;
+}
+```
+
+```typescript
+/* ❌ Wrong — @cssprop in the TSX class JSDoc produces nothing in the manifest */
+/**
+ * @cssprop --bds-dialog-width - Custom width for the dialog.
+ */
+@Component({ tag: 'bds-dialog' })
+export class BdsDialog { ... }
+```
+
+**Additional rules:**
+
+- Declare the variable with its default value in the same block as the `@prop` comment. Do not scatter defaults as fallback values in `var(--name, default)` calls elsewhere.
+- Internal implementation variables (e.g. `--_col-base`, `--_row-span`) must use the `--_` underscore prefix convention and must **not** have `@prop` documentation — they are not public API.
+
+##### Complete Example
+
+```typescript
+/**
+ * Checkbox component for boolean selection with three visual states.
+ *
+ * @slot - Label content when no `label` prop is provided.
+ */
+@Component({
+  tag: "bds-checkbox",
+  styleUrl: "bds-checkbox.scss",
+  formAssociated: true,
+})
+export class BdsCheckbox {
+  /** Whether the checkbox is selected. */
+  @Prop({ mutable: true, reflect: true }) checked: boolean = false;
+
+  /** Whether the checkbox is indeterminate. */
+  @Prop({ mutable: true, reflect: true }) indeterminate: boolean = false;
+
+  /** Value submitted with the form when checked. */
+  @Prop() readonly value: string = "on";
+
+  /** Label displayed next to the checkbox. */
+  @Prop() readonly label: string = "";
+
+  /** Emitted when the checked state changes (for 2-way binding / v-model). */
+  @Event()
+  bdsChange!: EventEmitter<{ checked: boolean; value: string }>;
+}
+```
+
+##### Common Pitfalls to Avoid
+
+- ❌ Using `@element`, `@method`, or class-level `@internal`.
+- ❌ Omitting JSDoc on `@Prop()` or placing it below the decorator.
+- ❌ Using `@fileoverview` instead of `@file`.
+- ❌ Adding explicit `bubbles/composed/cancelable` to `@Event()` — bare `@Event()` is the convention.
+- ❌ Naming events with native DOM names (`click`, `input`, `change`).
+- ❌ Writing `@cssprop` in the TSX class JSDoc — use `@prop` in the SCSS file instead.
+- ❌ Writing `@attr` or `@property` in the class JSDoc — the Stencil plugin generates both from `@Prop()` decorators.
+- ❌ Documenting internal `--_*` CSS variables with `@prop` — they are not public API.
+- ❌ Using fallback values in `var(--custom-prop, default)` instead of declaring the variable with its default in the tag selector block.
 
 **See Also:** Section 5.6 for complete CEM setup, configuration, and integration with Storybook and IDEs.
 
@@ -920,46 +1134,54 @@ Properties accept different types with specific coercion behavior:
 | `Object`  | JSON string         | Parsed via `JSON.parse()`   | `@Prop() config: Config`            |
 | `Array`   | JSON string         | Parsed via `JSON.parse()`   | `@Prop() items: Item[]`             |
 
-**Type Declaration:**
+**Type Inference and Default Values:**
+
+When a prop has a default value, TypeScript infers its type automatically — no explicit annotation is needed:
 
 ```typescript
-// String property
-@Prop() label: string = 'Default Label';
-
-// Number property
-@Prop() maxLength: number = 100;
-
-// Boolean property (presence-based)
-@Prop() disabled: boolean = false;
-
-// Object property (requires JSON in HTML)
-@Prop() config: { theme: string; mode: string };
-
-// Array property (requires JSON in HTML)
-@Prop() items: Array<{ id: string; name: string }> = [];
-
-// Union type (string enum)
-@Prop() variant: 'primary' | 'secondary' | 'tertiary' = 'primary';
+@Prop({ reflect: true }) readonly disabled = false;         // inferred boolean
+@Prop({ reflect: true }) readonly orientation = 'vertical'; // inferred string
 ```
 
-**HTML Usage:**
+When there is no default, the type must be declared explicitly:
 
-```html
-<!-- String -->
-<my-component label="Click Me"></my-component>
-
-<!-- Number -->
-<my-component max-length="50"></my-component>
-
-<!-- Boolean (presence = true) -->
-<my-component disabled></my-component>
-
-<!-- Object (JSON string) -->
-<my-component config='{"theme": "dark", "mode": "compact"}'></my-component>
-
-<!-- Array (JSON string) -->
-<my-component items='[{"id": "1", "name": "Item 1"}]'></my-component>
+```typescript
+@Prop({ reflect: true }) readonly name!: string;   // required, no default
+@Prop({ reflect: true }) readonly formId?: string; // optional, no default
 ```
+
+**Critical Rule: Never Use Constants as Default Values**
+
+Always use string literals as default values — never constant or enum references. Stencil resolves `@Prop()` defaults at static analysis time (AST level). If you write `= ORIENTATIONS.VERTICAL`, the compiler records the identifier `ORIENTATIONS.VERTICAL` in `custom-elements.json` instead of the actual value `'vertical'`. This leaks internal implementation details into Storybook ArgTypes and consumer IDEs.
+
+```typescript
+// ✅ Correct — CEM records 'vertical'
+@Prop() readonly orientation: Orientation = 'vertical';
+
+// ❌ Wrong — CEM records 'ORIENTATIONS.VERTICAL'
+@Prop() readonly orientation: Orientation = ORIENTATIONS.VERTICAL;
+```
+
+Constants may be used in logic (switch cases, class maps, `validatePropValue`) — just never as the `@Prop()` initializer.
+
+**When to Use Default Values:**
+
+| Use Case                | When to Use Default                      | When NOT to Use Default                                                    |
+| ----------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| **Behavioral props**    | Has sensible "off" state                 | —                                                                          |
+| **Identity data**       | —                                        | `name!: string`, `value!: string` — required for form submission           |
+| **Optional context**    | —                                        | `formId?: string` — `undefined` has meaning (no form association)          |
+| **State toggles**       | `disabled = false`, `required = false`   | —                                                                          |
+| **Component variants**  | `variant = 'primary'`, `size = 'medium'` | —                                                                          |
+| **Optional references** | —                                        | `required?: boolean` — absence means not required, not the same as `false` |
+
+**Rule of Thumb:**
+
+| Declaration        | Meaning                                                            |
+| ------------------ | ------------------------------------------------------------------ |
+| `name!: string`    | Required, no default — component cannot function without it        |
+| `formId?: string`  | Optional, no default — `undefined` is a valid and meaningful value |
+| `disabled = false` | Has default — behavioral, always a valid fallback                  |
 
 #### Property Validation
 

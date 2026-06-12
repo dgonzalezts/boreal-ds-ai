@@ -23,12 +23,32 @@ If `origin/HEAD` is not set, fall back to reading the repo's default branch name
 from the platform (e.g. GitHub UI) or asking the user which branch to target.
 
 Determine:
-- The primary intent (feature, bug fix, refactor, docs, chore)
-- The Jira ticket reference (e.g. `EOA-10099`)
-- The affected package scope (`web-components`, `boreal-docs`, `boreal-styleguidelines`)
-- Whether any alternatives were considered that reviewers should know about
 
-## Step 2: Write the Title
+- The primary intent (feature, bug fix, refactor, docs, chore, test, performance, hotfix, security, breaking change)
+- The Jira ticket reference (e.g. `EOA-10099`)
+- The affected package scope (`web-components`, `boreal-docs`, `boreal-styleguidelines`, `boreal-react`, `boreal-vue`)
+- Whether any alternatives were considered that reviewers should know about
+- Whether this is a breaking change (requires `!` in commit format)
+
+## Step 2: Select the Appropriate Template
+
+Based on the PR type identified in Step 1, select the matching template from `references/`:
+
+| PR Type             | Template File                 | When to Use                                       |
+| ------------------- | ----------------------------- | ------------------------------------------------- |
+| **Feature**         | `feature-template.md`         | New functionality, components, or capabilities    |
+| **Bug Fix**         | `bugfix-template.md`          | Fixes for defects, errors, or incorrect behavior  |
+| **Hotfix**          | `hotfix-template.md`          | Urgent production fixes (security, critical bugs) |
+| **Refactoring**     | `refactoring-template.md`     | Code improvements with no functional changes      |
+| **Documentation**   | `documentation-template.md`   | README, JSDoc, Storybook, or guide updates        |
+| **Security Patch**  | `security-patch-template.md`  | Security vulnerabilities (XSS, CSRF, CVE, etc.)   |
+| **Test**            | `test-template.md`            | Adding/fixing tests only (no implementation)      |
+| **Performance**     | `performance-template.md`     | Optimizations for speed, memory, or bundle size   |
+| **Breaking Change** | `breaking-change-template.md` | API changes requiring consumer code updates       |
+
+**Multi-type PRs:** If a PR spans multiple types (e.g., feature + docs), choose the primary type and mention secondary changes in the "Related Changes" section.
+
+## Step 3: Write the Title
 
 Follow the project's conventional commits format exactly:
 
@@ -36,34 +56,48 @@ Follow the project's conventional commits format exactly:
 <type>(<scope>): <TICKET> <imperative description>
 ```
 
-- **type:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `style`
-- **scope:** affected package short-name (e.g. `web-components`, `boreal-docs`)
-- **TICKET:** always present, always before the description
-
-## Step 3: Write the Description
-
-Use this four-section structure. Omit any section with nothing genuine to say:
+For **breaking changes**, add `!` after the scope:
 
 ```
-<One sentence — what this PR does at the highest level.>
-
-<Why — the motivation. What problem does this solve or what decision does it establish?>
-
-<Alternatives considered, if any — what was tried or rejected and why.>
-
-<Notes for reviewers — non-obvious constraints, intentionally deferred items, or areas needing careful attention.>
-
-Refs EOA-XXXXX
+<type>(<scope>)!: <TICKET> <imperative description>
 ```
 
-**Include:** ticket reference (`Refs` or `Closes`), links to related PRs or plan documents.
-**Do not include:** test plan sections, bullet-point diff summaries, or padding.
+- **type:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `style`, `perf`
+- **scope:** affected package short-name (e.g. `web-components`, `boreal-docs`, `boreal-react`)
+- **TICKET:** always present, always before the description (e.g. `EOA-10099`)
+- **`!`:** signals breaking change (breaking-change-template.md only)
 
-See `references/pr-examples.md` for concrete Boreal DS PR examples.
+## Step 4: Fill in the Template
 
-## Step 4: Output the Result
+Open the selected template from `references/` and fill in all sections:
 
-Write the PR title and body to `.claude/pr-description.md` at the workspace root so the user can open it in their editor and copy freely:
+1. **Replace placeholder text** with actual PR content
+2. **Fill required sections** (Description, Testing, etc.)
+3. **Check applicable checkboxes** (mark with `[x]`)
+4. **Remove non-applicable sections** (e.g., "Screenshots" if none)
+5. **Add ticket reference** (`Refs` or `Closes` EOA-XXXXX)
+
+**Template Sections:**
+
+- **Description**: What changed and why (motivation, problem solved)
+- **Implementation/Details**: How it was done (approach, patterns, decisions)
+- **Impact**: Effects on existing code, performance, breaking changes
+- **Testing**: Automated and manual verification steps
+- **Related Changes**: Multi-scope impacts (other packages, docs, etc.)
+- **Additional Remarks**: Context for reviewers, deferred work, non-obvious constraints
+- **Checklist**: Project-specific quality gates (coverage, tokens, accessibility, etc.)
+
+**Checklist Guidelines:**
+
+- Check items you've completed: `- [x] Item completed`
+- Leave unchecked if not applicable: `- [ ] Not applicable to this PR`
+- Delete entire sections that don't apply (e.g., "Form Components" for non-form PRs)
+
+See `references/pr-examples.md` for quick reference examples of well-formed Boreal DS PRs.
+
+## Step 5: Output the Result
+
+Write the completed PR title and body to `.claude/pr-description.md` at the workspace root:
 
 ```markdown
 # PR Title
@@ -74,21 +108,31 @@ Write the PR title and body to `.claude/pr-description.md` at the workspace root
 
 # PR Body
 
-<body here>
+<completed template content here>
 ```
+
+**Important:**
+
+- Remove all placeholder text from the template
+- Keep the checklist with items marked appropriately
+- Include the ticket reference (Refs/Closes EOA-XXXXX)
+- Preserve section headings for readability
 
 After writing the file, tell the user the path so they can open it directly. Do not print the full content inline in the terminal.
 
 ## Issue Reference Syntax
 
-| Syntax | Effect |
-|---|---|
-| `Closes EOA-XXXXX` | Closes the ticket on merge |
-| `Refs EOA-XXXXX` | Links without closing |
+| Syntax              | Effect                      |
+| ------------------- | --------------------------- |
+| `Closes EOA-XXXXX`  | Closes the ticket on merge  |
+| `Refs EOA-XXXXX`    | Links without closing       |
 | `Refs #<PR-number>` | Cross-references another PR |
 
 ## Guidelines
 
-- One PR per feature or fix — do not bundle unrelated changes
-- The description explains *why*; the diff shows *what*
-- Draft PRs are preferred for early, in-progress feedback
+- **One PR per feature or fix** — do not bundle unrelated changes
+- **The description explains _why_**; the diff shows _what_
+- **Use checklists** to verify quality gates before requesting review
+- **Draft PRs preferred** for early, in-progress feedback
+- **Templates are starting points** — adapt sections to fit your PR's specific needs
+- **Delete non-applicable sections** rather than leaving placeholder text
