@@ -50,6 +50,6 @@ Establish the foundational Storybook infrastructure required to document any com
 
 ## 5. Links or References
 - [Storybook Plan](storybook-plan.md)
-- [Code Practices & Dev Guidelines – Section 5.3](docs/code-practices-&-dev-guidelines.md#53)
+- [Code Practices & Dev Guidelines – Section 5.3](docs/development-standards.md#53)
 - [Ticket Definition Rubric](.cursor/rules/ticket-definition.mdc)
 - Colibri reference implementation: `apps/colibri-docs` (configuration, utilities, stories)

@@ -12,7 +12,7 @@ status: done
 
 ## 2. References
 
-- [Code Practices & Dev Guidelines – Section 5.3](docs/code-practices-&-dev-guidelines.md#53)
+- [Code Practices & Dev Guidelines – Section 5.3](docs/development-standards.md#53)
 - Existing Storybook implementation in `apps/colibri-docs`
 - Ticket definition rubric in `.cursor/rules/ticket-definition.mdc`
 

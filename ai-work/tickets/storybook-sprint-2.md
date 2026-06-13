@@ -50,6 +50,6 @@ Extend the foundation from Sprint 1 by delivering the documentation authoring sy
 ## 5. Links or References
 - [Storybook Plan](storybook-plan.md)
 - [Sprint 1 Ticket](storybook-sprint-1.md)
-- [Code Practices & Dev Guidelines – Section 5.3](docs/code-practices-&-dev-guidelines.md#53)
+- [Code Practices & Dev Guidelines – Section 5.3](docs/development-standards.md#53)
 - Colibri reference (`apps/colibri-docs/src/components/*`) for MDX + story implementations
 - [Ticket Definition Rubric](.cursor/rules/ticket-definition.mdc)

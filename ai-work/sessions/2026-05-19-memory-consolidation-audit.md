@@ -2,9 +2,9 @@
 
 **Plan reference:** `ai-work/plans/ai-scaffold-restructure.md` — Task 14
 
-**Scope:** Classify all 35 `.agents/memory/*.md` topic files against the three guideline files, identify inaccuracies in both memory and guideline content (codebase verified), and flag which sections of `code-practices-&-dev-guidelines.md` contain unique content not yet in other canonical files.
+**Scope:** Classify all 35 `.agents/memory/*.md` topic files against the three guideline files, identify inaccuracies in both memory and guideline content (codebase verified), and flag which sections of `development-standards.md` contain unique content not yet in other canonical files.
 
-> **Constraint:** `code-practices-&-dev-guidelines.md` is frozen until Confluence is updated. It may contain inaccurate content — do not treat it as a source of truth in either direction.
+> **Constraint:** `development-standards.md` is frozen until Confluence is updated. It may contain inaccurate content — do not treat it as a source of truth in either direction.
 
 ---
 
@@ -18,7 +18,7 @@ Before any promotion, these inaccuracies must be fixed first.
 |---------|-----------|----------|------------|
 | "FACE Components: `formAssociated: true` with `scoped: true`" | States `scoped: true` is "the canonical pattern" for all FACE components. **Codebase has NO `scoped: true` anywhere.** | `grep -rn "scoped: true" src/components` returns no results; all 6 FACE components use bare `@Component` with no encapsulation option | Replace `scoped: true` recommendation with verified pattern (bare light DOM, as in `project_no_shadow_dom.md`) |
 
-### `ai-docs/guidelines/code-practices-&-dev-guidelines.md` (frozen)
+### `ai-docs/guidelines/development-standards.md` (frozen)
 
 | Section | Status | Notes |
 |---------|--------|-------|
@@ -117,7 +117,7 @@ These corrections are a prerequisite for Task 15 — fixing these first ensures 
 
 ---
 
-## Part 5 — Unique Content in `code-practices-&-dev-guidelines.md` Not Covered Elsewhere
+## Part 5 — Unique Content in `development-standards.md` Not Covered Elsewhere
 
 These sections contain verified content that does not exist in memory files or other guideline files. They should be promoted to the correct canonical location in Task 15, **only after codebase verification**:
 

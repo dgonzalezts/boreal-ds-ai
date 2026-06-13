@@ -74,7 +74,7 @@
 | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | `ai-docs/guidelines/stencil-best-practices.md`          | Modify — absorb unique detail from overlapping memory entries     |
 | `ai-docs/guidelines/stencil-unit-testing-patterns.md`   | Modify — absorb unique detail from overlapping memory entries     |
-| `ai-docs/guidelines/code-practices-&-dev-guidelines.md` | Modify — absorb unique detail from overlapping memory entries     |
+| `ai-docs/guidelines/development-standards.md` | Modify — absorb unique detail from overlapping memory entries     |
 | `.agents/memory/MEMORY.md`                              | Modify — remove entries promoted to guidelines; add pointers      |
 | `.agents/memory/*.md`                                   | Remove — entries that duplicate guideline content after promotion |
 | `.github/copilot-instructions.md`                       | Modify — remove sections that duplicate `ai-docs/docs/` content   |
@@ -661,7 +661,7 @@ git commit -m "chore(workspace): * update internal cross-references to new scaff
 **Acceptance criteria:**
 
 - Read all 40+ files in `.agents/memory/`
-- Read `ai-docs/guidelines/stencil-best-practices.md`, `ai-docs/guidelines/stencil-unit-testing-patterns.md`, `ai-docs/guidelines/code-practices-&-dev-guidelines.md`
+- Read `ai-docs/guidelines/stencil-best-practices.md`, `ai-docs/guidelines/stencil-unit-testing-patterns.md`, `ai-docs/guidelines/development-standards.md`
 - Produce deduplication map at `ai-work/sessions/YYYY-MM-DD-memory-consolidation-audit.md` with columns:
   - Memory file name
   - Overlap status: `duplicate` / `partial` / `unique`
@@ -676,7 +676,7 @@ git commit -m "chore(workspace): * update internal cross-references to new scaff
 
 - `ai-docs/guidelines/stencil-best-practices.md` (modify)
 - `ai-docs/guidelines/stencil-unit-testing-patterns.md` (modify)
-- `ai-docs/guidelines/code-practices-&-dev-guidelines.md` (modify)
+- `ai-docs/guidelines/development-standards.md` (modify)
 
 **Acceptance criteria:**
 
@@ -826,7 +826,7 @@ Each skill has YAML frontmatter (`name`, `description`) and a markdown body. The
 - `name: stencil-component-knowledge`
 - `description:` "Domain knowledge for implementing Stencil web components in Boreal DS. Covers FACE (Form-Associated Custom Elements), component API conventions, props, events, slots, SCSS tokens, and light DOM patterns. Load proactively when implementing or reviewing Stencil components."
 - Consolidates from: `stencil-face-attach-internals.md`, `stencil-face-element-proxy-limits.md`, `stencil-face-constraint-validation-pattern.md`, `stencil-async-rendering-gotchas.md`, `feedback_prop_validation_pattern.md`, `component-interface-file-naming.md`, `component-interface-content-rule.md`, `component-accessor-naming-conventions.md`, `feedback_event_options_explicit.md`, `component-bds-typography-group-labels.md`, `stencil-composite-light-dom-event-boundary.md`, `stencil-form-control-interfaces.md`
-- References (do not duplicate): `ai-docs/guidelines/stencil-best-practices.md`, `ai-docs/guidelines/code-practices-&-dev-guidelines.md`, `ai-docs/docs/frontend.instructions.md`
+- References (do not duplicate): `ai-docs/guidelines/stencil-best-practices.md`, `ai-docs/guidelines/development-standards.md`, `ai-docs/docs/frontend.instructions.md`
 
 **`testing-knowledge`:**
 
