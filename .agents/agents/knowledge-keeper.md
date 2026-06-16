@@ -54,7 +54,25 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 ---
 
-### 3. Guideline Update
+### 3. Research Spike
+
+**When to use:** A session's primary output is an evaluation rather than a decision — technology comparisons, API analyses, approach assessments where the goal is to inform a future decision, not make one.
+
+**Location:** `ai-work/research/YYYY-MM-DD-{slug}.md`
+
+**Structure:**
+
+- **Goal** — what question or trade-off the spike set out to answer
+- **Options evaluated** — each option with key characteristics
+- **Findings** — concrete facts discovered (benchmark results, API constraints, compatibility issues)
+- **Recommendation** — the preferred option and why, or "inconclusive" with the blocking unknown
+- **Open questions** — what still needs to be answered before a decision can be made
+
+After writing the spike, check whether any finding qualifies as a Memory Entry (non-obvious codebase constraint) or ADR (decision with rejected alternatives). Produce those artifacts too if applicable.
+
+---
+
+### 5. Guideline Update
 
 **When to use:** A session revealed a gap, error, or new pattern in an existing instruction or guideline file (`copilot-instructions.md`, `CLAUDE.md`, a file in `ai-docs/guidelines/`).
 
@@ -62,7 +80,7 @@ Capture what was learned, decided, or discovered in a session, and persist it in
 
 ---
 
-### 4. Memory Entry
+### 6. Memory Entry
 
 **When to use:** A non-obvious fact about the codebase, environment, or workflow surfaced that would benefit future AI agent sessions. This complements but does not replace file-based artifacts.
 
@@ -97,7 +115,7 @@ This project has two memory stores. **Never write the same content to both** —
 
 ---
 
-### 5. Plan Document
+### 7. Plan Document
 
 **When to use:** A session produced a detailed enough specification or approach to constitute a starting point for an implementation plan.
 
@@ -140,6 +158,7 @@ Determine which artifact type(s) are appropriate:
 | ------------------------------------------- | ---------------- |
 | A decision with trade-offs and alternatives | ADR              |
 | Multiple findings, no single clear decision | Session summary  |
+| Evaluation of options, no decision yet      | Research spike   |
 | Gap or error in an existing guideline       | Guideline update |
 | Non-obvious codebase or env constraint      | Memory entry     |
 | Enough detail to kick off implementation    | Plan document    |

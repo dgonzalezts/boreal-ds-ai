@@ -35,11 +35,22 @@ Start by understanding the current project context, then ask questions one at a 
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
+## Output
+
+The output path depends on what the session produced:
+
+| Session type | Output path |
+|---|---|
+| Validated design / architecture spec | `ai-work/sessions/YYYY-MM-DD-{slug}-design.md` |
+| Research spike (tech comparison, API analysis, approach evaluation) | `ai-work/research/YYYY-MM-DD-{slug}.md` |
+
+**Research spike structure:** **Goal** — **Options evaluated** — **Findings** — **Recommendation** — **Open questions**. Use this format whenever the session's primary output is an evaluation rather than a design decision. Invoke `knowledge-keeper` after writing the spike if any findings should be promoted to team memory or an ADR.
+
 ## After the Design
 
 **Documentation:**
 
-- Write the validated design to `ai-work/sessions/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `ai-work/sessions/YYYY-MM-DD-{slug}-design.md`
 - Use writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
