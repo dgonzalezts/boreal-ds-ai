@@ -18,6 +18,49 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `ai-work/plans/<ticket-id>-<feature-name>.md`. Pull the ticket ID from the active branch, then confirm the filename with the user before saving.
 
+## Pre-Plan: Ticket Brief
+
+When the user provides a Jira ticket ID (e.g. `EOA-12345`), write a ticket brief **before** producing the plan file. The brief captures the work scope at a level that survives handoffs — what is in, what is explicitly out, and what is still unknown.
+
+**Output path:** `ai-work/tickets/<TICKET-ID>-{slug}.md`
+
+**Structure:**
+
+```markdown
+# <TICKET-ID> — {slug}
+
+**Ticket:** [link or ID]
+**Goal:** One sentence describing what this work produces and why.
+
+## Scope
+
+**In:** bullet list of what will be built or changed
+**Out:** bullet list of what is explicitly excluded from this ticket
+
+## Acceptance Criteria
+
+- [ ] Measurable, testable criteria the implementer can verify
+- [ ] ...
+
+## Dependencies
+
+- Other tickets, packages, or external decisions this work depends on
+
+## Open Questions
+
+- Unresolved decisions or unknowns that may affect scope or approach
+```
+
+After writing the ticket brief, proceed to the plan. The plan file's preamble must include a reference to the ticket brief:
+
+```markdown
+**Ticket brief:** [`ai-work/tickets/<TICKET-ID>-{slug}.md`](../tickets/<TICKET-ID>-{slug}.md)
+```
+
+If no ticket ID is provided, skip the ticket brief step entirely and proceed directly to the plan.
+
+---
+
 ## Task Granularity
 
 **Each task maps to one logical development step** — the smallest unit a developer would naturally commit and manually test in sequence, as if coding without AI assistance.
@@ -93,6 +136,8 @@ status: pending
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
+
+**Ticket brief:** [`ai-work/tickets/<TICKET-ID>-{slug}.md`](../tickets/<TICKET-ID>-{slug}.md) _(omit if no ticket ID was provided)_
 
 **Architecture:** [2-3 sentences about approach]
 
