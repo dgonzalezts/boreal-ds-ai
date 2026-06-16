@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # AI Scaffold — Knowledge Base Consolidation
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
