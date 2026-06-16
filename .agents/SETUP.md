@@ -52,51 +52,31 @@ git clone ssh://git@bitbucket.c11.telesign.com:7999/dev/boreal-ds.git
 cd boreal-ds
 ```
 
-### 2. Add the ai remote
+### 2. Run the bootstrap script
+
+From inside the repo root:
 
 ```bash
-git remote add ai https://github.com/dgonzalezts/boreal-ds-ai.git
+bash .agents/scripts/bootstrap.sh
 ```
 
-### 3. Restore the AI config files onto disk
+This single command handles the rest of the setup idempotently:
+- Adds the `ai` remote
+- Restores all AI scaffold files from `ai/main` (if not already present)
+- Adds all scaffold directories to `.git/info/exclude`
+- Writes the `git aiboot` alias to `.git/config`
+- Appends the `aisync` function to `~/.functions` (if not already present)
+- Runs `sync-symlinks.sh` to wire up all mirror facades
+
+If prompted to source `~/.functions`, add `source ~/.functions` to `~/.zshrc` or `~/.bashrc`.
+
+**For subsequent worktrees**, use the alias instead:
 
 ```bash
-git fetch ai
-git checkout ai/main -- .agents ai-docs ai-work .claude .cursor .github
-git rm --cached -r .agents ai-docs ai-work .claude .cursor .github
+git aiboot
 ```
 
-### 4. Exclude the folders from the main repo
-
-Add to `.git/info/exclude` (located at `<repo-root>/.git/info/exclude`):
-
-```
-# AI and IDE configuration — tracked in a separate private remote, not in origin
-.agents/
-ai-docs/
-ai-work/
-.claude/
-.cursor/
-.github/
-```
-
-### 5. Add the `aisync` function to your shell
-
-Add the `aisync` function to your `~/.functions` (or equivalent shell config file):
-
-```bash
-# Sync AI scaffold dirs to the ai-config branch and push to the ai remote.
-# Usage: aisync [repo-path]   (defaults to the current git repo root)
-function aisync() {
-  local root
-  root=$(git -C "${1:-.}" rev-parse --show-toplevel 2>/dev/null)
-  if [[ -z "$root" ]]; then
-    printf "\033[31mERROR:\033[0m Not inside a git repository\n"
-    return 1
-  fi
-  bash "$root/.agents/scripts/aisync.sh" "$root"
-}
-```
+This resolves to `bootstrap.sh` in the main repo regardless of which worktree it is run from.
 
 ---
 

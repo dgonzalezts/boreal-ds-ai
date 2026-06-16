@@ -2,6 +2,7 @@
 
 | File | Status | Description |
 | --- | --- | --- |
+| [ai-scaffold-knowledge-consolidation.md](./ai-scaffold-knowledge-consolidation.md) | pending | AI Scaffold — Knowledge Base Consolidation |
 | [ai-scaffold-restructure.md](./ai-scaffold-restructure.md) | pending | AI Scaffold Restructure Implementation Plan |
 | [alpha-release-vue-react-storybook.md](./alpha-release-vue-react-storybook.md) | in | Alpha Release — Vue First Publish, React Re-publish, Storybook Deploy |
 | [automated-changelog-&-release.md](./automated-changelog-&-release.md) | done | Automated Changelog & Release Plan |
