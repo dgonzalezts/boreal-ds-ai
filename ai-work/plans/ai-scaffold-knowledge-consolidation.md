@@ -39,7 +39,7 @@
 | Task 7 — ai-work/research/ writer | ✅ Done | |
 | Task 8 — ai-work/tickets/ governance | ✅ Done | |
 | Task 9 — Fix knowledge-keeper tools | ✅ Done | |
-| Task 10 — Wire knowledge-keeper into finishing-a-development-branch | ⏳ Not started | |
+| Task 10 — Wire knowledge-keeper into finishing-a-development-branch | ✅ Done | |
 | Task 11 — Wire knowledge-keeper into create-component | ⏳ Not started | |
 | Task 12 — /sync-knowledge skill | ⏳ Not started | |
 

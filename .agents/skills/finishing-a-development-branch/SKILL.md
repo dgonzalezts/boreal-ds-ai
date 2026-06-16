@@ -133,6 +133,15 @@ git branch -D <feature-branch>
 
 Then: Cleanup worktree (Step 5)
 
+### Final step — Capture session learnings
+
+Before closing the session, consider whether any of the following occurred:
+- A non-obvious constraint was discovered (environment, build, API, test infrastructure)
+- A decision was made with trade-offs that another contributor might re-litigate
+- A recurring gotcha was encountered that isn't documented anywhere
+
+If yes to any: invoke the `knowledge-keeper` agent to persist the finding. Pass a brief description of what was discovered and where; knowledge-keeper will classify and write the correct artifact type. This step is optional but strongly encouraged — undocumented discoveries are the primary source of repeated debugging sessions.
+
 ### Step 5: Cleanup Worktree
 
 **For Options 1, 2, 4:**
@@ -198,3 +207,4 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+- **knowledge-keeper** - Captures session discoveries before worktree teardown
