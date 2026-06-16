@@ -31,7 +31,7 @@
 | Task | Status | Notes |
 |---|---|---|
 | Task 1 — bootstrap.sh | ✅ Done | |
-| Task 2 — Memory Management sections in worker subagents | ⏳ Not started | |
+| Task 2 — Memory Management sections in worker subagents | ✅ Done | |
 | Task 3 — Three-tier memory ADR | ⏳ Not started | |
 | Task 4 — Consolidate code-review checklists | ⏳ Not started | |
 | Task 5 — Stencil-best-practices vs dev-standards dedup | ⏳ Not started | |

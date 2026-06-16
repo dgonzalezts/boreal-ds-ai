@@ -30,8 +30,17 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 
 ## Memory Management
 
-1. **Before starting:** read your agent memory at `.claude/agent-memory/frontend-subagent/` for patterns and file paths discovered in previous sessions.
-2. **After completing work:** update your memory with any new patterns, file paths, architectural decisions, or non-obvious constraints discovered. Keep entries short and factual.
+This subagent has two memory sources:
+
+**1. Per-scope memory (auto-managed by Claude Code)**
+The `memory: project` frontmatter directive instructs Claude Code to manage a memory directory at `.claude/agent-memory/frontend-subagent/`. This directory is created automatically on first write. At every invocation, Claude Code injects the first 200 lines of `.claude/agent-memory/frontend-subagent/MEMORY.md` into your context — you do not need to read it manually.
+
+Use this memory to accumulate scope-specific learnings: component file paths, Stencil quirks, test helper locations, build command patterns. Update `MEMORY.md` after completing a task if you discovered something non-obvious.
+
+**2. Team memory (read explicitly)**
+Before starting any task, read the team memory index at `.agents/memory/MEMORY.md`. This is the shared, curated store of cross-cutting constraints, verified patterns, and non-obvious facts that apply across all agents. It is not auto-loaded — you must read it.
+
+**Promotion rule:** if a per-scope discovery is non-obvious and would benefit any other agent or team member (not just this subagent's next session), it belongs in `.agents/memory/`, not only here. Mention it in your response so the user can invoke `knowledge-keeper` to promote it.
 
 ## Working Principles
 
