@@ -56,6 +56,18 @@ It reads the saved plan and dispatches each task to its declared `@<executor>` s
 
 ---
 
+## Phase 4 — Knowledge Capture (optional)
+
+After the component is implemented and reviewed, invoke the `knowledge-keeper` agent to persist what was learned. Pass it a summary of:
+- Any non-obvious Stencil patterns or FACE constraints encountered
+- API decisions made (prop naming, event shape, slot structure) and the rationale
+- Test setup quirks specific to this component type
+- Anything that would save the next person 30+ minutes
+
+Knowledge-keeper will classify the findings and write them to the appropriate artifact (ADR, memory entry, or guideline update). Per-subagent memory in `.claude/agent-memory/<name>/` captures session-level detail; this phase promotes cross-cutting findings to the team store at `.agents/memory/`.
+
+---
+
 ## Partial Workflow Shortcuts
 
 | Situation                     | Action                                    |
