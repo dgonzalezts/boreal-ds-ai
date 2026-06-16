@@ -47,21 +47,38 @@ Apply the sections below only when the change touches the corresponding package.
 
 ### A) `packages/boreal-web-components` (Stencil)
 
+#### Import Order and Barrel Hygiene
+
+- [ ] **Import order**: Framework → `@/services` → `@/mixins` → `@/utils` → local/relative.
+- [ ] **Named barrel re-exports**: Barrel files use `export { X } from './X'`, not `export * from './X'`.
+- [ ] **No over-exporting**: `@/services` (and other internal barrels) only re-export symbols that belong to that layer's contract.
+- [ ] **No cross-component barrels**: No component imports another component through a shared barrel.
+
 #### Component and Prop Discipline
 
 - [ ] **Props are readonly + documented**: Every `@Prop()` has `readonly` and an adjacent JSDoc block.
 - [ ] **Boolean prop naming**: No `is`, `has`, or `show` prefix — use descriptive adjectives matching native HTML (`closable` not `showClose`; `header` not `hasHeader`; `error` not `isError`).
 - [ ] **Prop validation pattern**: `validatePropValue` + `componentWillLoad()` + stacked `@Watch()` is used for enum-like props.
-- [ ] **Mutable props**: When `mutable: true` is used, internal assignment uses a narrow cast, not `as any`.
+- [ ] **Mutable props**: `mutable: true` is not used on native form attributes (`disabled`, `checked`, `value`) — use a `@State()` mirror instead. When `mutable: true` is used elsewhere, internal assignment uses a narrow cast, not `as any`.
+- [ ] **FACE disabled pattern**: `formDisabledCallback` writes to `@State() private isDisabled`, not to a mutable `@Prop()`.
+- [ ] **Interface file naming**: Component interface files are named `IComponent.ts` (e.g. `ITooltip.ts`), never `IBdsComponent.ts`.
+- [ ] **Getter accessor naming**: Getter methods do not carry a `get` prefix — `get placement()` not `get getPlacement()`.
+- [ ] **No redundant boolean expressions**: `!x || false` must be simplified to `!x`.
+- [ ] **No dead Popover API declarations**: No `declare global { interface HTMLElement { showPopover()... } }` blocks — the Popover API is native in TypeScript ≥ 5.2.
 - [ ] **No class-level `@internal`**: Component classes do not use `@internal` in JSDoc.
 - [ ] **No ignored JSDoc tags**: Avoid `@element` and `@method` at class level; use method-level JSDoc instead.
 - [ ] **Use `@file`**: Module JSDoc uses `@file` (not `@fileoverview`).
 - [ ] **Type narrowing**: Prefer `instanceof Element` for element-node narrowing instead of `nodeType` checks.
 
+#### DOM and Accessibility
+
+- [ ] **ARIA attribute casing in `setAttribute`**: ARIA attributes passed to `setAttribute` use kebab-case (`aria-describedby`, `aria-haspopup`) — never camelCase (`ariaDescribedBy`).
+- [ ] **`mouseleave` stayOnHover uses `relatedTarget`**: Floating element "keep-open" checks use `e.relatedTarget` (pointer destination), not `e.target` (element being left).
+
 #### Events
 
 - [ ] **Event naming**: Custom events use the `bds{Action}` prefixed camelCase pattern.
-- [ ] **Event decorator bare**: `@Event()` uses no explicit options (see ADR `.ai/decisions/0003-event-options-convention.md`).
+- [ ] **Event decorator bare**: `@Event()` uses no explicit options (see ADR `ai-docs/decisions/0003-event-options-convention.md`).
 - [ ] **No native collisions**: Event names do not reuse native DOM events (`click`, `change`, etc.).
 
 #### FACE (Form-Associated Custom Elements) Components

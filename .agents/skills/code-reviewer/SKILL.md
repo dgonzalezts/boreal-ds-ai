@@ -26,9 +26,9 @@ The script auto-derives the output filename from today's date, the current HEAD 
 
 After the script generates the report, read and apply the reference files:
 
-1. Read `references/coding_standards.md` and `references/common_antipatterns.md`
+1. Read `ai-docs/guidelines/code-review-checklist.md` and `references/common_antipatterns.md`
 2. For every ❌ (fail) item in the checklist, add sub-bullets directly under it in the saved report:
-   - The relevant standard from `coding_standards.md`
+   - The relevant rule from `code-review-checklist.md`
    - The antipattern explanation from `common_antipatterns.md`
 3. Edit the saved report file in `ai-work/reviews/` to include these annotations inline
 
