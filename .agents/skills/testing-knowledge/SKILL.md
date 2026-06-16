@@ -5,7 +5,13 @@ description: Domain knowledge for writing unit tests for Stencil components in B
 
 # Testing Knowledge — Boreal DS
 
-Primary references (read before writing tests):
+## Primary Reference
+
+[`ai-docs/guidelines/development-standards.md`](../../../ai-docs/guidelines/development-standards.md) is the project's primary rules document. Read the sections relevant to your task before starting. This skill provides scope-specific patterns and gotchas that complement — not replace — those rules.
+
+**Directional rule:** procedures and patterns (how to write a test, how to structure spec files) → live here. Rules, rationale, and constraints (component API contracts, event emission rules) → live in `development-standards.md`.
+
+Also read before writing tests:
 
 - `ai-docs/guidelines/stencil-unit-testing-patterns.md` — canonical `newSpecPage` patterns, AAA structure, FACE boilerplate, child component assertions
 - `ai-docs/guidelines/stencil-best-practices.md` §"FACE Components" — async rendering gotchas relevant to test setup

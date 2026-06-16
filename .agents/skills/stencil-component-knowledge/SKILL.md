@@ -5,10 +5,13 @@ description: Domain knowledge for implementing Stencil web components in Boreal 
 
 # Stencil Component Knowledge — Boreal DS
 
-Primary references (read before implementing):
+## Primary Reference
 
-- `ai-docs/guidelines/stencil-best-practices.md` — canonical implementation patterns (mixin architecture, FACE, SCSS, `IFormControl<T>` interface layering, API conventions)
-- `ai-docs/guidelines/stencil-best-practices.md` — ESLint rules, token usage, JSDoc requirements
+[`ai-docs/guidelines/development-standards.md`](../../../ai-docs/guidelines/development-standards.md) is the project's primary rules document. Read §1 (component architecture, naming, member ordering, props, events, output targets) before implementing. This skill provides scope-specific patterns and gotchas that complement — not replace — those rules.
+
+[`ai-docs/guidelines/stencil-best-practices.md`](../../../ai-docs/guidelines/stencil-best-practices.md) covers Stencil-specific runtime gotchas: SCSS utilities and `@use` constraints, FACE lifecycle quirks, `@Watch` write-guard patterns, event listener placement, composite event boundaries.
+
+**Directional rule:** procedures and patterns (how to implement X step by step) → live here. Rules, rationale, and constraints (you must / you must not, and why) → live in `development-standards.md`.
 
 ---
 

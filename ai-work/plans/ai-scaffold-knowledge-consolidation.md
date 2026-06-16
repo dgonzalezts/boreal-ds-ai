@@ -34,8 +34,8 @@
 | Task 2 — Memory Management sections in worker subagents | ✅ Done | |
 | Task 3 — Three-tier memory ADR | ⏭️ Skipped | ADRs reserved for project decisions, not AI scaffold meta-decisions |
 | Task 4 — Consolidate code-review checklists | ✅ Done | |
-| Task 5 — Stencil-best-practices vs dev-standards dedup | ⏳ Not started | |
-| Task 6 — Wire dev-standards into knowledge skills | ⏳ Not started | |
+| Task 5 — Stencil-best-practices vs dev-standards dedup | ✅ Done | Dedup map at ai-work/sessions/2026-06-15-stencil-bestpractices-dedup.md |
+| Task 6 — Wire dev-standards into knowledge skills | ✅ Done | |
 | Task 7 — ai-work/research/ writer | ⏳ Not started | |
 | Task 8 — ai-work/tickets/ governance | ⏳ Not started | |
 | Task 9 — Fix knowledge-keeper tools | ⏳ Not started | |

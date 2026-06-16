@@ -5,7 +5,13 @@ description: Domain knowledge for CI/CD, Turborepo pipelines, release workflows,
 
 # Infra Knowledge — Boreal DS
 
-Primary references (read before working on build/CI/release):
+## Primary Reference
+
+[`ai-docs/guidelines/development-standards.md`](../../../ai-docs/guidelines/development-standards.md) is the project's primary rules document. Read §4 (testing standards, CI pipeline) and §6–8 (git workflow, PR process, CI/CD) before working on build, release, or CI tasks. This skill provides scope-specific patterns and gotchas that complement — not replace — those rules.
+
+**Directional rule:** procedures and patterns (how to fix a Turbo hang, how to run validate:pack) → live here. Rules, rationale, and constraints (release ordering, CI requirements) → live in `development-standards.md`.
+
+Also read before working on build/CI/release:
 
 - `ai-docs/guidelines/release-process.md` — step-by-step release runbook
 - `ai-docs/guidelines/scripts-boreal.md` — custom monorepo tooling

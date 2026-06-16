@@ -5,12 +5,17 @@ description: Domain knowledge for writing Storybook stories and MDX documentatio
 
 # Documentation Knowledge — Boreal DS
 
-Primary references (read before writing docs):
+## Primary Reference
 
-- `ai-docs/guidelines/storybook-patterns.md` — canonical story structure and argTypes rules
+[`ai-docs/guidelines/development-standards.md`](../../../ai-docs/guidelines/development-standards.md) is the project's primary rules document. Read §5 (documentation strategy, JSDoc/CEM authoring, Storybook conventions) before writing stories or MDX. This skill provides scope-specific patterns and gotchas that complement — not replace — those rules.
+
+**Directional rule:** procedures and patterns (how to wire actions, how to override source snippets) → live here. Rules, rationale, and constraints (JSDoc placement, CEM generation behavior) → live in `development-standards.md`.
+
+Also read before writing docs:
+
+- `ai-docs/guidelines/storybook-patterns.md` — canonical story structure, argTypes rules, and the two-type docs/story component rule
 - `ai-docs/guidelines/jsdoc-template.md` — JSDoc on Stencil components: what to write, where, and what the CEM plugin generates automatically
 - `ai-docs/guidelines/plop-generator-learnings.md` — Plop.js story generator: critical issues, Handlebars template patterns, and common pitfalls
-- `ai-docs/guidelines/storybook-patterns.md` — two-type docs/story component rule, MDX section requirements
 
 ---
 

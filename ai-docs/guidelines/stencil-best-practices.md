@@ -434,34 +434,7 @@ All component classes must follow this 15-section member ordering. Consistent or
 
 ### Lifecycle methods ordering
 
-Lifecycle methods in section 9 must appear in their natural execution order, not alphabetically.
-
-**Initial load cycle:**
-
-| Order | Method                  | When it runs                                                                                |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------- |
-| 1     | `connectedCallback()`   | Every time the element connects to the DOM (before `componentWillLoad` on first connection) |
-| 2     | `componentWillLoad()`   | Once, just after first connection — good for one-time async setup                           |
-| 3     | `componentWillRender()` | Before every `render()`                                                                     |
-| 4     | `render()`              | Template rendering (section 15, not here)                                                   |
-| 5     | `componentDidRender()`  | After every `render()`                                                                      |
-| 6     | `componentDidLoad()`    | Once, just after first `render()` completes                                                 |
-
-**Update cycle (triggered by prop/state changes):**
-
-| Order | Method                    | When it runs                                                 |
-| ----- | ------------------------- | ------------------------------------------------------------ |
-| 1     | `componentShouldUpdate()` | Returns boolean to allow/prevent the re-render               |
-| 2     | `componentWillUpdate()`   | Before update render (never called on first render)          |
-| 3     | `componentWillRender()`   | Before every `render()`                                      |
-| 4     | `componentDidRender()`    | After every `render()`                                       |
-| 5     | `componentDidUpdate()`    | After update render completes (never called on first render) |
-
-**Disconnection:**
-
-| Method                   | When it runs                                    |
-| ------------------------ | ----------------------------------------------- |
-| `disconnectedCallback()` | Every time the element disconnects from the DOM |
+Lifecycle methods in section 9 must appear in their natural execution order, not alphabetically. See the lifecycle flow diagram in [`development-standards.md §1.3`](./development-standards.md#13-component-code-organization).
 
 ### Alphabetical ordering within sections
 
