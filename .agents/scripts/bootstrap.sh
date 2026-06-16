@@ -27,7 +27,7 @@ else
   cat >> "$functions_file" << 'AISYNC'
 
 # Sync AI scaffold dirs to the ai-config branch and push to the ai remote.
-# Usage: aisync [repo-path]   (defaults to the current git repo root)
+# Usage: aisync [repo-path] [commit-message]
 function aisync() {
   local root
   root=$(git -C "${1:-.}" rev-parse --show-toplevel 2>/dev/null)
@@ -35,7 +35,7 @@ function aisync() {
     printf "\033[31mERROR:\033[0m Not inside a git repository\n"
     return 1
   fi
-  bash "$root/.agents/scripts/aisync.sh" "$root"
+  bash "$root/.agents/scripts/aisync.sh" "$root" "${2:-}"
 }
 AISYNC
   printf "[machine] aisync appended to %s\n" "$functions_file"

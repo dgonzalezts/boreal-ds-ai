@@ -85,14 +85,16 @@ This resolves to `bootstrap.sh` in the main repo regardless of which worktree it
 Edit any files inside `.agents/`, `ai-docs/`, or `ai-work/` freely while on any branch. When ready to save and push:
 
 ```bash
-aisync
+aisync . "docs(agents): update memory management sections"
 ```
 
-That's it. The script:
+The second argument is the commit message. Omit it to fall back to a timestamped default (`sync: update AI configuration YYYY-MM-DD HH:MM`). The first argument is the repo path — use `.` for the current directory.
+
+The script:
 
 1. Adds a git worktree checked out to `ai-config` in a sibling directory
 2. Rsyncs all scaffold directories into the worktree (including deletions)
-3. Commits with a timestamped message and pushes to `ai/main`
+3. Commits with your message and pushes to `ai/main`
 4. Removes the worktree — your working directory is never touched
 
 After pushing, run the symlink reconciler to keep the mirror facades in sync:
