@@ -10,7 +10,7 @@ status: in progress
 
 **Ticket brief:** [`ai-work/tickets/EOA-10576-bds-table.md`](../tickets/EOA-10576-bds-table.md)
 
-**Architecture:** Light DOM composition — implementors place `<bds-table-column>` elements inside `<bds-table>`; the table reads them via `querySelectorAll` in `componentDidLoad` and re-reads on `slotchange`. Row data is passed as a `data: RowData[]` prop. All interactive state (sort, selection) is hand-rolled with `@State` — no third-party table library. Internal rendering uses native `<table>/<thead>/<tbody>/<tr>/<th>/<td>` for semantic accessibility.
+**Architecture:** Light DOM composition — implementors place `<bds-table-column>` elements inside `<bds-table>`; the table reads them via `querySelectorAll` in `componentDidLoad` and re-reads via a `MutationObserver({ childList: true })` when columns are added/removed dynamically (`slotchange` does not fire for direct DOM children in light DOM). Row data is passed as a `data: RowData[]` prop. All interactive state (sort, selection) is hand-rolled with `@State` — no third-party table library. Internal rendering uses native `<table>/<thead>/<tbody>/<tr>/<th>/<td>` for semantic accessibility.
 
 **Tech Stack:** Stencil, TypeScript (no `any`), SCSS with `var(--boreal-*)` tokens, native HTML table elements, CSS container queries for responsive toolbar.
 
@@ -41,6 +41,7 @@ Verified from node [55:39631](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY2
 | `<td>` line-height (20px) | `$boreal-typography-line-height-sm` | `var(--boreal-typography-line-height-sm)` |
 | Semibold weight | `$boreal-typography-font-weight-semibold` | `var(--boreal-typography-font-weight-semibold)` |
 | Regular weight | `$boreal-typography-font-weight-regular` | `var(--boreal-typography-font-weight-regular)` |
+| Container radius (4px) | `$boreal-radius-xs` | `var(--boreal-radius-xs)` |
 
 **Research:** `ai-work/research/2026-06-16-bds-table-column-api-spike.md`
 
@@ -166,7 +167,7 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
 - `@Prop() readonly data: ITable['data'] = []` — array of row objects
 - `@Prop({ attribute: 'row-key' }) readonly rowKey: string = 'id'` — the field name used as unique row identifier
 - `@State() private columns: HTMLBdsTableColumnElement[] = []` — populated in `componentDidLoad`
-- `componentDidLoad()` reads column children: `this.columns = Array.from(this.el.querySelectorAll('bds-table-column'))` and attaches a `slotchange` listener on the host to re-read when columns are added/removed dynamically
+- `componentDidLoad()` reads column children: `this.columns = Array.from(this.el.querySelectorAll('bds-table-column'))` and attaches a `MutationObserver({ childList: true })` on the host to re-read when `bds-table-column` children are added/removed dynamically; observer is disconnected in `disconnectedCallback()`
 - `render()` produces:
   ```
   <Host>
@@ -174,7 +175,15 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
       <table>
         <thead>
           <tr>
-            [one <th scope="col"> per column, text = column.label]
+            [one <th scope="col"> per column]
+              <span class="bds-table__th-content">   ← flex: space-between (right side for Task 5 sort / Task 7 pin)
+                <span class="bds-table__th-label">   ← flex: center, gap 2xs
+                  [if col.icon: <i class={col.icon} aria-hidden="true" />]
+                  <bds-typography variant="label" tooltipText={col.info || undefined}>
+                    {col.label}
+                  </bds-typography>
+                </span>
+              </span>
           </tr>
         </thead>
         <tbody>
@@ -190,12 +199,19 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
 - `bds-table-utils.ts` exports `readCellValue(row: RowData, colKey: string): unknown` — returns `row[colKey] ?? ''`
 - Formatter result handling: if `formatter` returns an `HTMLElement`, use a `ref` callback on the `<td>` to `appendChild` it after render; if it returns a `string`, render it as text content
 - `@Watch('data')` triggers re-render (Stencil does this automatically when a `@Prop` changes, but a `@Watch` is added to clear selection state in a later task — declare it now as a stub)
-- SCSS: `:host { display: block; }`, `.bds-table__wrapper { overflow-x: auto; }`, `table { width: 100%; border-collapse: separate; border-spacing: 0; }` — all spacing via `var(--boreal-*)` tokens
-- SCSS `<th>`: `font-size: $boreal-typography-font-size-xs; font-weight: $boreal-typography-font-weight-semibold; line-height: $boreal-typography-line-height-xs; color: $boreal-text-default-light` (matches Figma `supporting/label/xs`)
+- SCSS: `bds-table { display: flex; flex-direction: column; gap: $boreal-spacing-xs; padding: $boreal-spacing-m $boreal-spacing-l; border: 1px solid $boreal-stroke-default-light; border-radius: $boreal-radius-xs; overflow: clip; background-color: $boreal-ui-inverse; }` — outer chrome on the host element; `overflow: clip` clips to the radius without creating a scroll container (preserves `position: sticky` for Task 7 pinning); `flex-direction: column` + `gap` makes toolbar (Task 8) and paginator slot natural flex siblings of `.bds-table__wrapper`
+- SCSS: `.bds-table__wrapper { overflow-x: auto; }`, `table { width: 100%; border-collapse: separate; border-spacing: 0; }` — all spacing via `var(--boreal-*)` tokens
+- **`bds-table-column` gets an `icon: string = ''` prop** — CSS icon class (e.g. `bds-icon-emoji-circle`) rendered as `<i class={col.icon} aria-hidden="true" />` to the left of the label; not reflected to the DOM attribute
+- **Column header uses `bds-typography variant="label"`** — replaces the bare `{col.label}` text; `tooltipText={col.info || undefined}` wires the existing `info` prop into the built-in info icon; color overridden via `th .bds-typography--label { color: $boreal-text-default-light }` in SCSS (default variant color is `$boreal-text-default-darker`)
+- **`__th-content`** flex container inside each `<th>`: `display: flex; align-items: center; justify-content: space-between` — left group holds icon + typography; right group is empty now (Task 5 adds sort icon, Task 7 adds pin icon)
+- **`__th-label`** inner flex group: `display: flex; align-items: center; gap: $boreal-spacing-2xs` — icon + bds-typography side-by-side
+- SCSS `<th>`: keeps `text-align: left; padding: $boreal-spacing-xs $boreal-spacing-m` — font/color removed since `bds-typography` handles them (matches Figma `supporting/label/xs`)
 - SCSS `<td>`: `font-size: $boreal-typography-font-size-sm; font-weight: $boreal-typography-font-weight-regular; line-height: $boreal-typography-line-height-sm; color: $boreal-text-default` (matches Figma `body/sm`)
+- SCSS row dividers: `tbody tr td { border-bottom: 1px solid $boreal-stroke-default-light; }` — visible separator between every data row; applies to all rows including the last (matches Figma design)
+- SCSS header bottom border: `thead th { border-bottom: 1px solid $boreal-stroke-default-light; }` — separates the header row from the first data row
 - SCSS `tr:hover td`: `background-color: $boreal-ui-default-lighter` — row hover highlight
 - SCSS `thead`: `background-color: $boreal-ui-inverse` — header row stays white against scrolling body
-- `inheritAriaAttributes` from `@/utils/a11y` is called in `componentWillLoad` to pass through host ARIA attributes to the `<table>` element
+- `inheritAttributes(this.el, ['aria-label', 'aria-describedby'])` from `@/utils/a11y/attributes` is called in `componentWillLoad`; result stored in `private inheritedAttributes: Attributes` and spread onto `<table {...this.inheritedAttributes}>` in `render()` — strips those ARIA attrs from the host and places them on the semantic `<table>` element
 
 **Manual test _(waiveable)_:**
 
@@ -203,11 +219,16 @@ Playground scenarios in `packages/boreal-web-components/src/index.html`:
 - Scenario 1: `<bds-table>` with three `<bds-table-column>` children and a `data` prop set via JS — three column headers and data rows render
 - Scenario 2: Column with a `formatter` returning a `<bds-tag>` element — tag renders inside the cell
 - Scenario 3: Column with a `formatter` returning a plain string — string renders as text
+- Scenario (header): Column with `icon="bds-icon-emoji-circle"` and `info="The product category"` — icon appears left of label; ⓘ icon appears right of label with tooltip on hover
 
 Validation (run `pnpm dev:components`):
 - [ ] Given `data=[{id:1,name:'Alice'}]` and a `<bds-table-column col-key="name" label="Name">`, when the page loads, then one header "Name" and one data row "Alice" appear. Pass: correct text in DOM.
 - [ ] Given a formatter returning `document.createElement('strong')` with text, when rendered, then a `<strong>` element is inside the `<td>`. Pass: element visible in DevTools.
 - [ ] Given `data=[]`, when the page loads, then `<tbody>` is empty. Pass: no `<tr>` elements in `<tbody>`.
+- [ ] Given `<bds-table aria-label="Users table">`, when rendered, then `<table aria-label="Users table">` appears in DevTools and the host element has no `aria-label` attribute. Pass: attribute on `<table>`, absent on host.
+- [ ] Given a table with one column and `data` set, when a second `<bds-table-column>` is appended via JS, then the new column header and its cell data appear immediately. Pass: new column visible without page reload.
+- [ ] Given `icon="bds-icon-emoji-circle"` on a column, when the page loads, then an `<i class="bds-icon-emoji-circle">` appears to the left of the label inside `__th-label`. Pass: icon visible in DevTools.
+- [ ] Given `info="The product category"` on a column, when the page loads, then hovering the ⓘ icon shows the tooltip text. Pass: tooltip visible on hover.
 
 **Commit:**
 ```
@@ -226,27 +247,34 @@ feat(web-components): EOA-10576 scaffold bds-table with data and column renderin
 
 **Acceptance criteria:**
 
-- When `this.data.length === 0`, render a single `<tr>` inside `<tbody>` containing one `<td colspan={this.columns.length}>` that renders `<slot name="empty-state">` with a default fallback message
-- The default message text is `"No data to display"` using `<bds-typography variant="body">` centred inside the cell
-- When `this.data.length > 0`, the empty state `<tr>` is not rendered
-- The `<td>` carrying the empty state has `class="bds-table__empty-state"` and the colspan accounts for the checkbox column when `selectable` will be added (use `this.columns.length + (this.selectable ? 1 : 0)` — `selectable` prop can be declared here as a stub `@Prop() readonly selectable: boolean = false` even though checkbox column is implemented in Task 6)
-- SCSS: `.bds-table__empty-state { text-align: center; padding: $boreal-spacing-2xl; background-color: $boreal-ui-default-lighter; }` — light gray background matches Figma `ui (components)/default-lighter`
+- `@Prop() readonly emptyMessage: string = 'No data to display'` — overridable default text; added to `ITable` interface
+- When `this.data.length === 0`, render a single `<tr>` inside `<tbody>` containing one `<td class="bds-table__empty-state" colSpan={colSpan}>` where `colSpan = this.columns.length + (this.selectable ? 1 : 0)`
+- Empty state content priority: slot wins over prop — check `this.el.querySelector('[slot="empty-state"]') !== null` at render time; if truthy render `<slot name="empty-state" />`; otherwise render `<span class="bds-table__empty-text">{this.emptyMessage}</span>`
+- Do NOT use `<bds-typography>` for the default text — it overrides component token styles; use a plain `<span>` styled with `$boreal-*` tokens directly
+- Do NOT use Stencil slot fallback children (`<slot>...<FallbackContent/></slot>`) — this creates `<slot-fb>` DOM noise; use the imperative `querySelector` check instead (see `feedback_prop_or_slot_pattern.md` memory entry)
+- When `this.data.length > 0` the empty state `<tr>` is not rendered
+- `classMap` getter with `StyleModifiers` drives the wrapper div classes: `bds-table__wrapper` always present, `bds-table__wrapper--empty` when `data.length === 0`
+- Use `const PREFIX = 'bds-table' as const` for all BEM class names in the file (see `feedback_prefix_constant.md` memory entry)
+- SCSS uses BEM nesting (`&__empty-state`, `&__empty-text`) inside the `bds-table { }` block — no flat selectors (see `feedback_scss_bem_nesting.md` memory entry)
+- SCSS: `&__empty-state { text-align: center; padding: $boreal-spacing-2xl; background-color: $boreal-ui-default-lighter; }` — `$boreal-spacing-2xl` confirmed to exist
+- SCSS: `&__empty-text { font-size: $boreal-typography-font-size-xs; font-weight: $boreal-typography-font-weight-regular; line-height: $boreal-typography-line-height-sm; }`
 
 **Manual test _(waiveable)_:**
 
-Playground scenarios:
-- Scenario 1: `<bds-table>` with `data=[]` and no `slot="empty-state"` — default message appears
-- Scenario 2: Same with `<p slot="empty-state">Custom empty message</p>` — custom content appears
+Playground scenarios (all three added to `packages/boreal-web-components/src/index.html`):
+- Scenario 1: `<bds-table>` with `data=[]` and no `slot="empty-state"` — default "No data to display" appears as a `<span>`
+- Scenario 2: Same with `<p slot="empty-state">No results found. Try adjusting your filters.</p>` — custom content replaces default; no `empty-message=""` needed
 - Scenario 3: `<bds-table>` with data — no empty state row visible
 
 Validation:
-- [ ] Given `data=[]`, when the page loads, then "No data to display" text is centred in the table. Pass: text visible, no data rows present.
-- [ ] Given `data=[]` and a filled `slot="empty-state"`, then custom slot content appears instead of the default. Pass: custom text visible.
+- [ ] Given `data=[]`, when the page loads, then "No data to display" text is centred in the table. Pass: text visible as `<span class="bds-table__empty-text">`, no data rows present.
+- [ ] Given `data=[]` and a filled `slot="empty-state"`, then custom slot content appears instead of the default. Pass: custom text visible, no `<span>` in DOM.
 - [ ] Given `data=[{id:1}]`, then no empty state row is rendered. Pass: `<tbody>` contains one data `<tr>`.
+- [ ] Given `emptyMessage="No hay resultados"`, then the custom string appears in the span. Pass: localised text visible.
 
 **Commit:**
 ```
-feat(web-components): EOA-10576 add empty state slot with default fallback
+feat(web-components): EOA-10576 add empty state with emptyMessage prop and slot override
 ```
 
 ---
