@@ -20,7 +20,8 @@
       "mcp__playwright__browser_navigate",
       "Bash(rtk find *)",
       "mcp__playwright__browser_evaluate",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(python3 -c ' *)"
     ],
     "deny": [
       "Read(./.env)"

@@ -11,6 +11,7 @@
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |
 | [EOA-10533-bds-radio-button.md](./EOA-10533-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
+| [EOA-10576-bds-table.md](./EOA-10576-bds-table.md) | in | bds-table Implementation Plan |
 | [EOA-12029_grid_foundational_system.md](./EOA-12029_grid_foundational_system.md) | done |  |
 | [EOA-12334-bds-radio-and-radio-group.md](./EOA-12334-bds-radio-and-radio-group.md) | done | bds-radio + bds-radio-group Implementation Plan |
 | [EOA-12334-bds-radio-button.md](./EOA-12334-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
