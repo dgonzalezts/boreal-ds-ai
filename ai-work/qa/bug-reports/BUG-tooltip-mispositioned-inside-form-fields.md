@@ -71,21 +71,26 @@ The PR `fix/EOA-13922-popover-fixes` replaced a bespoke selector list (`.bds-but
 
 ```typescript
 // AFTER fix (correct):
-const trigger: HTMLElement = parent.querySelector(ANCHORED_TRIGGERS) || parent;
+const trigger: HTMLElement =
+  parent.closest<HTMLElement>('button, input, select') ??
+  parent.querySelector<HTMLElement>(ANCHORED_TRIGGERS) ??
+  parent;
 ```
 
-`parent.closest(ANCHORED_TRIGGERS)` was removed. The resolution now:
-1. Searches **down** inside `parent` for a known interactive element (handles sibling-trigger layouts).
-2. Falls back to `parent` itself (handles cases where the parent IS the interactive element, such as `<button><bds-tooltip/></button>`).
+`closest()` is now scoped to **native** HTML interactive elements only. This preserves the case where Stencil's slot polyfill physically moves a popover/tooltip inside a `<button>` element — `closest('button')` correctly walks up to it — while preventing the walker from reaching custom-element hosts like `<bds-text-field class="bds-text-field">` that carry BDS class names on the host itself.
+
+`querySelector(ANCHORED_TRIGGERS)` handles sibling-trigger layouts (e.g. tooltip next to an `<input>`). The `?? parent` fallback covers cases where the parent itself is the trigger.
+
+**Verified:** All 1,620 unit tests pass (`pnpm test` in `packages/boreal-web-components`).
 
 ### Impact assessment
 
 | Scenario | Before fix | After fix | Risk |
 |---|---|---|---|
 | Tooltip inside `bds-typography` inside `bds-text-field` | Anchors to text field (BUG) | Anchors to info span | ✅ Fixed |
+| Popover slotted inside `bds-button` (slot polyfill nests it inside `<button>`) | `closest('button')` found it | `closest('button, input, select')` finds it | ✅ None |
 | Tooltip sibling to `<input>` inside a wrapper div | `querySelector` finds input | Same | ✅ None |
-| Tooltip direct child of `<button>` | `|| parent` fallback = button | Same | ✅ None |
-| Popover sibling to `bds-text-field` inside a select | `querySelector` finds text field | Same | ✅ None |
+| Tooltip direct child of `<button>` | `?? parent` fallback = button | Same | ✅ None |
 | Popover click-outside (`listenTarget`) detection | Uses `closest()` inside `bds-popover.subscribe()` — unaffected | Same | ✅ None |
 
 `bds-popover.subscribe()` independently calls `trigger.closest(ANCHORED_TRIGGERS)` to resolve `this.listenTarget` for click-outside and focus-outside detection. That separate call operates on the already-resolved trigger element and is **not** affected by this fix.
