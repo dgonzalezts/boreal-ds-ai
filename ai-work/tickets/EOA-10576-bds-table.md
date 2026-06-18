@@ -15,6 +15,7 @@
 - Row selection — internal `Set<string>` state, checkbox column, select-all, `getSelectedRows()` method, `clearSelection()` method
 - Column pinning — `position: sticky` + inline `style.left` computed in `componentDidRender`
 - Empty state — `slot="empty-state"` + default centred message
+- Loading state — `loading: boolean` prop + `loadingRows: number` prop; visual skeleton deferred to follow-up once UX/UI specs land (API stub ships with v1)
 - Custom cell content — `formatter?: ({ value, row }) => string | HTMLElement` on `bds-table-column`
 - `slot="paginator"` — wired for future `bds-paginator` integration
 - Responsive toolbar — CSS container queries, collapses at ≤744px container width
@@ -82,4 +83,4 @@
 
 ## Open Questions
 
-- None. All architecture decisions finalised in research spike `ai-work/research/2026-06-16-bds-table-column-api-spike.md`.
+- **Loading state visual spec** — UX/UI team is preparing design specs for the skeleton/shimmer loading state. Key decisions still needed: whether `<thead>` skeletons during loading or stays visible; whether there is an overlay/backdrop variant for reload scenarios; shimmer gradient colours. Prop API (`loading`, `loadingRows`) ships as a stub in v1; full implementation is a follow-up task once specs land.
