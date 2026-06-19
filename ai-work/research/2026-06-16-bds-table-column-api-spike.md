@@ -25,13 +25,13 @@ Determine the best column API approach (light DOM composition vs. JSON props) an
 
 Every composite component in the repo reads children via **`querySelectorAll` on `this.el`** after mount. No component uses a JSON prop to define its children.
 
-| Component | Pattern |
-|---|---|
-| `bds-breadcrumb` | `querySelectorAll('bds-breadcrumb-item')` + `onSlotchange` |
-| `bds-radio-group` | `querySelectorAll('bds-radio, bds-radio-button, bds-radio-card')` + `@Listen('bdsChange')` |
-| `bds-button-group` | `querySelectorAll('bds-button')` + `@Watch` |
-| `bds-select` | `querySelectorAll('bds-list-menu-item')` in `componentDidLoad` |
-| `bds-list-menu` | `querySelectorAll('bds-list-menu-item')` + `@Listen('bdsSelectItem')` |
+| Component          | Pattern                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `bds-breadcrumb`   | `querySelectorAll('bds-breadcrumb-item')` + `onSlotchange`                                 |
+| `bds-radio-group`  | `querySelectorAll('bds-radio, bds-radio-button, bds-radio-card')` + `@Listen('bdsChange')` |
+| `bds-button-group` | `querySelectorAll('bds-button')` + `@Watch`                                                |
+| `bds-select`       | `querySelectorAll('bds-list-menu-item')` in `componentDidLoad`                             |
+| `bds-list-menu`    | `querySelectorAll('bds-list-menu-item')` + `@Listen('bdsSelectItem')`                      |
 
 No component uses `MutationObserver`. Slot changes are handled via `onSlotchange` or child event bubbling. **Option A (light DOM) is the dominant pattern. Option B (JSON) is a sharp departure from every composite component in the codebase.**
 
@@ -65,14 +65,14 @@ Requires a `bds-table-column-group` wrapper element. `bds-table` must:
 ```typescript
 const columns: ColumnDef<RowData>[] = [
   {
-    id: 'personalInfo',
-    header: 'Personal Info',
+    id: "personalInfo",
+    header: "Personal Info",
     columns: [
-      { accessorKey: 'name', header: 'Name' },
-      { accessorKey: 'age', header: 'Age' },
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "age", header: "Age" },
     ],
   },
-  { accessorKey: 'email', header: 'Email' },
+  { accessorKey: "email", header: "Email" },
 ];
 ```
 
@@ -80,26 +80,27 @@ const columns: ColumnDef<RowData>[] = [
 
 **Hidden cost of Option B:** All of Aqua DS's table rendering is imperative DOM manipulation (`document.createElement`, `appendChild`) — not Stencil JSX. This introduces a two-class rendering architecture within the Boreal DS repo and departs from every other component's render pattern.
 
-| | Option A | Option B |
-|---|---|---|
-| Grouping complexity | Medium | Low |
-| Colspan/rowspan calc | Manual | Automatic (TanStack) |
-| Codebase alignment | High | Low |
-| Custom cell content | Natural (slot) | Requires formatter callback |
-| Rendering model | Stencil JSX | Imperative DOM |
+|                      | Option A       | Option B                    |
+| -------------------- | -------------- | --------------------------- |
+| Grouping complexity  | Medium         | Low                         |
+| Colspan/rowspan calc | Manual         | Automatic (TanStack)        |
+| Codebase alignment   | High           | Low                         |
+| Custom cell content  | Natural (slot) | Requires formatter callback |
+| Rendering model      | Stencil JSX    | Imperative DOM              |
 
 ---
 
 ### 3. Virtualization options
 
-| Library | ~bundle (min+gz) | Variable-height rows | Known height required | Stencil compatible | Notes |
-|---|---|---|---|---|---|
-| `@tanstack/virtual-core` | ~4 kB | Yes (`measureElement`) | No | Full | Proven in Aqua DS; framework-agnostic; independent of `table-core` |
-| `content-visibility: auto` | 0 kB | Yes (browser) | No | Full | Paint optimization only — does NOT reduce DOM node count |
-| `virtua` | ~3–5 kB | Yes | No | Partial (bare core) | No Stencil/Aqua precedent; pre-1.0 API stability |
-| `@lit-labs/virtualizer` | ~15–20 kB | Yes | No | Lit-coupled | Public API is a `LitElement`; internal core is undocumented |
+| Library                    | ~bundle (min+gz) | Variable-height rows   | Known height required | Stencil compatible  | Notes                                                              |
+| -------------------------- | ---------------- | ---------------------- | --------------------- | ------------------- | ------------------------------------------------------------------ |
+| `@tanstack/virtual-core`   | ~4 kB            | Yes (`measureElement`) | No                    | Full                | Proven in Aqua DS; framework-agnostic; independent of `table-core` |
+| `content-visibility: auto` | 0 kB             | Yes (browser)          | No                    | Full                | Paint optimization only — does NOT reduce DOM node count           |
+| `virtua`                   | ~3–5 kB          | Yes                    | No                    | Partial (bare core) | No Stencil/Aqua precedent; pre-1.0 API stability                   |
+| `@lit-labs/virtualizer`    | ~15–20 kB        | Yes                    | No                    | Lit-coupled         | Public API is a `LitElement`; internal core is undocumented        |
 
 **Aqua DS Stencil integration pattern for `@tanstack/virtual-core`:**
+
 - `@State() virtualizer: Virtualizer<Element, Element>` — state change triggers Stencil re-render
 - `observeElementOffset` + `observeElementRect` callbacks wired to the scroll container
 - `virtualizer.getVirtualItems()` drives the render window; `virtualizer.getTotalSize()` sets the container height
@@ -123,6 +124,7 @@ The auto-`colspan`/`rowspan` value is real but only materialises for column grou
 ### Virtualization: skip v1, adopt `@tanstack/virtual-core` for v2
 
 V1 should rely on server-side pagination to bound row count. When virtualization is needed, `@tanstack/virtual-core` is the only justified choice:
+
 - Framework-agnostic, works with Stencil's `forceUpdate()` pattern
 - Aqua DS has a proven Stencil integration (same design system family)
 - Handles variable-height rows via `measureElement`
@@ -279,30 +281,40 @@ Aqua DS defines the formatter on the column's `meta` property (from TanStack's `
 
 ```typescript
 export interface AqColumnProp {
-  formatter?: (value: { value: unknown; data: RowData }) => string | HTMLElement;
+  formatter?: (value: {
+    value: unknown;
+    data: RowData;
+  }) => string | HTMLElement;
 }
 ```
 
 Usage in Aqua DS:
+
 ```typescript
-columns = [{
-  accessorKey: 'status',
-  header: 'Status',
-  meta: {
-    formatter: ({ value, data }) => {
-      const tag = document.createElement('aq-tag');
-      tag.setAttribute('label', String(value));
-      return tag;
-    }
-  }
-}];
+columns = [
+  {
+    accessorKey: "status",
+    header: "Status",
+    meta: {
+      formatter: ({ value, data }) => {
+        const tag = document.createElement("aq-tag");
+        tag.setAttribute("label", String(value));
+        return tag;
+      },
+    },
+  },
+];
 ```
 
 Cell rendering in `aq-table-core.tsx` (line ~13986):
+
 ```typescript
 if (columnDef.meta?.formatter) {
   const original = cell.getContext().row.original;
-  content = columnDef.meta.formatter({ value: cell.getValue(), data: original });
+  content = columnDef.meta.formatter({
+    value: cell.getValue(),
+    data: original,
+  });
 }
 if (content instanceof HTMLElement) {
   td.appendChild(content);
@@ -321,12 +333,14 @@ if (content instanceof HTMLElement) {
 **Use C2 (formatter callback) for v1; defer C1 to v2.**
 
 Rationale:
+
 - The `<template slot="cell">` cloning approach requires imperative DOM manipulation mixed into a JSX render — the same anti-pattern that makes TanStack integration undesirable.
 - C2 is simpler to implement (no template cloning, no `ref` wiring), consistent with how Aqua DS works, and covers all real use cases.
 - C1 can be added in v2 as an enhancement without changing the column API, since `<bds-table-column>` already uses the light DOM pattern.
 - Both can coexist: if the column has a formatter, use it; if it has a `<template slot="cell">`, clone it. V1 implements only C2.
 
 The formatter signature for `bds-table` should accept both a primitive return value and an `HTMLElement`, matching Aqua DS:
+
 ```typescript
 formatter?: (params: { value: unknown; row: RowData }) => string | HTMLElement;
 ```
@@ -346,12 +360,14 @@ There is no example of a `Set<string>` selection model (D1 pure internal) in the
 **Model D1 (internal `@State` tracking) is recommended for v1.**
 
 Rationale:
+
 - Tables embedded in data management pages are the primary use case. In these contexts, the page component calls `table.getSelectedRows()` when the user clicks "Delete selected" or "Export". The selection state does not need to be externally controlled — it needs to be readable on demand.
 - An external `selectedRows: string[]` prop (D2) creates a prop → state → event loop that requires the implementor to wire up `bdsSelect` → update `selectedRows` → pass back to the table. This is the React controlled-component pattern and is natural in React but unnatural in HTML-first web component usage.
 - Aqua DS uses internal selection state (`@State() selectionsData`) with `getSelectedRows()` method exposure plus `selectionChangeTable` event emission — exactly Model D1.
 - D2 can be added later as a `selectedRows` prop with a `@Watch` that syncs the internal `Set`, without breaking D1 consumers.
 
 **Recommended API surface for v1:**
+
 ```typescript
 @State() private selectedRowIds: Set<string> = new Set();
 
@@ -489,7 +505,7 @@ th[data-pinned] {
 
   // Divider on the right edge of the last pinned header
   &[data-pin-last]::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
@@ -507,7 +523,7 @@ td[data-pinned] {
   background-color: var(--boreal-color-surface-default);
 
   &[data-pin-last]::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
@@ -526,19 +542,100 @@ The `left` value is set via `componentDidRender` (see Option E2 above), not in S
 
 ---
 
+### F. `bds-pagination` integration — client-side and server-side assessment
+
+`bds-pagination` (branch `EOA-10580_pagination`, close to merge) is the concrete component that fills `slot="paginator"`. This section documents the integration contract, confirmed behaviors, and known gaps for both usage modes.
+
+#### Client-side integration (v1)
+
+The two components are fully decoupled siblings — `bds-table` never directly talks to `bds-pagination`. The parent page owns the wiring:
+
+```html
+<bds-table id="my-table" row-key="id">
+  <bds-table-column col-key="name" label="Name" sortable></bds-table-column>
+  <bds-pagination
+    slot="paginator"
+    total-items="50"
+    items-per-page="10"
+    current-page="1"
+  ></bds-pagination>
+</bds-table>
+
+<script>
+  const allRows = Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    name: `Row ${i + 1}`,
+  }));
+  const table = document.querySelector("#my-table");
+  const pagination = table.querySelector("bds-pagination");
+
+  function renderPage(page, pageSize) {
+    table.data = allRows.slice((page - 1) * pageSize, page * pageSize);
+  }
+
+  renderPage(1, 10);
+
+  pagination.addEventListener("bdsPageChange", (e) => {
+    const { currentPage, itemsPerPage } = e.detail;
+    renderPage(currentPage, itemsPerPage);
+  });
+</script>
+```
+
+`bds-table`'s `@Watch('data')` (Task 6) resets row selection whenever `data` is replaced — this means page navigation automatically clears checked rows without any extra wiring.
+
+#### Known issues in `bds-pagination` to flag before v2 server-side work
+
+**Bug — `@Watch('totalItems')` resets to prop value, not internal state (line 143 in `bds-pagination.tsx`):**
+
+```typescript
+@Watch('totalItems')
+onTotalItemsChange(newValue: number) {
+  this.internalTotalItems = this.normalizeTotalItems(newValue);
+  this.internalItemsPerPage = this.normalizeItemsPerPage(this.itemsPerPage);
+  this.internalCurrentPage = this.normalizePage(this.currentPage); // ← uses prop, not internalCurrentPage
+}
+```
+
+If `totalItems` is updated (e.g., after server-side filtering returns a new count) while `internalCurrentPage` has already advanced beyond `currentPage` prop, the displayed page snaps back. Fix: `this.normalizePage(this.internalCurrentPage)`. This must be resolved before V2-9 can be implemented.
+
+**Bug — empty state renders literal "1" (line 486):**
+
+```tsx
+{
+  isEmpty ? (
+    <bds-typography variant="helper">1</bds-typography>
+  ) : (
+    this.getPaginationControls()
+  );
+}
+```
+
+When `totalPages === 0` (i.e., `totalItems = 0`), a naked `1` renders in helper typography. Should render nothing or a disabled control set.
+
+**Gap — no `loading` prop:** Navigation buttons stay active during an in-flight server request. Server-side usage requires a `loading: boolean` prop that disables `<bds-button>` elements.
+
+**Gap — no error rollback:** The component optimistically updates `internalCurrentPage` immediately on navigation (before the server responds). If the fetch fails and the parent does not reset `current-page` prop, the display stays on the failed page with no way to retry the same page click (the `handlePage` guard `if (pageNumber === this.internalCurrentPage) return` prevents it).
+
+#### Server-side integration (v2 — see V2-9)
+
+Server-side tables differ fundamentally: `bds-table` receives only the current page's rows; `totalItems` comes from the server's count query; sort and filter events emit to the parent for re-fetching rather than operating in-browser. The component API gaps above must be resolved before this mode is usable. See V2-9.
+
+---
+
 ## Resolved Decisions
 
-| Question | Decision | Rationale |
-|---|---|---|
-| Column grouping a v1 requirement? | **No — v2** | Deferred; hand-roll with `bds-table-column-group` when needed |
-| `rowKey` prop name | **`row-key`** (attr) / `rowKey` (TS) | Consistent with Boreal DS kebab-case attribute convention |
-| Native elements vs. div + ARIA | **Native `<table>/<thead>/<tbody>/<tr>/<th>/<td>`** | Free a11y semantics; `th[scope="col"]` works out of the box |
-| Column API | **Option A — light DOM composition** | Matches all existing Boreal DS composite components |
-| TanStack table-core | **Not adopted in v1** | No benefit at v1 scope; imperative DOM rendering conflicts with Stencil JSX pattern |
-| Virtualization | **Deferred to v2 — `@tanstack/virtual-core`** | V1 relies on pagination; proven Stencil integration in Aqua DS |
-| Custom cell content | **Formatter callback (C2) for v1** | Simpler than template cloning; C1 (slot) addable in v2 without breaking API |
-| Row selection model | **Internal `@State() selectedRowIds: Set<string>` + method (D1)** | Matches Aqua DS; external controlled prop addable later via `@Watch` |
-| Column pinning CSS | **Inline `style.left` in `componentDidRender` (Option E2)** | No ResizeObserver needed in v1; sufficient without column resizing |
+| Question                          | Decision                                                          | Rationale                                                                           |
+| --------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Column grouping a v1 requirement? | **No — v2**                                                       | Deferred; hand-roll with `bds-table-column-group` when needed                       |
+| `rowKey` prop name                | **`row-key`** (attr) / `rowKey` (TS)                              | Consistent with Boreal DS kebab-case attribute convention                           |
+| Native elements vs. div + ARIA    | **Native `<table>/<thead>/<tbody>/<tr>/<th>/<td>`**               | Free a11y semantics; `th[scope="col"]` works out of the box                         |
+| Column API                        | **Option A — light DOM composition**                              | Matches all existing Boreal DS composite components                                 |
+| TanStack table-core               | **Not adopted in v1**                                             | No benefit at v1 scope; imperative DOM rendering conflicts with Stencil JSX pattern |
+| Virtualization                    | **Deferred to v2 — `@tanstack/virtual-core`**                     | V1 relies on pagination; proven Stencil integration in Aqua DS                      |
+| Custom cell content               | **Formatter callback (C2) for v1**                                | Simpler than template cloning; C1 (slot) addable in v2 without breaking API         |
+| Row selection model               | **Internal `@State() selectedRowIds: Set<string>` + method (D1)** | Matches Aqua DS; external controlled prop addable later via `@Watch`                |
+| Column pinning CSS                | **Inline `style.left` in `componentDidRender` (Option E2)**       | No ResizeObserver needed in v1; sufficient without column resizing                  |
 
 ---
 
@@ -551,6 +648,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** New configuration-only Stencil element `bds-table-column-group`. No TanStack needed.
 
 **Implementation notes:**
+
 - `bds-table-column-group` carries a single `label: string` prop and renders `<Host style={{ display: 'none' }} />`
 - `bds-table` switches from `querySelectorAll('bds-table-column')` (flat) to walking direct children: `Array.from(this.el.children)` to detect both `bds-table-column` and `bds-table-column-group`
 - Replaces `slotchange` listener with `MutationObserver({ childList: true, subtree: true })` — needed because `slotchange` is blind to mutations inside `bds-table-column-group` children
@@ -574,6 +672,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** Add `@tanstack/virtual-core` (~4 kB gz). Independent of column API — no architecture change required.
 
 **Implementation notes:**
+
 - Add `@State() private virtualizer: Virtualizer<Element, Element>` — assignment triggers Stencil re-render
 - `componentDidLoad` initialises the virtualizer with:
   - `count: this.data.length`
@@ -596,6 +695,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** Native HTML5 Drag and Drop API. No library needed.
 
 **Implementation notes:**
+
 - Add `@State() private columnOrder: string[]` — initialized from `this.columns.map(c => c.key)` in `componentDidLoad`
 - `<th>` elements for reorderable columns get `draggable="true"`, `onDragStart`, `onDragOver`, `onDrop` handlers
 - `onDrop` swaps positions in `columnOrder`; re-render picks up the new order
@@ -615,6 +715,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **⚠️ Blocking dependency:** `bds-dropdown` does not exist in Boreal DS yet. It must be designed and implemented before V2-4 can begin. Add it as a dependency ticket when scoping the v2 sprint.
 
 **Implementation notes:**
+
 - Add `@State() private hiddenColumns: Set<string> = new Set()` — columns in this set are excluded from both `<thead>` and `<tbody>` render
 - The layout button opens a `<bds-dropdown>` containing a checklist of column labels with `<bds-checkbox>` per column
 - Each checklist item toggles a column key in `hiddenColumns`
@@ -622,6 +723,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 - `bdsTableLayout` event (emitted in v1) is retired in favour of this internal implementation, or kept as a secondary escape hatch for implementors who want to handle the dropdown themselves
 
 **Prerequisites:**
+
 - `bds-dropdown` component (does not exist — must be built first)
 
 **Complexity:** Medium (~80 lines for state + dropdown wiring, excluding `bds-dropdown` build cost)
@@ -633,6 +735,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** Tree-shaped `RowData` with a `children?: RowData[]` field.
 
 **Implementation notes:**
+
 - Add `@State() private expandedRowIds: Set<string> = new Set()`
 - Rows with `children` render an expand/collapse toggle `<button>` as their first cell content
 - When expanded, child rows render immediately after the parent `<tr>` with an indent class
@@ -648,6 +751,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** Drag-resize handle on `<th>` right edge. Switches pin offset calculation from `componentDidRender` (static) to `ResizeObserver` (dynamic).
 
 **Implementation notes:**
+
 - Add `@State() private columnWidths: Record<string, number> = {}` — stores explicit widths per column key
 - A `<div class="bds-table__resize-handle">` is appended inside each resizable `<th>`; `onPointerDown` starts a resize drag via `pointermove`/`pointerup`
 - On drag end, updates `columnWidths[col.key]` and sets `th.style.width`
@@ -663,6 +767,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 **Approach:** Additive `@Prop` layered on top of the v1 internal model.
 
 **Implementation notes:**
+
 - Add `@Prop() readonly selectedRows: string[] = []` — external controlled prop
 - `@Watch('selectedRows')` syncs: `this.selectedRowIds = new Set(this.selectedRows)`
 - No breaking change to D1 consumers — the internal `@State` is still the source of truth; the prop is an initialiser/controller
@@ -671,11 +776,66 @@ Features deferred from v1, with enough implementation context to plan the next s
 
 ---
 
+### V2-9 — Server-side mode
+
+**Approach:** A `server-side` boolean prop that switches `bds-table` from client-owned state to an event-driven model where the parent owns all data operations.
+
+**What changes in `bds-table` when `server-side=true`:**
+
+- Internal sort state (`@State() sortKey / sortDirection`) is disabled — clicking a sortable header emits `bdsSort` but does NOT reorder `this.data`
+- `@Watch('data')` clears selection as normal — the parent sets a new page slice, triggering a clean render
+- A `loading: boolean` prop (new) shows a skeleton overlay or disables interaction while the parent fetches; implementation: `pointer-events: none` + skeleton rows or an overlay `<div>` with reduced opacity
+
+**What changes in `bds-pagination` before V2-9 can ship (prerequisite fixes):**
+
+- Fix `@Watch('totalItems')` to use `this.internalCurrentPage` instead of `this.currentPage` prop (Extended Finding F, Bug 1) — required for server-side filtering where `totalItems` changes per filter result
+- Fix empty state branch (Finding F, Bug 2) — renders "1" when `totalItems = 0`
+- Add `loading: boolean` prop — disables navigation buttons during in-flight requests
+
+**Integration contract for server-side:**
+
+```typescript
+// Parent listens to both bds-pagination and bds-table sort/filter events
+pagination.addEventListener("bdsPageChange", async ({ detail }) => {
+  table.loading = true;
+  const { rows, total } = await fetchPage({
+    page: detail.currentPage,
+    pageSize: detail.itemsPerPage,
+    sort: currentSort,
+    filter: currentFilter,
+  });
+  table.data = rows;
+  pagination.totalItems = total;
+  table.loading = false;
+});
+
+table.addEventListener("bdsSort", async ({ detail }) => {
+  currentSort = detail;
+  // re-fetch page 1 with new sort
+});
+```
+
+**The async pipeline (async loading → server sorting → server filtering → virtual scroll):**
+
+- Async loading + server sorting: covered by V2-9
+- Server filtering: `bdsFilter` event (already in v1 toolbar) becomes meaningful — parent opens a filter panel, user confirms, parent re-fetches and updates `totalItems`; this works with V2-9 without additional `bds-table` changes
+- Virtual scroll + server-side = infinite scroll: architecturally different from V2-2 (windowed fixed dataset vs. streaming fetch-as-you-scroll); deserves its own spike; do NOT combine with V2-2
+
+**Prerequisites:**
+
+- `bds-pagination` bugs fixed (see above)
+- V2-2 (virtualization) must remain independent — do not combine with server-side mode
+
+**Complexity:** Medium (~60 lines in `bds-table` + prerequisite fixes in `bds-pagination`)
+
+---
+
 ### V2-8 — Custom cell content via slot (C1)
 
 **Approach:** `<template slot="cell">` on `<bds-table-column>`, cloned per row with dataset injection.
 
 **Implementation notes:**
+
 - See Extended Findings Section C for the full implementation pattern
 - Can coexist with `formatter` (C2): if `formatter` is present it takes precedence; if a `<template slot="cell">` is present and no `formatter`, the template is cloned and row data is injected via `data-*` attributes on the root element of the clone
 - Requires imperative `DocumentFragment` cloning inside `componentDidRender` — mixed JSX/imperative pattern accepted at this stage since it is additive
