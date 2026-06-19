@@ -20,28 +20,28 @@ status: in progress
 
 Verified from node [55:39631](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY29/-BOR--DSG-COMPONENTS-%E2%86%92-DATA-VISUALIZATION?node-id=55-39631). Use these exact Sass variables (defined in `_theme.scss`) — never invent token names.
 
-| Role | Sass variable | CSS custom property |
-|---|---|---|
-| White / pinned cell bg | `$boreal-ui-inverse` | `var(--boreal-ui-inverse)` |
-| Empty state bg / row hover | `$boreal-ui-default-lighter` | `var(--boreal-ui-default-lighter)` |
-| Row divider / pin shadow | `$boreal-stroke-default-light` | `var(--boreal-stroke-default-light)` |
-| `<th>` label text | `$boreal-text-default-light` | `var(--boreal-text-default-light)` |
-| `<td>` cell text | `$boreal-text-default` | `var(--boreal-text-default)` |
-| Sort icon inactive | `$boreal-icon-default-light` | `var(--boreal-icon-default-light)` |
-| Sort icon active | `$boreal-icon-default-ink` | `var(--boreal-icon-default-ink)` |
-| 2px spacing | `$boreal-spacing-3xs` | `var(--boreal-spacing-3xs)` |
-| 4px spacing | `$boreal-spacing-2xs` | `var(--boreal-spacing-2xs)` |
-| 8px spacing | `$boreal-spacing-xs` | `var(--boreal-spacing-xs)` |
-| 12px spacing | `$boreal-spacing-s` | `var(--boreal-spacing-s)` |
-| 16px spacing | `$boreal-spacing-m` | `var(--boreal-spacing-m)` |
-| 24px spacing | `$boreal-spacing-l` | `var(--boreal-spacing-l)` |
-| `<th>` font-size (12px) | `$boreal-typography-font-size-xs` | `var(--boreal-typography-font-size-xs)` |
-| `<th>` line-height (16px) | `$boreal-typography-line-height-xs` | `var(--boreal-typography-line-height-xs)` |
-| `<td>` font-size (14px) | `$boreal-typography-font-size-sm` | `var(--boreal-typography-font-size-sm)` |
-| `<td>` line-height (20px) | `$boreal-typography-line-height-sm` | `var(--boreal-typography-line-height-sm)` |
-| Semibold weight | `$boreal-typography-font-weight-semibold` | `var(--boreal-typography-font-weight-semibold)` |
-| Regular weight | `$boreal-typography-font-weight-regular` | `var(--boreal-typography-font-weight-regular)` |
-| Container radius (4px) | `$boreal-radius-xs` | `var(--boreal-radius-xs)` |
+| Role                       | Sass variable                             | CSS custom property                             |
+| -------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| White / pinned cell bg     | `$boreal-ui-inverse`                      | `var(--boreal-ui-inverse)`                      |
+| Empty state bg / row hover | `$boreal-ui-default-lighter`              | `var(--boreal-ui-default-lighter)`              |
+| Row divider / pin shadow   | `$boreal-stroke-default-light`            | `var(--boreal-stroke-default-light)`            |
+| `<th>` label text          | `$boreal-text-default-light`              | `var(--boreal-text-default-light)`              |
+| `<td>` cell text           | `$boreal-text-default`                    | `var(--boreal-text-default)`                    |
+| Sort icon inactive         | `$boreal-icon-default-light`              | `var(--boreal-icon-default-light)`              |
+| Sort icon active           | `$boreal-icon-default-ink`                | `var(--boreal-icon-default-ink)`                |
+| 2px spacing                | `$boreal-spacing-3xs`                     | `var(--boreal-spacing-3xs)`                     |
+| 4px spacing                | `$boreal-spacing-2xs`                     | `var(--boreal-spacing-2xs)`                     |
+| 8px spacing                | `$boreal-spacing-xs`                      | `var(--boreal-spacing-xs)`                      |
+| 12px spacing               | `$boreal-spacing-s`                       | `var(--boreal-spacing-s)`                       |
+| 16px spacing               | `$boreal-spacing-m`                       | `var(--boreal-spacing-m)`                       |
+| 24px spacing               | `$boreal-spacing-l`                       | `var(--boreal-spacing-l)`                       |
+| `<th>` font-size (12px)    | `$boreal-typography-font-size-xs`         | `var(--boreal-typography-font-size-xs)`         |
+| `<th>` line-height (16px)  | `$boreal-typography-line-height-xs`       | `var(--boreal-typography-line-height-xs)`       |
+| `<td>` font-size (14px)    | `$boreal-typography-font-size-sm`         | `var(--boreal-typography-font-size-sm)`         |
+| `<td>` line-height (20px)  | `$boreal-typography-line-height-sm`       | `var(--boreal-typography-line-height-sm)`       |
+| Semibold weight            | `$boreal-typography-font-weight-semibold` | `var(--boreal-typography-font-weight-semibold)` |
+| Regular weight             | `$boreal-typography-font-weight-regular`  | `var(--boreal-typography-font-weight-regular)`  |
+| Container radius (4px)     | `$boreal-radius-xs`                       | `var(--boreal-radius-xs)`                       |
 
 **Research:** `ai-work/research/2026-06-16-bds-table-column-api-spike.md`
 
@@ -49,38 +49,38 @@ Verified from node [55:39631](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY2
 
 ## Files to create / modify
 
-| File | Notes |
-|---|---|
-| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/bds-table-column.tsx` | New — configuration-only Stencil component |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/types/ITableColumn.ts` | New — column prop interface |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/__test__/bds-table-column.basics.spec.ts` | New — unit tests |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` | New — organism component |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` | New — scoped styles with container queries |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/types/ITable.ts` | New — table prop/event/method interface |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/types/enum.ts` | New — `SORT_DIRECTION` enum |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/utils/bds-table-utils.ts` | New — sort comparator, column reader helpers |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.basics.spec.ts` | New — render and column reading tests |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.sort.spec.ts` | New — sorting behaviour tests |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.selection.spec.ts` | New — row selection tests |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.toolbar.spec.ts` | New — toolbar visibility and event tests |
-| `packages/boreal-web-components/src/index.html` | Modify — add playground scenarios |
-| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` | New — Storybook story |
-| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` | New — MDX documentation |
+| File                                                                                                                         | Notes                                        |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/bds-table-column.tsx`                     | New — configuration-only Stencil component   |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/types/ITableColumn.ts`                    | New — column prop interface                  |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table-column/__test__/bds-table-column.basics.spec.ts` | New — unit tests                             |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx`                                   | New — organism component                     |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss`                                  | New — scoped styles with container queries   |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/types/ITable.ts`                                 | New — table prop/event/method interface      |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/types/enum.ts`                                   | New — `SORT_DIRECTION` enum                  |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/utils/bds-table-utils.ts`                        | New — sort comparator, column reader helpers |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.basics.spec.ts`               | New — render and column reading tests        |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.sort.spec.ts`                 | New — sorting behaviour tests                |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.selection.spec.ts`            | New — row selection tests                    |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.toolbar.spec.ts`              | New — toolbar visibility and event tests     |
+| `packages/boreal-web-components/src/index.html`                                                                              | Modify — add playground scenarios            |
+| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts`                                             | New — Storybook story                        |
+| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx`                                                    | New — MDX documentation                      |
 
 ---
 
 ## Utility Discovery Summary
 
-| Feature area | Search location | Found | Reuse decision |
-|---|---|---|---|
-| Unique ID generation | `@/utils/helpers/common/BaseAttributes.tsx` | `createId(prefix)` | Reuse — checkbox input IDs |
-| Prop validation | `@/utils/helpers/validateProps.ts` | `validatePropValue()` | Reuse — validate `sortDirection` enum |
-| ARIA attribute inheritance | `@/utils/a11y` | `inheritAriaAttributes()` | Reuse — pass through `aria-label`, `aria-describedby` |
-| Keyboard interaction | `@/utils/a11y/keyboard/KeyboardController.ts` | `KeyboardController` + `KEYBOARD` | Reuse — Enter/Space on sort headers |
-| Class map type | `@/types/stylesMap.ts` | `StyleModifiers` | Reuse — class maps in render |
-| Sort state machine | `@/utils/**` | Not found | Hand-roll — `sortKey` + `sortDirection` @State + comparator in utils |
-| Row selection model | `@/utils/**` | Not found | Hand-roll — `selectedRowIds: Set<string>` @State |
-| Sticky offset calculation | `@/utils/**` | Not found | Hand-roll — `componentDidRender` inline `style.left` |
+| Feature area               | Search location                               | Found                             | Reuse decision                                                       |
+| -------------------------- | --------------------------------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| Unique ID generation       | `@/utils/helpers/common/BaseAttributes.tsx`   | `createId(prefix)`                | Reuse — checkbox input IDs                                           |
+| Prop validation            | `@/utils/helpers/validateProps.ts`            | `validatePropValue()`             | Reuse — validate `sortDirection` enum                                |
+| ARIA attribute inheritance | `@/utils/a11y`                                | `inheritAriaAttributes()`         | Reuse — pass through `aria-label`, `aria-describedby`                |
+| Keyboard interaction       | `@/utils/a11y/keyboard/KeyboardController.ts` | `KeyboardController` + `KEYBOARD` | Reuse — Enter/Space on sort headers                                  |
+| Class map type             | `@/types/stylesMap.ts`                        | `StyleModifiers`                  | Reuse — class maps in render                                         |
+| Sort state machine         | `@/utils/**`                                  | Not found                         | Hand-roll — `sortKey` + `sortDirection` @State + comparator in utils |
+| Row selection model        | `@/utils/**`                                  | Not found                         | Hand-roll — `selectedRowIds: Set<string>` @State                     |
+| Sticky offset calculation  | `@/utils/**`                                  | Not found                         | Hand-roll — `componentDidRender` inline `style.left`                 |
 
 ---
 
@@ -89,6 +89,7 @@ Verified from node [55:39631](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY2
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table-column/types/ITableColumn.ts` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/types/ITable.ts` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/types/enum.ts` (create)
@@ -108,6 +109,7 @@ Verified from node [55:39631](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY2
 **Manual test _(waiveable)_:** TypeScript compilation only — `pnpm tsc --noEmit` in `packages/boreal-web-components` passes with no errors.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add type interfaces for bds-table and bds-table-column
 ```
@@ -119,6 +121,7 @@ feat(web-components): EOA-10576 add type interfaces for bds-table and bds-table-
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table-column/bds-table-column.tsx` (create)
 
 **Acceptance criteria:**
@@ -138,13 +141,16 @@ feat(web-components): EOA-10576 add type interfaces for bds-table and bds-table-
 **Manual test _(waiveable)_:**
 
 Playground scenarios in `packages/boreal-web-components/src/index.html`:
+
 - Scenario 1: Place `<bds-table-column col-key="name" label="Name" sortable pinnable>` in the page and confirm it produces no visible output
 
 Validation:
+
 - [ ] Given a `<bds-table-column>` in the DOM, when the page loads, then no visible element is rendered. Pass: element has `display: none`.
 - [ ] Given `col-key="name"` attribute, when `el.getAttribute('col-key')` is called from JS, then `"name"` is returned. Pass: reflected prop is readable as attribute.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add bds-table-column configuration atom
 ```
@@ -156,6 +162,7 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/utils/bds-table-utils.ts` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (create — minimal, expanded in later tasks)
@@ -205,7 +212,9 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
 - **Column header uses `bds-typography variant="label"`** — replaces the bare `{col.label}` text; `tooltipText={col.info || undefined}` wires the existing `info` prop into the built-in info icon; color overridden via `th .bds-typography--label { color: $boreal-text-default-light }` in SCSS (default variant color is `$boreal-text-default-darker`)
 - **`__th-content`** flex container inside each `<th>`: `display: flex; align-items: center; justify-content: space-between` — left group holds icon + typography; right group is empty now (Task 5 adds sort icon, Task 7 adds pin icon)
 - **`__th-label`** inner flex group: `display: flex; align-items: center; gap: $boreal-spacing-2xs` — icon + bds-typography side-by-side
-- SCSS `<th>`: keeps `text-align: left; padding: $boreal-spacing-xs $boreal-spacing-m` — font/color removed since `bds-typography` handles them (matches Figma `supporting/label/xs`)
+- SCSS `<th>`: `height: var(--bds-table-header-height, 44px)` — exposed as a CSS custom property (same pattern as `--bds-table-empty-state-height`); 44px matches col-table and Figma spec; `text-align: left`; padding preserved from manual adjustments; font tokens kept as fallback
+- SCSS `thead`: `position: sticky; top: 0; z-index: 4; background-color: $boreal-ui-base-lighter` — always-on sticky (no prop, per col-table pattern); `base-lighter` background prevents scrolling body rows from showing through
+- SCSS `__th-label`: `gap: $boreal-spacing-3xs` (corrected from `2xs` per Figma Content gap spec); `@include bds-icon($boreal-icons-s, $boreal-typography-font-size-xs)` constrains icon to 12×12px via the standard mixin
 - SCSS `<td>`: `font-size: $boreal-typography-font-size-sm; font-weight: $boreal-typography-font-weight-regular; line-height: $boreal-typography-line-height-sm; color: $boreal-text-default` (matches Figma `body/sm`)
 - SCSS row dividers: `tbody tr td { border-bottom: 1px solid $boreal-stroke-default-light; }` — visible separator between every data row; applies to all rows including the last (matches Figma design)
 - SCSS header bottom border: `thead th { border-bottom: 1px solid $boreal-stroke-default-light; }` — separates the header row from the first data row
@@ -216,12 +225,14 @@ feat(web-components): EOA-10576 add bds-table-column configuration atom
 **Manual test _(waiveable)_:**
 
 Playground scenarios in `packages/boreal-web-components/src/index.html`:
+
 - Scenario 1: `<bds-table>` with three `<bds-table-column>` children and a `data` prop set via JS — three column headers and data rows render
 - Scenario 2: Column with a `formatter` returning a `<bds-tag>` element — tag renders inside the cell
 - Scenario 3: Column with a `formatter` returning a plain string — string renders as text
 - Scenario (header): Column with `icon="bds-icon-emoji-circle"` and `info="The product category"` — icon appears left of label; ⓘ icon appears right of label with tooltip on hover
 
 Validation (run `pnpm dev:components`):
+
 - [ ] Given `data=[{id:1,name:'Alice'}]` and a `<bds-table-column col-key="name" label="Name">`, when the page loads, then one header "Name" and one data row "Alice" appear. Pass: correct text in DOM.
 - [ ] Given a formatter returning `document.createElement('strong')` with text, when rendered, then a `<strong>` element is inside the `<td>`. Pass: element visible in DevTools.
 - [ ] Given `data=[]`, when the page loads, then `<tbody>` is empty. Pass: no `<tr>` elements in `<tbody>`.
@@ -231,6 +242,7 @@ Validation (run `pnpm dev:components`):
 - [ ] Given `info="The product category"` on a column, when the page loads, then hovering the ⓘ icon shows the tooltip text. Pass: tooltip visible on hover.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 scaffold bds-table with data and column rendering
 ```
@@ -242,6 +254,7 @@ feat(web-components): EOA-10576 scaffold bds-table with data and column renderin
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
@@ -262,19 +275,55 @@ feat(web-components): EOA-10576 scaffold bds-table with data and column renderin
 **Manual test _(waiveable)_:**
 
 Playground scenarios (all three added to `packages/boreal-web-components/src/index.html`):
+
 - Scenario 1: `<bds-table>` with `data=[]` and no `slot="empty-state"` — default "No data to display" appears as a `<span>`
 - Scenario 2: Same with `<p slot="empty-state">No results found. Try adjusting your filters.</p>` — custom content replaces default; no `empty-message=""` needed
 - Scenario 3: `<bds-table>` with data — no empty state row visible
 
 Validation:
+
 - [ ] Given `data=[]`, when the page loads, then "No data to display" text is centred in the table. Pass: text visible as `<span class="bds-table__empty-text">`, no data rows present.
 - [ ] Given `data=[]` and a filled `slot="empty-state"`, then custom slot content appears instead of the default. Pass: custom text visible, no `<span>` in DOM.
 - [ ] Given `data=[{id:1}]`, then no empty state row is rendered. Pass: `<tbody>` contains one data `<tr>`.
 - [ ] Given `emptyMessage="No hay resultados"`, then the custom string appears in the span. Pass: localised text visible.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add empty state with emptyMessage prop and slot override
+```
+
+---
+
+## Task 4b: Loading state — prop stub ⏳ pending design specs
+
+**Executor:** @frontend-subagent
+
+**Files:**
+
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/types/ITable.ts` (modify)
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
+
+**Context:** The UX/UI team is preparing the visual design for the loading state. This task locks in the prop API so consumers can bind `loading` without a future breaking rename. No rendering logic, skeleton markup, or SCSS is added here — those land once specs are delivered.
+
+**Acceptance criteria:**
+
+- Add to `ITable` interface:
+  - `loading: boolean` — when `true` the table is in a loading state
+  - `loadingRows: number` — number of skeleton rows to pre-allocate (default `5`)
+- Add to `BdsTable`:
+  - `@Prop() readonly loading: boolean = false`
+  - `@Prop() readonly loadingRows: number = 5`
+  - `@Watch('loading') onLoadingChange(): void {}` — stub; will trigger skeleton re-render in the full implementation
+- No render branching, no SCSS, no playground scenarios — implementation deferred to follow-up task once design specs land
+- No `any` types; JSDoc on both new props
+
+**Manual test _(waiveable — no visual output)_:** `rtk pnpm tsc --noEmit` in `packages/boreal-web-components` passes with no new errors.
+
+**Commit:**
+
+```
+feat(web-components): EOA-10576 add loading prop stub — visual implementation pending design specs
 ```
 
 ---
@@ -284,6 +333,7 @@ feat(web-components): EOA-10576 add empty state with emptyMessage prop and slot 
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/utils/bds-table-utils.ts` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
@@ -297,11 +347,11 @@ feat(web-components): EOA-10576 add empty state with emptyMessage prop and slot 
 - `compareValues` handles `string` (locale-aware), `number`, and `Date` values; falls back to string coercion for other types
 - Sort is single-column only — changing the sort key resets direction to `ASC`; cycling on the same key goes `ASC → DESC → NONE`
 - `render()` passes `sortedData` to the `<tbody>` row loop (replaces `this.data`)
-- Each `<th>` for a `sortable` column renders: the label text, a sort icon (`bds-icon-sort`, `bds-icon-sort-asc`, `bds-icon-sort-desc` class depending on state), and an `onClick` handler calling `handleSort(col.colKey)`
+- Each `<th>` for a `sortable` column renders: the label text, a sort icon in the right group of `__th-content` using one of three icon classes depending on state — `bds-icon-chevron-up-down` (NONE), `bds-icon-chevron-up` (ASC), `bds-icon-chevron-down` (DESC) — and an `onClick` handler calling `handleSort(col.colKey)`
 - `handleSort(colKey)` implements the three-state cycle and emits `bdsSort`
 - `KeyboardController` from `@/utils/a11y` is attached in `componentDidLoad` to handle `KEYBOARD.Enter` and `KEYBOARD.Space` on sortable `<th>` elements — calls `handleSort` on trigger
 - `<th>` for sortable columns gets `role="button"` and `tabIndex={0}` to be keyboard focusable
-- SCSS: sort icon classes styled with `$boreal-icon-default-light` in default/inactive state, `$boreal-icon-default-ink` when that column is the active sort column; `cursor: pointer` on sortable headers
+- SCSS: sort icon (`bds-icon-chevron-up-down`, `bds-icon-chevron-up`, `bds-icon-chevron-down`) styled with `$boreal-icon-default-light` when the column is not the active sort column, `$boreal-icon-default-ink` when it is; `cursor: pointer` on sortable headers; icon size `$boreal-icons-s` (12px) via `@include bds-icon($boreal-icons-s, $boreal-typography-font-size-xs)` on the right group span
 - `disconnectedCallback()` calls `this._keyboard.detach()` — follow `bds-button.tsx` pattern
 
 **Utility discovery note:** No shared sort state machine or comparator utility found in `@/utils/`. `compareValues` is implemented in `bds-table-utils.ts` (component-local). If a future shared comparator is added to `@/utils/helpers/`, migrate then.
@@ -309,11 +359,13 @@ feat(web-components): EOA-10576 add empty state with emptyMessage prop and slot 
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: Table with `sortable` column, unsorted data — click header once (ASC), again (DESC), again (NONE)
 - Scenario 2: Click a different column while one is sorted — previous sort resets, new column sorts ASC
 - Scenario 3: Focus a sortable header and press Enter — sort triggers
 
 Validation:
+
 - [ ] Given a sortable column, when clicked once, then rows are sorted ascending and sort icon shows ASC state. Pass: rows reordered, icon updated.
 - [ ] When clicked again, then rows are sorted descending. Pass: rows reversed.
 - [ ] When clicked a third time, then original data order is restored. Pass: rows in original order, icon shows neutral state.
@@ -321,6 +373,7 @@ Validation:
 - [ ] Given focus on a sortable `<th>`, when Enter is pressed, then sort triggers identically to a click. Pass: `bdsSort` event fires in DevTools.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add column sorting with keyboard support
 ```
@@ -332,6 +385,7 @@ feat(web-components): EOA-10576 add column sorting with keyboard support
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
@@ -356,12 +410,14 @@ feat(web-components): EOA-10576 add column sorting with keyboard support
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: `<bds-table selectable>` — checkbox column appears as first column
 - Scenario 2: Check individual rows — selected rows are highlighted; `bdsSelect` fires
 - Scenario 3: Check the header checkbox — all rows selected; check again — all deselected
 - Scenario 4: Change `data` prop — selection clears
 
 Validation:
+
 - [ ] Given `selectable`, when the page loads, then a checkbox column is prepended. Pass: checkboxes visible in first column.
 - [ ] Given an unchecked row, when its checkbox is clicked, then the row highlights and `bdsSelect` fires with the row's ID. Pass: DevTools event + visual highlight.
 - [ ] When all rows are individually checked, then the header checkbox shows checked state. Pass: header checkbox checked.
@@ -369,7 +425,16 @@ Validation:
 - [ ] Given a selection, when `clearSelection()` is called via DevTools console, then all checkboxes uncheck. Pass: no highlighted rows.
 - [ ] When `data` is updated to a new array, then all checkboxes reset to unchecked. Pass: no highlighted rows after update.
 
+**Keyboard behavior:**
+
+- **Tab** — moves focus sequentially through all checkboxes (header → row 1 → row 2 …)
+- **Space** — toggles the focused checkbox (native `<input type="checkbox">` behavior via `bds-checkbox`)
+- **Enter** — not applicable; Enter is standard for `role="button"` only. Checkboxes (`role="checkbox"`) respond to Space exclusively per WAI-ARIA Checkbox Pattern.
+
+**Future enhancement (not in scope):** Shift+Click / Shift+Space range selection — selects all rows between last-clicked and current. Common in data tables but deferred pending UX spec.
+
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add row selection with checkbox column
 ```
@@ -381,11 +446,14 @@ feat(web-components): EOA-10576 add row selection with checkbox column
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
 **Acceptance criteria:**
 
+- Pinnable `<th>` cells render a pin icon (12×12px) in the right group of `__th-content`, alongside the sort icon — two states: `bds-icon-pin` when the column is not yet pinned (inactive), `bds-icon-pin-fill` when the column is pinned (active); clicking toggles the pinned state
+- **Architecture note:** pinned state is stored in `@State() private pinnedColKeys: Set<string>` on `bds-table` (same pattern as `sortKey`/`sortDirection`) — do NOT reflect it back onto `bds-table-column`; table-level state keeps all interactive state co-located and avoids DOM mutation side-effects
 - Columns whose `<bds-table-column>` has `pinnable` (the attribute is present) are rendered with `data-pinned` attribute on their `<th>` and every `<td data-col-key={col.colKey}>` in the body
 - The column that is the rightmost pinned column additionally receives `data-pin-last` attribute, used by CSS for the divider shadow
 - `componentDidRender()` queries `th[data-pinned]` elements in order, computes cumulative `offsetWidth`, and sets `el.style.left = "${offset}px"` on each pinned `<th>` and all matching `<td[data-col-key]>` cells in the same column — follow the pattern from the research spike (Section E, Option E2)
@@ -398,16 +466,19 @@ feat(web-components): EOA-10576 add row selection with checkbox column
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: Table with 8+ columns; first two have `pinnable`; horizontal scroll enabled
 - Scenario 2: Same with `selectable` — confirm checkbox column + two pinned columns all stack correctly
 
 Validation:
+
 - [ ] Given two `pinnable` columns and a scrollable table, when scrolled right, then the two pinned columns remain fixed on the left. Pass: columns visible and stationary during scroll.
 - [ ] Given a pinned column, when its row is hovered, then the pinned cell shows the same hover background as non-pinned cells. Pass: uniform row highlight.
 - [ ] Given the last pinned column, then a vertical divider shadow is visible on its right edge. Pass: `::after` pseudo-element visible.
 - [ ] Given `selectable` + two `pinnable` columns, then all three fixed columns stack with correct z-index (no overlap artefacts). Pass: no z-index bleed visible.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add column pinning with sticky positioning
 ```
@@ -419,6 +490,7 @@ feat(web-components): EOA-10576 add column pinning with sticky positioning
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
@@ -455,6 +527,7 @@ feat(web-components): EOA-10576 add column pinning with sticky positioning
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: `<bds-table subheading="My Table">` — toolbar with title renders
 - Scenario 2: Same with `tooltip-text="More info"` — info icon + tooltip next to title
 - Scenario 3: `<bds-table>` with no `subheading` and no slots — no toolbar rendered
@@ -462,6 +535,7 @@ Playground scenarios:
 - Scenario 5: Click delete button — `bdsDelete` fires with selected IDs; click edit — `bdsEdit` fires
 
 Validation:
+
 - [ ] Given `subheading="My Table"`, when rendered, then "My Table" appears in subheading typography. Pass: text visible.
 - [ ] Given `tooltip-text="Help"`, when the info icon is hovered, then "Help" tooltip appears. Pass: tooltip visible.
 - [ ] Given no `subheading` and no toolbar slots, then no toolbar `<div>` exists in the DOM. Pass: `bds-table__toolbar` absent in DevTools.
@@ -469,6 +543,7 @@ Validation:
 - [ ] When delete button is clicked, then `bdsDelete` fires with the 2 selected IDs. Pass: event detail in DevTools.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add toolbar left zone with subheading and selection actions
 ```
@@ -480,6 +555,7 @@ feat(web-components): EOA-10576 add toolbar left zone with subheading and select
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
@@ -494,30 +570,49 @@ feat(web-components): EOA-10576 add toolbar left zone with subheading and select
     <slot name="toolbar-actions"></slot>
   </div>
   ```
-- `@Event() bdsFilter: EventEmitter<void>` — emits on filter button click; no payload
+- `@Event() bdsFilter: EventEmitter<void>` — emits on filter button click; no payload; the consumer is responsible for opening a filter drawer/panel, collecting filter criteria, and setting `table.data` with the filtered result; `bds-table` has no internal filter state
 - `@Event() bdsTableLayout: EventEmitter<void>` — emits on layout button click; no payload
 - Both buttons use `variant="plain"` and icon-only mode of `bds-button`
 - The filter button uses `bds-icon-filter` icon class; the layout button uses `bds-icon-table` icon class
 - `hasToolbar` getter (from Task 8) must also check `slot="toolbar-actions"` and `slot="search-bar"` slots — if any of these slots has assigned nodes, the toolbar renders; this ensures the toolbar appears when only the right-side slots are used (no `subheading`)
 - SCSS: `.bds-table__toolbar-right { display: flex; align-items: center; gap: $boreal-spacing-s; }` — `s` = 12px
+- **`bds-table` does NOT handle `bdsSearch` internally.** The `slot="search-bar"` is a passive mount point. The consumer listens to `bdsSearch` from the slotted element and updates `bds-table`'s `data` prop externally. This is intentional: the table holds only the current page slice and cannot filter the full dataset on its own. The wiring pattern is identical to `bdsFilter` — event bubbles up, consumer acts on it.
 
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: `<bds-table subheading="My Table">` — filter and layout buttons appear on the right
 - Scenario 2: Click filter button — `bdsFilter` event fires
 - Scenario 3: Click layout button — `bdsTableLayout` event fires
 - Scenario 4: `<bds-table>` with `<button slot="toolbar-actions">Export</button>` and no `subheading` — toolbar renders with just the right zone
 - Scenario 5: `<bds-table>` with no subheading and no slots — toolbar absent
+- Scenario 6: `<bds-table>` with a plain `<input slot="search-bar">` wired externally to filter `data` — typing in the input updates the visible rows; clearing the input restores all rows. Demonstrates the consumer-owned wiring pattern that `bds-search-bar` will replace. Implementation:
+  ```js
+  const table = document.querySelector("bds-table");
+  const allRows = table.data;
+  document.querySelector("#search-input").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    table.data = q
+      ? allRows.filter((r) =>
+          Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
+        )
+      : allRows;
+  });
+  ```
 
 Validation:
+
 - [ ] Given a table with `subheading`, when rendered, then filter and layout icon buttons appear on the right. Pass: buttons visible.
 - [ ] When filter button is clicked, then `bdsFilter` fires with no payload. Pass: event in DevTools.
 - [ ] When layout button is clicked, then `bdsTableLayout` fires. Pass: event in DevTools.
 - [ ] Given only `slot="toolbar-actions"` filled (no `subheading`), then the toolbar renders. Pass: toolbar div present.
 - [ ] Given no `subheading` and no filled slots, then toolbar `<div>` is absent. Pass: not in DOM.
+- [ ] Given `slot="search-bar"` filled with a plain `<input>` and a JS filter handler, when typing "Alice", then only rows containing "Alice" render in `<tbody>`. Pass: row count reduces correctly.
+- [ ] Given the same scenario, when the input is cleared, then all rows restore. Pass: full row count returns.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add toolbar right zone with filter and layout actions
 ```
@@ -529,6 +624,7 @@ feat(web-components): EOA-10576 add toolbar right zone with filter and layout ac
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
 **Acceptance criteria:**
@@ -544,13 +640,16 @@ feat(web-components): EOA-10576 add toolbar right zone with filter and layout ac
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: Place `<bds-table>` inside a `<div style="width: 500px">` — toolbar heading collapses
 
 Validation:
+
 - [ ] Given a table inside a 500px-wide container, when rendered, then the subheading is hidden and the toolbar right zone compresses. Pass: heading absent, buttons still visible.
 - [ ] Given a table in a 900px-wide container, then the full toolbar is visible. Pass: heading present.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add responsive toolbar with CSS container queries
 ```
@@ -562,6 +661,7 @@ feat(web-components): EOA-10576 add responsive toolbar with CSS container querie
 **Executor:** @frontend-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
 
@@ -576,27 +676,69 @@ feat(web-components): EOA-10576 add responsive toolbar with CSS container querie
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
+
 - Scenario 1: Column with a very long label in a narrow table — label truncates with ellipsis
 - Scenario 2: Column with `info="Full description of this column"` — info icon shows; tooltip on hover
 - Scenario 3: `max-height="300px"` on a table with many rows — vertical scrollbar appears; header stays sticky
 
 Validation:
+
 - [ ] Given a long column label, when the column is narrow, then the label is truncated with `…`. Pass: ellipsis visible.
 - [ ] Given a column with `info` text, when the info icon is hovered, then the tooltip shows the full info text. Pass: tooltip appears.
 - [ ] Given `max-height="200px"` with 20 data rows, then the table body scrolls vertically and the header remains fixed. Pass: sticky header during scroll.
 
 **Commit:**
+
 ```
 feat(web-components): EOA-10576 add column header truncation tooltip and maxHeight scroll
 ```
 
 ---
 
-## Task 12: Unit tests — `bds-table-column`
+## Task 12: `bds-pagination` integration
+
+**Executor:** @frontend-subagent
+
+**Files:**
+
+- `packages/boreal-web-components/src/index.html` (modify — add integration playground scenario)
+
+**Context:** `bds-pagination` exists as a sibling component (branch `EOA-10580_pagination`, close to merge). The `slot="paginator"` added in Task 3 is the mount point. No new props on `bds-table` are needed — the integration is wiring at the consumer level. `bds-table` always receives only the current page's rows; it never sees the full dataset.
+
+**Acceptance criteria:**
+
+- A playground scenario in `src/index.html` demonstrates the full client-side wiring:
+  1. A JS array of 50 rows (generated inline) is the source dataset
+  2. `<bds-table>` receives the current page slice — `rows.slice((page - 1) * pageSize, page * pageSize)` — updated on each `bdsPageChange`
+  3. `<bds-pagination total-items="50" items-per-page="10" current-page="1">` sits inside `<bds-table>` with `slot="paginator"`
+  4. A `bdsPageChange` listener on `bds-pagination` reads `event.detail.currentPage` and `event.detail.itemsPerPage`, recomputes the slice, and assigns to `table.data`
+  5. Changing items-per-page in the dropdown re-slices correctly and the table updates
+- Verify that when `bds-table` is `selectable` and the user has checked rows on page 2, navigating to page 3 resets the selection — this exercises `@Watch('data')` from Task 6
+- No loading state is needed for client-side — data is synchronous
+
+**Manual test:**
+
+Playground scenario (`pnpm dev:components`):
+
+- [ ] Given 50 rows and `items-per-page="10"`, when the page loads, then rows 1–10 appear in the table and `bds-pagination` shows page 1 of 5. Pass: correct rows visible, correct pagination state.
+- [ ] When clicking "Next page", then rows 11–20 appear. Pass: new page slice visible.
+- [ ] When changing items-per-page to 25, then rows 1–25 appear and `bds-pagination` recalculates to page 1 of 2. Pass: slice and page count update correctly.
+- [ ] Given `selectable` table on page 2 with two rows checked, when navigating to page 3, then all checkboxes are unchecked. Pass: selection cleared on data change.
+
+**Commit:**
+
+```
+feat(web-components): EOA-10576 add bds-pagination client-side integration playground
+```
+
+---
+
+## Task 13: Unit tests — `bds-table-column` (renumbered from 12)
 
 **Executor:** @testing-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table-column/__test__/bds-table-column.basics.spec.ts` (create)
 
 **Acceptance criteria:**
@@ -615,17 +757,19 @@ feat(web-components): EOA-10576 add column header truncation tooltip and maxHeig
 - `formatter` prop — accepts a function; readable as a JS property; does not throw when assigned
 
 **Commit:**
+
 ```
 test(web-components): EOA-10576 add unit tests for bds-table-column
 ```
 
 ---
 
-## Task 13: Unit tests — `bds-table` basics, sort, selection, toolbar
+## Task 14: Unit tests — `bds-table` basics, sort, selection, toolbar (renumbered from 13)
 
 **Executor:** @testing-subagent
 
 **Files:**
+
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.basics.spec.ts` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.sort.spec.ts` (create)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/__test__/bds-table.selection.spec.ts` (create)
@@ -674,6 +818,7 @@ test(web-components): EOA-10576 add unit tests for bds-table-column
 - No `subheading` and no toolbar slots — toolbar `<div>` is absent from the DOM
 - `subheading="My Table"` — toolbar renders; subheading text is present
 - `tooltip-text="Info"` — info icon and `bds-tooltip` are rendered in the toolbar
+- `slot="search-bar"` filled, no `subheading` — toolbar renders (slot presence alone is sufficient)
 - `selectedRowIds.size === 0` — delete and edit buttons are absent
 - `selectedRowIds.size > 0` — delete and edit buttons are present
 - Delete button click — `bdsDelete` emits with `selectedIds` array
@@ -682,17 +827,19 @@ test(web-components): EOA-10576 add unit tests for bds-table-column
 - Layout button click — `bdsTableLayout` emits
 
 **Commit:**
+
 ```
 test(web-components): EOA-10576 add unit tests for bds-table rendering, sort, selection, and toolbar
 ```
 
 ---
 
-## Task 14: Storybook story
+## Task 15: Storybook story (renumbered from 14)
 
 **Executor:** @documentation-subagent
 
 **Files:**
+
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` (create)
 
 **Acceptance criteria:**
@@ -709,20 +856,24 @@ test(web-components): EOA-10576 add unit tests for bds-table rendering, sort, se
   - `WithCustomEmptyState` — `data=[]`; custom `slot="empty-state"` content
   - `WithFormatter` — one column uses a `formatter` returning a `bds-tag` element
   - `WithMaxHeight` — `max-height="300px"` with 20 rows; vertical scroll visible
+  - `WithPagination` — 50-row dataset sliced client-side; `bds-pagination` in `slot="paginator"`; `bdsPageChange` handler updates `data` slice; shows page 1 of 5 on load
+  - `WithSearch` — 20-row dataset; plain `<input slot="search-bar">` wired via `input` event to filter `data`; demonstrates the consumer-owned wiring pattern and serves as a visual placeholder until `bds-search-bar` is built
 - JS property bindings for `data`, `formatter`, and `columns` are documented in an MDX "How to use it" note (not in the Source panel, which cannot show them)
 
 **Commit:**
+
 ```
 docs(docs): EOA-10576 add Storybook stories for bds-table
 ```
 
 ---
 
-## Task 15: MDX documentation
+## Task 16: MDX documentation (renumbered from 15)
 
 **Executor:** @documentation-subagent
 
 **Files:**
+
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (create)
 
 **Acceptance criteria:**
@@ -736,13 +887,15 @@ docs(docs): EOA-10576 add Storybook stories for bds-table
   - **Row selection** — how to use `selectable`, `getSelectedRows()`, `clearSelection()`, `bdsSelect` event
   - **Column sorting** — single-column sort, `bdsSort` event, `SORT_DIRECTION` values
   - **Column pinning** — how to use `pinnable`, what happens at render time
-  - **Toolbar** — slot map table (`search-bar`, `row-actions`, `toolbar-actions`); when toolbar auto-hides; events (`bdsFilter`, `bdsTableLayout`, `bdsDelete`, `bdsEdit`)
+  - **Toolbar** — slot map table (`search-bar`, `row-actions`, `toolbar-actions`); when toolbar auto-hides; events (`bdsFilter`, `bdsTableLayout`, `bdsDelete`, `bdsEdit`); note that `bds-table` does NOT handle `bdsSearch` internally — the slot is a passive mount point and the consumer owns the filter logic
+  - **Search bar integration** — explains the consumer-owned wiring pattern: consumer listens to `bdsSearch` (or `input`) from the slotted element, filters or re-slices the source data, and sets `table.data`; `bdsClear` restores the full dataset; full wiring code example; note that `bds-table` holds only the current page slice so internal filtering is intentionally absent; `bds-search-bar` (future component, `mode="filter"`) will replace the plain `<input>` placeholder without changing the wiring contract
   - **Empty state** — `slot="empty-state"` and default behaviour
-  - **Paginator integration** — `slot="paginator"` for future `bds-paginator`; wiring example
+  - **Paginator integration** — `slot="paginator"` wired to `bds-pagination`; full client-side code example showing: `bds-pagination` placed inside `bds-table` with `slot="paginator"`, `bdsPageChange` listener that slices the source array and assigns to `table.data`, `totalItems` set to the full dataset length; note that `bds-table` only ever holds the current page's rows — the parent owns the slice logic
   - **Accessibility** — native `<table>` semantics; `th[scope="col"]`; keyboard sort interaction
   - **What's coming in v2** — column grouping, drag/drop reorder, virtualization, column visibility dropdown
 
 **Commit:**
+
 ```
 docs(docs): EOA-10576 add MDX documentation for bds-table
 ```
