@@ -772,6 +772,26 @@ Features deferred from v1, with enough implementation context to plan the next s
 - `@Watch('selectedRows')` syncs: `this.selectedRowIds = new Set(this.selectedRows)`
 - No breaking change to D1 consumers — the internal `@State` is still the source of truth; the prop is an initialiser/controller
 
+**Unlocks Vue v-model:**
+
+V2-7 is the prerequisite for adding `bds-table` to the `componentModels` array in `vue-output-target.ts`. Once `selectedRows` exists as a writable prop, the Vue output target can wire v-model as:
+
+```ts
+{
+  elements: ['bds-table'],
+  event: 'bdsSelect',
+  targetAttr: 'selectedRows',
+}
+```
+
+This gives Vue consumers:
+
+```vue
+<BdsTable v-model:selectedRows="mySelection" :data="rows" />
+```
+
+Until V2-7 ships, `bds-table` must not be added to `componentModels` — there is no prop to bind against, and `bdsSelect` is a notification event, not a value-update signal.
+
 **Complexity:** Low (~20 lines)
 
 ---

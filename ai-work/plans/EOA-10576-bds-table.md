@@ -497,50 +497,71 @@ feat(web-components): EOA-10576 add column pinning with sticky positioning
 **Acceptance criteria:**
 
 - `@Prop() readonly subheading: string = ''` — when non-empty, toolbar renders
-- `@Prop() readonly tooltipText: string = ''` — when non-empty, an info icon + `<bds-tooltip>` appears next to the subheading
-- Private getter `hasToolbar` returns `true` when `this.subheading` is non-empty OR any of the toolbar slots (`search-bar`, `toolbar-actions`, `row-actions`) has assigned nodes; the check uses `this.el.querySelector('[slot="search-bar"]')` etc.
+- `@Prop() readonly subheadingIcon: string = ''` — CSS icon class (e.g. `bds-icon-user-manager`) rendered as `<i class={subheadingIcon} aria-hidden="true" />` to the left of the subheading typography element
+- `@Prop() readonly selectionLabel: string = 'items'` — noun label appended to the selection count in the tag (e.g. `"users"` renders "3 users"); defaults to `"items"`
+- `@Prop() readonly tooltipText: string = ''` — when non-empty, passed into `<bds-typography tooltipText={...}>` — the typography component renders the ⓘ icon and tooltip internally; do NOT add a separate `<bds-tooltip>` in the toolbar
+- Private getter `hasToolbar` returns `true` when `this.subheading` is non-empty OR any of the toolbar slots (`search-bar`, `toolbar-actions`, `row-actions`) has assigned nodes
 - When `hasToolbar` is false, the toolbar `<div>` is not rendered (conditional in JSX)
+- `<Host>` receives class `bds-table--has-selection` when `selectedRowIds.size > 0`; SCSS rule `bds-table:not(.bds-table--has-selection) [slot="row-actions"] { display: none }` hides slotted row-action content in Stencil scoped (non-shadow) mode when no rows are selected
 - Toolbar structure:
   ```
   <div class="bds-table__toolbar">
     <div class="bds-table__toolbar-left">
-      <div class="bds-table__toolbar-left-heading">
-        [if subheading] <bds-typography variant="subheading">{subheading}</bds-typography>
-        [if tooltipText] <span class="bds-icon-info-circle" /> <bds-tooltip>{tooltipText}</bds-tooltip>
-      </div>
+      [if subheading]
+        <div class="bds-table__toolbar-left-heading">
+          [if subheadingIcon] <i class={subheadingIcon} aria-hidden="true" />
+          <bds-typography variant="subheading" tooltipText={tooltipText || undefined}>
+            {subheading}
+          </bds-typography>
+        </div>
       [if selectedRowIds.size > 0]
-        <bds-tag>{selectedRowIds.size} items</bds-tag>
-        <bds-button variant="plain" [icon-only delete icon] onClick={handleDelete} />
-        <bds-button variant="plain" [icon-only edit icon] onClick={handleEdit} />
-      <slot name="row-actions"></slot>
+        <div class="bds-table__toolbar-row-actions">
+          <bds-tag onBdsClose={() => { clearSelection(); bdsSelect.emit({ selectedIds: [] }); }}>
+            {selectedRowIds.size} {selectionLabel}
+          </bds-tag>
+          <bds-button-group variant="default" color="default" size="md" label="Bulk row actions">
+            <bds-button variant="plain" aria-label="Delete selected rows" onBdsClick={handleDelete}>
+              <i slot="icon" class="bds-icon-trash" aria-hidden="true" />
+            </bds-button>
+            <bds-button variant="plain" aria-label="Edit selected rows" onBdsClick={handleEdit}>
+              <i slot="icon" class="bds-icon-edit" aria-hidden="true" />
+            </bds-button>
+          </bds-button-group>
+          <bds-divider orientation="vertical" />
+          <slot name="row-actions"></slot>
+        </div>
     </div>
     ...right zone in Task 9...
   </div>
   ```
-- `@Event() bdsDelete: EventEmitter<{ selectedIds: string[] }>` — emits `Array.from(this.selectedRowIds)` when delete button clicked
+- `@Event() bdsDelete: EventEmitter<{ selectedIds: string[] }>` — emits `Array.from(this.selectedRowIds)` when delete button clicked; payload is IDs only (full row objects intentionally excluded — see "Getting rich row data" in Task 16 MDX and V2-7 design decision)
 - `@Event() bdsEdit: EventEmitter<{ selectedIds: string[] }>` — same shape, emits on edit button click
-- Both buttons use `variant="plain"` and icon-only mode of `bds-button`; labels are `aria-label="Delete selected rows"` and `aria-label="Edit selected rows"`
-- `bds-tag` shows the count; it is `readonly` (no close button); uses default `color` prop
-- The `bds-typography` for subheading follows the pattern from `component-bds-typography-group-labels.md` memory entry
-- SCSS: `.bds-table__toolbar { display: flex; justify-content: space-between; align-items: center; padding: $boreal-spacing-s 0; gap: $boreal-spacing-m; }` — all spacing tokens (`s` = 12px, `m` = 16px)
+- `bds-tag` close button (`onBdsClose`) calls `clearSelection()` AND emits `bdsSelect` with `{ selectedIds: [] }` — user-initiated clear must notify listeners the same way checkbox deselection does; `clearSelection()` `@Method` does NOT emit (programmatic resets are silent)
+- Delete and edit buttons are wrapped in `<bds-button-group variant="default" color="default" size="md" label="Bulk row actions">`; icon is provided via `slot="icon"` named slot on `<bds-button>` (not an `icon` prop)
+- `<bds-divider orientation="vertical" />` separates the built-in button group from `slot="row-actions"` content
+- `slot="row-actions"` is always present in the DOM but hidden via the host class CSS rule when `selectedRowIds.size === 0`
+- SCSS: `.bds-table__toolbar { display: flex; justify-content: space-between; align-items: center; height: $boreal-spacing-xl; gap: $boreal-spacing-s; }`
 
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
 
-- Scenario 1: `<bds-table subheading="My Table">` — toolbar with title renders
-- Scenario 2: Same with `tooltip-text="More info"` — info icon + tooltip next to title
-- Scenario 3: `<bds-table>` with no `subheading` and no slots — no toolbar rendered
-- Scenario 4: Select two rows in `selectable` table — count tag + delete/edit buttons appear
-- Scenario 5: Click delete button — `bdsDelete` fires with selected IDs; click edit — `bdsEdit` fires
+- Scenario 1: `<bds-table subheading="Users">` — toolbar with subheading renders
+- Scenario 2: Same with `subheading-icon="bds-icon-user-manager"` — icon appears to the left of the subheading
+- Scenario 3: Same with `tooltip-text="More info"` — ⓘ icon appears inside the typography element (right of text) with tooltip on hover
+- Scenario 4: `<bds-table>` with no `subheading` and no slots — no toolbar rendered
+- Scenario 5: `selectable` table with `selection-label="users"` and a `<bds-button slot="row-actions">` — select rows; tag shows "N users", delete/edit group, divider, and custom button all appear; tag × clears selection and emits `bdsSelect { selectedIds: [] }`; all four events (`bdsSelect`, `bdsDelete`, `bdsEdit`, custom button `bdsClick`) visible in the in-page event log
 
 Validation:
 
-- [ ] Given `subheading="My Table"`, when rendered, then "My Table" appears in subheading typography. Pass: text visible.
-- [ ] Given `tooltip-text="Help"`, when the info icon is hovered, then "Help" tooltip appears. Pass: tooltip visible.
+- [ ] Given `subheading="Users"`, when rendered, then "Users" appears in `<bds-typography variant="subheading">`. Pass: text visible.
+- [ ] Given `subheading-icon="bds-icon-user-manager"`, then `<i class="bds-icon-user-manager">` appears to the left of the typography. Pass: icon visible in DevTools.
+- [ ] Given `tooltip-text="Help"`, when the ⓘ icon is hovered, then "Help" tooltip appears. Pass: tooltip visible without a separate `<bds-tooltip>` in the toolbar DOM.
 - [ ] Given no `subheading` and no toolbar slots, then no toolbar `<div>` exists in the DOM. Pass: `bds-table__toolbar` absent in DevTools.
-- [ ] Given `selectable` table with 2 rows checked, then the count tag shows "2 items" and delete/edit buttons are visible. Pass: tag + buttons appear.
-- [ ] When delete button is clicked, then `bdsDelete` fires with the 2 selected IDs. Pass: event detail in DevTools.
+- [ ] Given `selectable` table with `selection-label="users"` and 2 rows checked, then the tag shows "2 users" and delete/edit button group is visible. Pass: tag text and buttons present.
+- [ ] When delete button is clicked, then `bdsDelete` fires with `{ selectedIds: ["1","2"] }`. Pass: event in log.
+- [ ] When tag × is clicked, then selection clears AND `bdsSelect` fires with `{ selectedIds: [] }`. Pass: toolbar row-actions zone disappears + event in log.
+- [ ] Given a `<bds-button slot="row-actions">` child, then it is hidden on load and visible only after row selection. Pass: button absent/present conditionally.
 
 **Commit:**
 
@@ -561,7 +582,8 @@ feat(web-components): EOA-10576 add toolbar left zone with subheading and select
 
 **Acceptance criteria:**
 
-- Right zone appended inside `.bds-table__toolbar`:
+- Extract `private renderToolbarRight(): JSX.Element` method from the inline right-zone JSX in `renderToolbar()` — symmetry with `renderToolbarLeft()`, and provides a clean home for the search bar rendering that will be added once `bds-search-bar` ships
+- Right zone rendered by `renderToolbarRight()` inside `.bds-table__toolbar`:
   ```
   <div class="bds-table__toolbar-right">
     <slot name="search-bar"></slot>
@@ -577,6 +599,14 @@ feat(web-components): EOA-10576 add toolbar left zone with subheading and select
 - `hasToolbar` getter (from Task 8) must also check `slot="toolbar-actions"` and `slot="search-bar"` slots — if any of these slots has assigned nodes, the toolbar renders; this ensures the toolbar appears when only the right-side slots are used (no `subheading`)
 - SCSS: `.bds-table__toolbar-right { display: flex; align-items: center; gap: $boreal-spacing-s; }` — `s` = 12px
 - **`bds-table` does NOT handle `bdsSearch` internally.** The `slot="search-bar"` is a passive mount point. The consumer listens to `bdsSearch` from the slotted element and updates `bds-table`'s `data` prop externally. This is intentional: the table holds only the current page slice and cannot filter the full dataset on its own. The wiring pattern is identical to `bdsFilter` — event bubbles up, consumer acts on it.
+
+**Design decision — `searchable` prop (deferred):**
+
+A future `searchable: boolean` prop will render `<bds-search-bar mode="filter">` internally inside `renderToolbarRight()`, removing the need for consumers to slot in their own element for the common case. This is blocked on `bds-search-bar` shipping. When it lands:
+
+- `slot="search-bar"` is preserved as the escape hatch for custom implementations
+- The `searchable` prop is the convenience API for the default case
+- No equivalent `paginated` prop will be added — `bds-pagination` has `totalItems`, `itemsPerPage`, and `currentPage` that would require full prop-forwarding on `bds-table`, making the slot the correct long-term API for pagination
 
 **Manual test _(waiveable)_:**
 
@@ -849,8 +879,8 @@ test(web-components): EOA-10576 add unit tests for bds-table rendering, sort, se
 - Stories to include:
   - `Default` — basic table with 3 columns and 5 data rows, no extras
   - `WithSorting` — two sortable columns; `bdsSort` action logged
-  - `WithSelection` — `selectable` enabled; `bdsSelect`, `bdsDelete`, `bdsEdit` actions logged
-  - `WithToolbar` — `subheading`, `tooltip-text`, filter + layout button events logged
+  - `WithSelection` — `selectable` enabled; `bdsSelect` action logged
+  - `WithToolbar` — `subheading`, `subheading-icon`, `tooltip-text` props; filter + layout button events logged
   - `WithPinnedColumn` — first column has `pinnable`; table wide enough to require scroll
   - `EmptyState` — `data=[]`; default empty state message visible
   - `WithCustomEmptyState` — `data=[]`; custom `slot="empty-state"` content
@@ -858,6 +888,15 @@ test(web-components): EOA-10576 add unit tests for bds-table rendering, sort, se
   - `WithMaxHeight` — `max-height="300px"` with 20 rows; vertical scroll visible
   - `WithPagination` — 50-row dataset sliced client-side; `bds-pagination` in `slot="paginator"`; `bdsPageChange` handler updates `data` slice; shows page 1 of 5 on load
   - `WithSearch` — 20-row dataset; plain `<input slot="search-bar">` wired via `input` event to filter `data`; demonstrates the consumer-owned wiring pattern and serves as a visual placeholder until `bds-search-bar` is built
+  - **Bulk row-actions group** (actions that operate on the selected row subset — appear only when `selectedRowIds.size > 0`):
+    - `BulkDelete` — `selectable` table; selecting rows reveals the trash button; `bdsDelete` fires and the consumer filters those IDs out of `data`; no blocking confirmation in the story (pattern note in MDX)
+    - `BulkDeleteWithUndo` — same as above but the consumer shows an inline "Deleted N rows · Undo" banner below the table; clicking Undo restores the rows; demonstrates the recoverable-delete pattern without a modal
+    - `BulkEdit` — selecting rows triggers `bdsEdit`; consumer renders a compact inline form below the table with a single shared field (e.g. "Department"); Confirm button in the form updates all selected rows at once; Cancel closes the form
+    - `BulkCustomAction` — `slot="row-actions"` holds a `<bds-button>Approve</bds-button>`; clicking it updates a `status` field on selected rows to `"approved"` and the cell renders a `bds-tag` via formatter; demonstrates non-destructive bulk state change
+  - **Toolbar-actions group** (table-wide controls — always visible, no selection dependency):
+    - `WithAddRow` — `<bds-button slot="toolbar-actions" icon="bds-icon-plus">New</bds-button>` opens an inline form row prepended to the table; saving appends the new object to `data`
+    - `WithImportExport` — `<bds-button slot="toolbar-actions">Import CSV</bds-button>` triggers a file-input picker and parses rows into `data`; `<bds-button slot="toolbar-actions">Export All</bds-button>` downloads all rows as a `.csv` file
+    - `WithRefresh` — `<bds-button slot="toolbar-actions" icon="bds-icon-refresh">` simulates a 1-second async fetch and replaces `data` when it resolves; demonstrates the server-side data-refresh wiring pattern
 - JS property bindings for `data`, `formatter`, and `columns` are documented in an MDX "How to use it" note (not in the Source panel, which cannot show them)
 
 **Commit:**
@@ -887,7 +926,9 @@ docs(docs): EOA-10576 add Storybook stories for bds-table
   - **Row selection** — how to use `selectable`, `getSelectedRows()`, `clearSelection()`, `bdsSelect` event
   - **Column sorting** — single-column sort, `bdsSort` event, `SORT_DIRECTION` values
   - **Column pinning** — how to use `pinnable`, what happens at render time
-  - **Toolbar** — slot map table (`search-bar`, `row-actions`, `toolbar-actions`); when toolbar auto-hides; events (`bdsFilter`, `bdsTableLayout`, `bdsDelete`, `bdsEdit`); note that `bds-table` does NOT handle `bdsSearch` internally — the slot is a passive mount point and the consumer owns the filter logic
+  - **Toolbar** — slot map table with scope column (`search-bar` / `toolbar-actions` = table-wide, always visible; `row-actions` = row subset, conditional on selection); when toolbar auto-hides; built-in events (`bdsFilter`, `bdsTableLayout`, `bdsDelete`, `bdsEdit`); note that `bds-table` does NOT handle `bdsSearch` internally — the slot is a passive mount point and the consumer owns the filter logic
+  - **Bulk row actions** — documents the three consumer patterns using `bdsDelete` / `bdsEdit` / `slot="row-actions"`: (1) delete with no confirmation + undo banner, (2) bulk field edit with inline form + Confirm/Cancel, (3) non-destructive state change (Approve); clarifies that confirmation dialogs belong in the consumer, not the table; `@Watch('data')` auto-clears selection when `data` is replaced so no manual reset is needed after a confirmed delete; includes a "Getting rich row data" subsection explaining that `bdsDelete`/`bdsEdit` intentionally emit `{ selectedIds }` only (IDs are the correct currency for server-side operations and remain accurate when v2 server-side mode ships), and that consumers needing full row objects for UI purposes (e.g. a confirmation dialog listing names) should call `await table.getSelectedRows()` inside their event handler — includes a code example showing this pattern
+  - **Toolbar actions** — documents the three patterns using `slot="toolbar-actions"`: (1) Add new row (inline form), (2) Import/Export All, (3) Refresh from server; distinguishes `toolbar-actions` (table-wide, no selection needed) from `row-actions` (selection-scoped)
   - **Search bar integration** — explains the consumer-owned wiring pattern: consumer listens to `bdsSearch` (or `input`) from the slotted element, filters or re-slices the source data, and sets `table.data`; `bdsClear` restores the full dataset; full wiring code example; note that `bds-table` holds only the current page slice so internal filtering is intentionally absent; `bds-search-bar` (future component, `mode="filter"`) will replace the plain `<input>` placeholder without changing the wiring contract
   - **Empty state** — `slot="empty-state"` and default behaviour
   - **Paginator integration** — `slot="paginator"` wired to `bds-pagination`; full client-side code example showing: `bds-pagination` placed inside `bds-table` with `slot="paginator"`, `bdsPageChange` listener that slices the source array and assigns to `table.data`, `totalItems` set to the full dataset length; note that `bds-table` only ever holds the current page's rows — the parent owns the slice logic
