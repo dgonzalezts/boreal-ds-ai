@@ -643,7 +643,95 @@ Server-side tables differ fundamentally: `bds-table` receives only the current p
 
 Features deferred from v1, with enough implementation context to plan the next sprint without re-doing this research.
 
-### V2-1 — Column grouping (`bds-table-column-group`)
+Ordered by sprint-readiness: no-dependency items first, single Boreal DS component dependency next, architectural and multi-prerequisite items last.
+
+### V2-1 — External controlled row selection (Model D2)
+
+**Approach:** Additive `@Prop` layered on top of the v1 internal model.
+
+**Implementation notes:**
+
+- Add `@Prop() readonly selectedRows: string[] = []` — external controlled prop
+- `@Watch('selectedRows')` syncs: `this.selectedRowIds = new Set(this.selectedRows)`
+- No breaking change to D1 consumers — the internal `@State` is still the source of truth; the prop is an initialiser/controller
+
+**Unlocks Vue v-model:**
+
+V2-1 is the prerequisite for adding `bds-table` to the `componentModels` array in `vue-output-target.ts`. Once `selectedRows` exists as a writable prop, the Vue output target can wire v-model as:
+
+```ts
+{
+  elements: ['bds-table'],
+  event: 'bdsSelect',
+  targetAttr: 'selectedRows',
+}
+```
+
+This gives Vue consumers:
+
+```vue
+<BdsTable v-model:selectedRows="mySelection" :data="rows" />
+```
+
+Until V2-1 ships, `bds-table` must not be added to `componentModels` — there is no prop to bind against, and `bdsSelect` is a notification event, not a value-update signal.
+
+**Complexity:** Low (~20 lines)
+
+---
+
+### V2-2 — Custom cell content via slot (C1)
+
+**Approach:** `<template slot="cell">` on `<bds-table-column>`, cloned per row with dataset injection.
+
+**Implementation notes:**
+
+- See Extended Findings Section C for the full implementation pattern
+- Can coexist with `formatter` (C2): if `formatter` is present it takes precedence; if a `<template slot="cell">` is present and no `formatter`, the template is cloned and row data is injected via `data-*` attributes on the root element of the clone
+- Requires imperative `DocumentFragment` cloning inside `componentDidRender` — mixed JSX/imperative pattern accepted at this stage since it is additive
+
+**Complexity:** Medium (~80 lines)
+
+---
+
+### V2-3 — Built-in search bar (`searchable` prop)
+
+**Approach:** A `searchable: boolean` prop that renders `<bds-search-bar mode="filter">` internally inside `renderToolbarRight()`, removing the need for consumers to slot in their own element for the common case. The `slot="search-bar"` (introduced in v1 Task 9) is preserved as the escape hatch for custom implementations.
+
+**⚠️ Blocking dependency:** `bds-search-bar` does not exist in Boreal DS yet. It must be designed and implemented before V2-3 can begin.
+
+**Implementation notes:**
+
+- When `searchable=true`, `renderToolbarRight()` renders `<bds-search-bar mode="filter">` before the filter/layout buttons; `slot="search-bar"` serves custom cases; both must not be active simultaneously
+- `bds-table` does not filter internally — it listens to `bdsSearch` from `bds-search-bar` and the consumer updates `data` externally (same contract as the consumer-wired slot pattern established in v1 Task 9)
+- `hasToolbar` must include `this.searchable` in its truth check
+- No equivalent `paginated` prop will be added — `bds-pagination` has `totalItems`, `itemsPerPage`, `currentPage` that would require full prop-forwarding on `bds-table`; the slot is the correct long-term API for pagination
+
+**Prerequisites:**
+
+- `bds-search-bar` component (does not exist — must be built first)
+- `renderToolbarRight()` method (implemented in v1 Task 9)
+
+**Complexity:** Low (~15 lines) once `bds-search-bar` ships
+
+---
+
+### V2-4 — Row expand/collapse
+
+**Approach:** Tree-shaped `RowData` with a `children?: RowData[]` field.
+
+**Implementation notes:**
+
+- Add `@State() private expandedRowIds: Set<string> = new Set()`
+- Rows with `children` render an expand/collapse toggle `<button>` as their first cell content
+- When expanded, child rows render immediately after the parent `<tr>` with an indent class
+- Emits `bdsExpand: EventEmitter<{ rowId: string; expanded: boolean }>`
+- `getSelectedRows()` must decide whether to include child rows — default: only top-level rows unless children are also checked
+
+**Complexity:** Medium (~120 lines)
+
+---
+
+### V2-5 — Column grouping (`bds-table-column-group`)
 
 **Approach:** New configuration-only Stencil element `bds-table-column-group`. No TanStack needed.
 
@@ -667,7 +755,41 @@ Features deferred from v1, with enough implementation context to plan the next s
 
 ---
 
-### V2-2 — Virtualization (`@tanstack/virtual-core`)
+### V2-6 — Column drag/drop reorder
+
+**Approach:** Native HTML5 Drag and Drop API. No library needed.
+
+**Implementation notes:**
+
+- Add `@State() private columnOrder: string[]` — initialized from `this.columns.map(c => c.key)` in `componentDidLoad`
+- `<th>` elements for reorderable columns get `draggable="true"`, `onDragStart`, `onDragOver`, `onDrop` handlers
+- `onDrop` swaps positions in `columnOrder`; re-render picks up the new order
+- `this.columns` getter returns columns sorted by `columnOrder` rather than DOM order
+- Non-reorderable columns (e.g. the injected checkbox column) are excluded from drag targets
+- Emits `bdsColumnReorder: EventEmitter<{ order: string[] }>` after each successful drop
+- A drag handle icon (`bds-icon-drag-handle`) in the `<th>` signals draggability
+
+**Complexity:** Low–Medium (~100 lines)
+
+---
+
+### V2-7 — Column resizing
+
+**Approach:** Drag-resize handle on `<th>` right edge. Switches pin offset calculation from `componentDidRender` (static) to `ResizeObserver` (dynamic).
+
+**Implementation notes:**
+
+- Add `@State() private columnWidths: Record<string, number> = {}` — stores explicit widths per column key
+- A `<div class="bds-table__resize-handle">` is appended inside each resizable `<th>`; `onPointerDown` starts a resize drag via `pointermove`/`pointerup`
+- On drag end, updates `columnWidths[col.key]` and sets `th.style.width`
+- `componentDidRender` pin offset calculation replaced with a `ResizeObserver` that fires whenever a pinned `<th>` width changes
+- `disconnectedCallback` must disconnect the `ResizeObserver`
+
+**Complexity:** Medium (~130 lines)
+
+---
+
+### V2-8 — Virtualization (`@tanstack/virtual-core`)
 
 **Approach:** Add `@tanstack/virtual-core` (~4 kB gz). Independent of column API — no architecture change required.
 
@@ -690,29 +812,11 @@ Features deferred from v1, with enough implementation context to plan the next s
 
 ---
 
-### V2-3 — Column drag/drop reorder
-
-**Approach:** Native HTML5 Drag and Drop API. No library needed.
-
-**Implementation notes:**
-
-- Add `@State() private columnOrder: string[]` — initialized from `this.columns.map(c => c.key)` in `componentDidLoad`
-- `<th>` elements for reorderable columns get `draggable="true"`, `onDragStart`, `onDragOver`, `onDrop` handlers
-- `onDrop` swaps positions in `columnOrder`; re-render picks up the new order
-- `this.columns` getter returns columns sorted by `columnOrder` rather than DOM order
-- Non-reorderable columns (e.g. the injected checkbox column) are excluded from drag targets
-- Emits `bdsColumnReorder: EventEmitter<{ order: string[] }>` after each successful drop
-- A drag handle icon (`bds-icon-drag-handle`) in the `<th>` signals draggability
-
-**Complexity:** Low–Medium (~100 lines)
-
----
-
-### V2-4 — Column visibility toggle (dropdown)
+### V2-9 — Column visibility toggle (dropdown)
 
 **Approach:** `bds-table-layout` button (already emitting `bdsTableLayout` in v1) gains an internal dropdown powered by `bds-dropdown`.
 
-**⚠️ Blocking dependency:** `bds-dropdown` does not exist in Boreal DS yet. It must be designed and implemented before V2-4 can begin. Add it as a dependency ticket when scoping the v2 sprint.
+**⚠️ Blocking dependency:** `bds-dropdown` does not exist in Boreal DS yet. It must be designed and implemented before V2-9 can begin. Add it as a dependency ticket when scoping the v2 sprint.
 
 **Implementation notes:**
 
@@ -730,73 +834,7 @@ Features deferred from v1, with enough implementation context to plan the next s
 
 ---
 
-### V2-5 — Row expand/collapse
-
-**Approach:** Tree-shaped `RowData` with a `children?: RowData[]` field.
-
-**Implementation notes:**
-
-- Add `@State() private expandedRowIds: Set<string> = new Set()`
-- Rows with `children` render an expand/collapse toggle `<button>` as their first cell content
-- When expanded, child rows render immediately after the parent `<tr>` with an indent class
-- Emits `bdsExpand: EventEmitter<{ rowId: string; expanded: boolean }>`
-- `getSelectedRows()` must decide whether to include child rows — default: only top-level rows unless children are also checked
-
-**Complexity:** Medium (~120 lines)
-
----
-
-### V2-6 — Column resizing
-
-**Approach:** Drag-resize handle on `<th>` right edge. Switches pin offset calculation from `componentDidRender` (static) to `ResizeObserver` (dynamic).
-
-**Implementation notes:**
-
-- Add `@State() private columnWidths: Record<string, number> = {}` — stores explicit widths per column key
-- A `<div class="bds-table__resize-handle">` is appended inside each resizable `<th>`; `onPointerDown` starts a resize drag via `pointermove`/`pointerup`
-- On drag end, updates `columnWidths[col.key]` and sets `th.style.width`
-- `componentDidRender` pin offset calculation replaced with a `ResizeObserver` that fires whenever a pinned `<th>` width changes
-- `disconnectedCallback` must disconnect the `ResizeObserver`
-
-**Complexity:** Medium (~130 lines)
-
----
-
-### V2-7 — External controlled row selection (Model D2)
-
-**Approach:** Additive `@Prop` layered on top of the v1 internal model.
-
-**Implementation notes:**
-
-- Add `@Prop() readonly selectedRows: string[] = []` — external controlled prop
-- `@Watch('selectedRows')` syncs: `this.selectedRowIds = new Set(this.selectedRows)`
-- No breaking change to D1 consumers — the internal `@State` is still the source of truth; the prop is an initialiser/controller
-
-**Unlocks Vue v-model:**
-
-V2-7 is the prerequisite for adding `bds-table` to the `componentModels` array in `vue-output-target.ts`. Once `selectedRows` exists as a writable prop, the Vue output target can wire v-model as:
-
-```ts
-{
-  elements: ['bds-table'],
-  event: 'bdsSelect',
-  targetAttr: 'selectedRows',
-}
-```
-
-This gives Vue consumers:
-
-```vue
-<BdsTable v-model:selectedRows="mySelection" :data="rows" />
-```
-
-Until V2-7 ships, `bds-table` must not be added to `componentModels` — there is no prop to bind against, and `bdsSelect` is a notification event, not a value-update signal.
-
-**Complexity:** Low (~20 lines)
-
----
-
-### V2-9 — Server-side mode
+### V2-10 — Server-side mode
 
 **Approach:** A `server-side` boolean prop that switches `bds-table` from client-owned state to an event-driven model where the parent owns all data operations.
 
@@ -806,7 +844,7 @@ Until V2-7 ships, `bds-table` must not be added to `componentModels` — there i
 - `@Watch('data')` clears selection as normal — the parent sets a new page slice, triggering a clean render
 - A `loading: boolean` prop (new) shows a skeleton overlay or disables interaction while the parent fetches; implementation: `pointer-events: none` + skeleton rows or an overlay `<div>` with reduced opacity
 
-**What changes in `bds-pagination` before V2-9 can ship (prerequisite fixes):**
+**What changes in `bds-pagination` before V2-10 can ship (prerequisite fixes):**
 
 - Fix `@Watch('totalItems')` to use `this.internalCurrentPage` instead of `this.currentPage` prop (Extended Finding F, Bug 1) — required for server-side filtering where `totalItems` changes per filter result
 - Fix empty state branch (Finding F, Bug 2) — renders "1" when `totalItems = 0`
@@ -837,27 +875,13 @@ table.addEventListener("bdsSort", async ({ detail }) => {
 
 **The async pipeline (async loading → server sorting → server filtering → virtual scroll):**
 
-- Async loading + server sorting: covered by V2-9
-- Server filtering: `bdsFilter` event (already in v1 toolbar) becomes meaningful — parent opens a filter panel, user confirms, parent re-fetches and updates `totalItems`; this works with V2-9 without additional `bds-table` changes
-- Virtual scroll + server-side = infinite scroll: architecturally different from V2-2 (windowed fixed dataset vs. streaming fetch-as-you-scroll); deserves its own spike; do NOT combine with V2-2
+- Async loading + server sorting: covered by V2-10
+- Server filtering: `bdsFilter` event (already in v1 toolbar) becomes meaningful — parent opens a filter panel, user confirms, parent re-fetches and updates `totalItems`; this works with V2-10 without additional `bds-table` changes
+- Virtual scroll + server-side = infinite scroll: architecturally different from V2-8 (windowed fixed dataset vs. streaming fetch-as-you-scroll); deserves its own spike; do NOT combine with V2-8
 
 **Prerequisites:**
 
 - `bds-pagination` bugs fixed (see above)
-- V2-2 (virtualization) must remain independent — do not combine with server-side mode
+- V2-8 (virtualization) must remain independent — do not combine with server-side mode
 
 **Complexity:** Medium (~60 lines in `bds-table` + prerequisite fixes in `bds-pagination`)
-
----
-
-### V2-8 — Custom cell content via slot (C1)
-
-**Approach:** `<template slot="cell">` on `<bds-table-column>`, cloned per row with dataset injection.
-
-**Implementation notes:**
-
-- See Extended Findings Section C for the full implementation pattern
-- Can coexist with `formatter` (C2): if `formatter` is present it takes precedence; if a `<template slot="cell">` is present and no `formatter`, the template is cloned and row data is injected via `data-*` attributes on the root element of the clone
-- Requires imperative `DocumentFragment` cloning inside `componentDidRender` — mixed JSX/imperative pattern accepted at this stage since it is additive
-
-**Complexity:** Medium (~80 lines)

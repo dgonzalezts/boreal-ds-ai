@@ -608,6 +608,8 @@ A future `searchable: boolean` prop will render `<bds-search-bar mode="filter">`
 - The `searchable` prop is the convenience API for the default case
 - No equivalent `paginated` prop will be added — `bds-pagination` has `totalItems`, `itemsPerPage`, and `currentPage` that would require full prop-forwarding on `bds-table`, making the slot the correct long-term API for pagination
 
+Tracked as **V2-3** in `ai-work/research/2026-06-16-bds-table-column-api-spike.md`.
+
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
