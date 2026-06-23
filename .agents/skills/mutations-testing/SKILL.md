@@ -62,10 +62,12 @@ Config templates live in `.agents/skills/mutations-testing/templates/` and are a
 ### Step 1 — Create a throwaway worktree
 
 ```bash
-# From the workspace root, on your feature branch
+# Safe to run from any worktree or the main checkout —
+# REPO_ROOT always resolves to the primary checkout's absolute path.
 COMPONENT=bds-my-component
-git worktree add ../.worktrees/mutation-$COMPONENT HEAD
-cd ../.worktrees/mutation-$COMPONENT
+REPO_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+git worktree add "$REPO_ROOT/.worktrees/mutation-$COMPONENT" HEAD
+cd "$REPO_ROOT/.worktrees/mutation-$COMPONENT"
 fnm use
 ```
 
@@ -133,12 +135,15 @@ Re-run after each fix until the score is ≥ 90%.
 ### Step 8 — Copy results back and clean up
 
 ```bash
-# From the worktree — copy mutation.md back to the main workspace if needed
-cp mutation.md ../../boreal-ds/ai-work/qa/mutation-$COMPONENT.md
+# Copy results back to the main workspace, then remove the worktree.
+# REPO_ROOT must be set (see Step 1); re-derive it if running in a fresh shell:
+#   REPO_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+cp packages/boreal-web-components/mutation.md \
+   "$REPO_ROOT/ai-work/qa/mutation-$COMPONENT.md"
 
 # Discard the worktree — all Stryker files disappear with it
-cd ../..
-git worktree remove .worktrees/mutation-$COMPONENT --force
+cd "$REPO_ROOT"
+git worktree remove "$REPO_ROOT/.worktrees/mutation-$COMPONENT" --force
 ```
 
 The working branch is untouched. No `git restore`, no manual `pnpm remove`.
