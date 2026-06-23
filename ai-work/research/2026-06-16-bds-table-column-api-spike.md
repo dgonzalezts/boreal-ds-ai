@@ -617,9 +617,9 @@ When `totalPages === 0` (i.e., `totalItems = 0`), a naked `1` renders in helper 
 
 **Gap — no error rollback:** The component optimistically updates `internalCurrentPage` immediately on navigation (before the server responds). If the fetch fails and the parent does not reset `current-page` prop, the display stays on the failed page with no way to retry the same page click (the `handlePage` guard `if (pageNumber === this.internalCurrentPage) return` prevents it).
 
-#### Server-side integration (v2 — see V2-9)
+#### Server-side integration (v2 — see V2-11)
 
-Server-side tables differ fundamentally: `bds-table` receives only the current page's rows; `totalItems` comes from the server's count query; sort and filter events emit to the parent for re-fetching rather than operating in-browser. The component API gaps above must be resolved before this mode is usable. See V2-9.
+Server-side tables differ fundamentally: `bds-table` receives only the current page's rows; `totalItems` comes from the server's count query; sort and filter events emit to the parent for re-fetching rather than operating in-browser. The component API gaps above must be resolved before this mode is usable. See V2-11.
 
 ---
 
@@ -693,7 +693,40 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-3 — Built-in search bar (`searchable` prop)
+### V2-3 — Overflow tooltip on truncated header and cell text
+
+**Context:** `bds-table` v1 ships with `text-overflow: ellipsis` truncation on both column headers and cell content (`table-layout: fixed`). No tooltip is shown on hover — the truncation is visual only. This entry tracks adding the on-hover overflow tooltip for both surfaces.
+
+**Two independent behaviors that must NOT be conflated:**
+
+1. **`info` prop tooltip** — already shipped in v1. An explicit `ⓘ` icon + `<bds-tooltip>` rendered when `<bds-table-column info="...">` is set. Shows a column description, unrelated to overflow.
+2. **Overflow tooltip** — shows the full text on hover, only when `scrollWidth > clientWidth`. No icon. Applies to both `__th-label-text` (header) and `td` cell content.
+
+**Blocker — `bds-tooltip` lacks imperative `@Method()` APIs:**
+
+For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is acceptable. For cells (potentially hundreds of rows × columns), a **singleton floating tooltip** is required for performance. This requires three new `@Method()` decorators on `bds-tooltip`:
+
+- `show(): Promise<void>` — delegates to the existing internal `this.show()` from `anchoredMixin`
+- `hide(): Promise<void>` — delegates to `this.hide()`
+- `anchorTo(element: HTMLElement): Promise<void>` — detaches listeners from the current trigger, calls the internal `subscribe(element)` to wire up hover events on a new element, and triggers a positioning update via `anchoredMixin`
+
+**Required changes before V2-3 can ship:**
+
+| File | Change |
+|------|--------|
+| `bds-tooltip.tsx` | Add `@Method() show()`, `@Method() hide()`, `@Method() anchorTo(el)` |
+| `types/ITooltip.ts` | Add the three method signatures |
+| `bds-tooltip.spec.tsx` | Unit tests: `show()` sets `isVisible=true`; `hide()` sets it false; `anchorTo(el)` rewires trigger; `show()` while `disabled=true` stays hidden |
+| `bds-tooltip.mdx` | New "Programmatic control" section; singleton usage example for list/table contexts |
+| `bds-table.tsx` | One `<bds-tooltip>` singleton in `render()`; `mouseenter` event delegation in `componentDidLoad()` on `__wrapper`; overflow check → `anchorTo(span)` + `show()`; `mouseleave` → `hide()` |
+
+**Note:** This work is complementary to, but independent of, the `imperative-migration.md` research (Steps 1–9). The slot-based trigger refactor (Steps 8–9) changes how `bds-tooltip` detects triggers declaratively — the imperative `@Method()` additions here are a separate capability. If Steps 8–9 land first, the `anchorTo()` implementation will need to be aligned with the new slot-based internal trigger management.
+
+**Complexity:** Medium (~60 lines in `bds-table` + prerequisite `bds-tooltip` changes)
+
+---
+
+### V2-4 — Built-in search bar (`searchable` prop)
 
 **Approach:** A `searchable: boolean` prop that renders `<bds-search-bar mode="filter">` internally inside `renderToolbarRight()`, removing the need for consumers to slot in their own element for the common case. The `slot="search-bar"` (introduced in v1 Task 9) is preserved as the escape hatch for custom implementations.
 
@@ -715,7 +748,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-4 — Row expand/collapse
+### V2-5 — Row expand/collapse
 
 **Approach:** Tree-shaped `RowData` with a `children?: RowData[]` field.
 
@@ -731,7 +764,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-5 — Column grouping (`bds-table-column-group`)
+### V2-6 — Column grouping (`bds-table-column-group`)
 
 **Approach:** New configuration-only Stencil element `bds-table-column-group`. No TanStack needed.
 
@@ -755,7 +788,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-6 — Column drag/drop reorder
+### V2-7 — Column drag/drop reorder
 
 **Approach:** Native HTML5 Drag and Drop API. No library needed.
 
@@ -773,7 +806,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-7 — Column resizing
+### V2-8 — Column resizing
 
 **Approach:** Drag-resize handle on `<th>` right edge. Switches pin offset calculation from `componentDidRender` (static) to `ResizeObserver` (dynamic).
 
@@ -789,7 +822,49 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-8 — Virtualization (`@tanstack/virtual-core`)
+### V2-9 — Responsive toolbar
+
+**⚠️ UX/UI validation required before scoping.** The Figma spec defines two size variants (small: min-width 744px, large: min-width 800px) and shows the full toolbar — subheading, selection zone, and right-zone icons — visible at both minimum widths. No collapsed state has been designed. `bds-table` v1 therefore treats 744px as a hard minimum width constraint; behavior below that threshold is out of scope and undocumented.
+
+**Open questions that must be answered by UX/UI before implementation can begin:**
+
+- What collapses first below 744px — subheading, right-zone icons, or both?
+- When selection is active and the toolbar is at its densest (tag + bulk actions + slot + right-zone icons), what is the priority order for collapsing elements?
+- Is there a second breakpoint (e.g. 480px) at which the toolbar switches to a stacked or overflow-menu layout?
+- Should the right-zone icons (filter, columns) collapse into a single overflow `bds-dropdown` button at narrow widths?
+
+**Proposed approach (pending UX/UI sign-off):**
+
+- `container-type: inline-size` on the `bds-table` host element — enables CSS container queries scoped to the component's own width
+- `@container (width < 744px)` override block: hide `.bds-table__toolbar-left-heading` (subheading) first since it is informational, not interactive; the selection tag and bulk actions are higher priority
+- Further breakpoints and overflow-menu patterns to be specced by design
+
+**Complexity:** Low (CSS-only if subheading-only collapse) to Medium (if overflow menu pattern is required)
+
+---
+
+### V2-10 — `bds-pagination` responsive text wrapping fix
+
+**Context:** At narrow container widths, the typography text inside `.bds-pagination__items-per-page` wraps to a second line, collapsing the pagination row height and disrupting the toolbar layout. This is noticeable in any table configured with `bds-pagination` inside `slot="paginator"` when the viewport or table container is below ~744 px.
+
+**Root cause:** `<bds-typography>` is a block-level or inline-block element inside a flex row. Without an explicit width constraint, the flex algorithm allows it to wrap when the container runs out of space. The instinctive fix — adding `white-space: nowrap` to the typography element — forces the text onto one line but introduces two new problems:
+
+1. **Flickering:** `white-space: nowrap` makes the element's intrinsic width equal to its full unwrapped content width. If `bds-pagination` also runs a `ResizeObserver` or container query that reacts to its own width, the layout can oscillate between the nowrap and wrap states across multiple frames, causing visible flicker.
+2. **Overflow:** `nowrap` does not clip — it simply prevents wrapping, so the text bleeds outside the pagination container if no `overflow: hidden` or `min-width: 0` is applied to ancestor flex items.
+
+**Proposed approach (needs validation in `bds-pagination`):**
+
+- Apply `white-space: nowrap` only to the typography element **and simultaneously** add `min-width: 0` on the enclosing flex item (`.bds-pagination__items-per-page`). `min-width: 0` overrides the default `min-width: auto` on flex children, which is what allows intrinsic-width blowout.
+- Alternatively, wrap the label text in a container with `overflow: hidden; text-overflow: ellipsis` and a capped max-width, accepting truncation at very narrow widths.
+- If `bds-pagination` uses a `ResizeObserver`, confirm it does not re-observe on every render cycle — this is the most likely source of flicker if the observer callback triggers a state update that causes re-render, which changes the observed element's size, which triggers the observer again.
+
+**Prerequisite for V2-9 (responsive toolbar):** This fix must land in `bds-pagination` before the container-query breakpoints introduced by V2-9 are testable, since the pagination component is part of every narrow-width layout scenario. Without it, the responsive toolbar tests will produce false negatives (layout looks broken due to the wrapping text, not the toolbar logic).
+
+**Complexity:** Low (CSS-only change in `bds-pagination`) — but requires reproducing the flicker in a minimal test case to confirm the root cause before applying a fix.
+
+---
+
+### V2-11 — Virtualization (`@tanstack/virtual-core`)
 
 **Approach:** Add `@tanstack/virtual-core` (~4 kB gz). Independent of column API — no architecture change required.
 
@@ -812,29 +887,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 
 ---
 
-### V2-9 — Column visibility toggle (dropdown)
-
-**Approach:** `bds-table-layout` button (already emitting `bdsTableLayout` in v1) gains an internal dropdown powered by `bds-dropdown`.
-
-**⚠️ Blocking dependency:** `bds-dropdown` does not exist in Boreal DS yet. It must be designed and implemented before V2-9 can begin. Add it as a dependency ticket when scoping the v2 sprint.
-
-**Implementation notes:**
-
-- Add `@State() private hiddenColumns: Set<string> = new Set()` — columns in this set are excluded from both `<thead>` and `<tbody>` render
-- The layout button opens a `<bds-dropdown>` containing a checklist of column labels with `<bds-checkbox>` per column
-- Each checklist item toggles a column key in `hiddenColumns`
-- Pinning offsets in `componentDidRender` must skip hidden columns when computing `style.left`
-- `bdsTableLayout` event (emitted in v1) is retired in favour of this internal implementation, or kept as a secondary escape hatch for implementors who want to handle the dropdown themselves
-
-**Prerequisites:**
-
-- `bds-dropdown` component (does not exist — must be built first)
-
-**Complexity:** Medium (~80 lines for state + dropdown wiring, excluding `bds-dropdown` build cost)
-
----
-
-### V2-10 — Server-side mode
+### V2-12 — Server-side mode
 
 **Approach:** A `server-side` boolean prop that switches `bds-table` from client-owned state to an event-driven model where the parent owns all data operations.
 
@@ -844,7 +897,7 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 - `@Watch('data')` clears selection as normal — the parent sets a new page slice, triggering a clean render
 - A `loading: boolean` prop (new) shows a skeleton overlay or disables interaction while the parent fetches; implementation: `pointer-events: none` + skeleton rows or an overlay `<div>` with reduced opacity
 
-**What changes in `bds-pagination` before V2-10 can ship (prerequisite fixes):**
+**What changes in `bds-pagination` before V2-11 can ship (prerequisite fixes):**
 
 - Fix `@Watch('totalItems')` to use `this.internalCurrentPage` instead of `this.currentPage` prop (Extended Finding F, Bug 1) — required for server-side filtering where `totalItems` changes per filter result
 - Fix empty state branch (Finding F, Bug 2) — renders "1" when `totalItems = 0`
@@ -875,13 +928,12 @@ table.addEventListener("bdsSort", async ({ detail }) => {
 
 **The async pipeline (async loading → server sorting → server filtering → virtual scroll):**
 
-- Async loading + server sorting: covered by V2-10
-- Server filtering: `bdsFilter` event (already in v1 toolbar) becomes meaningful — parent opens a filter panel, user confirms, parent re-fetches and updates `totalItems`; this works with V2-10 without additional `bds-table` changes
-- Virtual scroll + server-side = infinite scroll: architecturally different from V2-8 (windowed fixed dataset vs. streaming fetch-as-you-scroll); deserves its own spike; do NOT combine with V2-8
+- Async loading + server sorting: covered by V2-11
+- Server filtering: `bdsFilter` event (already in v1 toolbar) becomes meaningful — parent opens a filter panel, user confirms, parent re-fetches and updates `totalItems`; this works with V2-11 without additional `bds-table` changes
+- Virtual scroll + server-side = infinite scroll: architecturally different from V2-11 (windowed fixed dataset vs. streaming fetch-as-you-scroll); deserves its own spike; do NOT combine with V2-11
 
 **Prerequisites:**
 
-- `bds-pagination` bugs fixed (see above)
-- V2-8 (virtualization) must remain independent — do not combine with server-side mode
+- `bds-pagination` bugs fixed (see above), including the responsive text wrapping fix (V2-10)
+- V2-11 (virtualization) must remain independent — do not combine with server-side mode
 
-**Complexity:** Medium (~60 lines in `bds-table` + prerequisite fixes in `bds-pagination`)

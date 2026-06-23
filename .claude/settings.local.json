@@ -22,7 +22,8 @@
       "mcp__playwright__browser_evaluate",
       "Bash(rtk git *)",
       "Bash(python3 -c ' *)",
-      "Bash(rtk grep *)"
+      "Bash(rtk grep *)",
+      "mcp__playwright__browser_resize"
     ],
     "deny": [
       "Read(./.env)"

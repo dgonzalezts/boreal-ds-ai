@@ -619,17 +619,21 @@ Playground scenarios:
 - Scenario 3: Click layout button — `bdsTableLayout` event fires
 - Scenario 4: `<bds-table>` with `<button slot="toolbar-actions">Export</button>` and no `subheading` — toolbar renders with just the right zone
 - Scenario 5: `<bds-table>` with no subheading and no slots — toolbar absent
-- Scenario 6: `<bds-table>` with a plain `<input slot="search-bar">` wired externally to filter `data` — typing in the input updates the visible rows; clearing the input restores all rows. Demonstrates the consumer-owned wiring pattern that `bds-search-bar` will replace. Implementation:
+- Scenario 6: `<bds-table>` with `<bds-text-field slot="search-bar" clearable>` wired externally — typing filters `data`; clicking the clear button (`bdsClear`) restores all rows. Demonstrates the consumer-owned wiring pattern that V2-3 (`searchable` prop) will replace. Implementation:
   ```js
+  const allRows = [...];
   const table = document.querySelector("bds-table");
-  const allRows = table.data;
-  document.querySelector("#search-input").addEventListener("input", (e) => {
+  table.data = allRows;
+  document.querySelector("bds-text-field").addEventListener("input", (e) => {
     const q = e.target.value.toLowerCase();
     table.data = q
       ? allRows.filter((r) =>
           Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
         )
       : allRows;
+  });
+  document.querySelector("bds-text-field").addEventListener("bdsClear", () => {
+    table.data = allRows;
   });
   ```
 
@@ -640,8 +644,8 @@ Validation:
 - [ ] When layout button is clicked, then `bdsTableLayout` fires. Pass: event in DevTools.
 - [ ] Given only `slot="toolbar-actions"` filled (no `subheading`), then the toolbar renders. Pass: toolbar div present.
 - [ ] Given no `subheading` and no filled slots, then toolbar `<div>` is absent. Pass: not in DOM.
-- [ ] Given `slot="search-bar"` filled with a plain `<input>` and a JS filter handler, when typing "Alice", then only rows containing "Alice" render in `<tbody>`. Pass: row count reduces correctly.
-- [ ] Given the same scenario, when the input is cleared, then all rows restore. Pass: full row count returns.
+- [ ] Given `slot="search-bar"` filled with `<bds-text-field clearable>` and a JS filter handler, when typing "Alice", then only rows containing "Alice" render in `<tbody>`. Pass: row count reduces correctly.
+- [ ] Given the same scenario, when the clear button is clicked (`bdsClear`), then all rows restore. Pass: full row count returns.
 
 **Commit:**
 
@@ -651,44 +655,8 @@ feat(web-components): EOA-10576 add toolbar right zone with filter and layout ac
 
 ---
 
-## Task 10: Responsive toolbar
 
-**Executor:** @frontend-subagent
-
-**Files:**
-
-- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table.scss` (modify)
-
-**Acceptance criteria:**
-
-- `:host` has `container-type: inline-size` — enables CSS container queries scoped to the component's own width
-- At `@container (max-width: 744px)`:
-  - `.bds-table__toolbar-left-heading` is hidden (`display: none`) — subheading and tooltip collapse
-  - `.bds-table__toolbar-right` reduces `gap` to `$boreal-spacing-xs` — compact right-zone (8px)
-- No JavaScript or `ResizeObserver` involved — this is a pure CSS change
-- No hardcoded pixel sizes in token-based values; the `744px` breakpoint is the one CSS value that may remain as a literal (it is a design spec breakpoint, not a spacing token)
-- Existing toolbar SCSS from Tasks 8–9 is not duplicated — only the override rules go inside the `@container` block
-
-**Manual test _(waiveable)_:**
-
-Playground scenarios:
-
-- Scenario 1: Place `<bds-table>` inside a `<div style="width: 500px">` — toolbar heading collapses
-
-Validation:
-
-- [ ] Given a table inside a 500px-wide container, when rendered, then the subheading is hidden and the toolbar right zone compresses. Pass: heading absent, buttons still visible.
-- [ ] Given a table in a 900px-wide container, then the full toolbar is visible. Pass: heading present.
-
-**Commit:**
-
-```
-feat(web-components): EOA-10576 add responsive toolbar with CSS container queries
-```
-
----
-
-## Task 11: Column header truncation + tooltip
+## Task 10: Column header truncation + tooltip
 
 **Executor:** @frontend-subagent
 
@@ -699,35 +667,36 @@ feat(web-components): EOA-10576 add responsive toolbar with CSS container querie
 
 **Acceptance criteria:**
 
-- Each `<th>` renders the label text inside a `<span class="bds-table__col-label">` with `text-overflow: ellipsis; overflow: hidden; white-space: nowrap` applied via SCSS
-- When a column has `info` set on its `<bds-table-column>`, an info icon (`bds-icon-info-circle`) and a `<bds-tooltip>` wrapping it are rendered in the header, identical to the `bds-typography` tooltip pattern (see `bds-typography.tsx:151–156`)
-- When a column label overflows its cell, the same `<bds-tooltip>` approach is used: the full label text is the tooltip content (set on hover); the truncated label remains visible — follow the `bds-typography` ellipsis + tooltip pattern
-- The `<th>` inner layout uses `display: flex; align-items: center; gap: var(--boreal-spacing-xs)` to align: sort icon | label span | info icon
-- `maxHeight` prop: `@Prop() readonly maxHeight: string = ''` — when non-empty, sets a CSS custom property `--bds-table-max-height` on the host via inline style; the `.bds-table__wrapper` SCSS reads it as `max-height: var(--bds-table-max-height, unset); overflow-y: var(--bds-table-overflow-y, visible)` — set `overflow-y: auto` via a second custom property when `maxHeight` is set
+- `table { table-layout: fixed }` added to SCSS — required for `text-overflow: ellipsis` to activate on `<th>`; without it the header expands to fit content and truncation never fires
+- `renderThLabel()`: `<bds-typography>` removed as label wrapper; replaced with `<span class="__th-label-text">` for full CSS control; `__th-label` gains `min-width: 0`; `__th-label-text` has `overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0`
+- `info` prop tooltip: rendered as `<span class="__th-info"><i class="bds-icon-info-circle" /><bds-tooltip>{col.info}</bds-tooltip></span>` — same pattern as `bds-radio`/`bds-checkbox`; independent of truncation; only rendered when `col.info` is set
+- Cell truncation: `td` gains `overflow: hidden; white-space: nowrap; text-overflow: ellipsis` — plain-text cells truncate; formatter-rendered elements are clipped at the column boundary
+- `maxHeight` prop: when non-empty, `<Host>` stamps `--bds-table-max-height: <value>` as inline style; `__wrapper` reads `max-height: var(--bds-table-max-height); overflow-y: auto`
+- Task 7 playground: explicit `width` attributes added to all `<bds-table-column>` elements in both pinning scenarios so column totals exceed the container width and horizontal scroll is preserved
+- **⚠️ V2-3 — Overflow tooltip deferred:** on-hover tooltip showing full text when content is truncated (both headers and cells) requires `bds-tooltip` to gain imperative `@Method()` APIs (`show()`, `hide()`, `anchorTo(element)`). Tracked in `ai-work/research/2026-06-16-bds-table-column-api-spike.md` as V2-3.
 
 **Manual test _(waiveable)_:**
 
 Playground scenarios:
 
-- Scenario 1: Column with a very long label in a narrow table — label truncates with ellipsis
-- Scenario 2: Column with `info="Full description of this column"` — info icon shows; tooltip on hover
-- Scenario 3: `max-height="300px"` on a table with many rows — vertical scrollbar appears; header stays sticky
+- Scenario 1: Column with a very long label in a 400px-wide table — label truncates with ellipsis
+- Scenario 2: `max-height="200px"` on a table with 20 rows — vertical scrollbar appears; header stays sticky
 
 Validation:
 
-- [ ] Given a long column label, when the column is narrow, then the label is truncated with `…`. Pass: ellipsis visible.
-- [ ] Given a column with `info` text, when the info icon is hovered, then the tooltip shows the full info text. Pass: tooltip appears.
-- [ ] Given `max-height="200px"` with 20 data rows, then the table body scrolls vertically and the header remains fixed. Pass: sticky header during scroll.
+- [x] Given a long column label, when the column is narrower than the label, then the label is truncated with `…`. Pass: ellipsis visible.
+- [x] Given `max-height="200px"` with 20 data rows, then the table body scrolls vertically and the header remains fixed. Pass: sticky header during scroll (verified via Playwright; macOS overlay scrollbar visible on hover).
+- [x] Task 7 pinning scenarios show horizontal scroll with pinned columns staying fixed after `table-layout: fixed` was applied.
 
 **Commit:**
 
 ```
-feat(web-components): EOA-10576 add column header truncation tooltip and maxHeight scroll
+feat(web-components): EOA-10576 add column header and cell truncation with maxHeight scroll
 ```
 
 ---
 
-## Task 12: `bds-pagination` integration
+## Task 11: `bds-pagination` integration
 
 **Executor:** @frontend-subagent
 
@@ -765,7 +734,7 @@ feat(web-components): EOA-10576 add bds-pagination client-side integration playg
 
 ---
 
-## Task 13: Unit tests — `bds-table-column` (renumbered from 12)
+## Task 12: Unit tests — `bds-table-column`
 
 **Executor:** @testing-subagent
 
@@ -785,7 +754,9 @@ feat(web-components): EOA-10576 add bds-pagination client-side integration playg
 - `label` prop is reflected — `el.getAttribute('label')` returns the set value
 - `sortable` attribute presence — when `sortable` is set, `el.hasAttribute('sortable')` is true; when absent, false
 - `pinnable` attribute presence — same pattern as `sortable`
-- `info` prop — readable as a JS property; not reflected to attribute
+- `info` prop — readable as a JS property (`(el as any).info`); not reflected to attribute (getAttribute returns null)
+- `width` prop — readable as a JS property; not reflected to attribute
+- `icon` prop — readable as a JS property; not reflected to attribute
 - `formatter` prop — accepts a function; readable as a JS property; does not throw when assigned
 
 **Commit:**
@@ -796,7 +767,7 @@ test(web-components): EOA-10576 add unit tests for bds-table-column
 
 ---
 
-## Task 14: Unit tests — `bds-table` basics, sort, selection, toolbar (renumbered from 13)
+## Task 13: Unit tests — `bds-table` basics, sort, selection, toolbar
 
 **Executor:** @testing-subagent
 
@@ -827,12 +798,13 @@ test(web-components): EOA-10576 add unit tests for bds-table-column
 
 **Unit tests to cover — `bds-table.sort.spec.ts`:**
 
-- Non-sortable column `<th>` — no click handler, no sort icon
-- Sortable column `<th>` — clicking emits `bdsSort` with `{ colKey, direction: 'asc' }`
-- Clicking the same header again — emits `bdsSort` with `direction: 'desc'`
-- Clicking again — emits `bdsSort` with `direction: 'none'` and rows return to original order
-- Clicking a different sortable column — resets first column to `none`, new column emits `asc`
-- `sortedData` getter — ascending sort orders rows correctly for string values; descending reverses them
+- Non-sortable column `<th>` — has no `data-sortable` attribute and no `role="button"` attribute
+- Sortable column `<th>` — has `data-sortable` attribute and `role="button"`; clicking emits `bdsSort` with `{ colKey, direction: 'asc' }`
+- Clicking the same sortable header again — emits `bdsSort` with `direction: 'desc'`
+- Clicking the same sortable header a third time — emits `bdsSort` with `direction: 'none'` and rows return to original order
+- Clicking a different sortable column while one is active — new column emits `bdsSort` with `direction: 'asc'`
+- Ascending sort — rows in `<tbody>` are reordered correctly for string values after a single click
+- Descending sort — rows in `<tbody>` are reversed after a second click on the same column
 
 **Unit tests to cover — `bds-table.selection.spec.ts`:**
 
@@ -848,15 +820,17 @@ test(web-components): EOA-10576 add unit tests for bds-table-column
 **Unit tests to cover — `bds-table.toolbar.spec.ts`:**
 
 - No `subheading` and no toolbar slots — toolbar `<div>` is absent from the DOM
-- `subheading="My Table"` — toolbar renders; subheading text is present
-- `tooltip-text="Info"` — info icon and `bds-tooltip` are rendered in the toolbar
-- `slot="search-bar"` filled, no `subheading` — toolbar renders (slot presence alone is sufficient)
-- `selectedRowIds.size === 0` — delete and edit buttons are absent
-- `selectedRowIds.size > 0` — delete and edit buttons are present
-- Delete button click — `bdsDelete` emits with `selectedIds` array
-- Edit button click — `bdsEdit` emits with `selectedIds` array
-- Filter button click — `bdsFilter` emits
-- Layout button click — `bdsTableLayout` emits
+- `subheading="My Table"` — toolbar renders; subheading text is visible inside the toolbar
+- `subheading-icon="bds-icon-table"` — `<i class="bds-icon-table">` renders inside the toolbar heading area
+- `tooltip-text="Info"` — `tooltipText` is forwarded to the `bds-typography` element in the toolbar; the toolbar heading area renders a `bds-typography` element
+- `slot="search-bar"` filled, no `subheading` — toolbar renders (slot presence alone triggers `hasToolbar`)
+- `slot="toolbar-actions"` filled, no `subheading` — toolbar renders
+- No rows selected — `.bds-table__toolbar-row-actions` element is absent from the DOM
+- Rows selected (trigger via row checkbox `bdsChange` event) — `.bds-table__toolbar-row-actions` element appears
+- Filter button (`aria-label="Filter"`) click — `bdsFilter` emits
+- Layout button (`aria-label="Column visibility"`) click — `bdsTableLayout` emits
+- Delete button (`aria-label="Delete selected rows"`) click when rows are selected — `bdsDelete` emits with `selectedIds` array
+- Edit button (`aria-label="Edit selected rows"`) click when rows are selected — `bdsEdit` emits with `selectedIds` array
 
 **Commit:**
 
@@ -866,7 +840,7 @@ test(web-components): EOA-10576 add unit tests for bds-table rendering, sort, se
 
 ---
 
-## Task 15: Storybook story (renumbered from 14)
+## Task 14: Storybook story
 
 **Executor:** @documentation-subagent
 
@@ -909,7 +883,7 @@ docs(docs): EOA-10576 add Storybook stories for bds-table
 
 ---
 
-## Task 16: MDX documentation (renumbered from 15)
+## Task 15: MDX documentation
 
 **Executor:** @documentation-subagent
 
@@ -931,11 +905,14 @@ docs(docs): EOA-10576 add Storybook stories for bds-table
   - **Toolbar** — slot map table with scope column (`search-bar` / `toolbar-actions` = table-wide, always visible; `row-actions` = row subset, conditional on selection); when toolbar auto-hides; built-in events (`bdsFilter`, `bdsTableLayout`, `bdsDelete`, `bdsEdit`); note that `bds-table` does NOT handle `bdsSearch` internally — the slot is a passive mount point and the consumer owns the filter logic
   - **Bulk row actions** — documents the three consumer patterns using `bdsDelete` / `bdsEdit` / `slot="row-actions"`: (1) delete with no confirmation + undo banner, (2) bulk field edit with inline form + Confirm/Cancel, (3) non-destructive state change (Approve); clarifies that confirmation dialogs belong in the consumer, not the table; `@Watch('data')` auto-clears selection when `data` is replaced so no manual reset is needed after a confirmed delete; includes a "Getting rich row data" subsection explaining that `bdsDelete`/`bdsEdit` intentionally emit `{ selectedIds }` only (IDs are the correct currency for server-side operations and remain accurate when v2 server-side mode ships), and that consumers needing full row objects for UI purposes (e.g. a confirmation dialog listing names) should call `await table.getSelectedRows()` inside their event handler — includes a code example showing this pattern
   - **Toolbar actions** — documents the three patterns using `slot="toolbar-actions"`: (1) Add new row (inline form), (2) Import/Export All, (3) Refresh from server; distinguishes `toolbar-actions` (table-wide, no selection needed) from `row-actions` (selection-scoped)
-  - **Search bar integration** — explains the consumer-owned wiring pattern: consumer listens to `bdsSearch` (or `input`) from the slotted element, filters or re-slices the source data, and sets `table.data`; `bdsClear` restores the full dataset; full wiring code example; note that `bds-table` holds only the current page slice so internal filtering is intentionally absent; `bds-search-bar` (future component, `mode="filter"`) will replace the plain `<input>` placeholder without changing the wiring contract
+  - **Search bar integration** — explains the consumer-owned wiring pattern: consumer listens to `bdsSearch` (or `input`) from the slotted element, filters or re-slices the source data, and sets `table.data`; `bdsClear` restores the full dataset; full wiring code example using `<bds-text-field clearable slot="search-bar">`; note that `bds-table` holds only the current page slice so internal filtering is intentionally absent; `bds-search-bar` (future component, `mode="filter"`) will replace the manual wiring without changing the event contract (V2-3)
+  - **Filter panel** — explains how to wire `bdsFilter` to open a `<bds-popover>` containing a structured filter form: column selector (`<bds-select>`), operator selector (equals / contains / greater than), value input (`<bds-text-field>`), and Apply / Clear buttons; consumer applies the active criteria to `table.data`; multiple criteria can be stacked — consumer owns the logic; includes a full wiring code example and a note that `bdsFilter` emits no payload — the popover is the UI contract, not the event
+  - **Column visibility** — explains how to wire `bdsTableLayout` to open a `<bds-popover>` containing a checkbox list of column labels (one `<bds-checkbox>` per `bds-table-column`) plus a Reset button in the popover footer; consumer toggles `bds-table-column` elements' visibility by adding/removing them from the DOM or hiding them via CSS; includes a full wiring code example
   - **Empty state** — `slot="empty-state"` and default behaviour
-  - **Paginator integration** — `slot="paginator"` wired to `bds-pagination`; full client-side code example showing: `bds-pagination` placed inside `bds-table` with `slot="paginator"`, `bdsPageChange` listener that slices the source array and assigns to `table.data`, `totalItems` set to the full dataset length; note that `bds-table` only ever holds the current page's rows — the parent owns the slice logic
+  - **Paginator integration** — `slot="paginator"` wired to `bds-pagination`; full client-side code example showing: `bds-pagination` placed inside `bds-table` with `slot="paginator"`, `bdsPageChange` listener that slices the source array and assigns to `table.data`, `totalItems` set to the full dataset length; note that `bds-table` only ever holds the current page's rows — the parent owns the slice logic; include a **Fully responsive pagination** subsection explaining how to combine the `responsive` prop (adapts visible page-button count to container width) with `responsiveConfig` (overrides the default breakpoints — e.g., `[{ maxWidth: 780, chunk: 1 }]` shows only one page button below 780 px), with a complete code example setting both props and wiring `bdsPageChange`; note that the "Items per page" / item-range section auto-hides via a CSS container query when the paginator is narrower than ~660 px (combined natural width of items-info + controls + inner padding)
+  - **Layout constraints** — `bds-table` has a minimum supported width of 800px; placing the table in a narrower container is unsupported and may cause toolbar overflow; responsive toolbar behaviour below this threshold has not been UX/UI specced and is deferred (see V2-8 in the research file)
   - **Accessibility** — native `<table>` semantics; `th[scope="col"]`; keyboard sort interaction
-  - **What's coming in v2** — column grouping, drag/drop reorder, virtualization, column visibility dropdown
+  - **What's coming in v2** — column grouping, drag/drop reorder, virtualization, server-side mode, built-in `searchable` prop (V2-3), responsive toolbar (V2-8 — pending UX/UI validation)
 
 **Commit:**
 

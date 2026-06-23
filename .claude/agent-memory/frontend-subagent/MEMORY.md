@@ -10,3 +10,4 @@
 - [PREFIX constant](feedback_prefix_constant.md) — declare `const PREFIX = 'bds-tag' as const` at the top of every component; use in all class template literals
 - [classMap getter](feedback_classmap_getter.md) — use `private get classMap(): StyleModifiers` for conditional classes; never inline ternaries in JSX class bindings
 - [SCSS BEM nesting](feedback_scss_bem_nesting.md) — nest all `&__element` rules inside the block selector; never write flat `.bds-component__element` selectors
+- [Component code organization](component-code-organization-bds-table.md) — `@Element()` before `@State()`; lifecycle section 9 follows execution order (`componentDidRender` before `componentDidLoad`); section comments omitted by team preference; `@State()` JSDoc is optional
