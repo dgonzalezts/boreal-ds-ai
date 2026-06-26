@@ -17,18 +17,21 @@ A comprehensive skill for QA engineers to create test plans, generate manual tes
 **Create a test plan:**
 
 ```
+"Create a test plan for EOA-10230"
 "Create a test plan for the user authentication feature"
 ```
 
 **Generate test cases:**
 
 ```
+"Generate manual test cases for EOA-10230"
 "Generate manual test cases for the checkout flow"
 ```
 
 **Build regression suite:**
 
 ```
+"Build a regression test suite for EOA-10230"
 "Build a regression test suite for the payment module"
 ```
 
@@ -41,6 +44,7 @@ A comprehensive skill for QA engineers to create test plans, generate manual tes
 **Create bug report:**
 
 ```
+"Create a bug report for EOA-10230: form validation issue"
 "Create a bug report for the form validation issue"
 ```
 
@@ -87,6 +91,18 @@ QA Deliverable Ready
 
 ---
 
+## Inputs
+
+| Input | Required | How to provide |
+| ----- | -------- | -------------- |
+| Jira ticket ID | Optional (preferred) | Mention it in your request: `"test plan for EOA-10230"` |
+| Component name | Optional (preferred) | The `bds-*` component under test: `"test plan for EOA-10230 bds-search-bar"` |
+| Feature description | Fallback | Plain-text description when no ticket or component is available |
+
+When a ticket ID and component name are provided they form the file prefix: `EOA-10230-bds-search-bar-test-plan.md`. When only a feature description is given, files use a `YYYY-MM-DD-{slug}` prefix instead.
+
+---
+
 ## Commands
 
 ### Interactive Scripts
@@ -102,13 +118,13 @@ Pass a path argument to override the default: `./scripts/generate_test_cases.sh 
 
 When generating files, save them to the following locations unless the user specifies otherwise:
 
-| Request                                 | Output                         | Save to                         |
-| --------------------------------------- | ------------------------------ | ------------------------------- |
-| "Create test plan for {feature}"        | Complete test plan document    | `ai-work/qa/test-plans/`        |
-| "Generate {N} test cases for {feature}" | Numbered test cases with steps | `ai-work/qa/test-plans/`        |
-| "Build smoke/regression test suite"     | Critical path / full suite     | `ai-work/qa/regressions/`       |
-| "Compare with Figma at {URL}"           | Visual validation checklist    | `ai-work/qa/visual-validation/` |
-| "Document bug: {description}"           | Structured bug report          | `ai-work/qa/bug-reports/`       |
+| Request                                 | Output                         | Save to                         | Filename                                                                              |
+| --------------------------------------- | ------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------- |
+| "Create test plan for {feature}"        | Complete test plan document    | `ai-work/qa/test-plans/`        | `{TICKET-ID}-{component}-test-plan.md` or `{YYYY-MM-DD}-{component}-test-plan.md`    |
+| "Generate {N} test cases for {feature}" | Numbered test cases with steps | `ai-work/qa/test-plans/`        | `{TICKET-ID}-{component}-test-cases.md` or `{YYYY-MM-DD}-{component}-test-cases.md`  |
+| "Build smoke/regression test suite"     | Critical path / full suite     | `ai-work/qa/regressions/`       | `{TICKET-ID}-{component}-regression.md` or `{YYYY-MM-DD}-{component}-regression.md`  |
+| "Compare with Figma at {URL}"           | Visual validation checklist    | `ai-work/qa/visual-validation/` | `{TICKET-ID}-{component}-visual.md` or `{YYYY-MM-DD}-{component}-visual.md`          |
+| "Document bug: {description}"           | Structured bug report          | `ai-work/qa/bug-reports/`       | `{TICKET-ID}-{component}-bug-{N}.md` or `{YYYY-MM-DD}-{component}-bug.md`            |
 
 ---
 
