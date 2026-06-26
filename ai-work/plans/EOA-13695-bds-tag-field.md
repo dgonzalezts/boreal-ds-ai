@@ -766,7 +766,7 @@ git commit -m "docs(docs): EOA-13695 add bds-tag-field Storybook stories and MDX
 
 ## Addendum: Suffix slot (prerequisite for bds-select multiselect)
 
-> This work was not in the original plan. It emerged from the architecture discussion in `ai-work/research/bds-select-multiselect-extension.md` and is a direct parallel to Task 3 of `ai-work/plans/EOA-13696-bds-text-field-refactor.md`.
+> This work was not in the original plan. It emerged from the architecture discussion in `ai-work/research/2026-05-28-bds-select-multiselect-extension.md` and is a direct parallel to Task 3 of `ai-work/plans/EOA-13696-bds-text-field-refactor.md`.
 
 The `bds-select[multiselect]` integration (separate ticket) requires injecting badge and spinner elements into `bds-tag-field`'s right side. The structural enabler is a `<slot name="suffix">` placed as a **sibling to the actions div** in the container — the same pattern added to `bds-text-field` in EOA-13696.
 

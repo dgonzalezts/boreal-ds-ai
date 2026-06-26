@@ -519,7 +519,7 @@ In `bds-select.tsx` `componentDidLoad`:
 
 ### Follow-up B: Multi-select (separate ticket)
 
-Covered in full in `ai-work/research/bds-select-multiselect-extension.md`. The consumer swaps `bds-text-field` for `bds-tag-field` in `slot="field"`. `bds-select` gains a `multiselect` prop that only affects the event contract (toggle vs replace, keep popover open); the render method stays unchanged.
+Covered in full in `ai-work/research/2026-05-28-bds-select-multiselect-extension.md`. The consumer swaps `bds-text-field` for `bds-tag-field` in `slot="field"`. `bds-select` gains a `multiselect` prop that only affects the event contract (toggle vs replace, keep popover open); the render method stays unchanged.
 
 The **badge** (showing a selected-items count) belongs here — not in the single-select path. A "N selected" count badge is a multi-select UX concept: in single-select, the selected value is always visible in the field itself. `bds-tag-field` will need its own `<slot name="suffix">` addition (parallel to this plan's Task 3) to receive the badge and spinner injected by `bds-select[multiselect]`.
 
