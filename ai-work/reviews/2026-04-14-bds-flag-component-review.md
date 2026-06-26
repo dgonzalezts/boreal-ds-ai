@@ -1,7 +1,7 @@
 # Code Review: `bds-flag` Component
 
-**Date:** 2026-04-14  
-**Component:** `packages/boreal-web-components/src/components/forms/bds-flag/`  
+**Date:** 2026-04-14
+**Component:** `packages/boreal-web-components/src/components/forms/bds-flag/`
 **Status:** ⚠️ **REQUIRES FIXES** (3 errors, 7 warnings)
 
 ---
@@ -11,6 +11,7 @@
 The `bds-flag` component is well-structured with excellent test coverage (3 comprehensive test suites), good accessibility patterns, and a clean rendering approach. However, it has **3 linting errors** that block merge and **7 barrel/import warnings** that should be fixed to align with Boreal DS standards.
 
 ### Quick Stats
+
 - **Stencil Component:** ✓ Correct structure
 - **Test Coverage:** ✓ Excellent (basics, variants, accessibility)
 - **Accessibility:** ✓ Proper ARIA labels, roles, and hidden attributes
@@ -40,6 +41,7 @@ The following props lack JSDoc blocks directly above their declarations:
 ```
 
 **Why this matters:** JSDoc blocks are required for:
+
 - CEM (custom-elements.json) generation for all frameworks
 - IDE IntelliSense
 - Wrapper package generation (React, Vue)
@@ -47,6 +49,7 @@ The following props lack JSDoc blocks directly above their declarations:
 All other props (lines 45–84) have correct JSDoc blocks directly above them. These three need the same treatment.
 
 **Fix:**
+
 ```tsx
 /**
  * Country value used to resolve the matching flag entry.
@@ -81,13 +84,14 @@ All other props (lines 45–84) have correct JSDoc blocks directly above them. T
 **Severity:** Warning | **File:** `bds-flag.tsx`
 
 Current import order:
+
 ```tsx
-import { anchoredMixin } from '@/mixins/anchored.mixin';  // ← internal alias
-import { FloatingMixinOptions } from '@/services/floating/interfaces/Floating';  // ← internal alias
-import { PositioningResult } from '@/services/floating/interfaces/Positioning';  // ← internal alias
-import { IPopover } from './types/IPopover';  // ← local
-import { AnchoredHooks } from '@/services';  // ← internal alias
-import { BUTTON_SIZES } from '@/components/actions/bds-button/types/enum';  // ← LOCAL (cross-component!)
+import { anchoredMixin } from "@/mixins/anchored.mixin"; // ← internal alias
+import { FloatingMixinOptions } from "@/services/floating/interfaces/Floating"; // ← internal alias
+import { PositioningResult } from "@/services/floating/interfaces/Positioning"; // ← internal alias
+import { IPopover } from "./types/IPopover"; // ← local
+import { AnchoredHooks } from "@/services"; // ← internal alias
+import { BUTTON_SIZES } from "@/components/actions/bds-button/types/enum"; // ← LOCAL (cross-component!)
 ```
 
 **Expected order:** Framework → `@/services` → `@/mixins` → `@/utils` → local/relative
@@ -95,14 +99,15 @@ import { BUTTON_SIZES } from '@/components/actions/bds-button/types/enum';  // �
 **Issue:** Lines 7–8 import from `@/mixins` and `@/services` before the `@stencil/core` imports are grouped, and there's a cross-component import on line 8 (`@/components/...`).
 
 **Fix:** Reorder imports:
+
 ```tsx
-import { Component, Element, Host, Mixin, Prop, State, h } from '@stencil/core';
-import { FloatingMixinOptions } from '@/services/floating/interfaces/Floating';
-import { PositioningResult } from '@/services/floating/interfaces/Positioning';
-import { AnchoredHooks } from '@/services';
-import { anchoredMixin } from '@/mixins/anchored.mixin';
-import { BUTTON_SIZES } from '@/components/actions/bds-button/types/enum';
-import { IPopover } from './types/IPopover';
+import { Component, Element, Host, Mixin, Prop, State, h } from "@stencil/core";
+import { FloatingMixinOptions } from "@/services/floating/interfaces/Floating";
+import { PositioningResult } from "@/services/floating/interfaces/Positioning";
+import { AnchoredHooks } from "@/services";
+import { anchoredMixin } from "@/mixins/anchored.mixin";
+import { BUTTON_SIZES } from "@/components/actions/bds-button/types/enum";
+import { IPopover } from "./types/IPopover";
 ```
 
 **Note:** The cross-component import of `BUTTON_SIZES` from `@/components/actions/bds-button/types/enum` should be evaluated — this defeats Stencil's lazy-loading splits. Consider moving `BUTTON_SIZES` to `@/utils` or importing directly in the render path if possible.
@@ -114,16 +119,18 @@ import { IPopover } from './types/IPopover';
 **Severity:** Warning | **Files:** `constants/index.ts`, `types/index.ts`
 
 #### `constants/index.ts`
+
 ```tsx
-export * from './countries';  // ← wildcard
-export * from './global';     // ← wildcard
-export * from './flagUrl';    // ← wildcard
+export * from "./countries"; // ← wildcard
+export * from "./global"; // ← wildcard
+export * from "./flagUrl"; // ← wildcard
 ```
 
 #### `types/index.ts`
+
 ```tsx
-export * from './Flag';   // ← wildcard
-export * from './Shape';  // ← wildcard
+export * from "./Flag"; // ← wildcard
+export * from "./Shape"; // ← wildcard
 ```
 
 **Why this matters:** Wildcard re-exports hide module edges from the bundler and can prevent tree-shaking. Named re-exports are more explicit and allow Rollup to optimize better.
@@ -131,15 +138,17 @@ export * from './Shape';  // ← wildcard
 **Fix:**
 
 `constants/index.ts`:
+
 ```tsx
-export { allCountries, GLOBAL } from './countries';
-export { FLAG_BASE_URL } from './flagUrl';
+export { allCountries, GLOBAL } from "./countries";
+export { FLAG_BASE_URL } from "./flagUrl";
 ```
 
 `types/index.ts`:
+
 ```tsx
-export { AlignFlag, FlagIdentifier } from './Flag';
-export { Shape } from './Shape';
+export { AlignFlag, FlagIdentifier } from "./Flag";
+export { Shape } from "./Shape";
 ```
 
 ---
@@ -147,6 +156,7 @@ export { Shape } from './Shape';
 ## Positive Findings
 
 ### ✓ Excellent Test Coverage
+
 - **bds-flag-basics.spec.ts:** 7 tests covering country resolution, name display, and custom flags
 - **bds-flag-variants.spec.ts:** 9 tests covering alignment, shape variants, and text combinations
 - **bds-flag-a11.spec.ts:** 7 tests verifying ARIA labels, roles, and accessibility attributes
@@ -154,23 +164,27 @@ export { Shape } from './Shape';
 All tests properly use `waitForChanges()` after async prop updates and check DOM state correctly.
 
 ### ✓ Correct Accessibility Implementation
+
 - Host element has `role="img"` (line 227)
 - Dynamic `aria-label` reflects country name or call sign (line 227)
 - Flag and text spans have `aria-hidden="true"` (lines 228–229)
 - CEM will correctly document these ARIA patterns
 
 ### ✓ Proper Prop Validation Pattern
+
 - `checkPropValues()` with stacked `@Watch()` (lines 94–106)
 - Uses shared `validatePropValue()` utility (line 7)
 - Validates `alignFlag`, `identifier`, and `shape` against enum values
 - Calls `componentWillLoad()` (assumed, should verify in component lifecycle)
 
 ### ✓ Clean Rendering Logic
+
 - Minimal DOM; no unnecessary nesting
 - Smart conditional rendering (line 228: only render flag span if flag exists)
 - Proper background-image styling for custom flags (line 224)
 
 ### ✓ Correct TypeScript Patterns
+
 - All @Prop() are `readonly`
 - Interface segregation (`IFlag`, `ICountry` separate)
 - Type-safe enum usage (`as const` pattern in types/Flag.ts and types/Shape.ts)
@@ -181,16 +195,16 @@ All tests properly use `waitForChanges()` after async prop updates and check DOM
 
 Using **Boreal DS Code Review Checklist** (Section A: Stencil):
 
-| Item | Status | Notes |
-|------|--------|-------|
-| **Import Order** | ❌ FAIL | Lines 7–8 violate order; cross-component import on line 8 |
-| **Props are readonly + documented** | ⚠️ WARN | 3 props missing JSDoc blocks directly above @Prop() |
-| **Named barrel re-exports** | ❌ FAIL | `constants/` and `types/` use wildcard exports |
-| **No over-exporting** | ✓ PASS | Exports are appropriate for their layers |
-| **Event naming** | N/A | No custom events in this component |
-| **Async render assertions** | ✓ PASS | All tests use `waitForChanges()` |
-| **Accessibility** | ✓ PASS | ARIA labels, roles, and hidden attributes correct |
-| **CEM integrity** | ⚠️ WARN | Will degrade without JSDoc on all props |
+| Item                                | Status  | Notes                                                     |
+| ----------------------------------- | ------- | --------------------------------------------------------- |
+| **Import Order**                    | ❌ FAIL | Lines 7–8 violate order; cross-component import on line 8 |
+| **Props are readonly + documented** | ⚠️ WARN | 3 props missing JSDoc blocks directly above @Prop()       |
+| **Named barrel re-exports**         | ❌ FAIL | `constants/` and `types/` use wildcard exports            |
+| **No over-exporting**               | ✓ PASS  | Exports are appropriate for their layers                  |
+| **Event naming**                    | N/A     | No custom events in this component                        |
+| **Async render assertions**         | ✓ PASS  | All tests use `waitForChanges()`                          |
+| **Accessibility**                   | ✓ PASS  | ARIA labels, roles, and hidden attributes correct         |
+| **CEM integrity**                   | ⚠️ WARN | Will degrade without JSDoc on all props                   |
 
 ---
 
@@ -199,6 +213,7 @@ Using **Boreal DS Code Review Checklist** (Section A: Stencil):
 **Fix all 3 errors before merge.** The 7 warnings are important for code quality and tree-shaking but do not block functionality.
 
 ### Priority Order:
+
 1. **HIGH:** Add JSDoc blocks to the 3 @Prop() declarations (lines 65, 78, 92)
 2. **HIGH:** Fix import order (reorder lines 1–8 to follow framework → @/services → @/mixins → local)
 3. **MEDIUM:** Convert wildcard exports to named re-exports in `constants/index.ts` and `types/index.ts`
@@ -208,8 +223,8 @@ Using **Boreal DS Code Review Checklist** (Section A: Stencil):
 
 ## Sign-Off
 
-| Role | Status | Notes |
-|------|--------|-------|
-| **Static Analysis** | 3 errors, 7 warnings | Review script run: `code_quality_checker.py` |
-| **Manual Review** | Complete | All source files read; accessibility and logic verified |
-| **Recommendation** | Fix & Resubmit | No blockers for implementation; errors easily resolved |
+| Role                | Status               | Notes                                                   |
+| ------------------- | -------------------- | ------------------------------------------------------- |
+| **Static Analysis** | 3 errors, 7 warnings | Review script run: `code_quality_checker.py`            |
+| **Manual Review**   | Complete             | All source files read; accessibility and logic verified |
+| **Recommendation**  | Fix & Resubmit       | No blockers for implementation; errors easily resolved  |

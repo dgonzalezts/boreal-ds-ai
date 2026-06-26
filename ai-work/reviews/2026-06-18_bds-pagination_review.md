@@ -1,8 +1,8 @@
 # Code Review — `bds-pagination.tsx`
 
-**Branch:** `feature/EOA-10580_pagination`  
-**File:** `packages/boreal-web-components/src/components/data-visualization/bds-pagination/bds-pagination.tsx`  
-**Date:** 2026-06-18  
+**Branch:** `feature/EOA-10580_pagination`
+**File:** `packages/boreal-web-components/src/components/data-visualization/bds-pagination/bds-pagination.tsx`
+**Date:** 2026-06-18
 **Effort:** medium (8 angles × verify)
 
 ---
@@ -17,7 +17,7 @@
 
 ### 1. `@Watch('totalItems')` stacked on the wrong methods — state corruption on `totalItems` change
 
-**File:** `bds-pagination.tsx` · **Lines:** 136, 141  
+**File:** `bds-pagination.tsx` · **Lines:** 136, 141
 **Severity:** Critical
 
 ```ts
@@ -63,7 +63,7 @@ onItemsPerPageChange(newValue: number) {
 
 ### 2. `handleFocusNav` dereferences `querySelector` result without a null check
 
-**File:** `bds-pagination.tsx` · **Lines:** 261–263  
+**File:** `bds-pagination.tsx` · **Lines:** 261–263
 **Severity:** High
 
 ```ts
@@ -121,7 +121,7 @@ if (autofocus) {
 
 ### 3. `normalizePage(0)` silently falls back without logging a warning
 
-**File:** `bds-pagination.tsx` · **Line:** 233  
+**File:** `bds-pagination.tsx` · **Line:** 233
 **Severity:** Medium
 
 ```ts
@@ -143,7 +143,10 @@ private normalizePage(page: number) {
 
 ```ts
 if (!Number.isFinite(page) || page < 1) {
-  this.logger.warn('bds-pagination', `Invalid currentPage value "${page}". Falling back to page 1.`);
+  this.logger.warn(
+    "bds-pagination",
+    `Invalid currentPage value "${page}". Falling back to page 1.`,
+  );
   return 1;
 }
 ```
@@ -152,7 +155,7 @@ if (!Number.isFinite(page) || page < 1) {
 
 ### 4. `safeItemsPerPageOptions` — dead `Array.isArray` guard
 
-**File:** `bds-pagination.tsx` · **Lines:** 174–181  
+**File:** `bds-pagination.tsx` · **Lines:** 174–181
 **Severity:** Low (cleanup)
 
 ```ts
@@ -180,7 +183,7 @@ private get safeItemsPerPageOptions() {
 
 ### 5. `componentDidLoad()` is an empty no-op lifecycle hook
 
-**File:** `bds-pagination.tsx` · **Line:** 127  
+**File:** `bds-pagination.tsx` · **Line:** 127
 **Severity:** Low (cleanup)
 
 ```ts
@@ -195,7 +198,7 @@ Empty lifecycle hooks add noise and mislead readers into searching for side-effe
 
 ### 6. `hasOverflow()` has a self-defeating measurement and a potential oscillation loop
 
-**File:** `bds-pagination.tsx` · **Lines:** 314–321, 324, 332  
+**File:** `bds-pagination.tsx` · **Lines:** 314–321, 324, 332
 **Severity:** Medium (logic flaw with visible rendering artifact)
 
 #### The circular dependency
@@ -265,7 +268,8 @@ private computeOverflow(): boolean {
 Then in `getItemsPerPage()`:
 
 ```ts
-const showItemsPerPage = this.size !== PAGINATION_SIZES.SMALL && !this.compact && !this.isOverflow;
+const showItemsPerPage =
+  this.size !== PAGINATION_SIZES.SMALL && !this.compact && !this.isOverflow;
 ```
 
 This eliminates the circular dependency (overflow is computed at resize time, not at render time when `itemsInfoEl` may be null), removes the per-render layout flushes, and prevents the oscillation loop.
