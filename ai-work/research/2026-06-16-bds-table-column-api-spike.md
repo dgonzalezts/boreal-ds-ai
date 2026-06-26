@@ -582,7 +582,20 @@ The two components are fully decoupled siblings — `bds-table` never directly t
 </script>
 ```
 
-`bds-table`'s `@Watch('data')` (Task 6) resets row selection whenever `data` is replaced — this means page navigation automatically clears checked rows without any extra wiring.
+`bds-table`'s `@Watch('data')` (Task 6) resets row selection whenever `data` is replaced — this means page navigation automatically clears checked rows without any extra wiring. This is **intentional behaviour for v1**, not a bug. See Finding G for the full design rationale and the v2 cross-page selection architecture.
+
+**Performance note — double render on page navigation:** `@Watch('data')` fires synchronously after the prop is set, but the `@State` mutation it triggers schedules a second render independently of the original prop-change render. The result is two paint cycles on every page change. Guard the write to avoid the second render when nothing is selected:
+
+```typescript
+@Watch('data')
+onDataChange(): void {
+  if (this.selectedRowIds.size > 0) {
+    this.selectedRowIds = new Set();
+  }
+}
+```
+
+This eliminates the second render on the common case (no selection active). When rows are selected and `data` changes, the two-render cost is accepted — it reflects a genuine, visible state transition (selection cleared). Existing bulk-action stories (`BulkDelete`, `BulkEdit`, `BulkCustomAction`) are unaffected because a `bdsDelete`/`bdsEdit` event can only fire when rows are already selected, so `size > 0` is always true at that moment.
 
 #### Known issues in `bds-pagination` to flag before v2 server-side work
 
@@ -623,6 +636,104 @@ Server-side tables differ fundamentally: `bds-table` receives only the current p
 
 ---
 
+### G. Cross-page row selection — design analysis & v2 architecture
+
+#### Why v1 clears selection on page change
+
+The v1 client-side integration contract is **slice-based**: the consumer owns all data in memory, listens to `bdsPageChange`, and sets `table.data` to the current page's slice on every navigation. From `bds-table`'s perspective, the `data` prop simply changed — it has no concept of "same dataset, different window" vs "completely new data." Clearing `selectedRowIds` when `data` changes is therefore the only safe default: retaining IDs for rows that are no longer present in `data` would corrupt `getSelectedRows()` (returning empty results for phantom IDs) and leave a stale count in the toolbar selection tag.
+
+This is intentional design, documented in playground Task 11 — Scenario 2 ("selectable + selection reset on page change") — and is consistent with how Ant Design and MUI DataGrid behave under server-side pagination.
+
+#### Industry patterns reviewed (MUI DataGrid)
+
+MUI DataGrid's row selection API was reviewed for alignment. Key findings:
+
+| MUI feature | Relevance to bds-table |
+|---|---|
+| `keepNonExistentRowsSelected` | Direct equivalent for server-side mode — preserves selection when `data` is replaced with a new page slice. Maps to V2-14. |
+| `checkboxSelectionVisibleOnly` | Restricts select-all to the current page. Default is all-dataset. Maps to V2-15. |
+| `isRowSelectable` | Function prop for conditional selectability (locked/archived rows). Maps to V2-16. |
+| `disableRowSelectionOnClick` | Prevents selection when clicking cells with interactive content (e.g. formatter-rendered `<bds-button>`). Maps to V2-18. |
+| `include`/`exclude` selection model | Performance optimisation for select-all-minus-few on large datasets. Not needed at v1/v2 scope; file for future consideration. |
+| `disableMultipleRowSelection` | Not applicable — bds-table has no licensing model; multi-select via checkboxes is always available. |
+| Ctrl/Cmd multi-select | Not applicable — checkboxes already cover independent row toggling without a modifier key; adding Ctrl/Cmd would create two competing interaction models. |
+| Shift+range selection | Applicable and desirable. Deferred to V2-17; depends on V2-13 (`dataset`) to be meaningful across pages. |
+
+#### Why client-side is not the same as server-side despite the same v1 API
+
+In v1, the consumer slices the full dataset externally before passing it to the table. The consumer owns all data — the table just doesn't know about it:
+
+```js
+const allRows = [...]; // consumer has all 100 rows
+table.data = allRows.slice(0, 10); // table sees only 10
+```
+
+This means pagination is a **view concern** disguised as a **data contract**. The table treats `data` as the source of truth for what exists, but the consumer knows that is only a window. This is the root cause of why cross-page selection cannot work in v1: the table cannot reference rows it has never seen.
+
+The server-side mode (V2-12) has the same API shape but a genuinely different contract: the consumer does not own all data — it fetches on demand. For server-side, the table receiving only the current page is correct and unavoidable.
+
+#### v2 client-side architecture: `dataset` prop + internal pagination
+
+For v2 client-side, `bds-table` should own the full dataset and handle pagination internally. The consumer drops the `bdsPageChange` listener and the slicing logic entirely.
+
+**API change:**
+
+| Prop | v1 | v2 client-side |
+|---|---|---|
+| `data: RowData[]` | Current page slice (set by consumer on each page change) | Removed or aliased |
+| `dataset: RowData[]` | — | Full unfragmented dataset; table handles slicing |
+
+**Internal wiring in `componentDidLoad`:** the table queries the slotted `bds-pagination` element (same `querySelectorAll` pattern already used for `bds-table-column` children), adds an internal `bdsPageChange` listener, and sets `paginationEl.totalItems = this.dataset.length`. The consumer no longer needs to wire pagination at all.
+
+**How Task 11 Scenario 1 simplifies:**
+
+Before (v1):
+```html
+<bds-pagination slot="paginator" id="pag-1" total-items="100" items-per-page="10" current-page="1"></bds-pagination>
+<script>
+  const allRows = [...]; // 100 rows
+  table.data = allRows.slice(0, 10);
+  document.querySelector('#pag-1').addEventListener('bdsPageChange', e => {
+    table.data = allRows.slice((e.detail.currentPage - 1) * e.detail.itemsPerPage, ...);
+  });
+</script>
+```
+
+After (v2 client-side):
+```html
+<bds-pagination slot="paginator" items-per-page="10"></bds-pagination>
+<!-- no total-items — table sets it from dataset.length -->
+<script>
+  table.dataset = [...]; // 100 rows — done
+</script>
+```
+
+**`bdsPageChange` is still re-emitted** by the table after internal slicing, so consumers who need it for analytics, URL sync, or scroll-to-top can still listen.
+
+#### `bds-pagination` prerequisite — also blocks v2 client-side
+
+The `@Watch('totalItems')` snap-back bug (Finding F) is a prerequisite for V2-13, not only V2-12. When the table sets `paginationEl.totalItems = dataset.length` in `componentDidLoad`, it triggers the watch handler. If `internalCurrentPage` has already advanced beyond the `currentPage` prop, the page display snaps back incorrectly. The fix (`this.normalizePage(this.internalCurrentPage)`) must land before V2-13 is testable.
+
+#### select-all breakage in v2: three coupled expressions
+
+`handleSelectAll()` and the header checkbox JSX both reference `this.data.length` — in v2 this becomes the current page size rather than the full dataset size. All three expressions must be updated together:
+
+```typescript
+// handleSelectAll — currently compares against current page count
+if (this.data.length > 0 && this.selectedRowIds.size === this.data.length)
+this.selectedRowIds = new Set(this.data.map(row => toCellString(row[this.rowKey])));
+
+// header checkbox — checked when current page fully selected
+checked={this.data.length > 0 && this.selectedRowIds.size === this.data.length}
+indeterminate={this.selectedRowIds.size > 0 && this.selectedRowIds.size < this.data.length}
+```
+
+In v2, all three must switch to `this.dataset.length` by default (select-all = entire dataset). The `checkboxSelectionVisibleOnly` boolean prop (V2-15) acts as an opt-in to restore the `this.data.length` behaviour (select-all = current page only).
+
+**Existing bulk-action stories are unaffected** — they use fixed 5-row datasets with no pagination, so `dataset.length === data.length` in both v1 and v2.
+
+---
+
 ## Resolved Decisions
 
 | Question                          | Decision                                                          | Rationale                                                                           |
@@ -636,6 +747,9 @@ Server-side tables differ fundamentally: `bds-table` receives only the current p
 | Custom cell content               | **Formatter callback (C2) for v1**                                | Simpler than template cloning; C1 (slot) addable in v2 without breaking API         |
 | Row selection model               | **Internal `@State() selectedRowIds: Set<string>` + method (D1)** | Matches Aqua DS; external controlled prop addable later via `@Watch`                |
 | Column pinning CSS                | **Inline `style.left` in `componentDidRender` (Option E2)**       | No ResizeObserver needed in v1; sufficient without column resizing                  |
+| `@Watch('data')` clear guard      | **`if (this.selectedRowIds.size > 0)` before clearing**           | Prevents a second render when `data` changes with no active selection (double-render on page navigation) |
+| Cross-page selection (v1)         | **Not supported — deferred to V2-13**                             | v1 slice model means the table only knows current-page rows; clearing on `data` change is the only safe default |
+| select-all scope (v2 default)     | **All rows in `dataset`; `checkboxSelectionVisibleOnly` opts into current-page only** | Matches MUI DataGrid convention; `data.length` references in `handleSelectAll` and header checkbox JSX must all switch to `dataset.length` |
 
 ---
 
@@ -936,4 +1050,133 @@ table.addEventListener("bdsSort", async ({ detail }) => {
 
 - `bds-pagination` bugs fixed (see above), including the responsive text wrapping fix (V2-10)
 - V2-11 (virtualization) must remain independent — do not combine with server-side mode
+
+---
+
+### V2-13 — Client-side `dataset` prop + internal pagination (cross-page selection)
+
+**Approach:** Replace the slice-based v1 contract with a full-dataset prop. `bds-table` owns slicing internally, queries the slotted `bds-pagination` to drive page changes, and cross-page selection becomes the default.
+
+**What changes in `bds-table`:**
+
+- Add `@Prop() readonly dataset: RowData[] = []` — the complete unfragmented dataset
+- `@Watch('dataset')` replaces `@Watch('data')` for selection clearing and resets pagination to page 1
+- `componentDidLoad` queries `this.el.querySelector('bds-pagination')`, reads its `itemsPerPage`, sets `paginationEl.totalItems = this.dataset.length`, and adds an internal `bdsPageChange` listener that slices `dataset` into an internal `@State() private visibleRows: RowData[]`
+- `render()` uses `this.visibleRows` where it previously used `this.data`
+- `getSelectedRows()` resolves against `this.dataset` (not just the current page slice)
+- `handleSelectAll()` and the header checkbox `checked`/`indeterminate` expressions switch from `this.data.length` to `this.dataset.length` — all three expressions must change together (see Finding G)
+- `bdsPageChange` is re-emitted after internal slicing for consumers who need it for side effects (URL sync, analytics, scroll-to-top)
+
+**How consumer code changes:**
+
+```js
+// v1 — consumer owns slicing and pagination wiring
+table.data = allRows.slice(0, 10);
+paginator.addEventListener('bdsPageChange', e => {
+  table.data = allRows.slice((e.detail.currentPage - 1) * e.detail.itemsPerPage, ...);
+});
+
+// v2 — consumer passes full dataset once
+table.dataset = allRows;
+// bds-pagination slot is still used for UI, but no bdsPageChange listener needed
+```
+
+**`bds-pagination` prerequisite:** The `@Watch('totalItems')` snap-back bug (Finding F, Bug 1) must be fixed before V2-13 is testable — the table sets `totalItems` programmatically in `componentDidLoad`, which is exactly the scenario that triggers the bug.
+
+**`checkboxSelectionVisibleOnly` interaction:** By default, select-all selects all rows in `dataset`. Add `checkboxSelectionVisibleOnly` boolean prop (V2-15) to restrict to the current page only.
+
+**Existing stories:** Unaffected. Current bulk-action stories use fixed 5-row datasets with no pagination — `dataset.length === visibleRows.length` in that context, so no behaviour change.
+
+**Complexity:** Medium (~100 lines: `dataset` prop + `visibleRows` state + `componentDidLoad` pagination wiring + `getSelectedRows` update + three `data.length` → `dataset.length` replacements)
+
+---
+
+### V2-14 — `keepNonExistentRowsSelected` (server-side selection persistence)
+
+**Approach:** A boolean prop that disables the `@Watch('data')` selection clear in server-side mode, allowing consumers to preserve cross-page selections they manage externally.
+
+**Implementation notes:**
+
+- Add `@Prop() readonly keepNonExistentRowsSelected: boolean = false`
+- In `onDataChange()`: `if (!this.keepNonExistentRowsSelected && this.selectedRowIds.size > 0) { this.selectedRowIds = new Set(); }`
+- Consumer is responsible for passing back the correct `selectedIds` via V2-1's `selectedRows` prop on each page render — the table renders checkbox state from `selectedRowIds`, which is now consumer-controlled
+- Making the behaviour explicit in markup is intentional: `<bds-table keep-non-existent-rows-selected server-side>` is self-documenting at the callsite, unlike implicit mode-based behaviour
+
+**Relationship to V2-13:** V2-13 makes cross-page selection the default for client-side (`dataset` prop). V2-14 is the server-side equivalent — opt-in because the table genuinely cannot know about rows it has not received.
+
+**Complexity:** Low (~10 lines)
+
+---
+
+### V2-15 — `checkboxSelectionVisibleOnly` (select-all scope control)
+
+**Approach:** Boolean prop that restricts the header checkbox's select-all action to the currently visible page rather than the full `dataset`.
+
+**Implementation notes:**
+
+- Add `@Prop() readonly checkboxSelectionVisibleOnly: boolean = false`
+- In `handleSelectAll()`, the toggle condition and the new Set source both gate on the prop:
+  ```typescript
+  const scope = this.checkboxSelectionVisibleOnly ? this.visibleRows : this.dataset;
+  if (scope.length > 0 && this.selectedRowIds.size === scope.length) {
+    this.selectedRowIds = new Set();
+  } else {
+    this.selectedRowIds = new Set(scope.map(row => toCellString(row[this.rowKey])));
+  }
+  ```
+- Header checkbox `checked` and `indeterminate` expressions use the same `scope` variable
+- Default (`false`) = MUI DataGrid convention: select-all covers the entire `dataset`
+
+**Prerequisite:** V2-13 (`dataset` prop must exist for the full-dataset path to be meaningful)
+
+**Complexity:** Low (~15 lines)
+
+---
+
+### V2-16 — `isRowSelectable` (conditional row selectability)
+
+**Approach:** A function prop that receives a row object and returns a boolean, allowing consumers to mark specific rows as non-selectable (e.g. locked, archived, or permission-restricted rows).
+
+**Implementation notes:**
+
+- Add `@Prop() readonly isRowSelectable?: (row: RowData) => boolean`
+- In `renderTd` (checkbox column): `const selectable = this.isRowSelectable ? this.isRowSelectable(row) : true`; pass `disabled={!selectable}` to `<bds-checkbox>`
+- In `handleRowSelect`: guard early — `if (!this.isRowSelectable?.(rowData) ?? true) return`
+- In `handleSelectAll`: filter `scope` through `isRowSelectable` before building the new Set
+- Header checkbox `indeterminate` and `checked` counts must also exclude non-selectable rows from `scope.length`
+
+**Complexity:** Low–Medium (~40 lines)
+
+---
+
+### V2-17 — Shift+range selection
+
+**Approach:** Track the last individually selected row ID and, on Shift+click, add all rows between the last selection and the clicked row to `selectedRowIds`.
+
+**Implementation notes:**
+
+- Add `@State() private lastSelectedId: string = ''`
+- In `handleRowSelect`: if `event.shiftKey && lastSelectedId !== ''`, find the index range in `this.visibleRows` (or `this.dataset` for cross-page range — requires V2-13) and add all IDs in that range to `selectedRowIds`; otherwise update `lastSelectedId = rowId` as normal
+- `handleRowSelect` must receive the `MouseEvent` or `KeyboardEvent` to read `shiftKey`
+- Keyboard: Space on a focused checkbox triggers the existing toggle; Shift+Space should also apply range selection
+- **Cross-page range selection depends on V2-13** — without `dataset`, the range is bounded to the current page. Implementing within a single page is safe in v1 but the API must not promise cross-page behaviour until V2-13 lands. Defer entirely to avoid setting wrong expectations.
+
+**Prerequisites:** V2-13 for cross-page range; not blocked for single-page range
+
+**Complexity:** Low–Medium (~50 lines, excluding cross-page edge cases)
+
+---
+
+### V2-18 — `disableRowSelectionOnClick` (prevent selection on cell click)
+
+**Approach:** A boolean prop that disables row selection when the user clicks anywhere in a row, leaving selection only achievable via the checkbox itself.
+
+**Implementation notes:**
+
+- Add `@Prop() readonly disableRowSelectionOnClick: boolean = false`
+- Currently the checkbox is the only interactive element that triggers `handleRowSelect` — there is no click-on-row selection in v1, so this prop is a forward-compatibility guard for any future click-to-select row interaction
+- Becomes essential once formatter-rendered interactive elements (`<bds-button>`, `<bds-text-field>`) are inside cells — without this prop, a future click-to-select feature would fire alongside the button's own click handler
+- No implementation change needed in v1; the prop is reserved and documented so the API surface is stable when click-to-select is introduced
+
+**Complexity:** Near-zero for v2 reservation (~5 lines); Medium if click-to-select row is also introduced at the same time
 

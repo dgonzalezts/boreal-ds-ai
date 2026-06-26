@@ -1,82 +1,96 @@
-# Introduce `bds-table` data visualization component
+## Prop Definitions Cleanup — Remove Indexed Access Types and Add Explicit Primitive Annotations
 
 ## Type of Change
-- [X] New feature (non-breaking change which adds functionality)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [X] Refactoring / chore (non-breaking change that improves code quality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
 
 ## Description of the Feature
 
-Adds `bds-table` and `bds-table-column` to the Boreal DS data-visualization component category. The table renders structured row and column data using native HTML `<table>` / `<thead>` / `<tbody>` elements, preserving full semantic accessibility while supporting an opt-in feature set: column sorting, row selection with bulk actions, column pinning, an auto-hiding toolbar, custom cell formatters, empty state handling, column header / cell truncation, vertical scrolling via `maxHeight`, and a `slot="paginator"` mount point for `bds-pagination`.
+This PR aligns `@Prop()` declarations across all Stencil web components with the project's
+**Type Inference and Default Values** and **Component Interface Contract** guidelines.
+Three recurring anti-patterns are eliminated:
 
-`bds-table-column` is a configuration-only atom (`display: none`) that carries column metadata as reflected props. `bds-table` reads its children via `querySelectorAll` and re-reads via a `MutationObserver` when columns are added or removed dynamically.
+1. **Indexed access types** — `@Prop() readonly x: IFoo['bar'] = ''` replaced with the concrete
+   named type alias (e.g. `ButtonVariant`) or an explicit primitive annotation (`: string`,
+   `: boolean`, `: number`).
+2. **Opaque constant defaults** — `= POPOVER_POSITION.BOTTOM` replaced with the actual string
+   literal `= 'bottom'`, so Stencil's CEM static analyser records the value (not the identifier)
+   in the generated manifest.
+3. **Unannotated `readonly` primitive props** — TypeScript narrows `readonly x = false` to the
+   literal type `false`, which causes the CEM to emit `x?: false` in JSX types. Consumers
+   attempting to pass a dynamic boolean receive `Type 'boolean' is not assignable to type 'false'`.
+   Explicit `: boolean` annotations fix this.
 
 ## Implementation Details
 
-**Component architecture**
+### Files changed
 
-- Light DOM composition — `<bds-table-column>` elements are placed as direct children of `<bds-table>`; no Shadow DOM, no slot diffing.
-- All interactive state (`sortKey`, `sortDirection`, `selectedRowIds`, `pinnedColKeys`) is managed with Stencil `@State`; no third-party table library.
-- `data: RowData[]` prop carries the current page slice. `bds-table` never filters or paginates internally — consumers own that logic and replace `data` on each change.
-- `inheritAttributes(el, ['aria-label', 'aria-describedby'])` strips ARIA attributes from the host and forwards them onto the native `<table>` element, preserving screen-reader semantics without attribute duplication.
+- **22 component `.tsx` files** — `IFoo['bar']` removed from every `@Prop()` annotation; explicit
+  primitive type annotations added; constant defaults replaced with literals. Unused interface
+  imports dropped where the interface is no longer referenced.
+- **4 test spec files** — Assertions updated to reflect correct Stencil boolean coercion behaviour:
+  - Boolean JS property reads: `toBe('true')` → `toBe(true)`
+  - Reflected boolean attribute checks: `getAttribute(x).toBe('true')` → `toBe('')`
+    (Stencil reflects `true` as an empty attribute string, not the string `"true"`)
+  - Boolean data-attribute presence: `getAttribute('data-multiline').toBe(true)` →
+    `hasAttribute('data-multiline').toBe(true)`
 
-**Sorting**
+### Scope
 
-Three-state cycle per column (`ASC → DESC → NONE`). Switching to a different column resets the previous one. A `compareValues` utility in `bds-table-utils.ts` handles strings (locale-aware), numbers, and Dates. `KeyboardController` adds Enter/Space activation on sortable headers.
+| Pattern fixed | Occurrences | Files |
+|---|---|---|
+| `IFoo['bar']` indexed access types | 76 | 22 |
+| Constant/enum defaults | 9 | 5 |
+| Missing explicit primitive annotations | ~50 | 22 |
+| Test assertion corrections | 8 | 4 |
 
-**Row selection**
-
-`selectedRowIds: Set<string>` tracks selections by the `rowKey` field. A `@Watch('data')` watcher clears the set whenever `data` is replaced, avoiding stale selections after page changes. `getSelectedRows()` and `clearSelection()` are exposed as `@Method()` APIs. The bulk-action toolbar zone (delete, edit, custom `slot="row-actions"`) appears only when `selectedRowIds.size > 0`, controlled via a host class and CSS rule.
-
-**Column pinning**
-
-`pinnedColKeys: Set<string>` lives on `bds-table`, not on `bds-table-column`, keeping all interactive state co-located. `componentDidRender` queries `th[data-pinned]` in DOM order, computes cumulative `offsetWidth`, and stamps `style.left` on each pinned `<th>` and its body `<td>` cells. `border-collapse: separate` is required for `position: sticky` to work and is set from Task 3.
-
-**Toolbar**
-
-Auto-hides when `subheading` is empty and no toolbar slots (`search-bar`, `toolbar-actions`, `row-actions`) have assigned nodes. The right zone holds a `slot="search-bar"` passive mount point (consumer-owned filter wiring), plus filter (`bdsFilter`) and column-visibility (`bdsTableLayout`) buttons. Both events emit with no payload; the consumer is responsible for opening the relevant panel and updating `data`.
-
-**Truncation and scroll**
-
-`table-layout: fixed` activates `text-overflow: ellipsis` on both `<th>` labels and `<td>` cells. `maxHeight` stamps `--bds-table-max-height` as a CSS custom property on `<Host>`; `.bds-table__wrapper` reads it via `max-height: var(--bds-table-max-height)`. The sticky `<thead>` (always on, `z-index: 4`) remains fixed during vertical scroll.
-
-**Pagination integration**
-
-No new props on `bds-table`. `slot="paginator"` is the mount point. The `bdsPageChange` handler on `bds-pagination` slices the source array and assigns to `table.data`; `@Watch('data')` clears any stale selection automatically.
-
-**Loading state stub**
-
-`loading: boolean` and `loadingRows: number` props are declared with a `@Watch` stub. Visual implementation (skeleton rows) is deferred pending UX/UI design specs.
+Components touched: `bds-button`, `bds-button-group`, `bds-list-menu`, `bds-list-menu-item`,
+`bds-toggle`, `bds-badge`, `bds-banner`, `bds-spinner`, `bds-status`, `bds-tag`,
+`bds-checkbox-card`, `bds-flag`, `bds-radio-card`, `bds-avatar`, `bds-grid`, `bds-grid-item`,
+`bds-divider`, `bds-step-item`, `bds-dialog`, `bds-popover`, `bds-tooltip`, `bds-typography`,
+`bds-pagination`, `bds-toast-container`, `bds-toast-item`, `bds-tag-field`.
 
 ## Impact of the Feature
 
-- Two new components registered in the Stencil component registry (`bds-table`, `bds-table-column`).
-- No changes to existing components or shared utilities; `KeyboardController`, `inheritAttributes`, `StyleModifiers`, and `createId` are reused without modification.
-- `border-collapse: separate` on `<table>` is a deliberate deviation from the more common `collapse`; it is required for `position: sticky` on pinned columns and is scoped entirely within `bds-table.scss`.
-- The `slot="search-bar"` is intentionally passive — `bds-table` does not listen to `bdsSearch` internally. This is a documented design decision (V2-3 in the research file) pending `bds-search-bar` shipping.
-- `bds-table-column` elements have `display: none`; they produce no layout impact when placed in the DOM.
+- **No consumer-visible API changes.** All prop names and default values remain identical.
+- **Improved CEM output.** Storybook ArgType controls, IDE autocompletion, and framework wrapper
+  types now show correct union literals instead of identifiers or overly-narrow literal types.
+- **Correct boolean attribute coercion.** Props typed as `: boolean` now correctly coerce
+  `disabled="true"` (HTML attribute string) to the JS boolean `true`, and reflect `true` as an
+  empty attribute (`disabled=""`), matching the HTML spec.
 
 ## Testing Conducted
 
-All playground scenarios in `packages/boreal-web-components/src/index.html` cover tasks 3–11:
-
-- **Basic rendering** — three columns, three rows, formatter returning `HTMLElement`, formatter returning string, `aria-label` transfer to `<table>`, dynamic column addition via `MutationObserver`.
-- **Empty state** — default `emptyMessage`, custom `slot="empty-state"`, non-empty data (no empty row).
-- **Sorting** — single-column sort cycle (ASC → DESC → NONE), switching active sort column, keyboard activation.
-- **Row selection** — checkbox column, select-all (including indeterminate state), data-change clears selection.
-- **Column pinning** — 8-column wide table with horizontal scroll; pinned columns + selectable checkbox.
-- **Toolbar** — subheading only; subheading + icon + tooltip; selectable + bulk actions with in-page event log; no subheading + no slots (toolbar absent); filter/layout event log; `slot="toolbar-actions"` alone triggers toolbar; `slot="search-bar"` with external JS filter.
-- **Truncation** — long column header in a 400px table, cell truncation, `maxHeight="200px"` with 20 rows (sticky header verified).
-- **Pagination** — 100-row client-side slice, page navigation, items-per-page change, selectable + selection reset on page change.
-
-Unit tests (tasks 12–13) cover `bds-table-column` prop reflection and `bds-table` rendering, sort cycle, selection state machine, and toolbar visibility / event emission.
+- **1746 unit tests across 178 test suites** — all pass after assertion corrections.
+- **`tsc -b`** on `react-testapp` and **`vue-tsc --build`** on `vue-testapp` — both pass with
+  zero errors, confirming wrapper types correctly surface the updated prop annotations.
+- **Grep verification** — zero remaining `IFoo['bar']` or in-scope constant-default patterns
+  in any `@Prop()` declaration.
 
 ## Screenshots/Videos (if applicable)
 
-N/A — the playground at `packages/boreal-web-components/src/index.html` covers all scenarios and can be run with `pnpm dev:components` from the monorepo root.
+N/A — no visual changes.
 
 ## Additional Remarks
 
-- **Overflow tooltip deferred (V2-3):** showing the full text in a `bds-tooltip` when a header or cell is truncated requires imperative `show()`/`hide()`/`anchorTo()` APIs on `bds-tooltip` that do not exist yet.
-- **Responsive toolbar deferred (V2-8):** behavior below the 800px minimum supported width has not been UX/UI specced.
-- **`searchable` convenience prop deferred:** blocked on `bds-search-bar` shipping; `slot="search-bar"` is the escape hatch in the interim.
-- **Loading skeleton deferred:** `loading` / `loadingRows` props are API-complete but render nothing pending design specs.
-- The playground file (`src/index.html`) is intentionally not committed — it is dev-only scratch content.
+- Three constant defaults in `bds-slider.tsx` and one in `bds-tag-field.tsx` (the `variant` prop)
+  were intentionally left unchanged: `bds-slider` was out of scope for this ticket, and
+  `bds-tag-field`'s `variant` already follows the correct named-type-alias pattern.
+- The `bds-tooltip.tsx` JSDoc hint ("JSDoc types may be moved to TypeScript types") is a
+  pre-existing IDE warning on the `@returns` tag; it does not affect compilation.
+
+## Checklist
+
+- [X] My code adheres to the project's coding and style guidelines.
+- [X] I have conducted a self-review of my code.
+- [ ] I have commented my code, particularly in complex areas.
+- [ ] I have made corresponding changes to the documentation.
+- [X] I have tested my feature thoroughly in different environments.
+- [X] I have added tests that prove my feature works as intended.
+- [X] New and existing unit tests pass locally with my changes.
+- [X] I have assessed the performance impact of the feature.
+- [X] My changes do not introduce new warnings or errors.
+- [X] I have checked for compatibility with other parts of the codebase.

@@ -2,12 +2,6 @@
 
 | File | Status | Description |
 | --- | --- | --- |
-| [ai-scaffold-knowledge-consolidation.md](./ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
-| [ai-scaffold-restructure.md](./ai-scaffold-restructure.md) | pending | AI Scaffold Restructure Implementation Plan |
-| [alpha-release-vue-react-storybook.md](./alpha-release-vue-react-storybook.md) | in | Alpha Release — Vue First Publish, React Re-publish, Storybook Deploy |
-| [automated-changelog-&-release.md](./automated-changelog-&-release.md) | done | Automated Changelog & Release Plan |
-| [code-snippetformatter.md](./code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
-| [depth-shadow-tokens.md](./depth-shadow-tokens.md) | done | Depth (Box-Shadow) Token Pipeline Implementation Plan |
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |
 | [EOA-10533-bds-radio-button.md](./EOA-10533-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
@@ -19,6 +13,12 @@
 | [EOA-12342-bds-checkbox-button.md](./EOA-12342-bds-checkbox-button.md) | done | bds-checkbox-button Implementation Plan |
 | [EOA-13695-bds-tag-field.md](./EOA-13695-bds-tag-field.md) | done | `bds-tag-field` Implementation Plan |
 | [EOA-13696-bds-text-field-refactor.md](./EOA-13696-bds-text-field-refactor.md) | pending | bds-text-field: Shared Utilities Refactoring + Suffix Slot |
+| [ai-scaffold-knowledge-consolidation.md](./ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
+| [ai-scaffold-restructure.md](./ai-scaffold-restructure.md) | pending | AI Scaffold Restructure Implementation Plan |
+| [alpha-release-vue-react-storybook.md](./alpha-release-vue-react-storybook.md) | in | Alpha Release — Vue First Publish, React Re-publish, Storybook Deploy |
+| [automated-changelog-&-release.md](./automated-changelog-&-release.md) | done | Automated Changelog & Release Plan |
+| [code-snippetformatter.md](./code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
+| [depth-shadow-tokens.md](./depth-shadow-tokens.md) | done | Depth (Box-Shadow) Token Pipeline Implementation Plan |
 | [first-alpha-release.md](./first-alpha-release.md) | done | First Alpha Release — Boreal DS |
 | [generator-extension-strategy.md](./generator-extension-strategy.md) | pending | Generator Extension Strategy: Cross-Package Component Scaffolding |
 | [icons-strategy.md](./icons-strategy.md) | in | Boreal Icons Strategy & Implementation Plan |
