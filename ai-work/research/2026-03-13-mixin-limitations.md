@@ -1,3 +1,8 @@
+---
+ticket: EOA-10056
+status: promoted
+---
+
 User: Confirm me the limitation of the attached mixin. Previously, we added the "name", "disabled" and "required" props to the mixin but we were having some problems with unit testing. Carefully look at the mixin comments and find web references to support this decision. Be thorough
 
 GitHub Copilot: Read [](file:///Users/dgonzalez/projects/src/worktrees/boreal-ds/feature/EOA-10056-bds-checkbox/packages/boreal-web-components/src/mixins)

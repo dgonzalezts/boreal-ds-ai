@@ -46,6 +46,18 @@ The output path depends on what the session produced:
 
 **Research spike structure:** **Goal** — **Options evaluated** — **Findings** — **Recommendation** — **Open questions**. Use this format whenever the session's primary output is an evaluation rather than a design decision. Invoke `knowledge-keeper` after writing the spike if any findings should be promoted to team memory or an ADR.
 
+**Every research file must start with this frontmatter:**
+
+```markdown
+---
+ticket: EOA-XXXXX          # Jira ticket that triggered this; use — for exploratory spikes
+component: bds-component   # primary bds-* component; omit this line for cross-cutting research
+status: exploring          # exploring | concluded | promoted
+---
+```
+
+Status lifecycle: `exploring` (active investigation) → `concluded` (recommendation documented, no further action) → `promoted` (findings converted to a plan or captured in team memory via `knowledge-keeper`). Update the status field as the research advances.
+
 ## After the Design
 
 **Documentation:**

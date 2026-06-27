@@ -1,3 +1,8 @@
+---
+ticket: —
+status: promoted
+---
+
 # Monorepo Orchestration Tools & Workspace Research
 
 > **Source:** Claude.ai shared conversation

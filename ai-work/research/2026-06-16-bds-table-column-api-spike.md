@@ -1,3 +1,9 @@
+---
+ticket: EOA-10576
+component: bds-table
+status: exploring
+---
+
 # Research Spike: bds-table Column API & Virtualization
 
 **Date:** 2026-06-16

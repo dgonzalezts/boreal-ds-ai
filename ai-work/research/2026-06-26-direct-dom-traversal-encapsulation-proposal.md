@@ -1,3 +1,9 @@
+---
+ticket: EOA-14609
+component: bds-text-field
+status: exploring
+---
+
 # Direct DOM Traversal & Encapsulation — Proposal
 
 **Date:** 2026-06-26

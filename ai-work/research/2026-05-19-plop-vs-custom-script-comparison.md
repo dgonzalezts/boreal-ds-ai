@@ -1,3 +1,8 @@
+---
+ticket: EOA-8845
+status: promoted
+---
+
 # Plop.js vs Custom Node.js Script: Detailed Comparison
 
 ## Executive Summary

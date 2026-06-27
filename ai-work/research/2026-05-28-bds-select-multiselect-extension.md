@@ -1,3 +1,9 @@
+---
+ticket: EOA-13695
+component: bds-select
+status: promoted
+---
+
 # Research: `bds-select` Multiselect Extension via `bds-tag-field`
 
 **Date:** 2026-05-28

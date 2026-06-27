@@ -1,3 +1,9 @@
+---
+ticket: —
+component: bds-slider
+status: concluded
+---
+
 # bds-slider: Native UI vs noUISlider
 
 **Date:** 2026-05-27

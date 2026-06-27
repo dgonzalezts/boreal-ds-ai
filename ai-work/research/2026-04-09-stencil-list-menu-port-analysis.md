@@ -1,7 +1,13 @@
+---
+ticket: —
+component: bds-list-menu
+status: promoted
+---
+
 # Research: Porting col-list-menu Architecture to Stencil
 
-**Date:** 2026-04-09  
-**Scope:** `col-list-menu` + `col-list-menu-item` (Colibri Lit implementation)  
+**Date:** 2026-04-09
+**Scope:** `col-list-menu` + `col-list-menu-item` (Colibri Lit implementation)
 **Question:** Can the same compound component pattern be implemented in a Stencil-based library?
 
 ---
@@ -15,21 +21,21 @@
 
 ### Inheritance chain roles
 
-| Base class | What it adds |
-|---|---|
-| `LitElement` | Lit reactive rendering engine |
+| Base class        | What it adds                                                   |
+| ----------------- | -------------------------------------------------------------- |
+| `LitElement`      | Lit reactive rendering engine                                  |
 | `ThemedComponent` | Per-component design token overrides via CSS custom properties |
-| `FormComponent` | `ElementInternals` form association (`formAssociated: true`) |
+| `FormComponent`   | `ElementInternals` form association (`formAssociated: true`)   |
 
 ### What `@lit/context` carries
 
 `listMenuContext` passes `{ role, multiSelectable, menuItems }` from parent to children. Each field serves a distinct purpose:
 
-| Field | Used for |
-|---|---|
-| `role` | Child picks render branch: `renderOptionRole()` vs `renderMenuItemButton/Link()` |
-| `multiSelectable` | `ListMenuController.getAriaSelected()` returns `null` unless role is `option` |
-| `menuItems` | `handleKeyDown` traverses siblings for ArrowUp/Down keyboard navigation |
+| Field             | Used for                                                                         |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `role`            | Child picks render branch: `renderOptionRole()` vs `renderMenuItemButton/Link()` |
+| `multiSelectable` | `ListMenuController.getAriaSelected()` returns `null` unless role is `option`    |
+| `menuItems`       | `handleKeyDown` traverses siblings for ArrowUp/Down keyboard navigation          |
 
 ### Reactive Controllers
 
@@ -56,15 +62,15 @@ Colibri uses this pattern consistently across two systems: the List Menu system 
 
 **No good path exists.** The options:
 
-| Option | Status |
-|---|---|
-| `@lit/context` directly | Lit-specific reactivity system; anti-pattern in Stencil |
-| `@stencil/state-tunnel` | Archived December 2022 |
-| `@stencil/store` | Designed for global/app state, not compound component pairing |
+| Option                  | Status                                                        |
+| ----------------------- | ------------------------------------------------------------- |
+| `@lit/context` directly | Lit-specific reactivity system; anti-pattern in Stencil       |
+| `@stencil/state-tunnel` | Archived December 2022                                        |
+| `@stencil/store`        | Designed for global/app state, not compound component pairing |
 
 **Recommended replacement: child queries parent.**
 
-Since we're using component composition (parent wraps children via `<slot>`), the DOM tree *is* the context. Children can access parent configuration directly:
+Since we're using component composition (parent wraps children via `<slot>`), the DOM tree _is_ the context. Children can access parent configuration directly:
 
 ```typescript
 // In col-list-menu-item
@@ -108,12 +114,12 @@ Traverses up the DOM tree to find the parent ancestor. Cost is O(DOM depth), typ
 
 Called during `handleKeyDown` on every keydown event. Cost is **O(n items)** per keystroke.
 
-| | Child queries parent | Context (Lit/cached) |
-|---|---|---|
-| `querySelectorAll` timing | Per keydown event | Per parent render cycle |
-| Array reuse | No — fresh each time | Yes — cached in context |
-| At 10 items | Imperceptible | Imperceptible |
-| At 1000 items | Measurable under rapid key-repeat | Faster |
+|                           | Child queries parent              | Context (Lit/cached)    |
+| ------------------------- | --------------------------------- | ----------------------- |
+| `querySelectorAll` timing | Per keydown event                 | Per parent render cycle |
+| Array reuse               | No — fresh each time              | Yes — cached in context |
+| At 10 items               | Imperceptible                     | Imperceptible           |
+| At 1000 items             | Measurable under rapid key-repeat | Faster                  |
 
 ### Practical ceiling
 
@@ -178,15 +184,15 @@ export class ColListMenu {
 ### `col-list-menu-item`
 
 ```typescript
-@Component({ tag: 'col-list-menu-item', shadow: true })
+@Component({ tag: "col-list-menu-item", shadow: true })
 export class ColListMenuItem {
   @Element() el: HTMLElement;
 
   @Prop({ reflect: true }) selected: boolean = false;
   @Prop({ reflect: true }) disabled: boolean = false;
-  @Prop() value: string = '';
-  @Prop() href: string = '';
-  @Prop() variant: 'button' | 'label' = 'button';
+  @Prop() value: string = "";
+  @Prop() href: string = "";
+  @Prop() variant: "button" | "label" = "button";
 
   @Event() listMenuItemClick: EventEmitter<{
     value: string;
@@ -195,17 +201,17 @@ export class ColListMenuItem {
   }>;
 
   private get parentMenu(): HTMLColListMenuElement | null {
-    return this.el.closest('col-list-menu');
+    return this.el.closest("col-list-menu");
   }
 
-  private get menuRole(): 'option' | 'menuitem' {
-    return this.parentMenu?.role === 'menu' ? 'menuitem' : 'option';
+  private get menuRole(): "option" | "menuitem" {
+    return this.parentMenu?.role === "menu" ? "menuitem" : "option";
   }
 
   private get siblings(): HTMLColListMenuItemElement[] {
     return Array.from(
-      this.parentMenu?.querySelectorAll('col-list-menu-item') ?? []
-    ).filter(item => !item.disabled);
+      this.parentMenu?.querySelectorAll("col-list-menu-item") ?? [],
+    ).filter((item) => !item.disabled);
   }
 
   // render() — same three branches as Lit version, translated to JSX
@@ -218,8 +224,11 @@ Lit's `ReactiveController` interface is Lit-specific. In Stencil, extract the sa
 
 ```typescript
 // list-menu.utils.ts
-export function getAriaSelected(role: string, selected: boolean): string | null {
-  return role === 'option' ? String(selected) : null;
+export function getAriaSelected(
+  role: string,
+  selected: boolean,
+): string | null {
+  return role === "option" ? String(selected) : null;
 }
 
 export function getTabIndex(disabled: boolean): number {
@@ -230,7 +239,7 @@ export function handleKeyNavigation(
   e: KeyboardEvent,
   items: Element[],
   currentIndex: number,
-  onClick: () => void
+  onClick: () => void,
 ): void {
   // Arrow key logic
 }
@@ -238,24 +247,24 @@ export function handleKeyNavigation(
 
 ### Base class equivalents
 
-| Lit | Stencil |
-|---|---|
-| `ThemedComponent` (design tokens) | Shared `applyTokens(el, tokens)` utility called in `componentDidLoad` + `componentDidUpdate` |
-| `FormComponent` (`ElementInternals`) | Stencil supports `formAssociated: true` + `attachInternals()` natively since v4 |
+| Lit                                  | Stencil                                                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `ThemedComponent` (design tokens)    | Shared `applyTokens(el, tokens)` utility called in `componentDidLoad` + `componentDidUpdate` |
+| `FormComponent` (`ElementInternals`) | Stencil supports `formAssociated: true` + `attachInternals()` natively since v4              |
 
 ---
 
 ## Key Differences to Be Aware Of
 
-| Topic | Lit | Stencil |
-|---|---|---|
-| `@queryAssignedElements` | Built-in decorator | Use `querySelectorAll` manually |
-| Mutation reactivity | Lit tracks deep property changes | Requires reference changes (`[...arr]`) |
-| Templates | `html` tagged template literals | JSX/TSX |
-| Controller pattern | Reactive Controllers (standard interface) | Plain utility functions or Extends/Mixins |
-| Context | `@lit/context` (first-class) | Child queries parent (idiomatic) |
-| Slot change detection | `@queryAssignedElements` reactive | `slotchange` event listener |
-| Form association | Via `FormComponent` base + `attachInternals()` | Native via `formAssociated: true` in `@Component` |
+| Topic                    | Lit                                            | Stencil                                           |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------- |
+| `@queryAssignedElements` | Built-in decorator                             | Use `querySelectorAll` manually                   |
+| Mutation reactivity      | Lit tracks deep property changes               | Requires reference changes (`[...arr]`)           |
+| Templates                | `html` tagged template literals                | JSX/TSX                                           |
+| Controller pattern       | Reactive Controllers (standard interface)      | Plain utility functions or Extends/Mixins         |
+| Context                  | `@lit/context` (first-class)                   | Child queries parent (idiomatic)                  |
+| Slot change detection    | `@queryAssignedElements` reactive              | `slotchange` event listener                       |
+| Form association         | Via `FormComponent` base + `attachInternals()` | Native via `formAssociated: true` in `@Component` |
 
 ---
 
@@ -265,25 +274,25 @@ An alternative architecture collapses both `col-list-menu` and `col-list-menu-it
 
 ### Pros
 
-| Benefit | Detail |
-|---|---|
-| No communication overhead | All state (role, items, focus index) is local — no context, no DOM querying |
-| Simpler implementation | One file, one lifecycle, one test suite |
-| Atomic state transitions | "Deselect all, select this" is a single synchronous operation |
+| Benefit                       | Detail                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| No communication overhead     | All state (role, items, focus index) is local — no context, no DOM querying     |
+| Simpler implementation        | One file, one lifecycle, one test suite                                         |
+| Atomic state transitions      | "Deselect all, select this" is a single synchronous operation                   |
 | Best keyboard nav performance | Items array is always in memory — O(1) index lookup, no `querySelectorAll` ever |
-| Easier serialization | Items are plain JS objects; diffable, storable, transmittable |
+| Easier serialization          | Items are plain JS objects; diffable, storable, transmittable                   |
 
 ### Cons
 
-| Limitation | Detail |
-|---|---|
-| **No content projection** | Items can only contain what the schema supports. Arbitrary HTML (icons, badges, checkboxes, nested buttons) is impossible without accepting `innerHTML` strings — an XSS risk. This is the dealbreaker for a design system. |
-| Requires JavaScript to use | Data props cannot be set from plain HTML or server-rendered templates. Compound components work declaratively with zero JS. |
-| Schema bloat | Every new item feature (link variant, router flag, slot elements) requires a schema change and a component update. |
-| No per-item form association | `ElementInternals` can only be attached once per component. Individual items cannot be separate form-associated elements. |
-| No per-item styling | Consumers cannot target individual items via `::slotted()` or `::part()`. All items are opaque shadow DOM internals. |
-| Not extensible | Teams cannot add custom item types or extend item behavior without forking the component. |
-| No independent item reuse | `col-list-menu-item` cannot be used in other contexts (e.g., a standalone action row). |
+| Limitation                   | Detail                                                                                                                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No content projection**    | Items can only contain what the schema supports. Arbitrary HTML (icons, badges, checkboxes, nested buttons) is impossible without accepting `innerHTML` strings — an XSS risk. This is the dealbreaker for a design system. |
+| Requires JavaScript to use   | Data props cannot be set from plain HTML or server-rendered templates. Compound components work declaratively with zero JS.                                                                                                 |
+| Schema bloat                 | Every new item feature (link variant, router flag, slot elements) requires a schema change and a component update.                                                                                                          |
+| No per-item form association | `ElementInternals` can only be attached once per component. Individual items cannot be separate form-associated elements.                                                                                                   |
+| No per-item styling          | Consumers cannot target individual items via `::slotted()` or `::part()`. All items are opaque shadow DOM internals.                                                                                                        |
+| Not extensible               | Teams cannot add custom item types or extend item behavior without forking the component.                                                                                                                                   |
+| No independent item reuse    | `col-list-menu-item` cannot be used in other contexts (e.g., a standalone action row).                                                                                                                                      |
 
 ### Industry standard
 
@@ -307,6 +316,7 @@ For a **design system library**, use compound components. The single component t
 The compound component model (`col-list-menu` wrapping `col-list-menu-item` via slots) is the correct architecture for both frameworks and should be preserved unchanged.
 
 The `@lit/context` mechanism is a Lit-specific optimization for reactive parent-child state sharing. In Stencil, it is replaced by the **child-queries-parent** pattern, which:
+
 - Requires no additional libraries
 - Is idiomatic in the web component ecosystem
 - Performs identically at realistic menu sizes

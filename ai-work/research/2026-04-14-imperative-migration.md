@@ -1,8 +1,7 @@
 ---
-title: Migrate floatingOptions to flat declarative props in bds-tooltip and bds-popover
-status: pending
-date: 2026-04-14
-output: .ai/research/floating-options-declarative-api-migration.md
+ticket: —
+component: bds-tooltip
+status: exploring
 ---
 
 ## Context

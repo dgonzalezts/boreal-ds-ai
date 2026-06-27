@@ -1,3 +1,8 @@
+---
+ticket: —
+status: concluded
+---
+
 # CSS Architecture & Consumer Setup Research
 
 > Status: Research complete. Implementation deferred.

@@ -1,5 +1,6 @@
 ---
-status: in progress
+ticket: —
+status: exploring
 ---
 
 # Boreal Icons Strategy & Implementation Plan
