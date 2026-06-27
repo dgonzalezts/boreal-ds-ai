@@ -1,5 +1,8 @@
 ---
+ticket: EOA-10533
+component: bds-radio-button
 status: done
+created: 2026-05-19
 ---
 
 # bds-radio-button Implementation Plan

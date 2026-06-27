@@ -1,5 +1,7 @@
 ---
-status: in progress
+ticket: EOA-9609
+status: done
+created: 2026-03-16
 ---
 
 # Alpha Release — Vue First Publish, React Re-publish, Storybook Deploy
@@ -32,12 +34,12 @@ But it does **not** skip or gate the release if there are no new commits. With `
 
 ## Current State Summary
 
-| Package                             | Last tag             | Package.json version | Changes since tag                                  |
-|-------------------------------------|----------------------|----------------------|----------------------------------------------------|
-| `@telesign/boreal-style-guidelines` | `0.1.0-alpha.0` ✅   | unknown              | None visible in git log — no release needed        |
-| `@telesign/boreal-web-components`   | `0.1.0-alpha.0` ✅   | `0.1.0-alpha.0`      | 2 commits (scaffold removed, README added) + teammate's pending PR |
-| `@telesign/boreal-react`            | `0.1.0-alpha.2` ✅   | `0.1.0-alpha.2`      | 1 commit (README added)                            |
-| `@telesign/boreal-vue`              | ❌ none               | `0.0.1`              | All commits — first release                        |
+| Package                             | Last tag           | Package.json version | Changes since tag                                                  |
+| ----------------------------------- | ------------------ | -------------------- | ------------------------------------------------------------------ |
+| `@telesign/boreal-style-guidelines` | `0.1.0-alpha.0` ✅ | unknown              | None visible in git log — no release needed                        |
+| `@telesign/boreal-web-components`   | `0.1.0-alpha.0` ✅ | `0.1.0-alpha.0`      | 2 commits (scaffold removed, README added) + teammate's pending PR |
+| `@telesign/boreal-react`            | `0.1.0-alpha.2` ✅ | `0.1.0-alpha.2`      | 1 commit (README added)                                            |
+| `@telesign/boreal-vue`              | ❌ none            | `0.0.1`              | All commits — first release                                        |
 
 ---
 
@@ -75,6 +77,7 @@ pnpm release:wc
 - The `before:init` hook runs `turbo run build --filter=@telesign/boreal-web-components` and `tsx scripts/check-cem-changes.ts` — **review the CEM report before confirming**
 
 Verify:
+
 ```bash
 npm dist-tag ls @telesign/boreal-web-components
 # → alpha: 0.1.0-alpha.1
@@ -108,6 +111,7 @@ pnpm release:react
 - `pnpm` replaces `"workspace:*"` with the exact published web-components version (`0.1.0-alpha.1`) in the tarball
 
 Verify:
+
 ```bash
 npm dist-tag ls @telesign/boreal-react
 # → alpha: 0.1.0-alpha.3
@@ -147,6 +151,7 @@ cd ../..   # return to workspace root
 ```
 
 Verify:
+
 ```bash
 npm dist-tag ls @telesign/boreal-vue
 # → alpha: 0.1.0-alpha.0
@@ -198,6 +203,7 @@ npm view @telesign/boreal-vue dist-tags
 ```
 
 Consumer smoke test (outside monorepo):
+
 ```bash
 mkdir /tmp/vue-alpha-test && cd /tmp/vue-alpha-test
 npm install @telesign/boreal-vue@alpha
@@ -208,11 +214,11 @@ npm install @telesign/boreal-vue@alpha
 
 ## Critical Files
 
-| File | Role |
-|------|------|
-| `packages/boreal-vue/.release-it.json` | Vue release config (`tag: alpha`, `preRelease: alpha`, `publishPackageManager: pnpm`) |
-| `packages/boreal-react/.release-it.json` | React release config |
-| `packages/boreal-web-components/.release-it.json` | WC release config (CEM check hook) |
-| `package.json` (root) | `release:wc`, `release:react`, `release:vue`, `validate:pack:*`, `deploy:docs` scripts |
-| `.ai/plans/first-alpha-release.md` | Canonical release runbook with key concepts |
-| `.ai/plans/storybook-chromatic-deployment.md` | Chromatic setup (status: done) |
+| File                                              | Role                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `packages/boreal-vue/.release-it.json`            | Vue release config (`tag: alpha`, `preRelease: alpha`, `publishPackageManager: pnpm`)  |
+| `packages/boreal-react/.release-it.json`          | React release config                                                                   |
+| `packages/boreal-web-components/.release-it.json` | WC release config (CEM check hook)                                                     |
+| `package.json` (root)                             | `release:wc`, `release:react`, `release:vue`, `validate:pack:*`, `deploy:docs` scripts |
+| `.ai/plans/first-alpha-release.md`                | Canonical release runbook with key concepts                                            |
+| `.ai/plans/storybook-chromatic-deployment.md`     | Chromatic setup (status: done)                                                         |

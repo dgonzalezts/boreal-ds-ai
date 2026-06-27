@@ -1,5 +1,7 @@
 ---
-status: in progress
+ticket: EOA-9609
+status: done
+created: 2026-05-19
 ---
 
 # Integrated Monorepo Migration Plan

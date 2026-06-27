@@ -2,7 +2,7 @@
 ticket: EOA-10057
 component: bds-text-field
 status: done
-tasks_complete: 1, 2a, 2b, 2c, 3, 4, 5, 6
+created: 2026-05-19
 ---
 
 # bds-text-field — Full Implementation Plan

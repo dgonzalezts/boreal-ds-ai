@@ -1,5 +1,7 @@
 ---
+ticket: EOA-9609
 status: done
+created: 2026-05-19
 ---
 
 # First Alpha Release — Boreal DS

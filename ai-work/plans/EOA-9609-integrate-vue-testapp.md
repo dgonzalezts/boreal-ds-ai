@@ -1,5 +1,5 @@
 ---
-title: Integrate @telesign/boreal-vue and vue-testapp into monorepo
+ticket: EOA-9609
 status: done
 created: 2026-03-12
 ---

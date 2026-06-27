@@ -1,5 +1,7 @@
 ---
+ticket: EOA-9609
 status: pending
+created: 2026-05-19
 ---
 
 # Generator Extension Strategy: Cross-Package Component Scaffolding

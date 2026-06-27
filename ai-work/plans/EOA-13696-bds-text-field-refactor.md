@@ -1,3 +1,10 @@
+---
+ticket: EOA-13696
+component: bds-text-field
+status: done
+created: 2026-05-19
+---
+
 # bds-text-field: Shared Utilities Refactoring + Suffix Slot
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
@@ -12,14 +19,14 @@
 
 ## Files to create / modify
 
-| File | Notes |
-| ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx` | Modify — add `readOnly?` to `FieldActionsProps`/`renderFieldActions`; add `counterClass?` to `FieldFooterProps`/`renderFieldFooter` |
-| `packages/boreal-web-components/src/components/forms/bds-text-field/types/ITextField.ts` | Modify — extend `IFormFieldProps`; retain text-field-only props |
-| `packages/boreal-web-components/src/components/forms/bds-text-field/types/enum.ts` | Modify — re-export `FIELD_VARIANTS` / `FIELD_VALIDATION_TIMING` as backward-compatible aliases |
-| `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.tsx` | Modify — shared render functions, `useFormField` lifecycle, inline actions div, suffix slot first, icon `<em>` → `<i>` |
-| `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.scss` | Modify — shared mixin calls + text-field-specific overrides |
-| `packages/boreal-web-components/src/components/forms/bds-text-field/__test__/bds-text-field-basics.spec.ts` | Modify — add suffix slot tests |
+| File                                                                                                        | Notes                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`                           | Modify — add `readOnly?` to `FieldActionsProps`/`renderFieldActions`; add `counterClass?` to `FieldFooterProps`/`renderFieldFooter` |
+| `packages/boreal-web-components/src/components/forms/bds-text-field/types/ITextField.ts`                    | Modify — extend `IFormFieldProps`; retain text-field-only props                                                                     |
+| `packages/boreal-web-components/src/components/forms/bds-text-field/types/enum.ts`                          | Modify — re-export `FIELD_VARIANTS` / `FIELD_VALIDATION_TIMING` as backward-compatible aliases                                      |
+| `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.tsx`                     | Modify — shared render functions, `useFormField` lifecycle, inline actions div, suffix slot first, icon `<em>` → `<i>`              |
+| `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.scss`                    | Modify — shared mixin calls + text-field-specific overrides                                                                         |
+| `packages/boreal-web-components/src/components/forms/bds-text-field/__test__/bds-text-field-basics.spec.ts` | Modify — add suffix slot tests                                                                                                      |
 
 ---
 
@@ -131,12 +138,14 @@ The suffix slot is positioned as a **sibling to the actions div**, placed in the
 - `<slot name="tags" />` is **removed** from the render — it is undocumented, unused by any known consumer, and is a legacy placeholder from an earlier iteration where tag chips were to be slotted into `bds-text-field` directly; that architecture was superseded by the standalone `bds-tag-field` component
 
 **Prop default value alignment** (per `.agents/memory/stencil-prop-patterns.md` — constants as `@Prop()` defaults corrupt the Custom Elements Manifest; the CEM analyzer records the identifier, not the resolved string):
+
 - `validationTiming` default changes from `TEXT_FIELD_VALIDATION_TIMING.BLUR` → `'blur'`
 - `type` default changes from `TEXT_FIELD_TYPES.TEXT` → `'text'`
 - `variant` default changes from `TEXT_FIELD_VARIANTS.OUTLINE` → `'outline'`
 - Constants remain valid in all logic: `validatePropValue`, switch cases, class maps — only the `@Prop()` initializer must be a string literal
 
 **Class JSDoc cleanup** (per `ai-docs/guidelines/jsdoc-template.md` — prohibited tags produce zero CEM output while creating maintenance divergence):
+
 - `@summary` tag — remove; not a CEM-recognized tag
 - All `@attr` entries (×8) — remove; generated from `@Prop()` decorators automatically
 - All `@property` entries (×14) — remove; generated from `@Prop()` decorators automatically
@@ -264,7 +273,7 @@ git commit -m "refactor(web-components): EOA-13696 migrate bds-text-field lifecy
 - `@include form-field-control($prefix)` applied; followed by a `.#{$prefix}__control` override adding only:
   - `min-width: 0`
   - `width: 100%`
-  (no `padding-left` — container handles it; these two are text-field-specific flex sizing)
+    (no `padding-left` — container handles it; these two are text-field-specific flex sizing)
 - `@include form-field-actions($prefix)` applied with no additional overrides
 - `@include form-field-action($prefix)` applied
 - `@include form-field-counter('#{$prefix}__char-count')` applied (replaces inline `__char-count` block)
@@ -281,10 +290,12 @@ git commit -m "refactor(web-components): EOA-13696 migrate bds-text-field lifecy
 - No hardcoded color, spacing, or typography values remain — all replaced with `$boreal-*` token references
 
 **`reflect: true` audit** (per `.agents/memory/stencil-prop-patterns.md` — reflect only when the SCSS has an attribute CSS selector for that prop):
+
 - Read the full SCSS and verify which reflected props (`name`, `disabled`, `required`, `value`, `error`, `type`, `variant`) are referenced by an attribute selector (e.g. `bds-text-field[variant="plain"]` or `&[disabled]`)
 - Remove `reflect: true` from any prop whose value is driven purely by a CSS class modifier (e.g. `bds-text-field--plain`) rather than an attribute selector
 
 **CSS custom property documentation** (per `ai-docs/guidelines/jsdoc-template.md` — `@prop` belongs in SCSS, not in the TSX class JSDoc):
+
 - Add `/** @prop --bds-text-field-width: Sets a custom width for the component. */` as a `@prop` JSDoc comment in the SCSS file's component tag-selector block (e.g. `bds-text-field { ... }`)
 - This was incorrectly placed as `@cssprop` in the TSX class JSDoc; that entry was removed in Task 3
 
@@ -363,7 +374,7 @@ git commit -m "test(web-components): EOA-13696 add suffix slot unit tests for bd
 
 ---
 
-### Task 7: Add bds-spinner mixin to _interactions.scss and refactor bds-button
+### Task 7: Add bds-spinner mixin to \_interactions.scss and refactor bds-button
 
 **Files:**
 
@@ -482,9 +493,9 @@ This is the direct follow-up to this plan. It wires a new `loading` prop on `bds
 #### Behavioral matrix
 
 | `loading` | Actions div contents (left → right inside field) |
-|---|---|
-| `false` | `[clear ×]` `[chevron ∨]` |
-| `true` | `[spinner]` |
+| --------- | ------------------------------------------------ |
+| `false`   | `[clear ×]` `[chevron ∨]`                        |
+| `true`    | `[spinner]`                                      |
 
 Loading hides both the clear button and the chevron by updating `bds-text-field` props via `updateElementProp`.
 
@@ -494,8 +505,8 @@ Task 7 of this plan adds the `bds-spinner` mixin to `packages/boreal-web-compone
 
 #### New prop on bds-select
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
+| Prop      | Type      | Default | Description                                                                            |
+| --------- | --------- | ------- | -------------------------------------------------------------------------------------- |
 | `loading` | `boolean` | `false` | When `true`, shows a spinner in the suffix slot and hides the clear button and chevron |
 
 #### Integration approach

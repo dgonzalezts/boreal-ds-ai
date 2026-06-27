@@ -1,5 +1,7 @@
 ---
+ticket: EOA-12660
 status: done
+created: 2026-05-19
 ---
 
 # Depth (Box-Shadow) Token Pipeline Implementation Plan

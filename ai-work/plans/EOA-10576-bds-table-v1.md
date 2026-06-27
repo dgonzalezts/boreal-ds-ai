@@ -1,8 +1,11 @@
 ---
-status: in progress
+ticket: EOA-10576
+component: bds-table
+status: done
+created: 2026-05-19
 ---
 
-# bds-table Implementation Plan
+# bds-table v1 Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
@@ -654,7 +657,6 @@ feat(web-components): EOA-10576 add toolbar right zone with filter and layout ac
 ```
 
 ---
-
 
 ## Task 10: Column header truncation + tooltip
 

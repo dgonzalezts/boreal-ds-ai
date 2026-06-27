@@ -1,5 +1,7 @@
 ---
+ticket: AI-002
 status: done
+created: 2026-05-19
 ---
 
 # AI Scaffold — Knowledge Base Consolidation

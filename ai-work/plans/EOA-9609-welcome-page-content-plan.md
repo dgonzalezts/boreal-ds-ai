@@ -1,5 +1,7 @@
 ---
+ticket: EOA-9609
 status: done
+created: 2026-02-05
 ---
 
 # Implementation Plan: Welcome Page Content for Boreal DS Storybook

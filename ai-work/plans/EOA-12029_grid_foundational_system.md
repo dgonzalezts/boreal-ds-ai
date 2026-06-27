@@ -1,10 +1,8 @@
 ---
-title: "Grid System — bds-grid & bds-grid-item"
-ticket: ".ai/tickets/grid-system-&-component.md"
-figma: "https://www.figma.com/design/htCJc5chrgNRK337cyc14K/-BOR--DSG-COMPONENTS-%E2%86%92-GUIDELINES?node-id=7273-43888"
+ticket: EOA-12029
+component: bds-grid
 status: done
-date: 2026-04-15
-updated: 2026-04-21
+created: 2026-04-15
 ---
 
 ## Context

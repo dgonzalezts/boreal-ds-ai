@@ -1,5 +1,7 @@
 ---
+ticket: EOA-8845
 status: done
+created: 2026-05-19
 ---
 
 # Implementation Plan: Shared Storybook Components for Boreal DS

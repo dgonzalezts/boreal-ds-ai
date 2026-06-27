@@ -1,5 +1,8 @@
 ---
+ticket: EOA-12342
+component: bds-checkbox-button
 status: done
+created: 2026-05-19
 ---
 
 # bds-checkbox-button Implementation Plan

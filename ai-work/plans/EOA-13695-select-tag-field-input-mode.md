@@ -1,5 +1,8 @@
 ---
+ticket: EOA-13695
+component: bds-tag-field
 status: done
+created: 2026-05-19
 ---
 
 # `bds-tag-field` `inputMode` prop — Restrict tag creation and enable searchable multiselect

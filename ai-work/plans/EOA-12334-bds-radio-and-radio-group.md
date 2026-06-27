@@ -1,5 +1,8 @@
 ---
+ticket: EOA-12334
+component: bds-radio-group
 status: done
+created: 2026-05-19
 ---
 
 # bds-radio + bds-radio-group Implementation Plan

@@ -1,3 +1,9 @@
+---
+ticket: AI-001
+status: done
+created: 2026-05-19
+---
+
 # AI Scaffold Restructure Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
@@ -17,15 +23,15 @@
 | Tasks 1–13 (Phase 1) | ✅ Complete    | Canonical dirs, symlinks, aisync, sync-symlinks, CLAUDE.md                                                                            |
 | Task 14              | ✅ Complete    | Audit written to `ai-work/sessions/2026-06-10-memory-consolidation-audit.md`                                                          |
 | Task 15              | ✅ Complete    | 16 memory entries promoted into 3 guideline files (9 → stencil-best-practices, 3 → stencil-unit-testing-patterns, 4 → code-practices) |
-| Task 16              | ⏳ Deferred    | Delete redundant memory files + update MEMORY.md — do after Phase 3                                                                   |
-| Task 17              | ⏳ Deferred    | Finalize copilot-instructions consolidation — do after Phase 3                                                                        |
-| Task 18              | ⏳ Not started | Create `with-node.sh` + `check-node-version.sh`                                                                                       |
-| Tasks 19–22          | ⏳ Not started | Create 4 knowledge skills                                                                                                             |
-| Tasks 23–26          | ⏳ Not started | Create 4 specialist subagent files                                                                                                    |
-| Task 27              | ⏳ Not started | Repurpose `frontend-developer.md` as coordinator                                                                                      |
-| Task 28              | ⏳ Not started | Update `writing-plans` + `executing-plans` skills                                                                                     |
-| Task 29              | ⏳ Not started | Create `create-component` SDLC entry-point skill                                                                                      |
-| Task 30              | ⏳ Not started | Run `sync-symlinks` to propagate new agents/skills into mirror dirs                                                                   |
+| Task 16              | ✅ Complete    | Delete redundant memory files + update MEMORY.md                                                                                      |
+| Task 17              | ✅ Complete    | Finalize copilot-instructions consolidation                                                                                           |
+| Task 18              | ✅ Complete    | Create `with-node.sh` + `check-node-version.sh`                                                                                       |
+| Tasks 19–22          | ✅ Complete    | Create 4 knowledge skills                                                                                                             |
+| Tasks 23–26          | ✅ Complete    | Create 4 specialist subagent files                                                                                                    |
+| Task 27              | ✅ Complete    | Repurpose `frontend-developer.md` as coordinator                                                                                      |
+| Task 28              | ✅ Complete    | Update `writing-plans` + `executing-plans` skills                                                                                     |
+| Task 29              | ✅ Complete    | Create `create-component` SDLC entry-point skill                                                                                      |
+| Task 30              | ✅ Complete    | Run `sync-symlinks` to propagate new agents/skills into mirror dirs                                                                   |
 
 ---
 
@@ -70,14 +76,14 @@
 
 ### Phase 2 — Consolidate (separate milestone, do not begin until Phase 1 is complete and verified)
 
-| File                                                    | Notes                                                             |
-| ------------------------------------------------------- | ----------------------------------------------------------------- |
-| `ai-docs/guidelines/stencil-best-practices.md`          | Modify — absorb unique detail from overlapping memory entries     |
-| `ai-docs/guidelines/stencil-unit-testing-patterns.md`   | Modify — absorb unique detail from overlapping memory entries     |
-| `ai-docs/guidelines/development-standards.md` | Modify — absorb unique detail from overlapping memory entries     |
-| `.agents/memory/MEMORY.md`                              | Modify — remove entries promoted to guidelines; add pointers      |
-| `.agents/memory/*.md`                                   | Remove — entries that duplicate guideline content after promotion |
-| `.github/copilot-instructions.md`                       | Modify — remove sections that duplicate `ai-docs/docs/` content   |
+| File                                                  | Notes                                                             |
+| ----------------------------------------------------- | ----------------------------------------------------------------- |
+| `ai-docs/guidelines/stencil-best-practices.md`        | Modify — absorb unique detail from overlapping memory entries     |
+| `ai-docs/guidelines/stencil-unit-testing-patterns.md` | Modify — absorb unique detail from overlapping memory entries     |
+| `ai-docs/guidelines/development-standards.md`         | Modify — absorb unique detail from overlapping memory entries     |
+| `.agents/memory/MEMORY.md`                            | Modify — remove entries promoted to guidelines; add pointers      |
+| `.agents/memory/*.md`                                 | Remove — entries that duplicate guideline content after promotion |
+| `.github/copilot-instructions.md`                     | Modify — remove sections that duplicate `ai-docs/docs/` content   |
 
 ### Phase 3 — Subagents Architecture (separate milestone, do not begin until Phase 1 is complete and verified)
 
