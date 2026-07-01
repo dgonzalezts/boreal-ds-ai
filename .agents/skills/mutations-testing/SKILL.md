@@ -138,8 +138,9 @@ Re-run after each fix until the score is ≥ 90%.
 # Copy results back to the main workspace, then remove the worktree.
 # REPO_ROOT must be set (see Step 1); re-derive it if running in a fresh shell:
 #   REPO_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+mkdir -p "$REPO_ROOT/ai-work/qa/mutation-reports"
 cp packages/boreal-web-components/mutation.md \
-   "$REPO_ROOT/ai-work/qa/mutation-$COMPONENT.md"
+   "$REPO_ROOT/ai-work/qa/mutation-reports/mutation-$COMPONENT.md"
 
 # Discard the worktree — all Stryker files disappear with it
 cd "$REPO_ROOT"

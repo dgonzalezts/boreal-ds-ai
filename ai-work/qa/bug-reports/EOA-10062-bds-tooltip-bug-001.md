@@ -113,4 +113,4 @@ Low. The `closest()` path only adds value in the unusual case where the tooltip'
 ## Related
 
 - `anchoredMixin` is also used by `bds-popover`; no popover regressions identified.
-- Known separate bug (unfixed as of 2026-04-13): `mouseleave` "stay on hover" logic in `bds-tooltip.tsx` uses `e.target` instead of `e.relatedTarget`. Tracked in `.agents/memory/mouseleave-relatedtarget-vs-target.md`.
+- Known separate bug, now fixed (2026-07-01): `mouseleave` "stay on hover" logic in `bds-tooltip.tsx` used `e.target` instead of `e.relatedTarget`. See `ai-work/qa/bug-reports/EOA-15147-bds-tooltip-bug-001.md` and `.agents/memory/mouseleave-relatedtarget-vs-target.md`.

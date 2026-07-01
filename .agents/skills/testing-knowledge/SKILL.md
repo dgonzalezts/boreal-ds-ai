@@ -27,6 +27,22 @@ Do not skip or reverse this order. Coverage alone does not prove the tests catch
 
 ---
 
+## Running the Spec Suite Scoped to One Component
+
+Full rationale and verified failure modes: `.agents/memory/stencil-scoped-test-invocation.md`. Summary:
+
+- Use a bare positional path, not `--testPathPattern` — Stencil's CLI wrapper mangles that flag into a matches-almost-everything character-class regex.
+- Pass `--collectCoverageFrom` explicitly, or the coverage % is computed against the project-wide default and looks misleadingly low.
+- Use `pnpm --filter <package> run <script>` from the repo root, not `cd <package> && ...` — `with-node.sh` resets cwd to repo root internally, so a preceding `cd` has no effect.
+
+```bash
+.agents/scripts/with-node.sh pnpm --filter boreal-web-components run test:coverage -- \
+  src/components/overlays/bds-tooltip \
+  --collectCoverageFrom="src/components/overlays/bds-tooltip/bds-tooltip.tsx"
+```
+
+---
+
 ## Spec File Organisation
 
 Split tests across up to five files per component: `{bds-component}.{type}.spec.ts`
@@ -107,6 +123,26 @@ Add a child to `components` only when the test needs to assert on that component
 ## `formDisabledCallback` Test Pattern
 
 `formDisabledCallback` is triggered by `<fieldset disabled>`, not by setting `form.disabled`. In unit tests, set `component.disabled` directly. In integration tests, toggle a `<fieldset disabled>` ancestor.
+
+---
+
+## Accessing Internal (Non-`@Prop`) Members for Precise Mutant Killing
+
+Plain class getters/methods (not decorated with `@Prop()`/`@Method()`, e.g. an internal `options`/`hooks` getter, or a `private` method) aren't part of the custom element's public API type, but TypeScript's `private` is compile-time only — the member still exists at runtime. `newSpecPage()` returns `rootInstance`, the actual class instance, which is the correct way to reach these members directly instead of routing through DOM events and `waitForChanges()` timing:
+
+```typescript
+const page = await newSpecPage({ components: [BdsTooltip], html: "..." });
+const instance = page.rootInstance as unknown as {
+  hooks: AnchoredHooks;
+  subscribe: (trigger?: HTMLElement) => void;
+};
+instance.hooks.onPositionUpdate(positioningResult); // call directly — no async positioning engine involved
+expect(() => instance.subscribe(undefined)).not.toThrow(); // exercise a guard clause directly
+```
+
+This is the established pattern for testing internals (see `bds-popover-methods.spec.ts`'s `(instance as unknown as { listenTarget: HTMLElement }).listenTarget`). Prefer it over triggering a real `mouseenter`/`autoUpdate` cycle when the code under test doesn't otherwise depend on the DOM event pipeline — it's deterministic and avoids depending on whether an async positioning library actually resolves inside `waitForChanges()`.
+
+**Watch for placeholder objects that silently pass validation but don't exercise a guard.** When testing an optional-chaining or `undefined`-check mutant, use an actual `undefined`/missing value, not a mostly-empty object — `{}` and `undefined` both read as "falsy" downstream but only `undefined` triggers the difference between `obj?.prop` and `obj.prop`. Passing `{}` where the mutant needs `undefined` leaves that specific mutant surviving even though the test "looks" like a negative-path test (caught during a real Stryker run on `bds-tooltip`, where a test named "when middlewareData is absent" used `middlewareData: {}` and missed the corresponding `OptionalChaining` mutant).
 
 ---
 
