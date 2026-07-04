@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-mock-doc-mouseevent-relatedtarget.md

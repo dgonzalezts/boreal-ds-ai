@@ -23,7 +23,9 @@
       "Bash(rtk git *)",
       "Bash(python3 -c ' *)",
       "Bash(rtk grep *)",
-      "mcp__playwright__browser_resize"
+      "mcp__playwright__browser_resize",
+      "Bash(.agents/scripts/with-node.sh pnpm *)",
+      "mcp__playwright__browser_console_messages"
     ],
     "deny": [
       "Read(./.env)"

@@ -11,3 +11,5 @@
 - [classMap getter](feedback_classmap_getter.md) — use `private get classMap(): StyleModifiers` for conditional classes; never inline ternaries in JSX class bindings
 - [SCSS BEM nesting](feedback_scss_bem_nesting.md) — nest all `&__element` rules inside the block selector; never write flat `.bds-component__element` selectors
 - [Component code organization](component-code-organization-bds-table.md) — `@Element()` before `@State()`; lifecycle section 9 follows execution order (`componentDidRender` before `componentDidLoad`); section comments omitted by team preference; `@State()` JSDoc is optional
+- [Collapsed-trigger focus/scroll bug pattern](feedback_scroll_into_view_collapsed_focusable.md) — manage tabindex on every internal focusable, not just the visible trigger, or reverse Tab can bypass the expand handler and corrupt scrollLeft on overflow:hidden containers
+- [bds-search-bar scroll-clip fix (EOA-15204)](stencil-search-bar-scroll-clip-bug.md) — root cause + fix location; also notes `--testPathPattern` doesn't scope correctly in this repo's test runner

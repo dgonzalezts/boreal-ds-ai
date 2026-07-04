@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-scoped-test-invocation.md

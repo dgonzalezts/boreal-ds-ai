@@ -1,96 +1,148 @@
-## Prop Definitions Cleanup — Remove Indexed Access Types and Add Explicit Primitive Annotations
+# PR Title
 
-## Type of Change
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [X] Refactoring / chore (non-breaking change that improves code quality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
+fix(web-components): EOA-15204 fix focus transitions, icon clipping, and spinner layout on search bar
 
-## Description of the Feature
+---
 
-This PR aligns `@Prop()` declarations across all Stencil web components with the project's
-**Type Inference and Default Values** and **Component Interface Contract** guidelines.
-Three recurring anti-patterns are eliminated:
+# PR Body
 
-1. **Indexed access types** — `@Prop() readonly x: IFoo['bar'] = ''` replaced with the concrete
-   named type alias (e.g. `ButtonVariant`) or an explicit primitive annotation (`: string`,
-   `: boolean`, `: number`).
-2. **Opaque constant defaults** — `= POPOVER_POSITION.BOTTOM` replaced with the actual string
-   literal `= 'bottom'`, so Stencil's CEM static analyser records the value (not the identifier)
-   in the generated manifest.
-3. **Unannotated `readonly` primitive props** — TypeScript narrows `readonly x = false` to the
-   literal type `false`, which causes the CEM to emit `x?: false` in JSX types. Consumers
-   attempting to pass a dynamic boolean receive `Type 'boolean' is not assignable to type 'false'`.
-   Explicit `: boolean` annotations fix this.
+## Description of the Bug
 
-## Implementation Details
+This PR addresses multiple layout, styling, and functional issues in the `bds-search-bar` component:
+1. **Focus Jitter / Jumps**: When navigating to the search bar via keyboard (e.g. Shift+Tab), focus lands directly on the inner input while it is collapsed. This triggers a standard width expand transition, causing the input to slide out from under the user's cursor/focus point.
+2. **Icon Clipping on Collapse**: When the search bar collapses, browser auto-scrolling on the inner `overflow: hidden` field container leaves a scroll offset (`scrollLeft > 0`) that is never cleared. Once collapsed, the leading search icon is clipped/scrolled out of view.
+3. **Loading Spinner Alignment & Redundancy**: In `mode="list"`, the loading spinner renders as a custom suffix element that is misaligned and overlaps/collides with the clear button. This also duplicates the built-in loader mechanism of the underlying `bds-select` component.
 
-### Files changed
+---
 
-- **22 component `.tsx` files** — `IFoo['bar']` removed from every `@Prop()` annotation; explicit
-  primitive type annotations added; constant defaults replaced with literals. Unused interface
-  imports dropped where the interface is no longer referenced.
-- **4 test spec files** — Assertions updated to reflect correct Stencil boolean coercion behaviour:
-  - Boolean JS property reads: `toBe('true')` → `toBe(true)`
-  - Reflected boolean attribute checks: `getAttribute(x).toBe('true')` → `toBe('')`
-    (Stencil reflects `true` as an empty attribute string, not the string `"true"`)
-  - Boolean data-attribute presence: `getAttribute('data-multiline').toBe(true)` →
-    `hasAttribute('data-multiline').toBe(true)`
+## Steps to Reproduce
 
-### Scope
+### Focus Jitter / Jumps:
+1. Place a focusable element after a minimized `bds-search-bar`.
+2. Tab to that element, and then press `Shift + Tab` to focus back onto the search bar.
+3. Observe the input sliding/jumping visual transition after focus has already landed.
 
-| Pattern fixed | Occurrences | Files |
-|---|---|---|
-| `IFoo['bar']` indexed access types | 76 | 22 |
-| Constant/enum defaults | 9 | 5 |
-| Missing explicit primitive annotations | ~50 | 22 |
-| Test assertion corrections | 8 | 4 |
+### Icon Clipping on Collapse:
+1. Focus/expand a minimized `bds-search-bar`.
+2. Type search criteria, then blur/close the search bar.
+3. Observe that the leading search icon is clipped/hidden on collapse.
 
-Components touched: `bds-button`, `bds-button-group`, `bds-list-menu`, `bds-list-menu-item`,
-`bds-toggle`, `bds-badge`, `bds-banner`, `bds-spinner`, `bds-status`, `bds-tag`,
-`bds-checkbox-card`, `bds-flag`, `bds-radio-card`, `bds-avatar`, `bds-grid`, `bds-grid-item`,
-`bds-divider`, `bds-step-item`, `bds-dialog`, `bds-popover`, `bds-tooltip`, `bds-typography`,
-`bds-pagination`, `bds-toast-container`, `bds-toast-item`, `bds-tag-field`.
+### Loading Spinner:
+1. Render a `bds-search-bar` with `mode="list"` and `loading={true}`.
+2. Observe the custom spinner's alignment relative to the clear action and trigger field.
 
-## Impact of the Feature
+---
 
-- **No consumer-visible API changes.** All prop names and default values remain identical.
-- **Improved CEM output.** Storybook ArgType controls, IDE autocompletion, and framework wrapper
-  types now show correct union literals instead of identifiers or overly-narrow literal types.
-- **Correct boolean attribute coercion.** Props typed as `: boolean` now correctly coerce
-  `disabled="true"` (HTML attribute string) to the JS boolean `true`, and reflect `true` as an
-  empty attribute (`disabled=""`), matching the HTML spec.
+## Root Cause
+
+1. **Focus Jitter**: The standard CSS expand transition ran even when focus had already landed on the input. An instant expansion is required to prevent the input from moving underneath the focused state.
+2. **Icon Clipping**: The inner `.bds-text-field__container` flex container was scrolled by the browser to keep the cursor visible, and this scroll offset (`scrollLeft`) persisted after collapse.
+3. **Loading Spinner**: The component rendered its own custom spinner element and container (`.bds-search-bar__loading`) rather than delegating the loading state to the `bds-select` or `bds-text-field` internal suffix slots.
+
+---
+
+## Description of the Fix
+
+1. **Instant Expansion on Direct Focus**: Introduced `suppressExpandTransition` state and class `.bds-search-bar__select--no-transition` that disables transitions for one frame. When `handleFocus` is called while the bar is closed, `expandInstantly()` is executed, expanding the search bar instantly without width animation.
+2. **Field Scroll Reset & Overflow**: Added `resetFieldScroll()` to set `scrollLeft = 0` on the text field container upon closing the search bar. Added CSS rule to set `overflow: visible` on `.bds-text-field__container` and `.bds-search-bar__trigger-wrapper` when collapsed to prevent clipping.
+3. **Spinner Delegation**:
+   - In `mode="list"`, delegated the loading spinner to the underlying `bds-select` via its `loading` prop.
+   - In `mode="search"`, rendered the spinner directly inside the `bds-text-field`'s `suffix` slot.
+4. **CSS Layout Cleanups**:
+   - Changed default expanded width from `320px` to `100%` using `width: var(--bds-search-bar-width, 100%)` for improved layout responsiveness.
+   - Hid the redundant default clear action (`.bds-text-field__action--icon-right`).
+5. **Testing & Docs**:
+   - Added unit tests covering the transition-end events, fallback timers, disconnect cleanups, and instant expansion states.
+   - Updated Storybook docs with details and canvas examples for virtualization performance and form integration.
+   - Added `flushMicrotasks` test helper to easily test native Promise microtasks under fake timers.
+
+---
+
+## Impact of the Fix
+
+- No breaking changes.
+- Seamless and accessible keyboard focus navigation.
+- Responsive sizing and correct layout rendering across states.
+- Unit test coverage expanded to verify the transition lifecycles.
+
+---
 
 ## Testing Conducted
 
-- **1746 unit tests across 178 test suites** — all pass after assertion corrections.
-- **`tsc -b`** on `react-testapp` and **`vue-tsc --build`** on `vue-testapp` — both pass with
-  zero errors, confirming wrapper types correctly surface the updated prop annotations.
-- **Grep verification** — zero remaining `IFoo['bar']` or in-scope constant-default patterns
-  in any `@Prop()` declaration.
+### Automated:
+- Unit tests added and updated in:
+  - `packages/boreal-web-components/src/components/forms/bds-search-bar/__test__/bds-search-bar.methods.spec.ts`
+  - `packages/boreal-web-components/src/components/forms/bds-search-bar/__test__/bds-search-bar.basics.spec.ts`
+  - `packages/boreal-web-components/src/components/forms/bds-search-bar/__test__/bds-search-bar.events.spec.ts`
+  - `packages/boreal-web-components/src/components/forms/bds-search-bar/__test__/bds-search-bar.variants.spec.ts`
+- Verified unit test suite passes locally.
 
-## Screenshots/Videos (if applicable)
+### Manual:
+- Tested focus behavior and transitions with keyboard navigation (Tab/Shift+Tab).
+- Verified that the leading search icon resets correctly on collapse and is never clipped.
+- Validated loading spinner layouts under both `mode="list"` and `mode="search"`.
 
-N/A — no visual changes.
+---
 
-## Additional Remarks
+## Screenshots/Videos
 
-- Three constant defaults in `bds-slider.tsx` and one in `bds-tag-field.tsx` (the `variant` prop)
-  were intentionally left unchanged: `bds-slider` was out of scope for this ticket, and
-  `bds-tag-field`'s `variant` already follows the correct named-type-alias pattern.
-- The `bds-tooltip.tsx` JSDoc hint ("JSDoc types may be moved to TypeScript types") is a
-  pre-existing IDE warning on the `@returns` tag; it does not affect compilation.
+Visual assets demonstrating the states and fixes are located in the repository root:
+- `before-collapse.png`
+- `during-collapse.png`
+- `after-fix.png`
+- `final-fixed.png`
+
+---
+
+## References
+
+Closes EOA-15204
+
+---
 
 ## Checklist
 
-- [X] My code adheres to the project's coding and style guidelines.
-- [X] I have conducted a self-review of my code.
-- [ ] I have commented my code, particularly in complex areas.
-- [ ] I have made corresponding changes to the documentation.
-- [X] I have tested my feature thoroughly in different environments.
-- [X] I have added tests that prove my feature works as intended.
-- [X] New and existing unit tests pass locally with my changes.
-- [X] I have assessed the performance impact of the feature.
-- [X] My changes do not introduce new warnings or errors.
-- [X] I have checked for compatibility with other parts of the codebase.
+### General
+
+- [x] Follows conventional commit format: `fix(scope): TICKET-ID description`
+- [x] Ticket reference included (`Closes EOA-15204`)
+- [x] Code adheres to TypeScript strict mode — no `any`
+- [x] Self-reviewed code for quality and correctness
+- [x] All tests pass locally
+
+### Bug Fix Verification
+
+- [x] Root cause identified and documented
+- [x] Fix addresses the root cause, not just symptoms
+- [x] Steps to reproduce verified before and after fix
+- [x] Bug no longer reproducible with the fix applied
+- [x] No new bugs introduced by the fix
+
+### Testing
+
+- [x] Regression tests added to prevent bug from returning
+- [x] Existing unit tests updated if behavior changed
+- [x] Edge cases tested (rapid actions, async timing, etc.)
+- [x] Tested across supported browsers
+- [x] Accessibility verified (keyboard, screen readers)
+
+### Boreal DS Standards
+
+- [x] Design tokens preserved — no style regressions
+- [x] Component API unchanged (unless required for fix)
+- [x] Events and lifecycle methods work correctly
+- [x] No console warnings or errors introduced
+
+### Documentation
+
+- [x] JSDoc updated if API changed
+- [x] Storybook story updated if needed
+- [x] Code comments added to explain non-obvious fix logic
+- [x] README updated if user-facing behavior changed
+
+### Impact Assessment
+
+- [x] Performance impact assessed (no degradation)
+- [x] Bundle size unchanged or minimally increased
+- [x] No breaking changes introduced
+- [x] Backward compatibility maintained
