@@ -84,6 +84,26 @@ Apply this pattern in every spec file for a component that uses `formAssociatedM
 
 ---
 
+## Suppressing Console Noise Across Sibling Spec Files
+
+`suppressConsoleWarn()` (same file as `suppressConsoleError()`, `src/utils/testing/mocks/console.ts`) silences `console.warn` for the enclosing `describe` block via `beforeEach`/`afterEach` spies. Call it if the component under test can trigger `console.warn` during normal test execution — most commonly:
+
+- Stencil's dev-mode "Prop `X` is immutable but was modified from within the component" warning
+- This project's `Logger.warn` fallback path
+
+```typescript
+import { suppressConsoleWarn } from "@/utils";
+
+describe("bds-my-component basics", () => {
+  suppressConsoleWarn();
+  // tests...
+});
+```
+
+**Convention: check sibling spec files before adding a new one.** When a component's `__test__/` directory already has spec files calling `suppressConsoleWarn()`/`suppressConsoleError()`, any new spec file added for that component must call the same hook — the warning is triggered by the component itself, not the specific spec file, so a new file omitting it leaks console noise even though the convention is established next to it. No lint/CI check catches this; verify by grepping the target `__test__/` directory for `suppressConsole` before writing a new spec file.
+
+---
+
 ## Testing Events That Fire in `componentDidLoad`
 
 `componentDidLoad` runs synchronously inside `newSpecPage()` — listeners attached after `await newSpecPage(...)` miss those events.

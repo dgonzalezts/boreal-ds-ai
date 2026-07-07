@@ -1,7 +1,7 @@
 ---
 ticket: EOA-14935
 component: bds-table
-status: pending
+status: in progress
 created: 2026-07-06
 ---
 

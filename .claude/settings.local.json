@@ -27,7 +27,8 @@
       "Bash(.agents/scripts/with-node.sh pnpm *)",
       "mcp__playwright__browser_console_messages",
       "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/main.tsx\")",
-      "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/index.css\")"
+      "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/index.css\")",
+      "Bash(/Users/dgonzalez/projects/src/boreal-ds/.agents/scripts/with-node.sh pnpm *)"
     ],
     "deny": [
       "Read(./.env)"
