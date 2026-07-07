@@ -13,4 +13,8 @@ module.exports = {
   testMatch: [
     "<rootDir>/src/components/<category>/<component>/__test__/**/*.spec.tsx",
   ],
+  // Prevents each Stryker worker from also parallelizing internally, which multiplies
+  // total process count far past Stryker's own concurrency cap. Pair with
+  // `concurrency: 2` in stryker.component.config.mjs.
+  maxWorkers: 1,
 };

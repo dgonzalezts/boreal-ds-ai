@@ -114,11 +114,15 @@ pnpm add -D --filter boreal-web-components @stryker-mutator/core @stryker-mutato
 
 ### Step 6 — Run and capture results
 
+The templates already cap `concurrency: 2` (Stryker) and `maxWorkers: 1` (Jest) — see "Memory Safety" below before raising either value.
+
 ```bash
 cd packages/boreal-web-components
 npx stryker run stryker.$COMPONENT.config.mjs > mutation.md 2>&1
 cat mutation.md
 ```
+
+If the run reports mutants as `timed out` in unusually high numbers, suspect memory pressure before suspecting slow tests — re-check after confirming the concurrency caps are in place.
 
 ### Step 7 — Review surviving mutants and improve tests
 
@@ -163,3 +167,14 @@ The working branch is untouched. No `git restore`, no manual `pnpm remove`.
 - Mutation testing is compute-intensive. Start with the single component file, not the whole package.
 - `coverageAnalysis: 'perTest'` in the template is the most accurate mode but also the slowest. Use `'off'` for a quick first pass.
 - The `.stryker-tmp/` directory is created in the worktree and removed with it — no cleanup needed.
+
+## Memory Safety
+
+Stryker's default `concurrency` is roughly `CPUs - 1` — on an 11-CPU/18GB machine this spawned 10 parallel worker processes, each booting its own full Jest+ts-jest instance, and OOM'd the machine before the run finished (confirmed on `bds-pagination`, 2026-07-07). Mutants reported as `timed out` in that run turned out to be memory-pressure artifacts, not genuinely slow tests — capping concurrency dropped the timeout count to 0 on re-run.
+
+Both templates in this skill already set:
+
+- `concurrency: 2` in `stryker.component.config.mjs`
+- `maxWorkers: 1` in `jest.stryker.config.cjs`
+
+Keep both caps unless the machine is known to have memory to spare. If you must raise them, raise one at a time and watch `ps aux | grep jest-worker` / `top -l 1 | grep PhysMem` (macOS) during the run rather than assuming headroom.

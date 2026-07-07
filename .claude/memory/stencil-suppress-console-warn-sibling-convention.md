@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-suppress-console-warn-sibling-convention.md

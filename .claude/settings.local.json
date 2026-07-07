@@ -28,7 +28,10 @@
       "mcp__playwright__browser_console_messages",
       "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/main.tsx\")",
       "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/index.css\")",
-      "Bash(/Users/dgonzalez/projects/src/boreal-ds/.agents/scripts/with-node.sh pnpm *)"
+      "Bash(/Users/dgonzalez/projects/src/boreal-ds/.agents/scripts/with-node.sh pnpm *)",
+      "Bash(awk '/SF:.*bds-pagination\\\\.tsx/,/end_of_record/' coverage/lcov.info)",
+      "Bash(awk -F'[:,]' '$3==0 {print $2}')",
+      "Bash(top -l 1 -n 0)"
     ],
     "deny": [
       "Read(./.env)"
