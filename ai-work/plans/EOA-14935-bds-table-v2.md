@@ -680,8 +680,9 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 - Per Utility Discovery, do not reuse `VirtualScrollController` — wire `@tanstack/virtual-core`'s `Virtualizer` directly against Stencil's render cycle. **Correction (researched 2026-07-06):** even a fixed/reworked `VirtualScrollController` could not be reused here — its entire architecture (`MutationObserver` + `querySelectorAll` over a consumer's pre-existing light-DOM children) is built to manage markup a consumer already placed, not to drive a declarative render function like `renderBody()`. These are different integration points that happen to share the same underlying `Virtualizer` primitive, not a shared-utility opportunity.
 - **No proven reference implementation exists to copy.** `ai-docs/lib/aqua-ds.txt`'s `aq-table-core.tsx` declares `@State() virtualizer: Virtualizer<Element, Element>` but never instantiates or reads it anywhere in the file — it's dead/unused code, not a working example. Aqua's actual windowing pattern (`utils/helpers/virtualScroll.ts`'s `VirtualScroll` class, used by its list/dropdown components, not its table) also only reduces DOM-attachment cost per scroll frame, not the upfront cost of creating every row — the same limitation as our `VirtualScrollController`. This task must be built directly against `@tanstack/virtual-core`'s public API (below) rather than by porting an existing pattern from either codebase.
 - `componentDidLoad`, when `virtual` is `true`, initializes with `count` from whichever row-set is active (`data`, `visibleRows`, or `serverSide`-supplied `data`), `getScrollElement` pointing at `.bds-table__wrapper`, `estimateSize: () => 48`, `measureElement` for variable-height rows.
-- `renderBody()` iterates only `getVirtualItems()` when `virtual` is `true`, with a spacer sized via `getTotalSize()`.
+- `renderBody()` iterates only `getVirtualItems()` when `virtual` is `true`, with a spacer sized via `getTotalSize()`, using **explicit `key={rowId}` on every virtualized `<tr>`** — currently absent from `renderBody()` even without virtualization. Without it, Stencil's JSX diffing falls back to positional reconciliation, risking the exact row-identity-cache mismatch class TanStack's own tracker documents upstream ([`TanStack/virtual#1147`](https://github.com/TanStack/virtual/issues/1147)) — except inside our own Stencil reconciliation instead of TanStack's internals. Add this regardless of virtualization, since the underlying data (`sortedData`/`visibleRows`) can already reorder on sort/filter/page-change today.
 - Log via `Logger` if `virtual=true` and `maxHeight === ''`.
+- **Critical finding (verified 2026-07-06 against TanStack Virtual's own official examples and issue tracker, not assumed):** TanStack's own official `examples/react/table` renders a genuine `<table><thead><tbody><tr><td>` with rows positioned via `transform: translateY(...)` only — the same technique this task uses. That exact example is the subject of open, unresolved bugs ([`#585`](https://github.com/TanStack/virtual/issues/585), [`#591`](https://github.com/TanStack/virtual/issues/591), [`#640`](https://github.com/TanStack/virtual/issues/640)): a sticky `<thead>` "cannot go beyond the bounds of the `<table>` element," and since the table only ever contains the visible+overscan rows, its rendered height is smaller than the true scroll height — so the sticky header breaks/disappears while scrolling. A maintainer states plainly: *"table examples are misleading, we should not use the absolute position[ing]/translateY here."* `bds-table` already has a sticky `<thead>` (`position: sticky; top: 0`), so this is not hypothetical. **Decision (Option B, confirmed with the user): scope out the combination for v1** rather than rearchitecting to a grid/flex-on-semantic-tags layout (which would make `table-layout: fixed` and the existing pinned-column offset math irrelevant — a materially larger change) or prototyping an unvalidated spacer-row alternative. **When `virtual=true`, disable the `<thead>`'s `position: sticky` behavior** (conditional class/style override) and document this as a known v1 limitation — silently leaving `position: sticky` active would reproduce the exact broken behavior found upstream.
 
 **Unit tests to cover:**
 
@@ -689,6 +690,8 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 - `virtual={true}` renders only the windowed subset.
 - `virtual={true}` without `maxHeight` logs a warning.
 - Spacer sized to `getTotalSize()` present when virtualized.
+- Each virtualized `<tr>` carries the correct `key={rowId}`; row/checkbox selection state stays attached to the correct row after a sort or filter while `virtual=true`.
+- `virtual={true}` disables `<thead>` sticky behavior (Option B); `virtual={false}` leaves it unchanged.
 
 **Manual test** _(waiveable)_:
 
@@ -696,8 +699,40 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 - Validate:
   - [ ] Given `virtual=true` with `maxHeight` set, when scrolling through 5,000 rows, then only a small window of `<tr>` elements exists in the DOM at any time (inspect via devtools). Pass: DOM node count stays roughly constant.
   - [ ] Given `virtual=true` without `maxHeight`, when mounted, then a console warning appears. Pass: warning visible.
+  - [ ] Given a virtualized table, when sorting or filtering while rows are selected, then the correct rows remain checked (not rows that happen to share the same scroll position). Pass: selection follows the data, not the position.
+  - [ ] Given `virtual=true`, when scrolling, then the header does not stick (Option B) rather than visibly breaking/disappearing mid-scroll. Pass: header behaves consistently (non-sticky), no flicker.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-14935 add opt-in row virtualization"`
+
+---
+
+## Task 22b: `bds-table` — throttle pin-offset recomputation during virtualized scroll
+
+**Executor:** @frontend-subagent
+**Depends on:** Task 22
+**Files:**
+
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
+
+**Context:** `componentDidRender` already runs a `querySelectorAll('th[data-pinned]')` + `offsetWidth` read on *every* render to compute pinned-column offsets. With virtualization enabled, every scroll-driven re-render triggers this same DOM query and layout read, reintroducing exactly the kind of per-frame cost virtualization is meant to remove.
+
+**Acceptance criteria:**
+
+- Guard the existing pin-offset computation so it only recomputes when `pinnedColKeys` or `columns` actually change, not on every scroll-triggered re-render while `virtual=true`.
+- No behavior change when `virtual=false` (default).
+
+**Unit tests to cover:**
+
+- Pin-offset computation does not re-run on a scroll-only re-render while `virtual=true` and `pinnedColKeys`/`columns` are unchanged.
+- Pin-offset computation still runs correctly when a column is pinned/unpinned or the column set changes.
+
+**Manual test** _(waiveable)_:
+
+- Run `pnpm dev:components`; render a virtualized table with several pinned columns and ~5,000 rows.
+- Validate:
+  - [ ] Given a virtualized table with pinned columns, when scrolling rapidly, then scrolling stays smooth with no visible lag or incorrect pin offsets. Pass: compare scroll smoothness before/after this fix using the browser's Performance panel.
+
+**Commit:** `git commit -m "perf(bds-table): EOA-14935 throttle pin-offset recomputation during virtualized scroll"`
 
 ---
 
@@ -713,7 +748,8 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 - Remove High-priority row 5 ("virtualization").
 - New "Virtualization" section, explicitly noting this differs from `bds-search-bar`'s lighter-weight approach (which keeps all DOM nodes mounted) — `bds-table`'s virtualization actually bounds DOM node count.
-- New `WithVirtualization` story using a ~5,000-row generated dataset.
+- Document the Option B limitation explicitly: the sticky header (`position: sticky` on `<thead>`) is disabled while `virtual=true`, since combining the two is a documented-broken pattern upstream in TanStack Virtual (not yet resolved by any known technique compatible with real `<table>` layout).
+- New `WithVirtualization` story using a ~5,000-row generated dataset, demonstrating the non-sticky header behavior in that mode.
 
 **Manual test:** Run `pnpm dev:docs`, confirm section/story.
 
@@ -774,8 +810,19 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 ---
 
+## Related research: shared virtualization utility with `bds-search-bar` — deferred, not in this plan's scope
+
+A follow-up question after Tasks 22/24 were corrected: since `VirtualScrollController` (used by `bds-search-bar`) doesn't reduce DOM node count, and `bds-table` needs real virtualization anyway, could ONE reusable utility on `@tanstack/virtual-core` serve both? Researched via three parallel fan-out agents (official docs, prior-art, dedicated counter-evidence), cross-checked against each other. Full findings and citations live in `/Users/dgonzalez/.claude/plans/let-s-continue-improving-the-calm-balloon.md` (the "Research: is a shared virtualization utility possible" section) — summarized here for this plan's record:
+
+- **Conclusion:** technically possible, but only by rearchitecting `bds-search-bar`'s list onto a windowed-creation model (data-driven element recycling) — not by generalizing `VirtualScrollController`'s current positional/`MutationObserver`-driven design, which has no working precedent anywhere researched and independently sits in a real bug class TanStack's own tracker documents (identity-cache races, `ResizeObserver` conflicts with hidden/removed nodes — e.g. `TanStack/virtual#1133`, `#1147`, `#823`).
+- **Decision (confirmed with the user):** defer to a separate future spike/ticket. This plan's Task 22 is unaffected — it already builds its own direct `@tanstack/virtual-core` integration without depending on or interfering with `VirtualScrollController` in any way. No task in this plan changes as a result.
+- **Does this deprecate `VirtualScrollController`?** Not by this plan. It stays as-is for now; a near-term mitigation (narrowing the misleading "virtualization" claim in `bds-search-bar`'s `LargeSuggestionsList` story, or reducing its item count) is tracked independently in `ai-work/qa/bug-reports/2026-07-06-bds-search-bar-bug-001.md` (now includes a second finding on the `display:none`+`ResizeObserver` correctness risk per `TanStack/virtual#823`).
+- **Follow-up spike completed:** `ai-work/research/2026-07-06-shared-virtualization-utility.md` — concludes a small shared `createBdsVirtualizer()` factory (~20-30 lines, extractable from `VirtualScrollController`'s existing plumbing) is a reasonable low-risk future extraction, but `bds-search-bar`'s full windowed-creation rearchitecture is its own larger ticket, gated on an accessibility redesign (no synthetic-focus/`aria-activedescendant` model exists in this codebase today). **Refined after follow-up review:** if `bds-search-bar` renders its own `<bds-list-menu-item>` children via JSX (from a data-array prop) rather than an imperative Vaadin-style pool, it can share the exact same integration pattern as `bds-table`, not a separate adapter — the accessibility redesign remains the real blocker either way. Neither is scheduled; Task 22 above is unaffected either way.
+
+---
+
 ## Execution order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 (sign-off) → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25.
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 (sign-off) → 18 → 19 → 20 → 21 → 22 → 22b → 23 → 24 → 25.
 
-Groups: pagination fixes (1–4) → tooltip singleton API (5–6) → controlled selection + its Vue wiring (7–8) → new `bds-skeleton` primitive (9–11, built before it's consumed by Task 20) → two no-blocker quick wins plus the pinnable-hover fix (12–13) → overflow tooltip, dependent on Task 5 (14–15) → dataset/pagination (16) → footer, gated on sign-off (17–19) → server-side mode + skeleton rows, dependent on `bds-skeleton` (20–21) → virtualization last among rendering-touching work (22–23) → guardrail, dependent on both server-side and virtual (24–25).
+Groups: pagination fixes (1–4) → tooltip singleton API (5–6) → controlled selection + its Vue wiring (7–8) → new `bds-skeleton` primitive (9–11, built before it's consumed by Task 20) → two no-blocker quick wins plus the pinnable-hover fix (12–13) → overflow tooltip, dependent on Task 5 (14–15) → dataset/pagination (16) → footer, gated on sign-off (17–19) → server-side mode + skeleton rows, dependent on `bds-skeleton` (20–21) → virtualization last among rendering-touching work, including its pin-offset throttling follow-up (22–22b) → documentation (23) → guardrail, dependent on both server-side and virtual (24–25).

@@ -1,7 +1,7 @@
 ---
 ticket: EOA-10576
 component: bds-table
-status: exploring
+status: promoted
 ---
 
 # Research Spike: bds-table Column API & Virtualization
@@ -759,9 +759,50 @@ In v2, all three must switch to `this.dataset.length` by default (select-all = e
 
 ---
 
+## Implementation Plan (2026-07-06): `EOA-14935` scope decision
+
+Following this spike's v2 backlog, ticket `EOA-14935` ("bds-table v2 high-priority limitations," plan at `ai-work/plans/EOA-14935-bds-table-v2.md`, ticket brief at `ai-work/tickets/EOA-14935-bds-table-v2.md`) committed a concrete subset of the backlog below to implementation, ordered by dependency. Everything else in the backlog is explicitly deferred to a future **v3** — not scheduled, not designed further than the amendments already added to each item above.
+
+### Included in `EOA-14935` (v2), in execution order
+
+| Order | Item | Plan tasks | Notes |
+|---|---|---|---|
+| 1 | `bds-pagination` bug fixes (Finding F — not a V2-numbered backlog item, a confirmed bug) | Tasks 1–4 | Prerequisite for V2-13 and V2-12 below |
+| 2 | V2-1 — External controlled row selection | Tasks 7–8 | Includes the Vue `v-model:selectedRows` wiring V2-1 unlocks |
+| 3 | New: `bds-skeleton` reusable primitive (not in this spike — decided during `EOA-14935` scoping) | Tasks 9–11 | Feeds Task 20's loading state |
+| 4 | V2-4 — Built-in search bar | Task 12 | Unblocked since this spike — `bds-search-bar` now exists |
+| 5 | New: pinnable-column hover state fix (bug, not a backlog item) | Task 13 | |
+| 6 | V2-3 — Overflow tooltip on truncated header/cell text | Tasks 5–6 (bds-tooltip prerequisite), 14–15 | |
+| 7 | V2-13 — Client-side `dataset` prop + internal pagination (cross-page selection) | Task 16 | Depends on Tasks 1–4 |
+| 8 | New: column footer row (MDX limitation #6 — no V2 coverage in this spike at all; brand-new design, signed off separately) | Tasks 17–19 | |
+| 9 | V2-12 — Server-side mode, plus MDX limitation #13 (skeleton loading placeholder, not separately V2-numbered) | Tasks 20–21 | Shares one loading-visual implementation for both |
+| 10 | V2-11 — Virtualization | Tasks 22, 22b, 23 | Sequenced last; see the critical sticky-header finding and Option B decision added to this doc's V2-11 section below |
+| 11 | New: `maxClientRows` large-dataset guardrail (team feedback, not in this spike) | Tasks 24–25 | Depends on both `serverSide` and `virtual` existing |
+
+### Deferred to v3 (not scheduled — out of scope for `EOA-14935`)
+
+Every other backlog item below, each already carrying a 2026-07-06 risk amendment against the virtualization work landing in v2:
+
+| Item | Priority (per MDX) | v3 risk note (see amendment in its section below) |
+|---|---|---|
+| V2-2 — Custom cell content via slot | Medium | Risk: Medium — needs explicit tie-in to the new `key={rowId}` requirement |
+| V2-5 — Row expand/collapse | Medium | Risk: **High** — needs a new virtualizer-remeasure acceptance criterion once built |
+| V2-6 — Column grouping | Medium | Risk: Medium — group-header `<th>` width constraint under `table-layout: fixed` |
+| V2-7 — Column drag/drop reorder | Medium | Risk: Low — no code conflict, test-coverage note only |
+| V2-8 — Column resizing | Medium | Risk: Medium — should share one throttled recompute path with Task 22b, not duplicate it |
+| V2-9 — Responsive toolbar | Medium | Still blocked on UX/UI sign-off per this spike's original finding; not re-assessed for virtualization interaction |
+| V2-10 — `bds-pagination` responsive text wrapping fix | Low (CSS-only) | Not re-assessed; unrelated to virtualization |
+| V2-14 — `keepNonExistentRowsSelected` | Low | Risk: None |
+| V2-15 — `checkboxSelectionVisibleOnly` | Low | Risk: None |
+| V2-16 — `isRowSelectable` | Low | Risk: Low |
+| V2-17 — Shift+range selection | Low | Risk: Medium — already correctly designed, needs one explicit documentation note |
+| V2-18 — `disableRowSelectionOnClick` | Low | Risk: Low |
+
+---
+
 ## v2 Backlog
 
-Features deferred from v1, with enough implementation context to plan the next sprint without re-doing this research.
+Features deferred from v1, with enough implementation context to plan the next sprint without re-doing this research. **Status (2026-07-06): partially executed — see "Implementation Plan" above for which items shipped in `EOA-14935` vs. which remain deferred to v3.**
 
 Ordered by sprint-readiness: no-dependency items first, single Boreal DS component dependency next, architectural and multi-prerequisite items last.
 
@@ -810,6 +851,8 @@ Until V2-1 ships, `bds-table` must not be added to `componentModels` — there i
 - Requires imperative `DocumentFragment` cloning inside `componentDidRender` — mixed JSX/imperative pattern accepted at this stage since it is additive
 
 **Complexity:** Medium (~80 lines)
+
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work):** this design predates the row-identity requirement virtualization introduced — `bds-table`'s `renderBody()` now needs an explicit `key={rowId}` on every `<tr>` (see plan `ai-work/plans/EOA-14935-bds-table-v2.md`, Task 22) to avoid Stencil's JSX diffing misattributing DOM nodes across rows during sort/filter while virtualized. Cloned template content sits inside that same `<tr>`, so the clone's regeneration must be tied to the owning row's `key` — if the `<tr>` is recycled to a different row's data during virtualized scrolling without the clone being regenerated, the injected `data-*` values (and any listeners the consumer attached inside the template) risk sticking to the wrong row, the same failure mode a stale `<bds-checkbox>` `checked` state would hit. This needs to be an explicit part of V2-2's design, not an afterthought, once virtualization also exists.
 
 ---
 
@@ -882,6 +925,8 @@ For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is accept
 
 **Complexity:** Medium (~120 lines)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: High, real conflict:** this design has no interaction with virtualized-row remeasurement at all, but needs one. Expanding a row changes its rendered height/row-count *after* initial mount — exactly the "height changes post-render" case the virtualization plan (Task 22, `ai-work/plans/EOA-14935-bds-table-v2.md`) flags as needing an explicit `measureElement`/`measure()` call, since the virtualizer's cached size estimate for that row goes stale otherwise, causing visible layout jumps/overlaps. **New acceptance criterion needed for V2-5 once virtualization exists:** call the virtualizer's remeasure method on every expand/collapse toggle, and give child rows their own stable `key` (parent rows also need this per V2-2's amendment above) so expand/collapse doesn't corrupt row identity during re-sorts.
+
 ---
 
 ### V2-6 — Column grouping (`bds-table-column-group`)
@@ -906,6 +951,8 @@ For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is accept
 
 **Complexity:** Medium (~200 lines for column tree traversal + header group renderer)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Medium:** no conflict with the sticky-header-disabled-under-`virtual` finding (that's an orthogonal toggle gated on `virtual=true` specifically, and column grouping doesn't require virtualization). The real constraint is `table-layout: fixed` (`bds-table.scss`) — under fixed layout, only the leaf row's cell widths truly govern column sizing, so a `colspan`'d group header `<th>` must NOT carry an explicit `width` itself; only the leaf-row `<th>` can. This is a well-understood fixed-layout constraint, not a blocker, but must be called out explicitly in the header-group renderer so widths aren't mistakenly set on group cells.
+
 ---
 
 ### V2-7 — Column drag/drop reorder
@@ -924,6 +971,8 @@ For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is accept
 
 **Complexity:** Low–Medium (~100 lines)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Low:** no code change needed. The existing pin-offset loop (`componentDidRender`) re-derives column order from live DOM order on every render rather than a cached index, and this proposal's `columnOrder: string[]` changes `this.columns`'s order *before* render — so the existing offset accumulation logic keeps working unchanged after reorder. No interaction with virtualization's row indexing at all (reorder only affects columns; `getVirtualItems()` operates on rows). Just add regression test coverage confirming reorder + pinning together still compute correct offsets.
+
 ---
 
 ### V2-8 — Column resizing
@@ -939,6 +988,8 @@ For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is accept
 - `disconnectedCallback` must disconnect the `ResizeObserver`
 
 **Complexity:** Medium (~130 lines)
+
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Medium:** `table-layout: fixed` doesn't conflict with resizing itself — fixed layout is actually resize-friendly since it always sizes columns from explicit widths rather than content, which is why this is a "static → dynamic" swap, not a layout-model change. The real risk: drag-resize fires many `pointermove` events, and if the pin-offset computation (`componentDidRender`'s `th.offsetWidth` reads) recomputes on every one, it reproduces the exact per-frame layout-thrash that Task 22b (in `ai-work/plans/EOA-14935-bds-table-v2.md`) was just written to fix for virtualized scroll. **Design note for whenever this is built:** the resize handler and the virtualization-era pin-offset guard (Task 22b's `ResizeObserver`/throttled approach) should share one recompute path, not two independent ones solving the same problem twice.
 
 ---
 
@@ -1112,6 +1163,8 @@ table.dataset = allRows;
 
 **Complexity:** Low (~10 lines)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: None:** purely a `@Watch('data')` guard question — whether to clear `selectedRowIds` when `data` is replaced. Selection state is keyed by `rowId` (`toCellString(row[this.rowKey])`), the same identity mechanism used elsewhere; no DOM/rendering interaction with virtualization.
+
 ---
 
 ### V2-15 — `checkboxSelectionVisibleOnly` (select-all scope control)
@@ -1137,6 +1190,8 @@ table.dataset = allRows;
 
 **Complexity:** Low (~15 lines)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: None:** purely a `handleSelectAll()` scope question — swaps the full-dataset scope for `this.visibleRows`. Operates on the data/ID array, not on rendered DOM `<tr>` elements, so virtualized/off-screen rows are irrelevant to correctness.
+
 ---
 
 ### V2-16 — `isRowSelectable` (conditional row selectability)
@@ -1152,6 +1207,8 @@ table.dataset = allRows;
 - Header checkbox `indeterminate` and `checked` counts must also exclude non-selectable rows from `scope.length`
 
 **Complexity:** Low–Medium (~40 lines)
+
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Low:** almost entirely a per-row, render-time check (`isRowSelectable(row)` gating `disabled` on the checkbox) with no dependency on whether a row is currently mounted by the virtualizer. Worth noting: since the checkbox's `disabled` state is content attached to the row (same category as `checked` state), it reinforces why the `key={rowId}` fix (see V2-2/V2-5 amendments above) is load-bearing here too — without it, `disabled` could attach to the wrong row during sort/filter while virtualized. Not a new conflict, just underscores an existing dependency.
 
 ---
 
@@ -1171,6 +1228,8 @@ table.dataset = allRows;
 
 **Complexity:** Low–Medium (~50 lines, excluding cross-page edge cases)
 
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Medium, already well-designed but needs an explicit note:** this design is already correctly built to survive virtualization — it operates on `this.visibleRows`/`this.dataset` (the full data array) to find the index range, never on rendered DOM `<tr>` elements, so a shift-click spanning virtualized/unmounted rows is safe *by design*. The gap: the implementation notes above don't explicitly say "this logic must never query the DOM" — worth adding that explicit constraint when this is built, specifically because virtualization means intermediate rows in a range may not exist in the DOM at click time, and a future refactor could accidentally introduce a `querySelectorAll`-based range-fill without realizing why the data-array approach was chosen.
+
 ---
 
 ### V2-18 — `disableRowSelectionOnClick` (prevent selection on cell click)
@@ -1185,4 +1244,6 @@ table.dataset = allRows;
 - No implementation change needed in v1; the prop is reserved and documented so the API surface is stable when click-to-select is introduced
 
 **Complexity:** Near-zero for v2 reservation (~5 lines); Medium if click-to-select row is also introduced at the same time
+
+**Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Low:** no implementation exists yet to conflict with anything — this only gates a future click handler's own firing logic against the existing checkbox handler, unrelated to row mount/reconciliation or virtualization.
 

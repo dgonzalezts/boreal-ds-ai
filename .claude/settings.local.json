@@ -25,7 +25,9 @@
       "Bash(rtk grep *)",
       "mcp__playwright__browser_resize",
       "Bash(.agents/scripts/with-node.sh pnpm *)",
-      "mcp__playwright__browser_console_messages"
+      "mcp__playwright__browser_console_messages",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/main.tsx\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/TanStack/virtual/main/examples/react/table/src/index.css\")"
     ],
     "deny": [
       "Read(./.env)"
