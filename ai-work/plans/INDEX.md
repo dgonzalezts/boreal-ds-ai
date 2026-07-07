@@ -18,6 +18,7 @@
 | [EOA-13695-bds-tag-field.md](./EOA-13695-bds-tag-field.md) | done | `bds-tag-field` Implementation Plan |
 | [EOA-13695-select-tag-field-input-mode.md](./EOA-13695-select-tag-field-input-mode.md) | done | `bds-tag-field` `inputMode` prop — Restrict tag creation and enable searchable multiselect |
 | [EOA-13696-bds-text-field-refactor.md](./EOA-13696-bds-text-field-refactor.md) | done | bds-text-field: Shared Utilities Refactoring + Suffix Slot |
+| [EOA-14935-bds-table-v2.md](./EOA-14935-bds-table-v2.md) | pending | bds-table v2 High-Priority Limitations Implementation Plan |
 | [EOA-8845-code-snippetformatter.md](./EOA-8845-code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
 | [EOA-8845-plop-implementation-plan.md](./EOA-8845-plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
 | [EOA-8845-shared-storybook-components.md](./EOA-8845-shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |
