@@ -142,3 +142,59 @@ collapses a templated key to `''` has no assertable effect through `newSpecPage`
 output. Killing it would require asserting on cross-render node-identity reuse during a keyed
 reorder, which is disproportionate effort for a reconciliation optimization with no user-facing
 behavior. Document as equivalent rather than writing a reconciliation-identity test.
+
+---
+
+## Equivalent mutants discovered on `bds-tooltip` (documented, not chased further)
+
+Session: `bds-tooltip` mutation testing (2026-07-07), final score 98.26% (2/115 survived,
+0 timed out, 1 excluded as an error — see below).
+
+**`Node.contains(self)` returns `true` in mock-doc, making an `=== target` check redundant.**
+`validateHide`'s `this.floatingContent.contains(target) || this.floatingContent === target`
+mutates to drop the right-hand clause. Per `stencil-mock-doc-mouseevent-relatedtarget.md`,
+`contains(self)` already returns `true` in `@stencil/core/mock-doc`, so the right-hand branch
+is dead in this test environment. Same pattern as that file's documented finding — cross-reference
+rather than re-deriving.
+
+**Redundant optional chaining on a prop with a non-optional default.** `getOffset(this.floatingOptions?.hideArrow, ...)`
+mutates `?.` away. `floatingOptions: Partial<FloatingTooltipProp> = {}` always has a default
+empty-object value (Stencil initializes `@Prop()` defaults before `componentWillLoad`), so
+`this.floatingOptions` is never `undefined` — the optional chaining was defensive but unreachable.
+
+### Follow-up finding (not a mutant, a real latent bug — out of scope for the task that found it)
+
+One mutant crashed a Stryker worker process (`ChildProcessCrashedError`, counted as an "error"
+mutant and excluded from the score) with `TypeError: Cannot read properties of undefined
+(reading 'placement')` inside `anchored.mixin.ts`'s `updatePosition`. Root cause: `sync()` in
+`startAutoUpdate` (`anchored.mixin.ts`) calls `void this.updatePosition(...)` — fire-and-forget
+on an `async` function with no `.catch()`. If `updatePosition` ever rejects, Node's default
+unhandled-rejection behavior terminates the process instead of failing a single test/interaction
+gracefully. This is pre-existing shared-mixin code used by every anchored component (`bds-tooltip`,
+`bds-popover`, dropdowns), not something specific to any one component's changes — it surfaced
+here only because mutation testing happened to produce a code path where `computePosition`
+returned `undefined`. Worth a dedicated hardening pass (wrap the `void this.updatePosition(...)`
+call in `sync()` with a `.catch()` that logs via `Logger` instead of throwing) but was not fixed
+as part of the session that found it, to keep that task's scope tight.
+
+---
+
+## API naming: `@Method()` cannot shadow an inherited mixin method with a different return type
+
+Stencil's `@Method()` contract requires an `async`/`Promise`-returning signature. If the
+component extends a mixin (via `Mixin(...)`) that already declares a same-named **synchronous**
+method (e.g. `floatingMixin`'s `show(target?: HTMLElement): void`), overriding it with
+`@Method() async show(): Promise<void>` is an unsafe override — ESLint correctly flags
+"Promise-returning method provided where a void return was expected by extended/implemented type."
+
+Fix: give the public `@Method()` a distinct name rather than shadowing the inherited one, and
+delegate to the inherited method from inside. `bds-popover` already established this pattern:
+`@Method() async openPopover(): Promise<void> { this.show(); }` (not `show()`). Applied to
+`bds-tooltip` as `showTooltip()`/`hideTooltip()` (2026-07-07) — `anchorTo()` had no inherited
+name to collide with, so it kept its plan-specified name unchanged.
+
+`super.method()` **does** resolve correctly through Stencil's `Mixin()` helper when there is no
+naming collision — `Mixin()` builds a real ES6 `extends` chain (`mixins.reduceRight((acc, mixin)
+=> mixin(acc), baseClass)`), not a proxy. Use `super.x()` freely for non-colliding overrides
+(e.g. `componentDidLoad()`); only same-named-but-incompatible-signature cases need the
+rename-and-delegate pattern above.
