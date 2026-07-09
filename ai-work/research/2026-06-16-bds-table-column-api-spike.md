@@ -769,7 +769,7 @@ Following this spike's v2 backlog, ticket `EOA-14935` ("bds-table v2 high-priori
 |---|---|---|---|
 | 1 | `bds-pagination` bug fixes (Finding F — not a V2-numbered backlog item, a confirmed bug) | Tasks 1–4 | Prerequisite for V2-13 and V2-12 below |
 | 2 | V2-1 — External controlled row selection | Tasks 7–8 | Includes the Vue `v-model:selectedRows` wiring V2-1 unlocks |
-| 3 | New: `bds-skeleton` reusable primitive (not in this spike — decided during `EOA-14935` scoping) | Tasks 9–11 | Feeds Task 20's loading state |
+| 3 | ~~New: `bds-skeleton` reusable primitive~~ **Revised 2026-07-08:** deferred — loading visual implemented as a private, table-scoped render helper inside Task 20 instead. See "Deferred: extract `bds-skeleton` primitive" in the plan file. | (removed) | Extraction to a real primitive is a future backlog item, gated on a second consumer |
 | 4 | V2-4 — Built-in search bar | Task 12 | Unblocked since this spike — `bds-search-bar` now exists |
 | 5 | New: pinnable-column hover state fix (bug, not a backlog item) | Task 13 | |
 | 6 | V2-3 — Overflow tooltip on truncated header/cell text | Tasks 5–6 (bds-tooltip prerequisite), 14–15 | |
@@ -797,6 +797,7 @@ Every other backlog item below, each already carrying a 2026-07-06 risk amendmen
 | V2-16 — `isRowSelectable` | Low | Risk: Low |
 | V2-17 — Shift+range selection | Low | Risk: Medium — already correctly designed, needs one explicit documentation note |
 | V2-18 — `disableRowSelectionOnClick` | Low | Risk: Low |
+| V2-19 — Opt-in Filter/Column-visibility toolbar buttons | Low | Not risk-checked against virtualization — unrelated (toolbar-only change, no row/DOM interaction) |
 
 ---
 
@@ -908,6 +909,10 @@ For headers (≤15 nodes), always rendering `<bds-tooltip>` per header is accept
 - `renderToolbarRight()` method (implemented in v1 Task 9)
 
 **Complexity:** Low (~15 lines) once `bds-search-bar` ships
+
+**Amendment (2026-07-08, design decision confirmed during `EOA-14935` Task 12 review):** `searchable` is the **only** supported/documented path for adding search to the toolbar. `slot="search-bar"` remains available as the same kind of generic escape hatch as `slot="toolbar-actions"`/`slot="row-actions"` (not search-specific), but is not documented as an equally-valid alternative for search — Storybook shows exactly one story (`WithSearch`, rewritten to use `searchable`) for "how to add search." `searchable` stays an explicit opt-in prop rather than always-on, because `bds-table` does not filter internally (per the contract above) — an always-rendered, unwired search input would be non-functional decoration for any table whose consumer didn't wire `bdsSearch`/`bdsClear`. The prop's presence is the signal that someone deliberately wired it up.
+
+**Related backlog item (raised during the same review):** the built-in Filter and Column-visibility icon buttons in `renderToolbarRight()`'s `<bds-button-group label="Table actions">` have the exact same "renders but does nothing until wired" characteristic `searchable`'s opt-in design was reasoned about above, but are pre-existing v1 behavior with no opt-in prop at all. Promoted to a tracked, Low-priority backlog item — see **V2-19** below for the full spec (Option B chosen: two independent booleans).
 
 ---
 
@@ -1246,4 +1251,26 @@ table.dataset = allRows;
 **Complexity:** Near-zero for v2 reservation (~5 lines); Medium if click-to-select row is also introduced at the same time
 
 **Amendment (2026-07-06, risk-checked against `EOA-14935`'s virtualization work) — Risk: Low:** no implementation exists yet to conflict with anything — this only gates a future click handler's own firing logic against the existing checkbox handler, unrelated to row mount/reconciliation or virtualization.
+
+---
+
+### V2-19 — Opt-in Filter and Column-visibility toolbar buttons
+
+**Raised:** 2026-07-08, during `EOA-14935` Task 12 review (see the amendment under V2-4 above for full context). **Decision: promoted to a tracked backlog item, Option B, Low priority.**
+
+**Approach:** Two independent boolean props gate the two built-in `<bds-button>` children inside `renderToolbarRight()`'s existing `<bds-button-group label="Table actions">`, matching the one-prop-per-feature convention `searchable`/`selectable`/`serverSide` already establish elsewhere in `bds-table`'s v2 API. Rejected alternatives: a single combined `toolbarActions` boolean (no granularity — can't show one button without the other) and a structured object/array prop (heavier, inconsistent with the rest of `bds-table`'s flat-boolean shape).
+
+**Implementation notes:**
+
+- Add `@Prop() readonly filterable: boolean = false` and `@Prop() readonly columnLayoutToggle: boolean = false`.
+- In `renderToolbarRight()`, gate each `<bds-button>` individually (`{this.filterable && <bds-button aria-label="Filter">...}`), **and** gate the `<bds-button-group>` itself on `this.filterable || this.columnLayoutToggle` — an empty button-group shell can still contribute unwanted `gap`/padding even with zero rendered children.
+- Add a `hasToolbarRight` getter (parallel to the existing `hasToolbar` getter) that folds in `this.searchable`, `this.filterable`, `this.columnLayoutToggle`, and the `search-bar`/`toolbar-actions` slot checks — gate the entire `toolbar-right` `<div>` on it. Without this, a `subheading`-only table (toolbar shown via the left zone alone) would render a hollow right-side flex container once these buttons stop being unconditional.
+- **Default value question, deliberately left open for whoever picks this up:** default `false` (true opt-in, consistent with every other v2 addition) vs. default `true` (preserves today's always-visible behavior for anyone who's started depending on it since alpha). Recommend `false` if this lands before any real consumer exists; revisit if that's no longer true by the time it's scheduled.
+- `bds-table.mdx`'s existing "Filter panel" and "Column visibility" sections need their opening sentence updated from "The built-in filter/column visibility button ... always rendered" to reflect the new opt-in prop.
+
+**Complexity:** Low (~15 lines, plus the `hasToolbarRight` getter)
+
+**Priority:** Low — design-consistency cleanup, not a missing capability; no consumer has ever been unable to do anything because of the current always-on behavior.
+
+---
 

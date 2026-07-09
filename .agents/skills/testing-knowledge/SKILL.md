@@ -16,6 +16,8 @@ Also read before writing tests:
 - `ai-docs/guidelines/stencil-unit-testing-patterns.md` — canonical `newSpecPage` patterns, AAA structure, FACE boilerplate, child component assertions
 - `ai-docs/guidelines/stencil-best-practices.md` §"FACE Components" — async rendering gotchas relevant to test setup
 
+**No inline comments in spec files.** The project's no-inline-comments rule (`.agents/CLAUDE.md` "Non-Negotiable Rules") applies to spec files exactly as it does to any other source file — there is no test-file carve-out. A test's own `describe`/`it` names and assertions must carry all the meaning a `//` comment would otherwise supply; if a name can't carry it, rewrite the name. The only sanctioned exception is accepted mutation survivor rationale, and even that does not get written as a spec-file comment — it goes in the component's mutation report instead (see "Accepted Mutation Survivors" below).
+
 ---
 
 ## Quality Gate — Two Phases (Required Order)

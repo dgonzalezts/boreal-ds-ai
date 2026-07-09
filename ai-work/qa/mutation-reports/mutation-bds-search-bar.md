@@ -2652,3 +2652,21 @@ All files           |  36.73 |   46.24 |      166 |         0 |        193 |    
 --------------------|--------|---------|----------|-----------|------------|----------|----------|
 [32m19:00:28 (54045) INFO HtmlReporter[39m Your report can be found at: file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-bds-search-bar/packages/boreal-web-components/reports/mutation/mutation.html
 [32m19:00:28 (54045) INFO MutationTestExecutor[39m Done in 4 minutes and 2 seconds.
+
+---
+
+## Accepted Mutation Survivors (focus-driven expand/collapse fix)
+
+Relocated from a top-of-file comment block in `bds-search-bar.methods.spec.ts` — per the project's no-inline-comments rule (spec files carry no exception), accepted-survivor rationale belongs here, not in the spec file itself.
+
+1. **`bds-search-bar.tsx:242`** — `resetFieldScroll`'s `container !== null && container !== undefined` guard, and the `bdsFieldEl`/`bdsInputEl`/`bdsSelectEl` optional-chaining getters throughout the component (`bds-search-bar.tsx:521`, `:532`, `:536`-`:537`, `:545`).
+   Equivalent: these are defensive against a DOM shape (`bds-text-field` / its `input` never rendering) that never occurs given `render()` always emits the field — no test can make these null without fabricating an unreachable component state.
+
+2. **`bds-search-bar.tsx:297`** — `handleFocus`'s own `!this.isOpen && this.variant !== SEARCH_BAR_VARIANTS.STATIC` guard duplicates the guard already inside `expandInstantly()` (`bds-search-bar.tsx:396`).
+   Equivalent: mutating the outer guard alone never changes observable behaviour because the inner guard blocks the same cases.
+
+3. **`bds-search-bar.tsx:411`-`425`** — `waitForSelectWidthTransition`'s null/undefined half-check on `target`, and the event-name string passed to `removeEventListener` in its `setTimeout` fallback (line 421).
+   Equivalence reasoning as originally documented: `bdsSelectEl` is typed `HTMLBdsSelectElement | null` (`querySelector` never yields `undefined`), and removing a listener with the wrong name after `resolve()` has already settled the promise doesn't change anything a test can observe.
+   Note (found while relocating this entry): the current `waitForSelectWidthTransition` targets `this.el` (the Host) unconditionally, with no `target === undefined` branch visible in `bds-search-bar.tsx` today — this rationale appears to predate the session that consolidated the expand/collapse width transition onto the Host element (see the "moved to Host" notes elsewhere in this file's test descriptions). The `removeEventListener('transitionend', onEnd)` string-literal mutant at line 421/416 still stands. Re-verify this survivor's scope on the next full mutation run rather than trusting this note indefinitely.
+
+See `.agents/skills/testing-knowledge/SKILL.md` "Accepted Mutation Survivors" for the general convention.

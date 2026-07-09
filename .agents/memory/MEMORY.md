@@ -102,6 +102,12 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `release-it-pnpm-publish.md` | `publishCommand` is silently ignored by release-it — use `publishPackageManager: "pnpm"` and `publishArgs` instead. Full pnpm workspace protocol replacement mechanics. Why `workspace:*` (exact pin) is correct for alpha. Why internal deps belong in `dependencies` not `peerDependencies`. Sequence diagram of the full publish flow. |
 
+### Framework Wrappers — Vue
+
+| File                                    | What it covers                                                                                                                                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vue-componentmodels-regeneration.md`   | Adding a `componentModels` entry to `boreal-web-components/targets/vue-output-target.ts` regenerates `boreal-vue/lib/components.ts` only via `pnpm --filter @telesign/boreal-web-components build` — that gitignored file must never be hand-edited. |
+
 ### Unit Testing — Spec File Organisation
 
 > Canonical reference: `ai-docs/guidelines/stencil-unit-testing-patterns.md` — five spec file types, slots.spec creation criteria, FACE boilerplate, child component prop assertions, AAA structure.

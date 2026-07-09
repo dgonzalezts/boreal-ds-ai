@@ -13,7 +13,7 @@ created: 2026-07-06
 
 **Ticket brief:** [`ai-work/tickets/EOA-14935-bds-table-v2.md`](../tickets/EOA-14935-bds-table-v2.md)
 
-**Architecture:** Ten features land as independently committable additions across four existing Stencil components (`bds-table`, `bds-table-column`, `bds-pagination`, `bds-tooltip`) plus one new small primitive (`bds-skeleton`), each guarded by its own prop and none altering v1's default (all-off) behavior. Three features require prerequisite work in sibling components before the `bds-table`-side work can start.
+**Architecture:** Ten features land as independently committable additions across four existing Stencil components (`bds-table`, `bds-table-column`, `bds-pagination`, `bds-tooltip`), each guarded by its own prop and none altering v1's default (all-off) behavior. Three features require prerequisite work in sibling components before the `bds-table`-side work can start. The loading/skeleton visual is implemented as a private, table-scoped render helper this sprint rather than a new reusable primitive — see "Deferred: extract `bds-skeleton` primitive" near the end of this document for the rationale and future extraction path.
 
 **Tech Stack:** Stencil (TSX + scoped SCSS), `@tanstack/virtual-core` (already a direct dependency), Jest + Stryker for the two-phase unit-test/mutation-score gate.
 
@@ -32,13 +32,7 @@ created: 2026-07-06
 | `packages/boreal-web-components/src/components/overlays/bds-tooltip/types/ITooltip.ts`                             | Modify — add method signatures and `manual` prop type                                              |
 | `packages/boreal-web-components/src/components/overlays/bds-tooltip/__test__/*.spec.tsx`                           | Modify — cover the new methods and `manual` mode                                                   |
 | `apps/boreal-docs/src/stories/overlays/bds-tooltip/bds-tooltip.mdx`                                                | Modify — "Programmatic control" section                                                            |
-| `packages/boreal-web-components/src/components/helpers/bds-skeleton/bds-skeleton.tsx`                              | Create — new reusable skeleton primitive                                                           |
-| `packages/boreal-web-components/src/components/helpers/bds-skeleton/types/ISkeleton.ts`                            | Create — prop types                                                                                |
-| `packages/boreal-web-components/src/components/helpers/bds-skeleton/bds-skeleton.scss`                             | Create — shimmer animation, `var(--boreal-*)` tokens only                                          |
-| `packages/boreal-web-components/src/components/helpers/bds-skeleton/__test__/*.spec.ts`                            | Create — unit tests                                                                                |
-| `apps/boreal-docs/src/stories/helpers/bds-skeleton/bds-skeleton.stories.ts`                                        | Create — Storybook story                                                                           |
-| `apps/boreal-docs/src/stories/helpers/bds-skeleton/bds-skeleton.mdx`                                               | Create — MDX documentation                                                                         |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx`               | Modify — all `bds-table`-side features                                                             |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx`               | Modify — all `bds-table`-side features, including a private table-scoped skeleton render helper    |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/types/ITable.ts`             | Modify — new prop/event types                                                                      |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss`              | Modify — overflow-tooltip truncation, pinned footer cells, pinnable hover state                    |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/*.spec.ts`          | Modify/create — cover all features                                                                 |
@@ -57,7 +51,7 @@ created: 2026-07-06
 | Row virtualization                    | `packages/boreal-web-components/src/utils/dom/virtualScroll/virtual-scroll.ts`, `package.json`                                                     | `VirtualScrollController<TItem>` (wraps `@tanstack/virtual-core`'s `Virtualizer`), used by `bds-search-bar`                                                                                              | **Partial.** `@tanstack/virtual-core` is already a direct dependency (`^3.17.1`) — no new install needed. But `VirtualScrollController` keeps every child mounted and only toggles `display:none` + absolute positioning; it does not reduce DOM node count. This is the exact mechanism the team flagged as the root cause of `bds-search-bar`'s `LargeSuggestionsList` slowdown/deploy timeout. | Reuse the underlying `@tanstack/virtual-core` dependency directly, not `VirtualScrollController`. `bds-table` needs true conditional JSX rendering (only `getVirtualItems()`-selected rows exist as `<tr>` nodes) which the light-DOM-child model cannot provide for Stencil-rendered rows. No shared-utility extension planned — the two use cases have different DOM ownership models. |
 | Overflow-tooltip singleton delegation | `src/utils/helpers/overlays/`, `src/utils/dom/`, `src/mixins/anchored.mixin.ts`                                                                    | `getOffset.ts` only; `anchoredMixin`'s `componentDidLoad`/`onBeforeLoad` auto-discovers a trigger once and calls `subscribe()` unconditionally, with no matching "unsubscribe"                           | Does not fit as-is; the auto-discovery path is actively wrong for a singleton reused across hundreds of cells                                                                                                                                                                                                                                                                                     | New `manual` prop on `bds-tooltip` needed to skip auto-discovery entirely (see Task 5) — this is a small, scoped addition to `bds-tooltip.tsx` only, not a change to the shared `anchored.mixin.ts` (keeps blast radius contained).                                                                                                                                                      |
 | Custom cell / footer rendering        | `bds-table.tsx` (`applyCellFormatter`, ~lines 244–249); design playground reference showing footer as a plain boolean toggle, not a computed value | Existing `applyCellFormatter` handles `string \| HTMLElement` via `ref`-based `appendChild`; `slot="empty-state"`/`slot="toolbar-actions"` already establish the light-DOM-slot-moved-into-place pattern | Footer should follow the **slot** pattern, not a new callback prop                                                                                                                                                                                                                                                                                                                                | No new `footer` prop on `bds-table-column`. Consumers slot static markup (`<span slot="footer">...</span>`) as a child of `<bds-table-column>`; `bds-table` moves that node into the matching `<tfoot>` cell once, same mechanism as existing slots. See corrected Task 17.                                                                                                              |
-| Skeleton loading rows                 | Repo-wide search for `skeleton`/`shimmer` in `boreal-web-components` and `boreal-style-guidelines`                                                 | None found outside the existing TODO comment in `bds-table.tsx`                                                                                                                                          | Does not fit                                                                                                                                                                                                                                                                                                                                                                                      | Confirmed with the user: build a new reusable `bds-skeleton` primitive (rect/text variants, shimmer via `var(--boreal-*)` tokens) since the loading mockup shows skeleton needed in at least four places within `bds-table` alone (toolbar, header, cells, pagination row) — enough internal repetition to justify a shared primitive now rather than deferring. See Tasks 9–12.         |
+| Skeleton loading rows                 | Repo-wide search for `skeleton`/`shimmer` in `boreal-web-components` and `boreal-style-guidelines`                                                 | None found outside the existing TODO comment in `bds-table.tsx`                                                                                                                                          | Does not fit                                                                                                                                                                                                                                                                                                                                                                                      | **Revised after team discussion (2026-07-08):** defer building a standalone reusable `bds-skeleton` primitive. Implement the loading visual as a private, table-scoped render helper directly in `bds-table.tsx`/`.scss` this sprint, using the exact naming/class structure the future primitive would use (`.bds-skeleton`/`.bds-skeleton--rect\|text\|circle`, `--bds-skeleton-*` tokens, a `renderSkeleton(variant, width, height)` helper signature) so a future extraction is a near-mechanical move rather than a rewrite. See revised Task 20 and "Deferred: extract `bds-skeleton` primitive" near the end of this document. |
 | Large-dataset guardrail logging       | `bds-table.tsx` (`private readonly logger = new Logger()`, line 36)                                                                                | `Logger` service already imported and used                                                                                                                                                               | Fully fits                                                                                                                                                                                                                                                                                                                                                                                        | Reuse `this.logger.warn(...)`.                                                                                                                                                                                                                                                                                                                                                           |
 | Dataset/pagination wiring             | `bds-table.tsx` `componentDidLoad`/`componentWillLoad` (existing `querySelectorAll('bds-table-column')` + `MutationObserver` pattern)              | Same slotted-child-query pattern already used for columns                                                                                                                                                | Fully fits                                                                                                                                                                                                                                                                                                                                                                                        | Reuse the identical pattern for querying the slotted `bds-pagination`.                                                                                                                                                                                                                                                                                                                   |
 | Vue v-model wiring                    | `packages/boreal-web-components/targets/vue-output-target.ts` `componentModels`                                                                    | Direct `event.detail` → `targetAttr` mapping, no transform support; existing entries use a dedicated `valueChange`-style event, never a domain event carrying a richer payload                           | `bdsSelect`'s `{selectedIds, row}` payload cannot drive `componentModels` directly                                                                                                                                                                                                                                                                                                                | Add a dedicated `selectedRowsChange: EventEmitter<string[]>` event on `bds-table`, matching the `valueChange` convention already used by `bds-search-bar` etc. See corrected Task 7 and new Task 8.                                                                                                                                                                                      |
@@ -70,7 +64,7 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 - Prerequisite fixes first (pagination, tooltip) since two later features depend on them.
 - The two no-blocker quick wins (`selectedRows`, `searchable`) land early for momentum, followed immediately by their own natural companions (Vue wiring for `selectedRows`; the pinnable-hover CSS fix, which is unrelated to any other feature and can land whenever).
-- `bds-skeleton` (new primitive) must exist before the server-side/loading task that consumes it.
+- The loading/skeleton visual is now a table-scoped render helper rather than a new primitive, so the old "`bds-skeleton` must exist before the loading task" ordering constraint no longer applies — Task 20 is self-contained.
 - Virtualization stays last among the rendering-touching phases (dataset, server-side/loading, footer, virtualization) because it is the only one that must be aware of all other row-source modes at once. Footer and loading are structurally independent of `<tbody>` row-windowing (a sibling `<tfoot>` and an early-return skeleton guard, respectively), so ordering them before virtualization does not require rework later.
 - The large-dataset guardrail comes last regardless, since it reads both `serverSide` and `virtual`.
 
@@ -295,83 +289,11 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 ---
 
-## Task 9: `bds-skeleton` — new reusable skeleton primitive (types, scaffold, render)
+## Tasks 9–11: REMOVED — deferred (`bds-skeleton` standalone primitive)
 
-**Executor:** @frontend-subagent
-**Files:**
+**Status change (2026-07-08):** these three tasks (`bds-skeleton` scaffold, shimmer SCSS, tests+docs) are removed from this plan. The team confirmed a reusable skeleton primitive is valuable long-term, but agreed to defer building it until a second real consumer exists, rather than building it speculatively now. The loading visual `bds-table` needs is implemented directly in Task 20 as a private, table-scoped render helper — see the revised Task 20 below.
 
-- `packages/boreal-web-components/src/components/helpers/bds-skeleton/bds-skeleton.tsx` (create)
-- `packages/boreal-web-components/src/components/helpers/bds-skeleton/types/ISkeleton.ts` (create)
-
-**Acceptance criteria:**
-
-| Prop      | Type                           | Default  | Description              |
-| --------- | ------------------------------ | -------- | ------------------------ |
-| `variant` | `'text' \| 'rect' \| 'circle'` | `'rect'` | Shape of the placeholder |
-| `width`   | `string`                       | `'100%'` | CSS width                |
-| `height`  | `string`                       | `'1rem'` | CSS height               |
-
-- Pure presentational atom — no `@Event()`, no `@Method()`, no form participation, no interaction/keyboard handling (none of those apply here per the leaf-component granularity model).
-- `render()` outputs a single `<Host>` with a class map reflecting `variant`, and inline `style` for `width`/`height`.
-- JSDoc on the class-level block and every `@Prop()`.
-- No `any` types.
-
-**Unit tests to cover** (`__test__/bds-skeleton.spec.ts`):
-
-- Default render produces `variant="rect"` styling.
-- Each variant (`text`, `rect`, `circle`) applies its corresponding class.
-- `width`/`height` props apply as inline styles.
-
-**Manual test** _(waiveable)_:
-
-- Scenario: render all three variants side by side in the playground.
-- Run `pnpm dev:components` and validate:
-  - [ ] Given the three variants render, when inspected, then each has visually distinct shape treatment (rect = rounded rectangle, circle = perfect circle, text = short rounded bar). Pass: visual match.
-
-**Commit:** `git commit -m "feat(bds-skeleton): EOA-14935 scaffold new skeleton primitive"`
-
----
-
-## Task 10: `bds-skeleton` — SCSS shimmer animation
-
-**Executor:** @frontend-subagent
-**Files:**
-
-- `packages/boreal-web-components/src/components/helpers/bds-skeleton/bds-skeleton.scss` (create)
-
-**Acceptance criteria:**
-
-- Shimmer treatment built entirely with `var(--boreal-*)` tokens — no hardcoded colors.
-- `@keyframes` animation for the shimmer sweep; respects `prefers-reduced-motion` (static, muted-token background instead of animating, for users who request reduced motion).
-- Each `variant` gets appropriate `border-radius` (`circle` = `50%`, `text` = small radius, `rect` = standard component radius token).
-
-**Manual test** _(waiveable)_:
-
-- Run `pnpm dev:components`, confirm the shimmer animates smoothly and respects the OS-level reduced-motion setting (toggle in browser devtools' rendering panel).
-  - [ ] Given `prefers-reduced-motion: reduce` is simulated, when the skeleton renders, then the shimmer animation is replaced by a static muted background. Pass: no animation, tokens still applied.
-
-**Commit:** `git commit -m "style(bds-skeleton): EOA-14935 add shimmer animation with boreal tokens"`
-
----
-
-## Task 11: `bds-skeleton` — unit tests and documentation
-
-**Executor:** @testing-subagent (tests) then @documentation-subagent (docs)
-**Files:**
-
-- `packages/boreal-web-components/src/components/helpers/bds-skeleton/__test__/*.spec.ts` (finalize)
-- `apps/boreal-docs/src/stories/helpers/bds-skeleton/bds-skeleton.stories.ts` (create)
-- `apps/boreal-docs/src/stories/helpers/bds-skeleton/bds-skeleton.mdx` (create)
-
-**Acceptance criteria:**
-
-- Tests from Task 9 pass the two-phase gate.
-- New Storybook story with variant/width/height controls.
-- New MDX doc following the standard component doc structure (How to use it, When to use it, Component preview, Accessibility, Properties).
-
-**Manual test:** Run `pnpm dev:docs`, confirm the story and doc page render correctly.
-
-**Commit:** `git commit -m "test(bds-skeleton): EOA-14935 add tests and documentation"`
+The extraction of a real `bds-skeleton` primitive is tracked as a deferred backlog item, not abandoned — see "Deferred: extract `bds-skeleton` primitive" near the end of this document for the trigger condition, scope, and allocation recommendation.
 
 ---
 
@@ -381,6 +303,9 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 **Files:**
 
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
+- `packages/boreal-web-components/src/components/forms/bds-search-bar/bds-search-bar.tsx` (modify — see "Search-bar sub-fixes" below)
+- `packages/boreal-web-components/src/components/forms/bds-search-bar/bds-search-bar.scss` (modify)
+- `packages/boreal-web-components/src/components/forms/bds-search-bar/types/*.ts` (modify — add `clearable` prop type)
 
 **Acceptance criteria:**
 
@@ -388,23 +313,42 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 | ------------ | --------- | ------- | ------------------------------------------------------------------------------- |
 | `searchable` | `boolean` | `false` | Renders a built-in `bds-search-bar` (`mode="search"`) in the toolbar right zone |
 
-- When `true`, `renderToolbarRight()` renders `<bds-search-bar mode="search">` instead of relying on `slot="search-bar"`. The slot remains the escape hatch — both must not render simultaneously; log via `Logger` if both are active.
+- When `true`, `renderToolbarRight()` renders `<bds-search-bar mode="search" async minimized clearable>`. **The `async` prop is required** — verified directly in `bds-search-bar.tsx`'s `handleFieldInput`: in `mode="search"`, `bdsInputDebounced` only fires `if (this.async)`; without it, the event never emits and the documented "listen to `bdsInputDebounced` for filter-as-you-type" pattern silently does nothing. `bdsSearch` (Enter key / icon click) is unaffected either way.
+- **Revised (2026-07-08, per UX/UI's explicit decision to enforce `bds-search-bar` as the exclusive search mechanism):** `slot="search-bar"` is removed entirely, not kept as an escape hatch. Unlike the generic `slot="toolbar-actions"`/`slot="row-actions"` (multi-purpose extension points), `search-bar` was a single-purpose named slot that existed only to add search functionality — keeping it functional whenever `searchable={false}` would let consumers bypass `bds-search-bar` entirely, undermining the enforcement. There is nothing left to warn about, since there's no second path left to conflict with.
 - `bds-table` does not filter internally; consumer listens to `bdsSearch`/`bdsInputDebounced` and updates `data`/`dataset` externally.
-- `hasToolbar` getter includes `this.searchable`.
+- `hasToolbar` getter includes `this.searchable` (the old `[slot="search-bar"]` check is removed along with the slot itself).
+
+### Search-bar sub-fixes (discovered during manual testing, 2026-07-08 — in scope for this task)
+
+Manual verification via Playwright MCP found two real gaps in `bds-search-bar` itself, not `bds-table`:
+
+1. **`mode="search"` never visually collapses.** `minimized`/`isOpen` toggle internal state (`aria-expanded`, the `bds-search-bar--expanded` host class) but produce **zero width change** — measured identical bounding-box width/position before and after toggling. Root cause: the collapse/expand width CSS (`$bds-search-bar-collapsed-size` ↔ `100%`, `.bds-search-bar__select`/`--expanded`) is scoped exclusively to the `<bds-select>` wrapper that only `mode="list"` renders. `mode="search"` calls `renderTextField(true)` directly with no equivalent wrapper, so it always renders at its natural full width.
+   - **Options considered:** (A) new wrapper `<div>` around `renderTextField(true)` in search mode carrying a new class (`bds-search-bar__field-wrap`) that reuses the same collapse tokens/transition as `.bds-search-bar__select`, fully additive, zero risk to `mode="list"`'s tested behavior; (B) generalize `.bds-search-bar__select` into a mode-agnostic class shared by both `<bds-select>` and a new search-mode wrapper — DRYer but touches the already-tested list-mode path for marginal benefit; (C) collapse `bds-text-field` itself via a class toggle, no extra wrapper — risks visual squishing since `bds-text-field`'s internal label/container/icon-slot layout isn't designed to shrink to an exact square.
+   - **Decision: Option A.** Add `private get searchFieldWrapClassMap(): StyleModifiers` mirroring `selectClassMap`'s shape (`bds-search-bar__field-wrap`, `--expanded`, `--static`, `--focused`, `--loading`, `--no-transition`); wrap `renderTextField(true)` in a `<div class={this.searchFieldWrapClassMap}>` only when `mode === SEARCH_BAR_MODE.SEARCH`. In SCSS, add a `.bds-search-bar__field-wrap` block reusing `$bds-search-bar-collapsed-size`/`$bds-search-bar-transition-duration` and the same `&--expanded, &--static { width: 100%; }` pattern as `.bds-search-bar__select` — do not touch `.bds-search-bar__select` or any `mode="list"` behavior.
+2. **No clear (×) button in `mode="search"`.** Traced: `renderTextField()` passes `clearable={this.canShowClear}` in both modes, and `canShowClear` only returns `true` for `variant === 'static'` (or while loading) — `false` for our default variant regardless of mode. `mode="list"` appears to have one anyway only because `bds-select.tsx` **imperatively overrides** the nested field's `clearable` prop (`updateElementProp(this.bdsField, 'clearable', !this.static)`, `bds-select.tsx:419`), bypassing `bds-search-bar`'s own logic entirely — `mode="search"` never goes through `bds-select`, so that override never applies.
+   - **Decision:** add a new opt-in `@Prop() readonly clearable: boolean = false;` at the top level of `bds-search-bar` (consistent with this plan's "no default-behavior change" convention elsewhere) rather than silently changing `canShowClear`'s default for all existing consumers. Update `canShowClear` to also return `true` when `this.clearable && this.value !== ''`. `bds-table` sets this prop when rendering its search bar (see updated `renderToolbarRight()` line above).
 
 **Unit tests to cover:**
 
 - `searchable={true}` renders a `bds-search-bar` in the toolbar.
 - `hasToolbar` returns `true` when only `searchable` is set.
-- Both `searchable` and populated `slot="search-bar"` logs a warning, no double-render.
+- `searchable={false}` (default) renders no search element in the toolbar right zone — confirms the removed slot has no residual effect.
+- **`bds-search-bar` (new/updated spec file):**
+  - `mode="search"` + `minimized` (default `isOpen=false`) renders `.bds-search-bar__field-wrap` at the collapsed width; clicking the trigger toggles to the expanded class/width.
+  - `mode="list"`'s existing collapse tests are unaffected (regression check — no shared class renamed).
+  - `clearable={true}` + non-empty `value` in `mode="search"` renders the field's clear affordance; `clearable={false}` (default) does not, regardless of value.
+  - `mode="list"`'s existing clear-button behavior (via `bds-select`'s override) is unaffected by the new `clearable` prop.
 
 **Manual test** _(waiveable)_:
 
-- Run `pnpm dev:components`; render `bds-table` with `searchable`, wire `bdsSearch` to filter a sample dataset.
+- Run `pnpm dev:components`; render `bds-table` with `searchable`, wire `bdsSearch`/`bdsInputDebounced` to filter a sample dataset.
 - Validate:
   - [ ] Given `searchable=true`, when typing and pressing Enter, then `bdsSearch` fires with the current value. Pass: log output matches typed text.
+  - [ ] Given `searchable=true`, when the page loads, then the search control renders collapsed (icon-only) immediately adjacent to the Filter/Column-visibility icons — no dead space between them. Pass: visual check via screenshot, not just DOM structure (accessibility tree alone doesn't reveal collapsed-vs-expanded width).
+  - [ ] Given the collapsed search icon is activated, then the search bar visibly expands **leftward** — the icon moves left and the input becomes visible to its right — measured via bounding-box width/position change (not just class-name presence), without overflowing the toolbar or overlapping the filter/layout buttons.
+  - [ ] Given text is typed, then a clear (×) affordance appears; clicking it (or firing `bdsClear`) restores the full dataset.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add built-in searchable prop"`
+**Commit:** `git commit -m "feat(bds-table): EOA-14935 add built-in searchable prop; fix(bds-search-bar): add mode=search collapse support and clearable prop"`
 
 ---
 
@@ -484,7 +428,8 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 - Remove High-priority rows 1 ("overflow tooltip") and 3 ("external controlled selection"), and Medium-priority row 12 ("built-in search input") from the limitations table.
 - Add `selectedRows`, `selectedRowsChange`, `searchable` to the props/events table.
-- New stories: `WithControlledSelection`, `WithBuiltInSearch`, `WithTruncatedContent`, `WithPinnableColumn` (updated to show the hover state).
+- **Replace the existing `WithSearch` story in place** — rewrite it to use the `searchable` prop and the built-in `bds-search-bar`, wiring `bdsInputDebounced`/`bdsClear` to filter the sample dataset. Remove the `<bds-text-field slot="search-bar">` example entirely; do not add a separate `WithBuiltInSearch` story alongside it — there should be exactly one story demonstrating how to add search. **Revised (2026-07-08):** `slot="search-bar"` no longer exists at all (removed in Task 12, not merely undocumented) — `searchable` is the only way to add search, per UX/UI's decision to enforce `bds-search-bar` exclusively.
+- New stories: `WithControlledSelection`, `WithTruncatedContent`, `WithPinnableColumn` (updated to show the hover state).
 
 **Manual test:** Run `pnpm dev:docs`, review each story.
 
@@ -604,13 +549,14 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 ---
 
-## Task 20: `bds-table` — server-side mode and finished loading/skeleton visual
+## Task 20: `bds-table` — server-side mode and inline loading/skeleton visual
 
 **Executor:** @frontend-subagent
-**Depends on:** Task 1, Task 3, Tasks 9–11 (`bds-skeleton`)
+**Depends on:** Task 1, Task 3
 **Files:**
 
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss` (modify, or a sibling `_bds-table-skeleton.scss` partial imported by it)
 
 **Acceptance criteria:**
 
@@ -619,24 +565,31 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 | `serverSide` | `boolean` | `false` | Disables local sort reordering; `bdsSort` still emits for the consumer to re-fetch |
 
 - When `serverSide` is `true`, `sortedData`/`visibleRows`-aware equivalent returns rows unsorted; `handleSort` still emits `bdsSort` with the correct payload.
-- Replace the `onLoadingChange` no-op stub with real behavior: when `loading` is `true`, `renderBody()` renders `loadingRows` rows composed of `<bds-skeleton variant="rect">` instances (Task 9's new component) — one per column plus the checkbox-column gap when `selectable` — instead of using inline shimmer CSS.
+- Replace the `onLoadingChange` no-op stub with real behavior: when `loading` is `true`, `renderBody()` renders `loadingRows` rows composed of a private `renderSkeleton(variant, width, height)` helper — one per column plus the checkbox-column gap when `selectable` — instead of real data.
+- **No new component is created.** The skeleton markup/CSS lives entirely inside `bds-table`'s own files, but is named and structured as if it were the future extracted primitive, to keep a later extraction cheap:
+  - CSS classes: `.bds-skeleton` root class with `.bds-skeleton--rect`, `.bds-skeleton--text`, `.bds-skeleton--circle` modifiers (not `.bds-table__skeleton*`).
+  - Custom properties: `--bds-skeleton-*` (not `--bds-table-skeleton-*`), matching the `bds-divider` `--bds-divider-*` convention.
+  - Private TSX helper signature: `renderSkeleton(variant: 'text' | 'rect' | 'circle', width: string, height: string)` — a signature-for-signature match to the deferred `bds-skeleton` primitive's eventual public props.
+  - Shimmer built entirely with `var(--boreal-*)` tokens; `@keyframes` sweep; respects `prefers-reduced-motion` (static, muted-token background instead of animating).
 - This single implementation satisfies both this task's server-side loading state and the standalone Low-priority "skeleton placeholder" limitation.
 - Does not combine `serverSide` with future virtualization-based infinite scroll (documentation-only note, no code enforcement needed).
 
 **Unit tests to cover:**
 
 - `serverSide={true}` + sortable header click emits `bdsSort` but leaves row order unchanged.
-- `loading={true}` renders exactly `loadingRows` rows of `bds-skeleton` elements with correct column count.
+- `loading={true}` renders exactly `loadingRows` rows of skeleton placeholder cells with correct column count.
 - `loading={false}` (default) renders real data unaffected.
+- The reduced-motion class/attribute is present on the skeleton markup when `loading={true}` (absorbs the manual-test reduced-motion criterion into an automated check, since there's no separate `bds-skeleton` spec file to hold it).
 
 **Manual test** _(waiveable)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `serverSide` + a sortable column; toggle `loading`.
 - Validate:
   - [ ] Given `serverSide=true`, when clicking a sortable header, then row order stays visually unchanged while the sort icon updates. Pass: visual + icon check.
-  - [ ] Given `loading=true`, when rendered, then skeleton rows composed of `bds-skeleton` appear instead of data. Pass: shimmer visible, real data hidden.
+  - [ ] Given `loading=true`, when rendered, then skeleton placeholder rows appear instead of data. Pass: shimmer visible, real data hidden.
+  - [ ] Given `prefers-reduced-motion: reduce` is simulated (browser devtools rendering panel), when `loading=true`, then the shimmer animation is replaced by a static muted background. Pass: no animation, tokens still applied.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add serverSide mode and bds-skeleton-based loading rows"`
+**Commit:** `git commit -m "feat(bds-table): EOA-14935 add serverSide mode and inline skeleton loading rows"`
 
 ---
 
@@ -653,6 +606,7 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 - Remove High-priority row 4 ("server-side mode") and Low-priority row 13 ("skeleton placeholder").
 - New "Server-side mode" section with a fetch-wiring example.
 - New stories: `WithServerSideMode`, `WithLoadingState`.
+- No separate `bds-skeleton` doc page to reference — the loading-state section documents the skeleton visual as a `bds-table` implementation detail only.
 
 **Manual test:** Run `pnpm dev:docs`, confirm sections/stories.
 
@@ -810,6 +764,24 @@ Kept largely as originally sequenced, with the new `bds-skeleton` primitive and 
 
 ---
 
+## Deferred: extract `bds-skeleton` primitive — not in this plan's scope
+
+**Decision (confirmed with the user, 2026-07-08):** this plan implements `bds-table`'s loading visual as a private, table-scoped render helper (Task 20) instead of building a standalone `bds-skeleton` component (former Tasks 9–11). The team agrees a reusable skeleton primitive is valuable, but is deferring it until there's a second real consumer rather than building it speculatively now.
+
+**Trigger condition to revisit:** a second component (e.g. `bds-list`, `bds-card`, a detail-panel pattern) needs a loading-placeholder visual, or design/product explicitly requests skeleton support outside `bds-table`.
+
+**Why the extraction should stay cheap when that happens:** Task 20 was written to use the future primitive's exact shape today — `.bds-skeleton`/`.bds-skeleton--rect|text|circle` classes, `--bds-skeleton-*` custom properties, and a `renderSkeleton(variant, width, height)` helper signature matching the deferred component's eventual public props. Extracting later should be close to "cut, paste, rename tag, add Stencil registration" rather than a redesign.
+
+**Recommendations for allocating this backlog item:**
+
+- **File it now, in `ai-work/tickets/`**, as a small follow-up ticket linked to EOA-14935 (e.g. `EOA-XXXXX-bds-skeleton-primitive-extraction.md`) rather than leaving it only as plan-file prose — plan files in this repo represent active/completed sprints, not a durable backlog, so the ticket is the thing that survives once this plan is marked `done`.
+- **Size it as a single small task**, not a multi-task plan: scaffold + SCSS + tests + docs, essentially former Tasks 9–11 unchanged, since the shimmer/variant logic will already exist proven-out inside `bds-table` — the work is extraction plus a second consumer's integration, not new design.
+- **Don't pre-assign it to a specific sprint.** Gate it on the trigger condition above (a second consumer), not a calendar date — pulling it in before a second consumer exists just reproduces the speculative-build risk this decision avoided.
+- **Best owner:** whoever picks up the second consuming component's work, not necessarily this plan's author — they'll have the freshest context on what that second consumer actually needs from the primitive (which may reveal the extracted API should differ slightly from `bds-table`'s internal shape).
+- **Watch for scope creep in the meantime:** if a third internal spot in `bds-table` itself wants skeleton loading (e.g. a future inline-editing state) before any external consumer appears, treat that as the trigger too — "needed twice inside one component" is the same signal as "needed by two components."
+
+---
+
 ## Related research: shared virtualization utility with `bds-search-bar` — deferred, not in this plan's scope
 
 A follow-up question after Tasks 22/24 were corrected: since `VirtualScrollController` (used by `bds-search-bar`) doesn't reduce DOM node count, and `bds-table` needs real virtualization anyway, could ONE reusable utility on `@tanstack/virtual-core` serve both? Researched via three parallel fan-out agents (official docs, prior-art, dedicated counter-evidence), cross-checked against each other. Full findings and citations live in `/Users/dgonzalez/.claude/plans/let-s-continue-improving-the-calm-balloon.md` (the "Research: is a shared virtualization utility possible" section) — summarized here for this plan's record:
@@ -823,6 +795,8 @@ A follow-up question after Tasks 22/24 were corrected: since `VirtualScrollContr
 
 ## Execution order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 (sign-off) → 18 → 19 → 20 → 21 → 22 → 22b → 23 → 24 → 25.
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 12 → 13 → 14 → 15 → 16 → 17 (sign-off) → 18 → 19 → 20 → 21 → 22 → 22b → 23 → 24 → 25.
 
-Groups: pagination fixes (1–4) → tooltip singleton API (5–6) → controlled selection + its Vue wiring (7–8) → new `bds-skeleton` primitive (9–11, built before it's consumed by Task 20) → two no-blocker quick wins plus the pinnable-hover fix (12–13) → overflow tooltip, dependent on Task 5 (14–15) → dataset/pagination (16) → footer, gated on sign-off (17–19) → server-side mode + skeleton rows, dependent on `bds-skeleton` (20–21) → virtualization last among rendering-touching work, including its pin-offset throttling follow-up (22–22b) → documentation (23) → guardrail, dependent on both server-side and virtual (24–25).
+(Tasks 9–11 removed per the 2026-07-08 scoping decision — see the stub in their place above.)
+
+Groups: pagination fixes (1–4) → tooltip singleton API (5–6) → controlled selection + its Vue wiring (7–8) → two no-blocker quick wins plus the pinnable-hover fix (12–13) → overflow tooltip, dependent on Task 5 (14–15) → dataset/pagination (16) → footer, gated on sign-off (17–19) → server-side mode + inline skeleton rows, self-contained (20–21) → virtualization last among rendering-touching work, including its pin-offset throttling follow-up (22–22b) → documentation (23) → guardrail, dependent on both server-side and virtual (24–25).

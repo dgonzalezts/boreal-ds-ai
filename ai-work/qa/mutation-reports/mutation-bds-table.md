@@ -1612,3 +1612,32 @@ Scoped to the lines Task 7 added: the `selectedRows` prop, its `@Watch`, the `co
    Equivalent for the same reason: when `data.length` is 0, `selectedRowIds.size === this.data.length` can only be true if `selectedRowIds` is also empty, so both branches collapse to the same "select all" no-op.
 
 See `.agents/skills/testing-knowledge/SKILL.md` "Accepted Mutation Survivors" for the general convention.
+
+---
+
+## Task 8 follow-up — `selectedRows` mutable-prop mirroring (Vue v-model fix)
+
+Task 8's manual test (driving `examples/vue-testapp` live) revealed that `@stencil/vue-output-target`'s `defineContainer` reads the v-model value off `event.target[modelProp]`, not `event.detail` — so `bds-table`'s `selectedRows` had to become a self-mirroring mutable prop (`@Prop({ mutable: true })`, matching `bds-checkbox`'s `checked` pattern) for `v-model="selection"` to work at all. This added `this.selectedRows = [...]` assignments in `handleRowSelect`, `handleSelectAll`, `clearSelection`, and `onDataChange`.
+
+Two new mutants appeared as a result, both fixed:
+
+1. **`bds-table.tsx:100`** — `@Prop({ mutable: true }) selectedRows: string[] = [];` default-value mutant (`[]` → `["Stryker was here"]`) started surviving again. Root cause: the existing "does not pre-select..." test set `data` via `html` template then assignment *after* mount, and the new `onDataChange` auto-clear (added for consistency — see below) wiped out the mutated seed before assertions ran. Fixed by rewriting the test to set `data` via `page.doc.createElement` before `appendChild`, matching the componentWillLoad-seed test's pattern (no `@Watch('data')` fires on the very first value).
+2. **`bds-table.tsx:127`** — `this.selectedRowsChange.emit([]);` (added to `onDataChange` for v-model consistency when a data change auto-clears selection) had no event-spy assertion. Fixed by adding a `selectedRowsChange` spy to the "clears selection ... when data prop changes" test.
+
+**Final score after both fixes:** 260 killed / 130 survived / 10 no-coverage (65.00% file-wide, up from 64.50%). Task-8-scoped new lines: fully killed, no new accepted survivors beyond the two already documented above (componentWillLoad guard and handleSelectAll guard equivalents, unaffected by this change).
+
+---
+
+## Task 12 — `bds-table` built-in search bar (`searchable`)
+
+Scope: `@Prop() readonly searchable: boolean = false;` (line 92), the `hasToolbar` getter's `this.searchable ||` clause (line 298), and `renderToolbarRight()`'s `{this.searchable && <bds-search-bar mode="search" />}` conditional (lines 545-549).
+
+Mid-session design correction: the initial implementation kept `slot="search-bar"` as an escape hatch (with a `hasSearchBarSlotContent` check and a `Logger.warn` when both `searchable` and the slot were populated simultaneously). A confirmed UX/UI decision removed the slot entirely — `searchable` is now the only way to add search; there is no dual-render guard, no warning, and no `[slot="search-bar"]` query anywhere in the component. Tests were rewritten accordingly (dropped the "both set → warns" and "slot renders when searchable=false" cases; added "no search element and no residual `<slot name=\"search-bar\">` renders when searchable=false"). One pre-existing test from before this task (`renders the toolbar when only the search-bar slot is filled...`) was now asserting dead behavior and was corrected to assert the toolbar does NOT render for stray `slot="search-bar"` content, since `hasToolbar` no longer checks for that slot.
+
+Final suite: 91 tests across 6 spec files, 98.13% statement coverage on `bds-table.tsx` (all Task 12 lines exercised, confirmed via `lcov.info` DA hit-counts).
+
+**Mutation run (second, against corrected implementation):** 401 mutants total, 262 killed, 129 survived, 10 no-coverage, 0 timeout (65.34% file-wide — consistent with the pre-existing low file-wide baseline noted in Tasks 7/8, driven by unrelated code: pinned-column offset calc, the `colKey`-missing warning, pin-props object literals, etc.).
+
+**Task-12-scoped result: 100% — zero survivors, zero no-coverage.** Confirmed by grepping the survived/no-coverage sections of the mutation report for lines 92, 298, 545, and 548: no matches. All mutants Stryker generated on the `searchable` prop default, the `hasToolbar` boolean-or clause, and the `renderToolbarRight` conditional-render were killed by the `searchable` describe block in `bds-table.toolbar.spec.ts`. No accepted survivors to document for this task.
+
+(Note: an earlier first Stryker run, executed before the slot-removal correction landed, is superseded and was not used for this scoring — re-run in full against the corrected code.)
