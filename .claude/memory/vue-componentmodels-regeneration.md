@@ -1,0 +1,1 @@
+../../.agents/memory/vue-componentmodels-regeneration.md
