@@ -1,60 +1,71 @@
 # EOA-14935 — bds-table v2 high-priority limitations
 
 **Ticket:** EOA-14935
-**Goal:** Close out the six "Priority: High" limitations documented in `bds-table.mdx`, plus two team-requested follow-ups (built-in search bar, skeleton loading) and a large-dataset guardrail raised in a feedback meeting, bringing `bds-table` from its v1 client-side-only scope toward the v2 capabilities scoped in the `EOA-10576` column-API spike.
+**Status:** Done (2026-07-09)
+**Goal:** Close four of the six "Priority: High" limitations documented in `bds-table.mdx` that were tractable without deeper architectural prerequisites, plus a `bds-pagination` bug-fix pass and a new `bds-tooltip` manual/imperative-control API, moving `bds-table` a step toward the v2 capabilities scoped in the `EOA-10576` column-API spike.
+
+**Remaining scope:** the rest of the originally-scoped v2 work (full `dataset` prop + internal pagination + cross-page selection, column footer, server-side mode + skeleton loading, row virtualization, `maxClientRows` guardrail) did not land in this pass — see [`ai-work/tickets/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md), which carries it forward as its own ticket.
 
 ## Scope
 
-**In:**
+**In (shipped):**
 
-- Overflow tooltip on truncated header/cell text — requires a new `manual` mode plus `show()`/`hide()`/`anchorTo()` methods on `bds-tooltip` (not just three methods — the existing auto-discovery-on-mount behavior in `anchoredMixin` must be bypassable, otherwise a singleton tooltip reused across hundreds of cells leaks listeners)
-- Full dataset prop + internal pagination + cross-page selection (requires a `bds-pagination` bug fix)
-- Externally controlled row selection (`selectedRows` prop) plus a dedicated `selectedRowsChange` event and `v-model:selectedRows` wiring in `vue-output-target.ts` (the existing `bdsSelect` event's richer payload can't drive Vue's `componentModels` directly)
-- Server-side sort/pagination/filter mode, including finishing the existing `loading` prop stub using the new `bds-skeleton` primitive
-- Row virtualization for large datasets, reusing the already-present `@tanstack/virtual-core` dependency directly (not the existing `VirtualScrollController` utility — see Open Questions)
-- Column footer row — **slot-based**, not a computed callback: consumers slot static markup per column (`<span slot="footer">`), `bds-table` projects it into `<tfoot>`, matching the existing `slot="empty-state"`/`slot="row-actions"` pattern
-- Built-in `searchable` prop using the now-available `bds-search-bar` component
-- New reusable `bds-skeleton` primitive (rect/text/circle variants, shimmer via `var(--boreal-*)` tokens) — justified by the loading mockup showing skeleton needed in at least four places within `bds-table` alone (toolbar, header, cells, pagination row)
-- Hover state fix for `pinnable`-only (non-sortable) columns — confirmed missing in current SCSS, sortable columns get a hover-darken treatment on their header icon that pinnable-only columns don't
-- `maxClientRows` guardrail — warns (non-blocking) when a client-side dataset exceeds a safe row count without `server-side`/`virtual` enabled
+- Three `bds-pagination` bug fixes: `totalItems` watcher snap-back, a stray literal `"1"` in the empty state, and a new `loading` prop that disables navigation.
+- `bds-tooltip` gains a `manual` mode plus `show()`/`hide()`/`anchorTo()` methods — not just three methods bolted on, but a way to bypass `anchoredMixin`'s automatic trigger-discovery-on-mount entirely, since a singleton tooltip reused across hundreds of table cells cannot go through that path repeatedly without leaking listeners.
+- Externally controlled row selection on `bds-table`: `selectedRows` prop plus a dedicated `selectedRowsChange` event and `v-model:selectedRows` wiring in `vue-output-target.ts` (the existing `bdsSelect` event's richer payload can't drive Vue's `componentModels` directly).
+- Built-in `searchable` prop on `bds-table` using `bds-search-bar`. This surfaced two real gaps in `bds-search-bar` itself (not originally scoped, discovered during manual testing and fixed as part of this same ticket): `mode="search"` never actually collapsed visually, and had no clear button. Also surfaced and fixed a keyboard-accessibility bug (`Shift+Tab` trapped focus in a loop when exiting an open search bar) and a bug where the clear button/blur-while-typing behavior silently never worked in `mode="search"`.
+- Hover state fix for `pinnable`-only (non-sortable) columns — sortable columns already got a hover-darken treatment on their header icon that pinnable-only columns didn't.
+- Overflow tooltip on truncated header/cell text, via the new `bds-tooltip` manual-mode singleton.
 
-**Out (surfaced during a design playground review, not added to scope):**
+**Deferred to v3 (not shipped in this ticket):**
 
-- Column grouping, drag/drop reorder ("Button Reorder" in the reviewed playground), column resizing, row expand/collapse (Medium/Low priority items, separate future work)
-- Multiple header type variants, per-column skeleton dropdown config, explicit scrollbar visibility toggles, and per-cell state variants (all visible in the reviewed column-config playground but with no equivalent in the current `bds-table-column` implementation) — flagged for a future design pass, not scoped here
-- Custom cell content via declarative `<template>` slots for body cells (Medium priority, formatter callback remains the only mechanism — note this is distinct from the footer slot, which is now in scope)
-- Responsive toolbar behavior below 744px (blocked on UX/UI sign-off per the original spike)
-- Any change to `bds-search-bar`'s own large-list performance behavior (a related but separate concern — its `VirtualScrollController` keeps all DOM nodes mounted rather than reducing DOM count, which is why it isn't reused for `bds-table`)
+- Full dataset prop + internal pagination + cross-page selection.
+- Column footer row (slot-based).
+- Server-side sort/pagination/filter mode + skeleton loading visual.
+- Row virtualization for large datasets (`@tanstack/virtual-core`).
+- `maxClientRows` guardrail.
+- The standalone reusable `bds-skeleton` primitive — deferred further still, pending a second real consumer (see the v3 ticket/plan for the trigger condition).
+
+**Out (surfaced during a design playground review, not added to scope in this ticket):**
+
+- Column grouping, drag/drop reorder ("Button Reorder" in the reviewed playground), column resizing, row expand/collapse (Medium/Low priority items, previously "separate future work" — **update (2026-07-09): promoted into v3's scope**, see the v3 ticket)
+- Multiple header type variants, per-column skeleton dropdown config, explicit scrollbar visibility toggles, and per-cell state variants (all visible in the reviewed column-config playground but with no equivalent in the current `bds-table-column` implementation) — previously "flagged for a future design pass, not scoped here" — **update (2026-07-09): promoted into v3's scope**, see the v3 ticket
+- Custom cell content via declarative `<template>` slots for body cells (formatter callback remains available as an alternative mechanism, distinct from the footer slot) — **update (2026-07-09): promoted into v3's scope**, see the v3 ticket
+- Responsive toolbar behavior below 744px (blocked on UX/UI sign-off per the original spike) — **update (2026-07-09): promoted into v3's scope** (sign-off gate still required), see the v3 ticket
+- Any change to `bds-search-bar`'s own large-list performance behavior (a related but separate concern — its `VirtualScrollController` keeps all DOM nodes mounted rather than reducing DOM count, which is why it isn't reused for `bds-table`'s virtualization) — still out of scope, not carried into v3 either
 
 ## Acceptance Criteria
 
-- [ ] `bds-pagination`'s `totalItems` watcher no longer snaps back to a stale `currentPage` prop value
-- [ ] `bds-pagination`'s empty state no longer renders a stray literal `"1"`
-- [ ] `bds-pagination` exposes a `loading` prop that disables navigation
-- [ ] `bds-tooltip` exposes `show()`, `hide()`, `anchorTo(element)` methods usable by a singleton consumer
-- [ ] `bds-table` supports `selectedRows` for external/controlled selection
-- [ ] `bds-table` supports `searchable` rendering a built-in `bds-search-bar`
-- [ ] `bds-table` shows a real overflow tooltip on truncated header/cell text
-- [ ] `bds-table` supports a `dataset` prop with internal pagination and cross-page selection, mutually exclusive with `data`
-- [ ] `bds-table` supports `serverSide` mode and a working `loading` skeleton-row visual
-- [ ] `bds-table` supports a `footer` render path per column, signed off before implementation
-- [ ] `bds-table` supports `virtual` opt-in row virtualization backed by the already-present `@tanstack/virtual-core` dependency, with correct row-identity preservation (`key={rowId}`) across sort/filter, and the sticky `<thead>` explicitly disabled while `virtual=true` (documented v1 limitation — see Task 22/22b in the plan for the underlying TanStack Virtual bug this avoids)
-- [ ] `bds-table` warns (non-blocking) via `Logger` when a client-side dataset exceeds `maxClientRows` without `serverSide`/`virtual` enabled
-- [ ] `bds-table.mdx`'s "Current limitations" table has all shipped rows removed
-- [ ] Every new/changed behavior has passing unit tests meeting the two-phase coverage + mutation-score gate
+- [x] `bds-pagination`'s `totalItems` watcher no longer snaps back to a stale `currentPage` prop value
+- [x] `bds-pagination`'s empty state no longer renders a stray literal `"1"`
+- [x] `bds-pagination` exposes a `loading` prop that disables navigation
+- [x] `bds-tooltip` exposes `show()`, `hide()`, `anchorTo(element)` methods usable by a singleton consumer
+- [x] `bds-table` supports `selectedRows` for external/controlled selection
+- [x] `bds-table` supports `searchable` rendering a built-in `bds-search-bar`
+- [x] `bds-table` shows a real overflow tooltip on truncated header/cell text, independent of the existing per-column `info` tooltip
+- [x] `bds-table` supports a hover-darken state for `pinnable`-only (non-sortable) columns
+- [x] `bds-table.mdx`'s "Current limitations" table has all four shipped-in-this-ticket rows removed (renumbered)
+- [x] Unit tests added for every change in this ticket, coverage ≥90% statements per component
+- [ ] Mutation-score gate (Stryker) — intentionally deferred to a single batched pass across all touched components rather than per-feature; not yet run against final source at ticket close. Tracked as the first task of follow-on work (see the v3 plan's Task 12, which also covers this ticket's own touched files).
+
+Moved to the v3 ticket (not acceptance criteria here anymore):
+
+- `dataset` prop with internal pagination and cross-page selection
+- `serverSide` mode and `loading` skeleton-row visual
+- `footer` render path per column
+- `virtual` opt-in row virtualization
+- `maxClientRows` guardrail
 
 ## Dependencies
 
 - `EOA-10576-bds-table-v1.md` (shipped, `status: done`) — this ticket continues its deferred v2 backlog
-- `2026-06-16-bds-table-column-api-spike.md` — primary research source for items 1–6
-- `bds-search-bar` component (already shipped) — unblocks the `searchable` item
-- `@tanstack/virtual-core` (already a direct dependency, `^3.17.1`, used today by `VirtualScrollController`) — unblocks the `virtual` item without adding a new dependency
+- `2026-06-16-bds-table-column-api-spike.md` — primary research source
+- `bds-search-bar` component (already shipped) — unblocked the `searchable` item; several latent bugs in it were fixed as part of this ticket (see Scope above)
 
-## Open Questions
+## Open Questions (resolved during this ticket)
 
-- Plan file identity: continue `EOA-10576-bds-table-v1.md` numbering or start fresh under this ticket? → resolved: new file under this ticket.
-- `data` vs `dataset` mutual exclusivity enforcement mechanism — resolved: `Logger.warn`, non-blocking.
-- Footer design — resolved: slot-based (`slot="footer"`), not a computed callback prop. Sign-off gate remains (Task 17 of the plan) to confirm before implementation.
 - `anchorTo()` on `bds-tooltip` — resolved: a new `manual` prop skips `anchoredMixin`'s automatic trigger discovery entirely, so `anchorTo()` can cheaply reassign `triggerSlot` without ever calling the listener-attaching `subscribe()` path.
-- `maxClientRows` default value — proposed `1000`, needs team confirmation.
-- Whether `VirtualScrollController` should eventually be generalized to support true DOM-count virtualization (not just positional) — **resolved (2026-07-06):** yes, technically possible, via a windowed-creation model, not by generalizing `VirtualScrollController`'s current positional/`MutationObserver` design (no working precedent found anywhere, sits in a real upstream bug class — `TanStack/virtual#1133`, `#1147`, `#823`). **Refined (2026-07-06, follow-up review):** the mechanism doesn't have to be Vaadin's imperative `createElements`/`updateElement` pool — if `bds-search-bar` renders its own `<bds-list-menu-item>` children via its own Stencil JSX (from a data-array prop) instead of relying on consumer-slotted markup, it can use the identical "`.map()` over `getVirtualItems()`" pattern `bds-table` already plans, sharing the same factory rather than needing a separate imperative adapter. Vaadin's `createElements`/`updateElement` is cited only as proof that one shared class *can* serve a list and a grid — not as the recommended mechanism for this codebase. **Decision: deferred to a separate future spike, out of scope for this ticket.** `bds-table` builds its own integration against `@tanstack/virtual-core` directly, fully decoupled from this question. Full research and citations: `/Users/dgonzalez/.claude/plans/let-s-continue-improving-the-calm-balloon.md`; bug tracked at `ai-work/qa/bug-reports/2026-07-06-bds-search-bar-bug-001.md`. Follow-up spike (API design + migration strategy, including the JSX-rendering refinement): `ai-work/research/2026-07-06-shared-virtualization-utility.md` — neither the shared factory nor `bds-search-bar`'s migration is scheduled.
+- Whether to keep `slot="search-bar"` as a fallback alongside `searchable` — resolved: no. Per an explicit UX/UI decision, `slot="search-bar"` was removed entirely rather than kept as an escape hatch, enforcing `bds-search-bar` as the only supported search mechanism.
+- Mutation-testing cadence — resolved (2026-07-09): run once, batched across all touched components, rather than after every individual task/feature. Carried forward as the stated testing policy for the v3 plan too.
+
+Remaining open questions (dataset mutual exclusivity, footer sign-off gate, `maxClientRows` default, `VirtualScrollController` generalization) moved to [`ai-work/tickets/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md) along with their scope.
