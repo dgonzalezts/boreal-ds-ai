@@ -79,6 +79,12 @@ RE_DECLARE_GLOBAL_POPOVER = re.compile(r"declare\s+global\s*\{[^}]*(?:showPopove
 RE_INTERFACE_BDS_FILENAME = re.compile(r"^IBds[A-Z].*\.ts$")
 # Matches getter accessor with a redundant `get` prefix in the name
 RE_GETTER_GET_PREFIX = re.compile(r"\bget\s+get[A-Z]\w*\s*\(")
+# Matches the class-level JSDoc block immediately preceding @Component
+RE_CLASS_JSDOC_BLOCK = re.compile(r"(/\*\*[\s\S]*?\*/)\s*@Component")
+# Matches an @slot tag inside a JSDoc block, capturing the optional slot name
+RE_SLOT_TAG = re.compile(r"^\s*\*\s*@slot(?:\s+([\w-]+))?\s*(?:-|$)", re.MULTILINE)
+# Matches a rendered <slot> element with no name attribute (the default slot)
+RE_DEFAULT_SLOT_ELEMENT = re.compile(r"<slot(?![^>/]*\bname=)")
 # Matches no-op mixin constructor identical to the implicit super call
 RE_MIXIN_NOOP_CTOR = re.compile(
     r"constructor\s*\(\s*\.\.\.args\s*:\s*any\[\]\s*\)\s*\{\s*super\s*\(\s*\.\.\.args\s*\)\s*;\s*\}"
@@ -156,6 +162,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_event_name_format(rel, lines)
     findings += _check_event_options(rel, lines)
     findings += _check_class_jsdoc_tags(rel, source)   # uses full source — anchored to @Component
+    findings += _check_class_jsdoc_stale_slot(rel, source, code_only)
     findings += _check_fileoverview(rel, lines)
     findings += _check_nodetype(rel, lines)
     findings += _check_typescript_safety(rel, lines)
@@ -273,6 +280,44 @@ def _check_class_jsdoc_tags(rel: str, source: str) -> List[Finding]:
             message="Component class JSDoc uses `@element` or `@method` tags — ignored by the CEM analyzer. Use method-level JSDoc instead.",
             file=rel,
         ))
+    return findings
+
+
+def _check_class_jsdoc_stale_slot(rel: str, source: str, code_only: str) -> List[Finding]:
+    """Every @slot tag in the class JSDoc must match a <slot> rendered in the file.
+
+    Uses the full source to read the JSDoc block (tags live inside comments) and
+    the JSDoc-stripped source to find rendered <slot> elements, so slot examples
+    inside JSDoc cannot mask a genuinely missing render-side slot.
+    """
+    block_match = RE_CLASS_JSDOC_BLOCK.search(source)
+    if not block_match:
+        return []
+
+    findings = []
+    block = block_match.group(1)
+    block_offset = block_match.start(1)
+
+    for m in RE_SLOT_TAG.finditer(block):
+        slot_name = m.group(1)
+        line_num = source[:block_offset + m.start()].count("\n") + 1
+        if slot_name:
+            rendered = re.search(rf"""<slot[^>]*\bname=["']{re.escape(slot_name)}["']""", code_only)
+        else:
+            rendered = RE_DEFAULT_SLOT_ELEMENT.search(code_only)
+        if not rendered:
+            label = f"'{slot_name}'" if slot_name else "(default)"
+            findings.append(Finding(
+                rule="class-jsdoc-stale-slot",
+                severity="error",
+                message=(
+                    f"Class JSDoc documents @slot {label} but no matching <slot> is rendered "
+                    "in this file. The CEM plugin cannot detect this — the stale tag ships as "
+                    "a phantom slot in custom-elements.json. Remove the tag or restore the slot."
+                ),
+                file=rel,
+                line=line_num,
+            ))
     return findings
 
 

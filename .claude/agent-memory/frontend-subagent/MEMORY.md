@@ -6,6 +6,7 @@
 - [Utils in a dedicated folder](feedback_utils_folder.md) — Place component-local utilities in a `utils/` subfolder, not inline in the `.tsx` file
 - [slotchange: two patterns](feedback_slotchange_listener.md) — Use `<slot onSlotchange>` for slotted children; use imperative `addEventListener` for unslotted direct DOM children read via `querySelectorAll`
 - [No @summary in JSDoc](feedback_no_jsdoc_summary_tag.md) — Stencil CEM compiler silently discards @summary; leading prose before any @ tag is the sole source of the "description" field in custom-elements.json
+- [Re-audit JSDoc on every API change](feedback_jsdoc_sync_on_change.md) — `@slot` tags drift silently because CEM can't infer them from render(); verify class JSDoc against render() before finishing any component edit (bds-table `search-bar` incident, EOA-14935)
 - [Prop-or-slot pattern](feedback_prop_or_slot_pattern.md) — avoid slot-fb DOM noise: use {prop.length > 0 ? <el> : <slot />} not slot fallback children
 - [PREFIX constant](feedback_prefix_constant.md) — declare `const PREFIX = 'bds-tag' as const` at the top of every component; use in all class template literals
 - [classMap getter](feedback_classmap_getter.md) — use `private get classMap(): StyleModifiers` for conditional classes; never inline ternaries in JSX class bindings

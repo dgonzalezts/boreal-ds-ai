@@ -55,6 +55,27 @@ Nothing else. No `@attr`, `@property`, `@cssprop`, `@fires`, `@summary`, `@metho
 
 ---
 
+## Keeping JSDoc in Sync
+
+JSDoc is part of the change, not a follow-up task. Any edit that adds, removes, or renames a prop, event, method, or slot must update the corresponding JSDoc in the same commit.
+
+Drift risk is not uniform:
+
+- **Props, events, methods** — low risk. The JSDoc sits directly on the member, so deleting or renaming the member forces you past its doc.
+- **`@slot` tags** — highest risk. They live in the class-level JSDoc block, far from the `render()` code that changes, and the CEM plugin cannot infer or validate them from the AST. A stale `@slot` ships silently into `custom-elements.json` as a phantom slot.
+- **Class description prose** — moderate risk. It often names props or behaviors ("with support for selection, pagination, …") that a change can invalidate.
+
+Before finishing any component edit, run this checklist:
+
+1. Every `@slot` tag in the class JSDoc has a matching `<slot>` / `<slot name="...">` in `render()` or its render helpers.
+2. Every rendered slot has a corresponding `@slot` tag.
+3. The class description prose still matches the component's actual behavior.
+4. Prop/event/method JSDoc still describes what the member does after the change (especially when semantics changed but the name did not).
+
+The `code-reviewer` skill enforces item 1 mechanically via the `class-jsdoc-stale-slot` rule; the rest require a deliberate read.
+
+---
+
 ## Module-Level JSDoc (`@file`)
 
 ```ts
@@ -254,3 +275,4 @@ export class BdsCheckbox {
 - Writing `@attr` or `@property` in the class JSDoc — the Stencil plugin generates both from `@Prop()` decorators.
 - Documenting internal `--_*` CSS variables with `@prop` — they are not public API.
 - Using fallback values in `var(--custom-prop, default)` instead of declaring the variable with its default in the tag selector block.
+- Leaving a stale `@slot` tag behind after removing or replacing a slot in `render()` — the CEM plugin cannot detect the mismatch and publishes the phantom slot.

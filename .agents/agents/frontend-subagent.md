@@ -50,4 +50,5 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 - All props must have explicit TypeScript types. No `any`. No inferred prop types.
 - All tokens from `@telesign/boreal-style-guidelines/stencil` — no hard-coded colours, spacing, or radii.
 - Use bare `@Event()` — no `bubbles` or `composed` options unless the event must bubble to a parent `@Listen()` handler (see ADR 0003).
+- Any edit that touches the public API (props, events, methods) or the slots rendered in `render()` requires a JSDoc consistency pass before finishing: verify every `@slot` tag matches a rendered slot and the class description prose still holds. See `ai-docs/guidelines/jsdoc-template.md` → "Keeping JSDoc in Sync".
 - Only implement what is in the current task. Do not refactor surrounding code or add features outside scope.

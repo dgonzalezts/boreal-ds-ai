@@ -105,6 +105,7 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 | `face-missing-attach-internals`   | error    | `formAssociated: true` without `@AttachInternals()` on the class                 |
 | `face-native-constraint-on-input` | error    | Inner `<input>` carrying native constraint attributes                            |
 | `class-jsdoc-internal`            | error    | `@internal` in a component class JSDoc                                           |
+| `class-jsdoc-stale-slot`          | error    | `@slot` tag in class JSDoc with no matching `<slot>` rendered in the file        |
 | `mutable-prop-any-cast`           | warning  | Mutable prop assigned with `as any`                                              |
 | `nodetype-check`                  | warning  | `.nodeType` used instead of `instanceof Element`                                 |
 | `unsafe-any`                      | warning  | Broad `any` usage in types or casts                                              |
