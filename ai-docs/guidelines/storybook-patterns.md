@@ -165,6 +165,7 @@ Stories use Lit's `html` tagged template literal. The component element is a sta
 | ----------------- | ------------------------------ | -------------------------------------------------------- |
 | String / enum     | `variant=${args.variant}`      | Reflected string props                                   |
 | Boolean attribute | `?disabled=${args.disabled}`   | Props that map to boolean HTML attributes                |
+| Optional attribute | `value=${args.value \|\| nothing}` | String props that should be omitted entirely (not rendered as `attr=""`) when the arg is empty |
 | JS property       | `.options=${args.options}`     | Objects, arrays, non-reflected props                     |
 | Event listener    | `@bdsClick=${args.onBdsClick}` | Custom events (the `@` prefix equals `addEventListener`) |
 
@@ -184,6 +185,14 @@ html`
 ```
 
 Use `nothing` (not `undefined` or `''`) to suppress a slot — Lit renders `nothing` as an empty text node with no HTML output.
+
+**Optional attributes:**
+
+```ts
+html`<bds-text-field value=${args.value || nothing} placeholder=${args.placeholder || nothing}></bds-text-field>`;
+```
+
+`nothing` behaves differently by position: in a **child position** (above) it suppresses a text/element node; in an **attribute position** (`attr=${...}`) it removes the attribute entirely rather than rendering `attr=""`. Use `args.value || nothing` for optional string args so the "Show code" snippet stays clean when the arg is empty. This is distinct from `?attr=${bool}` (boolean-attribute binding, table above) — different binding syntax, different purpose.
 
 **Icon font styles:**
 
