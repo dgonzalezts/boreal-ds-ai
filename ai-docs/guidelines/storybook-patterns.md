@@ -249,6 +249,20 @@ Use this sequence. Omit sections that do not apply to the component.
 
 > Note: "Component preview" and "States" sometimes use `<Subtitle>` and sometimes `## H2` headings depending on how prominent the section needs to be. Follow the precedent of the nearest existing component in the same category.
 
+### MDX `include` completeness — silent-drop pitfall
+
+`<ArgTypes of={BdsXxxStories} include={[...]}>` filters to only the names listed in `include`. If a name in that array has no matching key in the `.stories.ts` `argTypes` object, Storybook does not error or warn — it simply renders no row for it. This makes it easy to believe a prop/event is documented (it's right there in the `include` array) when it silently isn't.
+
+**Before considering a component's docs complete, cross-check three lists against each other, not just two:**
+
+1. Every `@Prop()`/`@Event()` in the component's `.tsx`.
+2. Every key in `argTypes` in `.stories.ts`.
+3. Every string in the MDX file's `<ArgTypes include={[...]}>` array(s) — components with sub-parts (e.g. `bds-table` + `bds-table-column`) may have more than one `<ArgTypes>` block, each with its own `include`.
+
+All three must match. A name present in (3) but missing from (2) is the specific failure mode that shipped undetected in `bds-table` (EOA-14935) — `selected-rows`, `searchable`, and `selectedRowsChange` were listed in the MDX `include` array but had no `argTypes` entry, so the props/events table silently omitted all three despite looking complete in a source diff.
+
+**Verification:** don't just review the diff — run `pnpm dev:docs` and visually confirm each prop/event row actually renders in the "Properties" panel for the component you touched.
+
 ### Canvas blocks
 
 Reference story exports by name. Optionally add `<Description of={...} />` before the Canvas to show the story's JSDoc comment:
@@ -316,6 +330,7 @@ Omit the table of contents for simple components with fewer than four sections.
 - **Never import from `@storybook/blocks`** — use `@storybook/addon-docs/blocks` (this is what the project installs).
 - **Never use `ColibriStoryMeta` / `ColibriStory`** — these are from a predecessor design system; the correct types are `BorealStoryMeta` / `BorealStory` from `@/types/stories`.
 - **Never omit `parameters` from the meta** — `BorealStoryMeta` makes it required; always include the `docs.source` block with `formatHtmlSource`.
+- **Never add a name to an MDX `<ArgTypes include={[...]}>` array without also adding a matching `argTypes` entry in `.stories.ts`** — see "MDX `include` completeness" above. This is the single most common way a documented-looking prop/event silently never renders.
 
 ---
 

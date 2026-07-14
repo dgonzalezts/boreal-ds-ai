@@ -82,6 +82,34 @@ The `?.` optional chain is required — `args.bdsChange` is `undefined` in snaps
 
 ---
 
+## Props/Events Completeness Check — run before finishing any doc task
+
+The rule (`development-standards.md` §5 "ArgTypes Rules") is that every `@Prop()`/`@Event()` must have an `argTypes` entry, no exceptions for props that feel JS-only or internal. This procedure is how to actually verify it, because the failure mode is silent: `<ArgTypes include={[...]}>` drops any name without a matching `argTypes` key with no error (see `storybook-patterns.md`'s "MDX `include` completeness" section). A source diff that "looks complete" can still ship a props table missing rows — this happened for real on `bds-table` (EOA-14935): three names were already in the MDX `include` array with no `argTypes` entry behind them, and nothing caught it until PR review.
+
+Cross-check three lists against each other for every component you touch, not just two:
+
+```bash
+# 1. Every @Prop()/@Event() in the component source
+grep -n "@Prop\|@Event" packages/boreal-web-components/src/components/**/<bds-component>.tsx
+
+# 2. Every key in argTypes (.stories.ts) — read the file, don't just grep;
+#    keys can be renamed via `name:` (e.g. `selectedRows` -> `selected-rows`)
+
+# 3. Every string inside <ArgTypes include={[...]}> in the .mdx file —
+#    check every <ArgTypes> block if the component has sub-parts
+#    (e.g. bds-table + bds-table-column each get their own block)
+```
+
+All three must agree. Specifically watch for:
+
+- A prop/event that exists in the `.tsx` but is missing from **both** (2) and (3) — the plain "forgot to document it" case.
+- A name present in (3) but absent from (2) — the silent-drop case; `include` referencing a name is not evidence the row renders.
+- A prop that "does nothing yet" (e.g. deferred/stubbed pending design specs) — still document it, but say so explicitly in the description so consumers aren't left guessing why nothing happens when they set it.
+
+**Do not consider the task done from reading the diff.** Run `pnpm dev:docs` and visually confirm every prop/event you added actually renders as a row in the component's "Properties" panel.
+
+---
+
 ## Source Snippet Override for Non-Primitive Props
 
 When a story uses Lit property binding (`.propName=${value}`) for a non-primitive prop (array, object), the auto-generated "Show code" snippet is incomplete — Storybook only sees the serialised DOM and cannot reconstruct the JS property assignment.

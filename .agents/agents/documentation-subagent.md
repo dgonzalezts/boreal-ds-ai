@@ -49,6 +49,11 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 - Read `ai-docs/guidelines/jsdoc-template.md` before adding or modifying JSDoc — JSDoc placement follows strict rules and CEM generates parts of the docs automatically.
 - Follow `ai-docs/guidelines/storybook-patterns.md` for the two-type docs/story component rule and required MDX sections.
 - All code examples in MDX must be copy-paste ready and accurate.
-- Every public prop and event must be described in the story argTypes and the MDX props table.
 - The accessibility section in MDX must be actionable: keyboard navigation steps, ARIA roles, screen reader behaviour — not generic platitudes.
 - Only document the component specified in the current task.
+
+## Before marking any doc task complete
+
+Run the "Props/Events Completeness Check" from `documentation-knowledge` — cross-check the component's `@Prop()`/`@Event()` list against both the `.stories.ts` `argTypes` object and every `<ArgTypes include={[...]}>` array in the `.mdx` file. Do not treat a name appearing in an MDX `include` array as evidence it's documented — `<ArgTypes>` silently renders no row for any `include` entry without a matching `argTypes` key.
+
+Then run `pnpm dev:docs` and visually confirm every prop/event you touched actually renders as a row in the Properties panel — a clean source diff is not sufficient evidence the table is complete.

@@ -98,21 +98,23 @@ completed: 2026-07-09
 
 - `packages/boreal-web-components/src/components/data-visualization/bds-pagination/bds-pagination.tsx` (modify, line ~470)
 
-**Acceptance criteria:**
+**Reverted (2026-07-14) — UX/UI decision reversed, see below.** The acceptance criteria and commit below describe this task's *original* execution (commit `e0582e99`), kept for history. That decision has since been reversed: UX/UI review determined the empty-state page indicator should keep showing "1" — "the table always has a first page," confirmed by Figma — and the original pre-`e0582e99` behavior (bare `<bds-typography variant="helper">1</bds-typography>`, no `getPaginationControls()`/nav arrows, when `totalPages === 0`) was restored in `render()`. The unit tests and manual test below were reverted to match. No new commit message is prescribed here — this correction lands as its own follow-up commit, e.g. `revert(bds-pagination): EOA-14935 restore empty-state literal "1" per UX/UI feedback`.
+
+**Acceptance criteria (original, now reverted):**
 
 - Replace the `isEmpty ? <bds-typography variant="helper">1</bds-typography> : ...` branch with `this.getPaginationControls()` unconditionally — its buttons are already `disabled` via `isPrevButtonDisabled`/`isNextButtonDisabled` when `totalPages === 0`.
 
-**Unit tests to cover:**
+**Unit tests to cover (original, now reverted):**
 
 - `totalItems={0}` renders no literal `"1"` anywhere in the controls.
 - `totalItems={0}` renders navigation buttons disabled.
 
-**Manual test** _(waiveable)_:
+**Manual test** _(waiveable, original, now reverted)_:
 
 - Run `pnpm dev:components`, render `bds-pagination` with `total-items="0"`:
   - [ ] Given `total-items="0"`, when rendered, then no stray "1" appears and controls are visibly disabled. Pass: visual inspection confirms no orphaned "1".
 
-**Commit:** `git commit -m "fix(bds-pagination): EOA-14935 remove stray literal in empty state"`
+**Commit (original, now reverted):** `git commit -m "fix(bds-pagination): EOA-14935 remove stray literal in empty state"`
 
 ---
 
@@ -433,6 +435,8 @@ Manual verification via Playwright MCP found two real gaps in `bds-search-bar` i
 **Manual test:** Run `pnpm dev:docs`, review each story — specifically confirm `WithSearch` actually filters/clears via the rendered search bar (it currently would not, since the story itself hasn't been updated yet), and that the truncation-tooltip and pinnable-hover behaviors are visible in their respective canvases.
 
 **Commit:** `git commit -m "docs(bds-table): EOA-14935 document selectedRows, searchable, overflow tooltip, pinnable hover"`
+
+**Follow-up (2026-07-14) — PR review caught an incomplete execution of the "Props ArgTypes" bullet above.** `selected-rows`, `searchable`, and `selectedRowsChange` had been added to the MDX `<ArgTypes include={[...]}>` list, but the corresponding entries were never actually added to the `argTypes` object in `bds-table.stories.ts` — Storybook's `<ArgTypes include={...}>` silently drops any name that isn't a declared argType, so all three were invisible in the rendered props/events table despite appearing in both source files. Fixed by adding all three to `argTypes` (plus matching `StoryArgs` fields and `args` defaults). While auditing the full prop/event list against `argTypes` for this fix, two more genuine (pre-existing, not part of this task's original scope) gaps were found and closed the same way: `data` and `rowKey`, neither of which had ever been in `argTypes` or the MDX `include` list. `loading`/`loadingRows` were also found missing but were deliberately left out — see the v3 plan note below.
 
 ---
 

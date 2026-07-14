@@ -217,6 +217,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 - New "Server-side mode" section with a fetch-wiring example.
 - New stories: `WithServerSideMode`, `WithLoadingState`.
 - No separate `bds-skeleton` doc page to reference — the loading-state section documents the skeleton visual as a `bds-table` implementation detail only.
+- **Props ArgTypes — confirmed still missing as of 2026-07-14, do not skip:** `loading`, `loadingRows`, and this task's new `serverSide` prop are not currently in `bds-table.stories.ts`'s `argTypes` object, nor in the MDX `<ArgTypes include={[...]}>` list (verified directly against both files while auditing v2's docs). Add all three the same way `data`/`rowKey`/`selectedRows`/`searchable`/`selectedRowsChange` were added in the v2 plan's Task 15 follow-up. **Known pitfall from that same follow-up:** adding a name to the MDX `include` array alone does nothing — Storybook's `<ArgTypes>` silently drops any entry without a matching `argTypes` object entry in `.stories.ts`. Add to `argTypes` first, then the MDX `include` list, and verify via `pnpm dev:docs` that the rows actually render — don't just check the source diff.
 
 **Manual test:** Run `pnpm dev:docs`, confirm sections/stories.
 
