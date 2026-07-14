@@ -34,13 +34,15 @@ Do not skip or reverse this order. Coverage alone does not prove the tests catch
 Full rationale and verified failure modes: `.agents/memory/stencil-scoped-test-invocation.md`. Summary:
 
 - Use a bare positional path, not `--testPathPattern` — Stencil's CLI wrapper mangles that flag into a matches-almost-everything character-class regex.
-- Pass `--collectCoverageFrom` explicitly, or the coverage % is computed against the project-wide default and looks misleadingly low.
+- Pass `--collectCoverageFrom` explicitly with a `**/*.tsx` glob matching all component source files, or the coverage % is computed against the project-wide default and looks misleadingly low.
 - Use `pnpm --filter <package> run <script>` from the repo root, not `cd <package> && ...` — `with-node.sh` resets cwd to repo root internally, so a preceding `cd` has no effect.
+- Pass `--coverageReporters` **twice** (e.g. `--coverageReporters=text --coverageReporters=text-summary`) — Stencil parses a single value as string, Jest needs array; single flag causes `coverageReporters.forEach is not a function`.
 
 ```bash
 .agents/scripts/with-node.sh pnpm --filter boreal-web-components run test:coverage -- \
   src/components/overlays/bds-tooltip \
-  --collectCoverageFrom="src/components/overlays/bds-tooltip/bds-tooltip.tsx"
+  --collectCoverageFrom="src/components/overlays/bds-tooltip/**/*.tsx" \
+  --coverageReporters=text --coverageReporters=text-summary
 ```
 
 ---

@@ -376,6 +376,14 @@ Manual verification via Playwright MCP found two real gaps in `bds-search-bar` i
 
 **Commit:** `git commit -m "fix(bds-table): EOA-14935 add hover state for pinnable-only columns"`
 
+**Follow-up (2026-07-14) — pin icon cursor affordance.** This task's original scope only covered the hover-darken color change; it deliberately left `th[data-pinnable]` out of the `cursor: pointer` rule (`th[data-sortable] { cursor: pointer; }`), since for a pinnable-only column the whole `<th>` isn't clickable — only the pin `<i>` icon is (`renderThActions`'s `onClick`/`stopPropagation` sits on the icon, not the header). A later request asked to add `cursor: pointer` for pinnable columns; extending the existing `th[data-sortable]`-style rule to the whole `<th>[data-pinnable]` was considered and rejected for the same reason as above (misleading — most of the header would show a pointer cursor without being clickable). Implemented instead scoped to the icon itself:
+
+- `bds-table.tsx`'s `renderThActions` now gives the pin `<i>` a stable base class, `${PREFIX}__pin-icon` (previously it only carried a conditional `--active` modifier, nothing at rest to target).
+- `bds-table.scss` adds `&__pin-icon { cursor: pointer; }`, scoped to the icon — `th[data-sortable]`'s existing whole-header pointer-cursor rule is untouched, since that case is genuinely fully clickable.
+- Two tests added to `bds-table.extras.spec.ts` covering both the pinnable-only case and the sortable+pinnable case (where the icon-level class is redundant with the header-level rule but still correctly present).
+
+No new commit message prescribed here — this lands as its own follow-up commit, e.g. `fix(bds-table): EOA-14935 add pointer cursor to the pin icon`.
+
 ---
 
 ## Task 14: `bds-table` — overflow tooltip on truncated text

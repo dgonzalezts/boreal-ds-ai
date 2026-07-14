@@ -20,7 +20,20 @@ To scope coverage stats to the same component (otherwise `test:coverage` compute
 ```bash
 .agents/scripts/with-node.sh pnpm --filter boreal-web-components run test:coverage -- \
   src/components/overlays/bds-tooltip \
-  --collectCoverageFrom="src/components/overlays/bds-tooltip/bds-tooltip.tsx"
+  --collectCoverageFrom="src/components/overlays/bds-tooltip/**/*.tsx"
+```
+
+`--collectCoverageFrom` glob must match **all** component source files (main component + sub-components + utils). Use `**/*.tsx` pattern.
+
+**2. `--coverageReporters` must be passed twice (or more).**
+
+Stencil's CLI parses a single `--coverageReporters=text` as a string and forwards it to Jest, which expects an array. This causes `TypeError: coverageReporters.forEach is not a function` in Jest's CoverageReporter. Multiple flags create the required array:
+
+```bash
+.agents/scripts/with-node.sh pnpm --filter boreal-web-components run test:coverage -- \
+  src/components/overlays/bds-tooltip \
+  --collectCoverageFrom="src/components/overlays/bds-tooltip/**/*.tsx" \
+  --coverageReporters=text --coverageReporters=text-summary
 ```
 
 **2. `with-node.sh` resets the working directory to repo root internally.**
