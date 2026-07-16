@@ -3,6 +3,7 @@
 | File | Status | Description |
 | --- | --- | --- |
 | [AI-001-ai-scaffold-restructure.md](./AI-001-ai-scaffold-restructure.md) | done | AI Scaffold Restructure Implementation Plan |
+| [AI-001-bds-button-accessibility-docs.md](./AI-001-bds-button-accessibility-docs.md) | done | bds-button Accessibility & Documentation Improvements |
 | [AI-002-ai-scaffold-knowledge-consolidation.md](./AI-002-ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |

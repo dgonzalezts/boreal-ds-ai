@@ -16,3 +16,5 @@
 - [bds-search-bar scroll-clip fix (EOA-15204)](stencil-search-bar-scroll-clip-bug.md) — root cause + fix location; also notes `--testPathPattern` doesn't scope correctly in this repo's test runner
 - [Third-party prop string literals](feedback_thirdparty_prop_string_literals.md) — nested bds-* component props (e.g. `mode="search"`) use string literals, not the target's own enum import, matching surrounding file convention
 - [Imperative content into non-shadow slot](feedback_imperative_content_into_nonshadow_slot.md) — never set `.textContent` on a `shadow:false` custom element host; ref a plain child node inside its slot instead
+- [Fresh worktree missing style-guidelines dist](stencil-worktree-missing-dist-dependency.md) — `stencil build` sass "Can't find stylesheet" errors in a new worktree mean build the `@telesign/boreal-style-guidelines` workspace package first, not a real code bug
+- [Slot relocation timing](feedback_slot_relocation_timing.md) — non-shadow slot polyfill relocates light-DOM children before `componentDidLoad`; inspect `this.el` children in `componentWillLoad` instead (bds-button `checkAccessibleName` fix)
