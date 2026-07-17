@@ -1,5 +1,5 @@
 ---
-ticket: EOA-14935
+ticket: EOA-15507
 component: bds-table
 status: in progress
 created: 2026-07-09
@@ -11,9 +11,9 @@ created: 2026-07-09
 
 **Goal:** Close out the remaining `bds-table` v2 scope that did not land in the v2 plan/PR: full-dataset internal pagination with cross-page selection, a slot-based column footer, server-side mode with an inline skeleton loading visual, opt-in row virtualization, and a large-dataset guardrail warning.
 
-**Ticket brief:** [`ai-work/tickets/EOA-14935-bds-table-v3.md`](../tickets/EOA-14935-bds-table-v3.md)
+**Ticket brief:** [`ai-work/tickets/EOA-15507-bds-table-v3.md`](../tickets/EOA-15507-bds-table-v3.md)
 
-**Relationship to v2:** This plan is a direct continuation of `ai-work/plans/EOA-14935-bds-table-v2.md` (status: `done`), which shipped Tasks 1–15 (pagination fixes, tooltip manual mode, controlled selection, built-in search, pinnable hover state, overflow tooltip, and their docs). Tasks below were originally numbered 16–25 (+22b) in that plan; they are renumbered 1–11 here for a clean, self-contained v3 sequence. Original task numbers are noted alongside each title for traceability back to the v2 plan's history/discovery tables.
+**Relationship to v2:** This plan is a direct continuation of `ai-work/plans/EOA-15507-bds-table-v2.md` (status: `done`), which shipped Tasks 1–15 (pagination fixes, tooltip manual mode, controlled selection, built-in search, pinnable hover state, overflow tooltip, and their docs). Tasks below were originally numbered 16–25 (+22b) in that plan; they are renumbered 1–11 here for a clean, self-contained v3 sequence. Original task numbers are noted alongside each title for traceability back to the v2 plan's history/discovery tables.
 
 **Architecture:** Five features land as independently committable additions to `bds-table` (one, the column footer, also touches no other component). Two depend on prerequisite work already shipped in v2 (the `bds-pagination` fixes); the rest are new dependencies purely within this plan's own task sequence.
 
@@ -35,17 +35,19 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 ### Utility Discovery (relevant rows only — see v2 plan's history for the full original table)
 
-| Feature area | Search performed | Candidate found | Fit | Decision |
-| --- | --- | --- | --- | --- |
-| Row virtualization | `packages/boreal-web-components/src/utils/dom/virtualScroll/virtual-scroll.ts`, `package.json` | `VirtualScrollController<TItem>` (wraps `@tanstack/virtual-core`'s `Virtualizer`), used by `bds-search-bar` | **Partial.** `@tanstack/virtual-core` is already a direct dependency (`^3.17.1`) — no new install needed. But `VirtualScrollController` keeps every child mounted and only toggles `display:none` + absolute positioning; it does not reduce DOM node count. | Reuse the underlying `@tanstack/virtual-core` dependency directly, not `VirtualScrollController`. `bds-table` needs true conditional JSX rendering (only `getVirtualItems()`-selected rows exist as `<tr>` nodes) which the light-DOM-child model cannot provide for Stencil-rendered rows. No shared-utility extension planned. |
-| Custom cell / footer rendering | `bds-table.tsx` (`applyCellFormatter`); design playground reference showing footer as a plain boolean toggle, not a computed value | Existing `applyCellFormatter` handles `string \| HTMLElement` via `ref`-based `appendChild`; `slot="empty-state"`/`slot="toolbar-actions"` already establish the light-DOM-slot-moved-into-place pattern | Footer should follow the **slot** pattern, not a new callback prop | No new `footer` prop on `bds-table-column`. Consumers slot static markup (`<span slot="footer">...</span>`) as a child of `<bds-table-column>`; `bds-table` moves that node into the matching `<tfoot>` cell once, same mechanism as existing slots. See Task 2 (sign-off) and Task 3. |
-| Skeleton loading rows | Repo-wide search for `skeleton`/`shimmer` in `boreal-web-components` and `boreal-style-guidelines` | None found outside the existing TODO comment in `bds-table.tsx` | Does not fit | Defer building a standalone reusable `bds-skeleton` primitive. Implement the loading visual as a private, table-scoped render helper directly in `bds-table.tsx`/`.scss` (Task 5), using the exact naming/class structure a future primitive would use (`.bds-skeleton`/`.bds-skeleton--rect\|text\|circle`, `--bds-skeleton-*` tokens, a `renderSkeleton(variant, width, height)` helper signature) so a future extraction is a near-mechanical move rather than a rewrite. See "Deferred: extract `bds-skeleton` primitive" below. |
-| Large-dataset guardrail logging | `bds-table.tsx` (`private readonly logger = new Logger()`) | `Logger` service already imported and used | Fully fits | Reuse `this.logger.warn(...)`. |
-| Dataset/pagination wiring | `bds-table.tsx` `componentDidLoad`/`componentWillLoad` (existing `querySelectorAll('bds-table-column')` + `MutationObserver` pattern) | Same slotted-child-query pattern already used for columns | Fully fits | Reuse the identical pattern for querying the slotted `bds-pagination`. |
+| Feature area                    | Search performed                                                                                                                      | Candidate found                                                                                                                                                                                          | Fit                                                                                                                                                                                                                                                          | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Row virtualization              | `packages/boreal-web-components/src/utils/dom/virtualScroll/virtual-scroll.ts`, `package.json`                                        | `VirtualScrollController<TItem>` (wraps `@tanstack/virtual-core`'s `Virtualizer`), used by `bds-search-bar`                                                                                              | **Partial.** `@tanstack/virtual-core` is already a direct dependency (`^3.17.1`) — no new install needed. But `VirtualScrollController` keeps every child mounted and only toggles `display:none` + absolute positioning; it does not reduce DOM node count. | Reuse the underlying `@tanstack/virtual-core` dependency directly, not `VirtualScrollController`. `bds-table` needs true conditional JSX rendering (only `getVirtualItems()`-selected rows exist as `<tr>` nodes) which the light-DOM-child model cannot provide for Stencil-rendered rows. No shared-utility extension planned.                                                                                                                                                                                                     |
+| Custom cell / footer rendering  | `bds-table.tsx` (`applyCellFormatter`); design playground reference showing footer as a plain boolean toggle, not a computed value    | Existing `applyCellFormatter` handles `string \| HTMLElement` via `ref`-based `appendChild`; `slot="empty-state"`/`slot="toolbar-actions"` already establish the light-DOM-slot-moved-into-place pattern | Footer should follow the **slot** pattern, not a new callback prop                                                                                                                                                                                           | No new `footer` prop on `bds-table-column`. Consumers slot static markup (`<span slot="footer">...</span>`) as a child of `<bds-table-column>`; `bds-table` moves that node into the matching `<tfoot>` cell once, same mechanism as existing slots. See Task 2 (sign-off) and Task 3.                                                                                                                                                                                                                                               |
+| Skeleton loading rows           | Repo-wide search for `skeleton`/`shimmer` in `boreal-web-components` and `boreal-style-guidelines`                                    | None found outside the existing TODO comment in `bds-table.tsx`                                                                                                                                          | Does not fit                                                                                                                                                                                                                                                 | Defer building a standalone reusable `bds-skeleton` primitive. Implement the loading visual as a private, table-scoped render helper directly in `bds-table.tsx`/`.scss` (Task 5), using the exact naming/class structure a future primitive would use (`.bds-skeleton`/`.bds-skeleton--rect\|text\|circle`, `--bds-skeleton-*` tokens, a `renderSkeleton(variant, width, height)` helper signature) so a future extraction is a near-mechanical move rather than a rewrite. See "Deferred: extract `bds-skeleton` primitive" below. |
+| Large-dataset guardrail logging | `bds-table.tsx` (`private readonly logger = new Logger()`)                                                                            | `Logger` service already imported and used                                                                                                                                                               | Fully fits                                                                                                                                                                                                                                                   | Reuse `this.logger.warn(...)`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Dataset/pagination wiring       | `bds-table.tsx` `componentDidLoad`/`componentWillLoad` (existing `querySelectorAll('bds-table-column')` + `MutationObserver` pattern) | Same slotted-child-query pattern already used for columns                                                                                                                                                | Fully fits                                                                                                                                                                                                                                                   | Reuse the identical pattern for querying the slotted `bds-pagination`.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ---
 
-## Task 1 (was Task 16): `bds-table` — `dataset` prop, internal pagination, cross-page selection
+## Task 1 (was Task 16): `bds-table` — `rows` prop, internal pagination, cross-page selection **✅ COMPLETE**
+
+> **Amendment (2026-07-16, during execution):** the prop is named **`rows`**, not `dataset` — `dataset` shadows the native `HTMLElement.prototype.dataset` API (the standard `data-*` attribute map) on the host element; verified against Stencil 4.42.1's runtime during implementation and renamed with user sign-off (mirrors MUI DataGrid's `rows`). Every reference to `dataset`/`dataset.length`/"dataset mode" in this task and in Tasks 6, 7, 10, and the docs tasks means `rows` from here on. Commits on this branch use ticket ID **EOA-15507** (branch convention), not EOA-15507.
 
 **Executor:** @frontend-subagent
 **Depends on:** v2 Task 1, `bds-pagination`'s `totalItems` watcher fix — already shipped in the v2 PR.
@@ -56,35 +58,38 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Acceptance criteria:**
 
-| Prop/State | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataset` (Prop) | `RowData[]` | `[]` | Full unfragmented dataset; table performs internal page slicing |
-| `visibleRows` (State, private) | `RowData[]` | `[]` | Current page slice derived from `dataset` |
+| Prop/State                     | Type        | Default | Description                                                     |
+| ------------------------------ | ----------- | ------- | --------------------------------------------------------------- |
+| `rows` (Prop)                  | `RowData[]` | `[]`    | Full unfragmented dataset; table performs internal page slicing |
+| `visibleRows` (State, private) | `RowData[]` | `[]`    | Current page slice derived from `rows`                          |
 
-- `@Watch('dataset')` resets pagination to page 1 and clears `selectedRowIds`.
-- `componentDidLoad`, when `dataset.length > 0`: queries the slotted `bds-pagination`, sets `paginationEl.totalItems = this.dataset.length`, attaches an internal `bdsPageChange` listener that slices into `visibleRows`.
-- `render()`/`sortedData`/`renderBody` read from `visibleRows` when `dataset.length > 0`.
-- `getSelectedRows()` resolves against `dataset` in this mode.
+- `@Watch('rows')` resets pagination to page 1 and clears `selectedRowIds`.
+- `componentDidLoad`, when `rows.length > 0`: queries the slotted `bds-pagination`, sets `paginationEl.totalItems = this.rows.length`, attaches an internal `bdsPageChange` listener that slices into `visibleRows`.
+- `render()`/`sortedData`/`renderBody` read from `visibleRows` when `rows.length > 0`.
+- `getSelectedRows()` resolves against `rows` in this mode.
 - `handleSelectAll()` and header checkbox scope default to current-page (`visibleRows.length`), not full-dataset scope.
-- Warn via `Logger` if both `data` and `dataset` are set simultaneously.
+- Warn via `Logger` if both `data` and `rows` are set simultaneously.
 - Re-emit `bdsPageChange` after internal slicing.
 
 **Unit tests to cover:**
 
-- `dataset` slices correctly per `bdsPageChange`.
-- `dataset` change resets page/selection.
+- `rows` slices correctly per `bdsPageChange`.
+- `rows` change resets page/selection.
 - `getSelectedRows()` resolves correctly across page navigations (cross-page selection).
 - Select-all scope reflects current-page.
-- Both `data`+`dataset` set logs a warning.
+- Both `data`+`rows` set logs a warning.
+- `rows` prop does not shadow native `HTMLElement.dataset` API.
 
 **Manual test** _(waiveable)_:
 
-- Run `pnpm dev:components`; render `bds-table` with `dataset` (50 rows) + slotted `bds-pagination` (`items-per-page="10"`), selectable.
+- Run `pnpm dev:components`; render `bds-table` with `rows` (50 rows) + slotted `bds-pagination` (`items-per-page="10"`), selectable.
 - Validate:
-  - [ ] Given `dataset` with 50 rows, when mounted, then the paginator shows 5 pages with no consumer-side slicing. Pass: matches `50/10`.
-  - [ ] Given a row selected on page 1, when navigating to page 2 and back, then it remains selected. Pass: checkbox still checked.
+  - [x] Given `rows` with 50 rows, when mounted, then the paginator shows 5 pages with no consumer-side slicing. Pass: matches `50/10`.
+  - [x] Given a row selected on page 1, when navigating to page 2 and back, then it remains selected. Pass: checkbox still checked.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add dataset prop with internal pagination and cross-page selection"`
+**Unit test results:** 11 tests passing in `bds-table.rows.spec.ts` (see `pnpm --filter @telesign/boreal-web-components test -- bds-table.rows.spec.ts`)
+
+**Commit:** `git commit -m "feat(bds-table): EOA-15507 add rows prop with internal pagination and cross-page selection"`
 
 ---
 
@@ -133,7 +138,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 - Validate:
   - [ ] Given a column with slotted footer content, when the table renders, then the footer row shows that content in the correct column position. Pass: visual match, correct alignment with pinned columns if applicable.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add slot-based column footer row"`
+**Commit:** `git commit -m "feat(bds-table): EOA-15507 add slot-based column footer row"`
 
 ---
 
@@ -154,7 +159,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Manual test:** Run `pnpm dev:docs`, confirm the new section and story.
 
-**Commit:** `git commit -m "docs(bds-table): EOA-14935 document slot-based column footer row"`
+**Commit:** `git commit -m "docs(bds-table): EOA-15507 document slot-based column footer row"`
 
 ---
 
@@ -169,8 +174,8 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Acceptance criteria:**
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
+| Prop         | Type      | Default | Description                                                                        |
+| ------------ | --------- | ------- | ---------------------------------------------------------------------------------- |
 | `serverSide` | `boolean` | `false` | Disables local sort reordering; `bdsSort` still emits for the consumer to re-fetch |
 
 - When `serverSide` is `true`, `sortedData`/`visibleRows`-aware equivalent returns rows unsorted; `handleSort` still emits `bdsSort` with the correct payload.
@@ -198,7 +203,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
   - [ ] Given `loading=true`, when rendered, then skeleton placeholder rows appear instead of data. Pass: shimmer visible, real data hidden.
   - [ ] Given `prefers-reduced-motion: reduce` is simulated (browser devtools rendering panel), when `loading=true`, then the shimmer animation is replaced by a static muted background. Pass: no animation, tokens still applied.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add serverSide mode and inline skeleton loading rows"`
+**Commit:** `git commit -m "feat(bds-table): EOA-15507 add serverSide mode and inline skeleton loading rows"`
 
 ---
 
@@ -221,7 +226,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Manual test:** Run `pnpm dev:docs`, confirm sections/stories.
 
-**Commit:** `git commit -m "docs(bds-table): EOA-14935 document server-side mode and loading state"`
+**Commit:** `git commit -m "docs(bds-table): EOA-15507 document server-side mode and loading state"`
 
 ---
 
@@ -237,10 +242,10 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Acceptance criteria:**
 
-| Prop/State | Type | Default | Description |
-| --- | --- | --- | --- |
-| `virtual` (Prop) | `boolean` | `false` | Opt-in row virtualization; `false` renders exactly as today |
-| `virtualizer` (State, private) | `Virtualizer<Element, Element>` | — | Drives the windowed row set |
+| Prop/State                     | Type                            | Default | Description                                                 |
+| ------------------------------ | ------------------------------- | ------- | ----------------------------------------------------------- |
+| `virtual` (Prop)               | `boolean`                       | `false` | Opt-in row virtualization; `false` renders exactly as today |
+| `virtualizer` (State, private) | `Virtualizer<Element, Element>` | —       | Drives the windowed row set                                 |
 
 - Per Utility Discovery, do not reuse `VirtualScrollController` — wire `@tanstack/virtual-core`'s `Virtualizer` directly against Stencil's render cycle. Even a fixed/reworked `VirtualScrollController` could not be reused here — its entire architecture (`MutationObserver` + `querySelectorAll` over a consumer's pre-existing light-DOM children) is built to manage markup a consumer already placed, not to drive a declarative render function like `renderBody()`.
 - **No proven reference implementation exists to copy.** Build directly against `@tanstack/virtual-core`'s public API rather than porting an existing pattern from another codebase (verified during v2 planning: neither this repo's `aq-table-core.tsx` reference nor Aqua's own list/dropdown virtualization solves the "reduce upfront row-creation cost for a real `<table>`" problem this task needs).
@@ -267,7 +272,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
   - [ ] Given a virtualized table, when sorting or filtering while rows are selected, then the correct rows remain checked (not rows that happen to share the same scroll position). Pass: selection follows the data, not the position.
   - [ ] Given `virtual=true`, when scrolling, then the header does not stick (Option B) rather than visibly breaking/disappearing mid-scroll. Pass: header behaves consistently (non-sticky), no flicker.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add opt-in row virtualization"`
+**Commit:** `git commit -m "feat(bds-table): EOA-15507 add opt-in row virtualization"`
 
 ---
 
@@ -279,7 +284,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
 
-**Context:** `componentDidRender` already runs a `querySelectorAll('th[data-pinned]')` + `offsetWidth` read on *every* render to compute pinned-column offsets. With virtualization enabled, every scroll-driven re-render triggers this same DOM query and layout read, reintroducing exactly the kind of per-frame cost virtualization is meant to remove.
+**Context:** `componentDidRender` already runs a `querySelectorAll('th[data-pinned]')` + `offsetWidth` read on _every_ render to compute pinned-column offsets. With virtualization enabled, every scroll-driven re-render triggers this same DOM query and layout read, reintroducing exactly the kind of per-frame cost virtualization is meant to remove.
 
 **Acceptance criteria:**
 
@@ -297,7 +302,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 - Validate:
   - [ ] Given a virtualized table with pinned columns, when scrolling rapidly, then scrolling stays smooth with no visible lag or incorrect pin offsets. Pass: compare scroll smoothness before/after this fix using the browser's Performance panel.
 
-**Commit:** `git commit -m "perf(bds-table): EOA-14935 throttle pin-offset recomputation during virtualized scroll"`
+**Commit:** `git commit -m "perf(bds-table): EOA-15507 throttle pin-offset recomputation during virtualized scroll"`
 
 ---
 
@@ -319,7 +324,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Manual test:** Run `pnpm dev:docs`, confirm section/story.
 
-**Commit:** `git commit -m "docs(bds-table): EOA-14935 document row virtualization"`
+**Commit:** `git commit -m "docs(bds-table): EOA-15507 document row virtualization"`
 
 ---
 
@@ -334,8 +339,8 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Acceptance criteria:**
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
+| Prop            | Type     | Default                        | Description                                        |
+| --------------- | -------- | ------------------------------ | -------------------------------------------------- |
 | `maxClientRows` | `number` | `1000` (confirm with the team) | Threshold above which a non-blocking warning fires |
 
 - Keep this guardrail even with virtualization shipped — `virtual=true` only bounds DOM node count/paint cost; it does **not** eliminate the cost of `sortedData`'s `[...this.data].sort(...)` running over the full array on every sort, `getSelectedRows()` filtering over the full array, holding the entire dataset in memory, or the network/JSON-parse cost of transferring it.
@@ -353,7 +358,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 - Validate:
   - [ ] Given 1,500 rows with neither mode enabled, when mounted, then a console warning recommends server-side or virtual mode. Pass: warning visible; table still renders all rows.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-14935 add maxClientRows guardrail warning"`
+**Commit:** `git commit -m "feat(bds-table): EOA-15507 add maxClientRows guardrail warning"`
 
 ---
 
@@ -372,7 +377,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Manual test:** Run `pnpm dev:docs`, confirm the update.
 
-**Commit:** `git commit -m "docs(bds-table): EOA-14935 document maxClientRows guardrail"`
+**Commit:** `git commit -m "docs(bds-table): EOA-15507 document maxClientRows guardrail"`
 
 ---
 
@@ -394,7 +399,7 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 
 **Manual test:** N/A — this task's own output (mutation score + report files) is its verification.
 
-**Commit:** `git commit -m "test(bds-table): EOA-14935 close mutation-testing gate for v3 changes"`
+**Commit:** `git commit -m "test(bds-table): EOA-15507 close mutation-testing gate for v3 changes"`
 
 ---
 
@@ -415,7 +420,8 @@ The following research/decisions from the v2 plan remain directly relevant to ta
 Carried forward from the v2 plan's own research: since `VirtualScrollController` (used by `bds-search-bar`) doesn't reduce DOM node count, and `bds-table` needs real virtualization anyway (Task 7), a shared reusable utility on `@tanstack/virtual-core` was investigated as a possible consolidation.
 
 - **Conclusion:** technically possible, but only by rearchitecting `bds-search-bar`'s list onto a windowed-creation model (data-driven element recycling) — not by generalizing `VirtualScrollController`'s current positional/`MutationObserver`-driven design, which sits in a real bug class TanStack's own tracker documents (identity-cache races, `ResizeObserver` conflicts with hidden/removed nodes).
-- **Decision:** deferred to a separate future spike/ticket. Task 7 above is unaffected — it builds its own direct `@tanstack/virtual-core` integration without depending on or interfering with `VirtualScrollController`.
+- **Decision:** deferred to a separate future spike/ticket. Task 7 abo
+  ve is unaffected — it builds its own direct `@tanstack/virtual-core` integration without depending on or interfering with `VirtualScrollController`.
 - Full research: `ai-work/research/2026-07-06-shared-virtualization-utility.md`. Related bug tracked at `ai-work/qa/bug-reports/2026-07-06-bds-search-bar-bug-001.md`. Neither is scheduled against this plan.
 
 ---
