@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-worktree-missing-style-guidelines-dist.md

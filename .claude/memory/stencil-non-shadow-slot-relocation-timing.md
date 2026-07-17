@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-non-shadow-slot-relocation-timing.md
