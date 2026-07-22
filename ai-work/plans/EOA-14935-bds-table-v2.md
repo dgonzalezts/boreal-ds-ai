@@ -8,7 +8,7 @@ completed: 2026-07-09
 
 # bds-table v2 High-Priority Limitations Implementation Plan
 
-> **For Claude:** this plan is `done`. Do not re-execute. The remaining scope originally planned here (Tasks 16–25) was moved to a follow-up plan: [`ai-work/plans/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md) (ticket: [`ai-work/tickets/EOA-14935-bds-table-v3.md`](../tickets/EOA-14935-bds-table-v3.md)).
+> **For Claude:** this plan is `done`. Do not re-execute. The remaining scope originally planned here (Tasks 16–25) was moved to a follow-up plan: [`ai-work/plans/EOA-15507-bds-table-v3.md`](./EOA-15507-bds-table-v3.md) (ticket: [`ai-work/tickets/EOA-15507-bds-table-v3.md`](../tickets/EOA-15507-bds-table-v3.md)).
 
 **Goal:** Close four of the six "Priority: High" limitations in `bds-table.mdx` that were tractable without deeper architectural prerequisites, plus a prerequisite `bds-pagination` bug-fix pass and a new `bds-tooltip` manual/imperative-control API, following the `EOA-10576` column-API spike's resolved decisions wherever they apply. The remaining v2-scoped work (dataset/internal pagination, column footer, server-side/skeleton loading, virtualization, large-dataset guardrail) is tracked in the v3 plan linked above.
 
@@ -287,7 +287,7 @@ completed: 2026-07-09
 
 ## Tasks 9–11: REMOVED — deferred (`bds-skeleton` standalone primitive)
 
-**Status change (2026-07-08):** these three tasks (`bds-skeleton` scaffold, shimmer SCSS, tests+docs) are removed from this plan. The team confirmed a reusable skeleton primitive is valuable long-term, but agreed to defer building it until a second real consumer exists, rather than building it speculatively now. The loading visual `bds-table` needs is implemented as a private, table-scoped render helper in the v3 plan's Task 5 (`ai-work/plans/EOA-14935-bds-table-v3.md`), not in this plan.
+**Status change (2026-07-08):** these three tasks (`bds-skeleton` scaffold, shimmer SCSS, tests+docs) are removed from this plan. The team confirmed a reusable skeleton primitive is valuable long-term, but agreed to defer building it until a second real consumer exists, rather than building it speculatively now. The loading visual `bds-table` needs is implemented as a private, table-scoped render helper in the v3 plan's Task 5 (`ai-work/plans/EOA-15507-bds-table-v3.md`), not in this plan.
 
 The extraction of a real `bds-skeleton` primitive is tracked as a deferred backlog item, not abandoned — see the "Deferred: extract `bds-skeleton` primitive" section in the v3 plan for the trigger condition, scope, and allocation recommendation.
 
@@ -450,7 +450,7 @@ No new commit message prescribed here — this lands as its own follow-up commit
 
 ## Remaining scope — moved to the v3 plan
 
-Tasks originally numbered 16–25 (+22b) in this plan — `dataset` prop with internal pagination and cross-page selection, the column footer (sign-off gate + implementation + docs), server-side mode with inline skeleton loading, row virtualization (+ its pin-offset throttling follow-up + docs), and the `maxClientRows` guardrail (+ docs) — did not land as part of this plan's execution and are now tracked, renumbered 1–11, in [`ai-work/plans/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md), along with a new consolidated Task 12 for mutation testing across everything in that plan. The "Deferred: extract `bds-skeleton` primitive" and "Related research: shared virtualization utility" sections that supported that work have also been carried forward into the v3 plan.
+Tasks originally numbered 16–25 (+22b) in this plan — `dataset` prop with internal pagination and cross-page selection, the column footer (sign-off gate + implementation + docs), server-side mode with inline skeleton loading, row virtualization (+ its pin-offset throttling follow-up + docs), and the `maxClientRows` guardrail (+ docs) — did not land as part of this plan's execution and are now tracked, renumbered 1–11, in [`ai-work/plans/EOA-15507-bds-table-v3.md`](./EOA-15507-bds-table-v3.md), along with a new consolidated Task 12 for mutation testing across everything in that plan. The "Deferred: extract `bds-skeleton` primitive" and "Related research: shared virtualization utility" sections that supported that work have also been carried forward into the v3 plan.
 
 ---
 

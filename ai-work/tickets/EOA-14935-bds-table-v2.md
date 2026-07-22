@@ -4,7 +4,7 @@
 **Status:** Done (2026-07-09)
 **Goal:** Close four of the six "Priority: High" limitations documented in `bds-table.mdx` that were tractable without deeper architectural prerequisites, plus a `bds-pagination` bug-fix pass and a new `bds-tooltip` manual/imperative-control API, moving `bds-table` a step toward the v2 capabilities scoped in the `EOA-10576` column-API spike.
 
-**Remaining scope:** the rest of the originally-scoped v2 work (full `dataset` prop + internal pagination + cross-page selection, column footer, server-side mode + skeleton loading, row virtualization, `maxClientRows` guardrail) did not land in this pass — see [`ai-work/tickets/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md), which carries it forward as its own ticket.
+**Remaining scope:** the rest of the originally-scoped v2 work (full `dataset` prop + internal pagination + cross-page selection, column footer, server-side mode + skeleton loading, row virtualization, `maxClientRows` guardrail) did not land in this pass — see [`ai-work/tickets/EOA-15507-bds-table-v3.md`](./EOA-15507-bds-table-v3.md), which carries it forward as its own ticket.
 
 ## Scope
 
@@ -68,4 +68,4 @@ Moved to the v3 ticket (not acceptance criteria here anymore):
 - Whether to keep `slot="search-bar"` as a fallback alongside `searchable` — resolved: no. Per an explicit UX/UI decision, `slot="search-bar"` was removed entirely rather than kept as an escape hatch, enforcing `bds-search-bar` as the only supported search mechanism.
 - Mutation-testing cadence — resolved (2026-07-09): run once, batched across all touched components, rather than after every individual task/feature. Carried forward as the stated testing policy for the v3 plan too.
 
-Remaining open questions (dataset mutual exclusivity, footer sign-off gate, `maxClientRows` default, `VirtualScrollController` generalization) moved to [`ai-work/tickets/EOA-14935-bds-table-v3.md`](./EOA-14935-bds-table-v3.md) along with their scope.
+Remaining open questions (dataset mutual exclusivity, footer sign-off gate, `maxClientRows` default, `VirtualScrollController` generalization) moved to [`ai-work/tickets/EOA-15507-bds-table-v3.md`](./EOA-15507-bds-table-v3.md) along with their scope.

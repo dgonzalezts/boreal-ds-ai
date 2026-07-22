@@ -801,7 +801,7 @@ Every other backlog item below, each already carrying a 2026-07-06 risk amendmen
 
 ### Coverage audit (2026-07-16)
 
-Cross-reference of every backlog item against the two places a deferred item must be tracked: the active v3 plan (`ai-work/plans/EOA-14935-bds-table-v3.md` — the renumbered continuation of this ticket after the v2 sprint scope reduction) and the `bds-table.mdx` "Current limitations" table.
+Cross-reference of every backlog item against the two places a deferred item must be tracked: the active v3 plan (`ai-work/plans/EOA-15507-bds-table-v3.md` — the renumbered continuation of this ticket after the v2 sprint scope reduction) and the `bds-table.mdx` "Current limitations" table.
 
 > **2026-07-16 re-tiering note:** the MDX limitations table was restructured on 2026-07-16 to align priorities with the v3 plan's actual scope — High now means "scheduled in the v3 plan" (rows 1–5, including skeleton loading, which ships bundled with server-side mode), Low means "unscheduled backlog" (rows 6–17). The Medium tier was removed; V2-2, V2-5, V2-6, V2-7, and V2-8 are now Low. Later the same day, the responsive-toolbar row (V2-9) was removed from the table entirely — deferred together with V2-10 pending the UX/UI responsive review — leaving Low as rows 6–16. Row numbers below reflect the final table.
 
@@ -1151,6 +1151,8 @@ table.addEventListener("bdsSort", async ({ detail }) => {
 - Add a `hasToolbarRight` getter (parallel to the existing `hasToolbar` getter) that folds in `this.searchable`, `this.filterable`, `this.columnLayoutToggle`, and the `search-bar`/`toolbar-actions` slot checks — gate the entire `toolbar-right` `<div>` on it. Without this, a `subheading`-only table (toolbar shown via the left zone alone) would render a hollow right-side flex container once these buttons stop being unconditional.
 - **Default value question, deliberately left open for whoever picks this up:** default `false` (true opt-in, consistent with every other v2 addition) vs. default `true` (preserves today's always-visible behavior for anyone who's started depending on it since alpha). Recommend `false` if this lands before any real consumer exists; revisit if that's no longer true by the time it's scheduled.
 - `bds-table.mdx`'s existing "Filter panel" and "Column visibility" sections need their opening sentence updated from "The built-in filter/column visibility button ... always rendered" to reflect the new opt-in prop.
+
+**Amendment (2026-07-21, added during `EOA-15507` Task 5 loading-state work):** `bds-table` now has a `loading` prop that swaps the filter/column-visibility buttons from their real `<bds-button>` form to a skeleton placeholder while `loading=true` (added after this spike was written). When V2-19 is implemented, the skeleton swap must also be gated behind `this.filterable`/`this.columnLayoutToggle`, mirroring the real-button gating exactly (e.g. `{this.filterable && (this.loading ? <skeleton> : <real button>)}`) — otherwise the skeleton placeholder becomes the one remaining always-rendered path once these props ship, silently reintroducing the always-on behavior V2-19 exists to remove.
 
 **Complexity:** Low (~15 lines, plus the `hasToolbarRight` getter)
 

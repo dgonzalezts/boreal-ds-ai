@@ -1,10 +1,10 @@
-# EOA-14935 — bds-table v3 dataset mode, footer, server-side/loading, virtualization, guardrail
+# EOA-15507 — bds-table v3 dataset mode, footer, server-side/loading, virtualization, guardrail
 
-**Ticket:** EOA-14935
+**Ticket:** EOA-15507 (originally scoped as EOA-14935 continuation work; this ticket/branch use EOA-15507 per team convention)
 **Status:** Pending
 **Goal:** Carry forward the `bds-table` v2 scope that did not land in [`ai-work/tickets/EOA-14935-bds-table-v2.md`](./EOA-14935-bds-table-v2.md) (status: `done`) — full-dataset internal pagination with cross-page selection, a slot-based column footer, server-side mode with an inline skeleton loading visual, opt-in row virtualization, and a large-dataset guardrail warning.
 
-**Plan:** [`ai-work/plans/EOA-14935-bds-table-v3.md`](../plans/EOA-14935-bds-table-v3.md)
+**Plan:** [`ai-work/plans/EOA-15507-bds-table-v3.md`](../plans/EOA-15507-bds-table-v3.md)
 
 ## Scope
 
@@ -62,4 +62,4 @@
 - `maxClientRows` default value — proposed `1000`, still needs team confirmation.
 - Whether `VirtualScrollController` should eventually be generalized to support true DOM-count virtualization (not just positional) — resolved: yes, technically possible via a windowed-creation model, not by generalizing `VirtualScrollController`'s current positional/`MutationObserver` design (no working precedent found, sits in a real upstream bug class — `TanStack/virtual#1133`, `#1147`, `#823`). Decision: deferred to a separate future spike, out of scope for this ticket. `bds-table` builds its own integration against `@tanstack/virtual-core` directly, fully decoupled from this question. Full research: `ai-work/research/2026-07-06-shared-virtualization-utility.md`; related bug: `ai-work/qa/bug-reports/2026-07-06-bds-search-bar-bug-001.md`.
 - Mutation-testing cadence — resolved: one batched pass at the end (plan Task 12), not per-task — this was also how the v2 ticket's own gate was actually run in practice.
-- **Not yet resolved:** the four items promoted from the v2 ticket's "Out" list (column grouping/drag-drop-reorder/resizing/row-expand-collapse, header type variants/skeleton-dropdown-config/scrollbar-toggles/cell-state-variants, declarative `<template>` cell content, responsive toolbar below 744px) are now in this ticket's scope but have no corresponding tasks in `ai-work/plans/EOA-14935-bds-table-v3.md` yet — each needs its own design/scoping pass (similar to how the footer needed its own sign-off gate) before tasks can be written and executed. Do not start implementation on any of these until that planning pass happens.
+- **Not yet resolved:** the four items promoted from the v2 ticket's "Out" list (column grouping/drag-drop-reorder/resizing/row-expand-collapse, header type variants/skeleton-dropdown-config/scrollbar-toggles/cell-state-variants, declarative `<template>` cell content, responsive toolbar below 744px) are now in this ticket's scope but have no corresponding tasks in `ai-work/plans/EOA-15507-bds-table-v3.md` yet — each needs its own design/scoping pass (similar to how the footer needed its own sign-off gate) before tasks can be written and executed. Do not start implementation on any of these until that planning pass happens.
