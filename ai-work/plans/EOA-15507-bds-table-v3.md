@@ -1,13 +1,16 @@
 ---
 ticket: EOA-15507
 component: bds-table
-status: in progress
+status: done
 created: 2026-07-09
+completed: 2026-07-23
 ---
 
 # bds-table v3 — Dataset Mode, Column Footer, Server-Side/Loading, Virtualization, Guardrail
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
+
+> **Closed 2026-07-23:** Tasks 1–11 all shipped and verified. Task 12 (consolidated mutation-testing pass) was deferred out of this plan rather than executed — it now runs once against the combined v2+v3+v4 surface area as the final task of `EOA-16000` (v4) instead, per the "Implementation Plan (2026-07-23)" amendment in `ai-work/research/2026-06-16-bds-table-column-api-spike.md`. See that ticket: `ai-work/tickets/EOA-16000-bds-table-v4.md`.
 
 **Goal:** Close out the remaining `bds-table` v2 scope that did not land in the v2 plan/PR: full-dataset internal pagination with cross-page selection, a slot-based column footer, server-side mode with an inline skeleton loading visual, opt-in row virtualization, and a large-dataset guardrail warning.
 
@@ -637,7 +640,7 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 
 ---
 
-## Task 9 (was Task 23): `bds-table` — documentation for virtualization
+## Task 9 (was Task 23): `bds-table` — documentation for virtualization **✅ COMPLETE**
 
 **Executor:** @documentation-subagent
 **Depends on:** Task 7
@@ -655,7 +658,7 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 - **Document `virtual` + server mode as alternative, not complementary, strategies (decided 2026-07-22, no code change, no live example — guidance-only):** `virtual`'s `count` is `sortedData.length` (`bds-table.tsx`, `initVirtualizer`), which in `data`+`serverSide` mode only ever equals the current page's row count — server-side pagination's entire premise is that the browser never holds more than one page's worth of rows at once. Combining `virtual` with server mode is not broken (nothing warns or misbehaves), it simply provides little-to-no benefit, since there's rarely enough in-memory data in that mode to need windowing. Document `virtual` as intended for large in-memory datasets (`rows` mode, or a large un-paginated `data` array) — an alternative to server-side pagination for solving the "large dataset" problem, not a feature meant to be stacked on top of it. No dedicated story/example needed for this combination; a prose note in the "Virtualization" section is sufficient.
 - **Document that `estimateSize`/`overscan` are internally fixed, not configurable (decided 2026-07-22, no code change — considered and deliberately not exposed as props):** row height is estimated internally (48px) and self-corrects per row via `measureElement` once rendered, so variable-height content is fully supported without any consumer configuration; overscan (extra rows rendered beyond the viewport) is fixed at `10`, TanStack Virtual's own commonly-recommended default. One or two sentences in the "Virtualization" section noting neither is currently exposed as a prop is sufficient — no need to justify the decision in depth.
 - New `WithVirtualization` story using a ~5,000-row generated dataset, demonstrating that the header remains sticky/pinned while scrolling in that mode.
-- **Document automatic virtualization above `maxClientRows` (added 2026-07-22, see Task 10's rewritten scope):** a new subsection (e.g. "Automatic virtualization for large datasets") explaining that `bds-table` auto-enables `virtual` internally once the active row count exceeds `maxClientRows` (default `1000`), even if the consumer never set `virtual` themselves — a safety measure motivated by a real precedent of users adding excessive rows to a table in another internal component library without realizing the consequences. Cover: it only applies when `serverSide` is `false` (in `serverSide` mode `data` normally holds just one page, so there's rarely enough in-memory data to matter); it's sticky (once triggered, stays on even if the dataset later shrinks back under the threshold); it overrides an explicit `virtual={false}` (Stencil can't distinguish "left at default" from "explicitly set to the default value," and this is a safety guardrail, so the safer behavior wins); and it does **not** eliminate sort/selection/memory/transfer cost, which still scales with dataset size regardless — `serverSide` remains the complete answer for very large datasets. Cross-link with the "Layout constraints" section (Task 11).
+- **Deferred to Task 11 (moved 2026-07-23):** the "Automatic virtualization for large datasets" subsection (documenting `maxClientRows` auto-enable behavior) originally scoped here has been moved to Task 11, since that behavior depends on Task 10's implementation, which has not shipped when this task runs. Task 9 documents virtualization as it exists after Task 7/8 only; Task 11 will add the auto-enable subsection once Task 10 is complete.
 
 **Manual test:** Run `pnpm dev:docs`, confirm section/story.
 
@@ -663,7 +666,9 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 
 ---
 
-## Task 10 (was Task 24): `bds-table` — large-dataset guardrail (`maxClientRows`, auto-enable `virtual`)
+## Task 10 (was Task 24): `bds-table` — large-dataset guardrail (`maxClientRows`, auto-enable `virtual`) **✅ COMPLETE**
+
+**Implementation notes (added on completion, 2026-07-23):** shipped as scoped, plus one deliberate addition beyond the plan's literal enumerated call-site list — `onVirtualPropChange()` (the `@Watch('virtual')` handler) was changed to guard on `this.effectiveVirtual` instead of the raw new prop value. Without this, a consumer setting `virtual={false}` *after* auto-enable had already triggered would tear down the real `Virtualizer` instance even though `effectiveVirtual` still resolved `true` in the getter — silently defeating acceptance criterion 7 at the actual-rendering level. Verified independently via Playwright against the real dev server (bounded DOM node counts for the auto-enable and override cases, full unbounded render + zero warnings for the `serverSide` exemption) and via a fresh, non-tautological unit test suite: `bds-table.max-client-rows.spec.ts` (13 tests, new file), full `bds-table` suite 233/233 passing, coverage 98.1%/90.69%/100%/99.47% (all ≥ 90% gate). New dedicated manual-test playground section added to `src/index.html` (not merged into the Task 7/8 sections).
 
 **Executor:** @frontend-subagent
 **Depends on:** Task 5, Task 7
@@ -716,7 +721,9 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 
 ---
 
-## Task 11 (was Task 25): `bds-table` — documentation for the guardrail
+## Task 11 (was Task 25): `bds-table` — documentation for the guardrail **✅ COMPLETE**
+
+**Implementation notes (added on completion, 2026-07-23):** shipped as scoped, plus one necessary scope extension beyond the plan's listed files — `bds-table.stories.ts` needed a new `maxClientRows`/`max-client-rows` `argTypes` entry (Task 10 only touched `.tsx`/`ITable.ts`; Task 9's docs pass predates `maxClientRows` entirely). Without it, the MDX `<ArgTypes include={[...]}>` reference to `max-client-rows` would have silently rendered no props-table row. Verified independently via Playwright against the live `pnpm dev:docs` instance: the `max-client-rows` props-table row renders correctly, and the "Layout constraints" ↔ "Automatic virtualization for large datasets" cross-link was click-tested (not just visually present) and confirmed to navigate to the correct heading. The subagent later revised its own initial draft to drop a reference to the internal-precedent motivation ("another internal component library at the same company"), rephrasing the "Automatic virtualization" intro paragraph to stay purely behavioral — consistent with this task's own acceptance criteria ("keep the doc focused on behavior, not internal history" if the internal rationale doesn't read naturally as user-facing guidance). Re-verified the final wording directly.
 
 **Executor:** @documentation-subagent
 **Depends on:** Task 10
@@ -728,7 +735,8 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 
 - `maxClientRows` added to the props table — description reflects the rescoped behavior (auto-enables `virtual` above the threshold, not just a passive warning).
 - Row-count ceiling documented in "Layout constraints", alongside the 800px minimum-width note — rewritten to describe auto-enable, not just "a warning fires."
-- Cross-link to Task 9's new "Automatic virtualization for large datasets" subsection (under "Virtualization") rather than duplicating that explanation — "Layout constraints" states the threshold/prop, the "Virtualization" section carries the full behavioral explanation (sticky, overrides explicit `virtual={false}`, doesn't apply under `serverSide`, doesn't eliminate sort/selection cost).
+- **New "Automatic virtualization for large datasets" subsection under "Virtualization" (moved here from Task 9 on 2026-07-23, since it depends on Task 10's implementation):** explain that `bds-table` auto-enables `virtual` internally once the active row count exceeds `maxClientRows` (default `1000`), even if the consumer never set `virtual` themselves — a safety measure motivated by a real precedent of users adding excessive rows to a table in another internal component library without realizing the consequences. Cover: it only applies when `serverSide` is `false` (in `serverSide` mode `data` normally holds just one page, so there's rarely enough in-memory data to matter); it's sticky (once triggered, stays on even if the dataset later shrinks back under the threshold); it overrides an explicit `virtual={false}` (Stencil can't distinguish "left at default" from "explicitly set to the default value," and this is a safety guardrail, so the safer behavior wins); and it does **not** eliminate sort/selection/memory/transfer cost, which still scales with dataset size regardless — `serverSide` remains the complete answer for very large datasets.
+- "Layout constraints" states the threshold/prop and cross-links to the "Virtualization" section's new subsection (authored in this same task) rather than duplicating the full behavioral explanation.
 - Briefly note the real-world motivation (a precedent of users adding excessive rows in another internal component library) only if it reads naturally as user-facing guidance — otherwise keep the doc focused on behavior, not internal history; use judgment on tone rather than copying the plan's internal rationale verbatim.
 
 **Manual test:** Run `pnpm dev:docs`, confirm the update, and confirm the "Layout constraints" ↔ "Virtualization" cross-link resolves correctly.
@@ -737,7 +745,9 @@ Verified via Playwright against `#virtual-table` (Task 7's example, temporarily 
 
 ---
 
-## Task 12 (new): Mutation testing for all v3 changes
+## Task 12 (new): Mutation testing for all v3 changes **⏸ DEFERRED TO v4 (`EOA-16000`)**
+
+> **Deferred 2026-07-23:** not executed as part of this plan. Moved to `EOA-16000` (v4) as its final task, to run once against the full combined v2+v3+v4 surface area rather than running this pass now and a second one after v4 ships. The acceptance criteria below are unchanged and carry forward as-is — see `ai-work/tickets/EOA-16000-bds-table-v4.md`.
 
 **Executor:** @testing-subagent
 **Depends on:** Tasks 1–11 all complete and merged/committed.

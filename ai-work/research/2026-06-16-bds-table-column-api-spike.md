@@ -761,7 +761,9 @@ In v2, all three must switch to `this.dataset.length` by default (select-all = e
 
 ## Implementation Plan (2026-07-06): `EOA-14935` scope decision
 
-Following this spike's v2 backlog, ticket `EOA-14935` ("bds-table v2 high-priority limitations," plan at `ai-work/plans/EOA-14935-bds-table-v2.md`, ticket brief at `ai-work/tickets/EOA-14935-bds-table-v2.md`) committed a concrete subset of the backlog below to implementation, ordered by dependency. Everything else in the backlog is explicitly deferred to a future **v3** — not scheduled, not designed further than the amendments already added to each item above.
+Following this spike's v2 backlog, ticket `EOA-14935` ("bds-table v2 high-priority limitations," plan at `ai-work/plans/EOA-14935-bds-table-v2.md`, ticket brief at `ai-work/tickets/EOA-14935-bds-table-v2.md`) committed a concrete subset of the backlog below to implementation, ordered by dependency. Everything else in the backlog is explicitly deferred to a future continuation — not scheduled, not designed further than the amendments already added to each item above.
+
+> **Correction (2026-07-23):** rows 7–11 of the table below were never actually executed under `EOA-14935` — the v2 sprint's scope was reduced before they started, and they instead shipped later under the renumbered continuation ticket `EOA-15507` (v3, plan `ai-work/plans/EOA-15507-bds-table-v3.md`, now complete — see the "Implementation Plan (2026-07-23)" section below). They are kept here, struck through, for historical traceability of the original dependency ordering; do not read this table as "what `EOA-14935` shipped."
 
 ### Included in `EOA-14935` (v2), in execution order
 
@@ -773,17 +775,17 @@ Following this spike's v2 backlog, ticket `EOA-14935` ("bds-table v2 high-priori
 | 4 | V2-4 — Built-in search bar | Task 12 | Unblocked since this spike — `bds-search-bar` now exists |
 | 5 | New: pinnable-column hover state fix (bug, not a backlog item) | Task 13 | |
 | 6 | V2-3 — Overflow tooltip on truncated header/cell text | Tasks 5–6 (bds-tooltip prerequisite), 14–15 | |
-| 7 | V2-13 — Client-side `dataset` prop + internal pagination (cross-page selection) | Task 16 | Depends on Tasks 1–4 |
-| 8 | New: column footer row (MDX limitation #6 — no V2 coverage in this spike at all; brand-new design, signed off separately) | Tasks 17–19 | |
-| 9 | V2-12 — Server-side mode, plus MDX limitation #13 (skeleton loading placeholder, not separately V2-numbered) | Tasks 20–21 | Shares one loading-visual implementation for both |
-| 10 | V2-11 — Virtualization | Tasks 22, 22b, 23 | Sequenced last; see the critical sticky-header finding and Option B decision added to this doc's V2-11 section below |
-| 11 | New: `maxClientRows` large-dataset guardrail (team feedback, not in this spike) | Tasks 24–25 | Depends on both `serverSide` and `virtual` existing |
+| ~~7~~ | ~~V2-13 — Client-side `dataset`/`rows` prop + internal pagination (cross-page selection)~~ — shipped in `EOA-15507` (v3) instead | — | See v3 Task 1 |
+| ~~8~~ | ~~New: column footer row~~ — shipped in `EOA-15507` (v3) instead | — | See v3 Tasks 2–4 |
+| ~~9~~ | ~~V2-12 — Server-side mode, plus skeleton loading placeholder~~ — shipped in `EOA-15507` (v3) instead | — | See v3 Tasks 5–6 |
+| ~~10~~ | ~~V2-11 — Virtualization~~ — shipped in `EOA-15507` (v3) instead | — | See v3 Tasks 7–9 |
+| ~~11~~ | ~~New: `maxClientRows` large-dataset guardrail~~ — shipped in `EOA-15507` (v3) instead | — | See v3 Tasks 10–11 |
 
-### Deferred to v3 (not scheduled — out of scope for `EOA-14935`)
+### Deferred to v4 (not scheduled — out of scope for `EOA-14935` and `EOA-15507`; tracked in `EOA-16000`)
 
-Every other backlog item below, each already carrying a 2026-07-06 risk amendment against the virtualization work landing in v2:
+Every other backlog item below, each already carrying a 2026-07-06 risk amendment against the virtualization work that has since landed in v3 (`EOA-15507`). **Ticket:** `EOA-16000` (`ai-work/tickets/EOA-16000-bds-table-v4.md`) — no plan file yet; see that ticket's Open Questions.
 
-| Item | Priority (per MDX) | v3 risk note (see amendment in its section below) |
+| Item | Priority (per MDX) | v4 risk note (see amendment in its section below) |
 |---|---|---|
 | V2-2 — Custom cell content via slot | Medium | Risk: Medium — needs explicit tie-in to the new `key={rowId}` requirement |
 | V2-5 — Row expand/collapse | Medium | Risk: **High** — needs a new virtualizer-remeasure acceptance criterion once built |
@@ -799,30 +801,40 @@ Every other backlog item below, each already carrying a 2026-07-06 risk amendmen
 | V2-18 — `disableRowSelectionOnClick` | Low | Risk: Low |
 | V2-19 — Opt-in Filter/Column-visibility toolbar buttons | Low | Not risk-checked against virtualization — unrelated (toolbar-only change, no row/DOM interaction) |
 
-### Coverage audit (2026-07-16)
+---
 
-Cross-reference of every backlog item against the two places a deferred item must be tracked: the active v3 plan (`ai-work/plans/EOA-15507-bds-table-v3.md` — the renumbered continuation of this ticket after the v2 sprint scope reduction) and the `bds-table.mdx` "Current limitations" table.
+## Implementation Plan (2026-07-23): `EOA-15507` (v3) completion → `EOA-16000` (v4) scope decision
 
-> **2026-07-16 re-tiering note:** the MDX limitations table was restructured on 2026-07-16 to align priorities with the v3 plan's actual scope — High now means "scheduled in the v3 plan" (rows 1–5, including skeleton loading, which ships bundled with server-side mode), Low means "unscheduled backlog" (rows 6–17). The Medium tier was removed; V2-2, V2-5, V2-6, V2-7, and V2-8 are now Low. Later the same day, the responsive-toolbar row (V2-9) was removed from the table entirely — deferred together with V2-10 pending the UX/UI responsive review — leaving Low as rows 6–16. Row numbers below reflect the final table.
+`EOA-15507` (v3, plan `ai-work/plans/EOA-15507-bds-table-v3.md`) is now **complete** — all 11 tasks shipped: `rows` prop with internal pagination and cross-page selection (V2-13, Task 1), the slot-based column footer (Tasks 2–4, no V2 number), server-side mode with skeleton loading (V2-12, Tasks 5–6), row virtualization via `@tanstack/virtual-core` (V2-11, Tasks 7–9), and the `maxClientRows` auto-virtualization guardrail (Tasks 10–11, no V2 number). Task 12 (a single consolidated mutation-testing pass across every file the v2+v3 work touched) was **deferred out of the v3 plan** rather than executed — see that plan's Task 12 section for the original scope; it now moves to `EOA-16000` (v4) as that ticket's final task, to run once against the full combined v2+v3+v4 surface area instead of twice.
+
+Every item in the "Deferred to v4" table above — plus V2-9/V2-10 in the "Deferred items — not scheduled" section at the end of this document — is now tracked under a new ticket, **`EOA-16000`** (`ai-work/tickets/EOA-16000-bds-table-v4.md`). No plan file exists yet for v4; per this document's own recurring pattern, each item needs a design/scoping pass before task-level planning can begin (see that ticket's Open Questions for specifics — column grouping, drag/drop reorder, and resizing in particular still need UX sign-off on interaction details not covered by this spike).
+
+### Coverage audit (2026-07-16, updated 2026-07-23)
+
+Cross-reference of every backlog item against the two places a deferred item must be tracked: the `EOA-16000` (v4) ticket (`ai-work/tickets/EOA-16000-bds-table-v4.md` — no plan file yet) and the `bds-table.mdx` "Current limitations" table.
+
+> **2026-07-16 re-tiering note:** the MDX limitations table was restructured on 2026-07-16 to align priorities with the v3 plan's actual scope — High meant "scheduled in the v3 plan" (rows 1–5, including skeleton loading, which shipped bundled with server-side mode), Low meant "unscheduled backlog." The Medium tier was removed; V2-2, V2-5, V2-6, V2-7, and V2-8 became Low. The responsive-toolbar row (V2-9) was removed from the table entirely the same day — deferred together with V2-10 pending the UX/UI responsive review.
+>
+> **2026-07-23 update:** v3 (`EOA-15507`) is now complete and every High-priority row it covered has been removed from the MDX table (see Task 9's limitations-table cleanup in the v3 plan). The table is now a single unscheduled-backlog list, rows 1–11, all of which roll forward into v4 (`EOA-16000`). Row numbers below reflect the current table.
 
 | Disposition | Items |
 |---|---|
-| Shipped in v2 (plan Tasks 1–15) | V2-1, V2-3, V2-4, Finding F `bds-pagination` bug fixes |
-| Scheduled in the v3 plan | V2-11 (Tasks 7–9), V2-12 (Tasks 5–6), V2-13 (Task 1) — plus the non-V2-numbered footer (Tasks 2–4), skeleton loading (Task 5), and `maxClientRows` (Tasks 10–11) |
-| Tracked in the MDX limitations table | V2-2 (#7), V2-5 (#6), V2-6 (#9), V2-7 (#10), V2-8 (#8), V2-14 (#14), V2-15 (#11), V2-16 (#12), V2-17 (#13), V2-18 (#15), V2-19 (#16) |
-| Deliberately deferred, tracked only in this spike | **V2-9** and **V2-10** — see "Deferred items" at the end of this document |
+| Shipped in v2 (`EOA-14935`, plan Tasks 1–15) | V2-1, V2-3, V2-4, Finding F `bds-pagination` bug fixes |
+| Shipped in v3 (`EOA-15507`, complete 2026-07-23) | V2-11, V2-12, V2-13 — plus the non-V2-numbered footer, skeleton loading, and `maxClientRows` guardrail |
+| Deferred to v4 (`EOA-16000`), tracked in the MDX limitations table | V2-5 (#1), V2-2 (#2), V2-8 (#3), V2-6 (#4), V2-7 (#5), V2-15 (#6), V2-16 (#7), V2-17 (#8), V2-14 (#9), V2-18 (#10), V2-19 (#11) |
+| Deferred to v4 (`EOA-16000`), tracked only in this spike | **V2-9** and **V2-10** — see "Deferred items" at the end of this document |
 
-**V2-9 and V2-10 are deliberately deferred (decision 2026-07-16):** both concern responsive behavior at narrow widths and depend on a thorough responsive review of all components by the UX/UI team, which is not planned for the near future. Their full write-ups were moved to the **"Deferred items — not scheduled"** section at the end of this document, which is now the only record of both items.
+**V2-9 and V2-10 are deliberately deferred (decision 2026-07-16, still unresolved as of 2026-07-23):** both concern responsive behavior at narrow widths and depend on a thorough responsive review of all components by the UX/UI team, which is not planned for the near future. Their full write-ups were moved to the **"Deferred items — not scheduled"** section at the end of this document, which is now the only record of both items.
 
 ---
 
 ## v2 Backlog
 
-Features deferred from v1, with enough implementation context to plan the next sprint without re-doing this research. **Status (2026-07-06): partially executed — see "Implementation Plan" above for which items shipped in `EOA-14935` vs. which remain deferred to v3.**
+Features deferred from v1, with enough implementation context to plan the next sprint without re-doing this research. **Status (2026-07-23): v2 (`EOA-14935`) and v3 (`EOA-15507`) both complete — everything below that isn't marked "shipped" is now v4 (`EOA-16000`) scope.**
 
-Ordered (2026-07-16) to mirror `bds-table.mdx`'s limitations table: the v3-scheduled items first in MDX High-priority row order, then the unscheduled backlog in MDX Low-priority row order, then items with no MDX row (shipped in v2; deferred pending the UX/UI responsive review).
+Ordered (2026-07-16, re-labeled 2026-07-23) to mirror `bds-table.mdx`'s limitations table: the shipped-in-v3 items first (kept for implementation-context traceability, no longer scheduled work), then the v4 backlog in current MDX row order, then items with no MDX row (deferred pending the UX/UI responsive review).
 
-**Scheduled in the v3 plan — MDX High-priority order (rows 1–3):**
+**Shipped in v3 (`EOA-15507`) — kept here for implementation context, no longer scheduled work:**
 
 ### V2-13 — Client-side `dataset` prop + internal pagination (cross-page selection)
 
@@ -937,7 +949,7 @@ table.addEventListener("bdsSort", async ({ detail }) => {
 
 ---
 
-**Unscheduled backlog — MDX Low-priority order (rows 6–16):**
+**Deferred to v4 (`EOA-16000`) — current MDX row order (rows 1–11):**
 
 ### V2-5 — Row expand/collapse
 

@@ -1,179 +1,78 @@
 # PR Title
 
-chore(web-components): EOA-15147 improve Storybook docs with imperative API examples
+feat(web-components): EOA-15507 add bds-table v3 — dataset mode, column footer, server-side mode, virtualization, guardrail
 
 ---
 
 # PR Body
 
-## Description of Changes
+## Description
 
-Updates Storybook stories and MDX documentation across multiple components to demonstrate the imperative API pattern for setting JavaScript properties. Replaces Lit property binding syntax (`.floatingOptions={...}`) with an IIFE + `<script>` tag pattern that mirrors real-world usage and remains visible in Storybook's Source panel.
+Closes out the remaining `bds-table` v2 scope that did not land in `EOA-14935` (v2, shipped): full-dataset internal pagination with cross-page selection, a slot-based column footer, server-side mode with an inline skeleton loading visual, opt-in row virtualization, and a large-dataset auto-virtualization guardrail. Continues the `bds-table` roadmap from `ai-work/research/2026-06-16-bds-table-column-api-spike.md`.
 
-Key updates:
-- **Story templates** (`component.mdx.hbs`): Improved "How to use it" section with framework-agnostic setup instructions and Framework Integration guide reference
-- **Floating components** (tooltip, popover): Switched to IIFE pattern for `floatingOptions` to expose the imperative API
-- **Storybook configuration**: Enhanced preview decorator with contrast scheme detection and improved theme handling
-- **KeyboardDocs component**: New utility for documenting keyboard interactions
-- **Story generation** (plopfile): Updated template prompts for clearer component descriptions
+---
 
-## Motivation
+## Implementation Details
 
-**Problem**: Lit property assignments like `.floatingOptions=${{...}}` are invisible in Storybook's Source panel, leaving developers to guess how to set JS properties in real code.
+- **`rows` prop + internal pagination + cross-page selection** — full unfragmented dataset owned by the table; wires the slotted `bds-pagination`, slices `visibleRows` internally, and preserves selection across page navigation. Required a `bds-pagination` fix: `itemsPerPage`/`currentPage` changed from `readonly` to `mutable` with write-back, since the props were going stale after internal navigation.
+- **Column footer row** — slot-based (`slot="footer"`), not a computed callback, matching the existing `slot="empty-state"`/`slot="row-actions"` pattern. Pinned-column offset tracking extended to footer cells so they stay aligned with header/body cells.
+- **Server-side mode + skeleton loading** — `serverSide` prop disables local sort reordering; `loading` prop renders a private, table-scoped skeleton (toolbar, header, checkbox column, body rows, footer, paginator), respecting `prefers-reduced-motion`. Skeleton row count is remainder-aware (a partial last page renders only its actual row count, not a full page's worth).
+- **Row virtualization (`virtual` prop)** — `@tanstack/virtual-core` integration, windowed rendering via spacer rows bracketing the visible range. Sticky `<thead>` works normally with `virtual={true}` (validated via two Playwright spikes against this component's actual CSS — an earlier assumption that the combination was broken was reversed before implementation). Variable-height rows supported via `measureElement`. Fixed a critical crash bug found via manual testing: the very first render (before the `Virtualizer` instance exists) previously fell through to rendering the full unbounded dataset; now renders one bounded spacer row instead.
+- **Pin-offset throttling during virtualized scroll** — a `ResizeObserver`-driven, two-phase guard (cached expensive read + unconditional cheap write) so pinned-column offsets recompute correctly on both container resize and virtualized scroll's dynamically-swapped row elements, without recomputing on every scroll-driven re-render.
+- **`maxClientRows` guardrail** — auto-enables `virtual` internally once the active row count exceeds a threshold (default 1000, module constant), even if the consumer never set `virtual`. Only applies when `serverSide` is `false`; sticky (doesn't turn back off if the dataset shrinks); overrides an explicit `virtual={false}` (deliberate — no escape hatch, since this is a safety guardrail against a real precedent of users adding excessive rows to a table in another internal component library). Non-blocking console warnings cover both the auto-enable event and the remaining sort/selection/memory cost that virtualization alone doesn't address.
+- **Component housekeeping** — reordered `bds-table.tsx`'s class members to match the 15-section standard in `ai-docs/guidelines/stencil-best-practices.md` (pure reorder, verified via sorted-line diff with zero content drift), and removed internal (non-public-API) JSDoc per `.claude/CLAUDE.md`'s inline-comment policy — `@Prop()`/`@Event()`/`@Method()`/class-level `@slot` JSDoc is untouched.
 
-**Solution**: Demonstrating the imperative API via IIFE makes the code visible and teaches developers the exact pattern they need to use in their applications.
+---
 
-**Additional improvements**:
-- Consistent "How to use it" sections across all component docs
-- Better onboarding for new developers (setup once, use everywhere)
-- Framework-specific guidance (React/Vue) via Framework Integration guide
-- Fixed tooltip `stayOnHover` and `hideArrow` behavior bug during documentation review
+## Impact Analysis
 
-## Implementation Details: Why IIFE Over Property Binding
+- No breaking changes to existing `data`/`selectable`/`searchable`/`serverSide` usage.
+- `maxClientRows` (default 1000) changes rendering behavior for any existing consumer whose row count already exceeds the threshold — such tables will now auto-virtualize where they previously rendered every row. This is a deliberate, non-optional safety change; two console warnings surface it.
+- New direct dependency surface: none — `@tanstack/virtual-core` was already present in the workspace.
+- `bds-pagination`'s `itemsPerPage`/`currentPage` props changed from `readonly` to `mutable` — additive, not breaking (external writes still work; the props just also update from internal navigation now).
 
-**The Pattern:**
+---
 
-```typescript
-// ❌ Before: Invisible in Storybook Source panel
-const renderTooltip: Story['render'] = args => html`
-  <bds-tooltip .floatingOptions=${{ placement: args.placement }}>
-    Content
-  </bds-tooltip>
-`;
+## Testing Conducted
 
-// ✅ After: Visible in Storybook Source panel and real-world code
-const renderTooltip = (tooltipId: string): Story['render'] => args => html`
-  <bds-tooltip id="${tooltipId}">Content</bds-tooltip>
-  <script>
-    (function () {
-      const tooltip = document.getElementById('${tooltipId}');
-      tooltip.floatingOptions = {
-        placement: '${args.placement}',
-        offset: ${args.offset},
-      };
-    })();
-  </script>
-`;
-```
+**Automated:**
 
-**Why IIFE?**
+- [x] Unit tests added per feature area — `bds-table.rows.spec.ts`, `bds-table.footer.spec.ts`, `bds-table.skeleton.spec.ts`, `bds-table.virtual.spec.ts`, `bds-table.pin-offsets.spec.ts`, `bds-table.max-client-rows.spec.ts` (new), plus updates to existing `bds-pagination` specs
+- [x] Full `bds-table` suite: 233/233 passing, coverage 98.1% statements / 90.69% branches / 100% functions / 99.47% lines
+- [x] `tsc --noEmit` and `eslint` clean on all touched files
+- [x] Independently re-verified (not just trusted subagent self-reports) — diffs reviewed, tests re-run, coverage numbers reproduced
 
-1. **Storybook Source Panel Visibility**: Lit property assignments (`.prop=${}`) are invisible in the generated source code, leaving developers unable to see how to replicate the behavior
-2. **Real-World Accuracy**: The IIFE pattern matches how developers actually set JS properties in their code (imperative API)
-3. **No Type Casting**: Eliminates TypeScript type assertions like `as FloatingPopoverProp['placement']` by using string literals
-4. **Isolated Scope**: IIFE prevents global namespace pollution and ensures each story gets a unique, scoped element
-5. **Copy-Paste Ready**: Developers can copy the source directly from Storybook and adapt it to their framework without translation
+**Manual (via Playwright against the real dev server):**
 
-## Relevant Sections Updated
+- [x] Sticky-header + virtualized-scroll combination validated with two prototype spikes before implementation
+- [x] Crash-bug fix verified against a real 5,000-row dataset (bounded `<tr>` count on first paint, no crash)
+- [x] `maxClientRows` auto-enable, override-of-explicit-`false`, and `serverSide` exemption all verified with real DOM node counts and console output
+- [x] Pin-offset correctness verified through scroll and through a simulated container resize
+- [x] Server-side skeleton loading verified across page navigation, sort-disable behavior, and remainder-aware row counts on partial last pages
 
-### Storybook Configuration
-- `apps/boreal-docs/.storybook/preview.ts`
-  - Enhanced `withCustomStyling` decorator with `data-sb-scheme` attribute for contrast-aware styling
-  - Improved language registration for syntax highlighting
-- `apps/boreal-docs/.storybook/preview.css`
-  - Added `data-sb-scheme` rules for light/mid/dark backgrounds
-
-### Story Templates & Generation
-- `apps/boreal-docs/.plop-templates/story-simple/component.mdx.hbs`
-  - Improved "How to use it" section with canonical setup instructions
-  - Framework Integration guide callout
-  - Clearer component description prompt
-- `apps/boreal-docs/plopfile.js`
-  - Updated description prompt to "Complete the sentence"
-
-### Story Examples (New & Updated)
-- New stories with comprehensive examples:
-  - `bds-button-group` (237 lines)
-  - `bds-list-menu` (737 lines)
-  - `bds-toggle` (467 lines)
-  - `bds-pagination` (360 lines)
-  - `bds-table` (1509 lines, significant v2 documentation)
-  - `bds-badge`, `bds-spinner`, `bds-status` (feedback components)
-- Updated `bds-tooltip.stories.ts` and `bds-popover.stories.ts` with IIFE pattern
-
-### New Components
-- `KeyboardDocs` component and styles for documenting keyboard interactions
-- Accessible keyboard event documentation across interactive components
-
-### Documentation
-- **MDX files** updated with `floatingOptions` imperative API documentation
-- Consistent structure across all component docs
-- Added keyboard interaction documentation
-
-## Impact
-
-### Consuming teams
-- **Benefits**: Clearer examples of how to use floating components; consistent "How to use it" section across all docs; framework-specific guidance
-- **Breaking changes**: None
-- **Migration needed**: No — this is documentation/demo only
-
-### Component behavior
-- **Tooltip bug fix**: Fixed `stayOnHover` and `hideArrow` not working in Storybook (these now properly set via imperative API)
-- **No functional changes** to components themselves
-
-### CI/Build
-- Added `KeyboardDocs` to the docs app component index
-- Storybook stories may render slightly differently due to new decorator, but no visual regressions expected
-
-## Testing
-
-### Manual Verification Steps
-
-1. **Run Storybook**:
-   ```bash
-   pnpm dev:docs
-   ```
-
-2. **Test floating component examples** (Tooltip, Popover):
-   - Open "Overlays > Tooltip" and "Overlays > Popover" stories
-   - In the Source panel (Docs tab), verify the `<script>` block is visible with property assignments
-   - Switch story variants and confirm `floatingOptions` values update in the source code
-   - Test interactive controls (placement, offset, etc.) update the DOM properties correctly
-
-3. **Test new stories**:
-   - Navigate to new stories (Button Group, List Menu, Toggle, Pagination, Table)
-   - Verify "How to use it" section appears with setup instructions
-   - Check Framework Integration callout renders with link
-
-4. **Test "How to use it" consistency**:
-   - Open several component stories (Button, Badge, Spinner)
-   - Verify all have the same "How to use it" structure (setup → framework callout → usage example)
-
-5. **Test theme/contrast**:
-   - Toggle Storybook background colors (light, mid, dark)
-   - Verify `data-sb-scheme` attribute updates on the story container
-   - Check any theme-dependent story styling adapts correctly
-
-### Automated Tests
-- [x] Storybook builds without errors (`pnpm build:docs`)
-- [x] No console errors or warnings in Storybook
-- [x] All story render functions execute without runtime errors
-- [x] No TypeScript type errors in story files
+---
 
 ## Related Changes
 
-- **Refs EOA-15149**: Tooltip bug fix (stayOnHover, hideArrow) merged during documentation review
-- **Depends on**: @telesign/boreal-web-components (floating options API must exist)
-- **Framework wrappers**: React/Vue wrapper teams should reference the Framework Integration guide in their docs
+- **`bds-pagination`**: `itemsPerPage`/`currentPage` mutability fix (prerequisite for cross-page navigation state to stay in sync)
+- **`bds-search-bar`**: minor layout fix for slot placement within `bds-table`'s toolbar-actions integration
+- **`boreal-docs`**: `bds-table.mdx` and `bds-table.stories.ts` updated with new sections for dataset mode, column footer, server-side mode, loading state, row virtualization (including a dedicated `WithVirtualization` story), and the `maxClientRows` guardrail; "Current limitations" table cleaned up to remove every row this PR closes, including one stale entry (`rows` prop/cross-page selection) left over from an earlier doc pass
+- **`packages/boreal-web-components/src/index.html`**: dev-only playground scenarios for manual verification (per project convention, not intended to be reviewed as production code)
+
+---
 
 ## Additional Remarks
 
-### Deferred Work
-- **Table v2 styling**: Full table v2 CSS alignment deferred to follow-up PR; current docs reflect current state
-- **Keyboard event standardization**: KeyboardDocs component is foundation; per-component keyboard shortcuts can be expanded in future PRs
+- **Deferred to `EOA-16000` (v4)**: column grouping, drag/drop column reorder, column resizing, row expand/collapse, declarative `<template>` cell content, five row-selection refinements (`checkboxSelectionVisibleOnly`, `isRowSelectable`, shift+range selection, `keepNonExistentRowsSelected`, `disableRowSelectionOnClick`), opt-in filter/column-visibility toolbar buttons, and the responsive toolbar (blocked on a UX/UI review with no scheduled owner). See `ai-work/tickets/EOA-16000-bds-table-v4.md`.
+- **Mutation testing (Task 12 of the v3 plan) deferred to `EOA-16000`** as well — moved so it runs once against the full combined v2+v3+v4 surface area instead of running now and again after v4 ships.
+- `estimateSize` (fixed at 48px, self-correcting via `measureElement`) and `overscan` (fixed at 10) are intentionally not exposed as configurable props — documented as a deliberate scope decision, not an oversight.
+- Full task-by-task history and design rationale: `ai-work/plans/EOA-15507-bds-table-v3.md` (status: done) and `ai-work/research/2026-06-16-bds-table-column-api-spike.md`.
 
-### Non-Obvious Constraints
-- **Script placement**: `<script>` must be inside the `html\`...\`` template so Lit processes the string interpolations; element ID is scoped to prevent collisions
-- **Storybook source filter**: `excludeDecorators: true` in parameters ensures the decorator wrapper doesn't appear in the source panel (decorator handles background; user sees clean component markup)
-- **Contrast scheme**: `data-sb-scheme` is computed from Storybook's active background color, not story-controlled; updates only when background control changes
-
-### Testing Surface
-- Story render functions now return IIFE-wrapped templates — verify no memory leaks or multiple script executions on controls/args changes
-- New KeyboardDocs component uses CSS `@supports` for keyboard key styling — test rendering in older browsers if applicable
+---
 
 ## References
 
-Refs EOA-15147
+Closes EOA-15507
 
 ---
 
@@ -181,47 +80,37 @@ Refs EOA-15147
 
 ### General
 
-- [x] Follows conventional commit format: `chore(web-components): EOA-15147 description`
-- [x] Ticket reference included
-- [x] Self-reviewed for clarity and correctness
-- [x] No broken links or references
+- [x] Follows conventional commit format: `feat(web-components): EOA-15507 description`
+- [x] Ticket reference included (`Closes EOA-15507`)
+- [x] Code adheres to TypeScript strict mode — no `any` or implicit types
+- [x] Self-reviewed code for quality, readability, and correctness
+- [x] All tests pass locally
 
-### Documentation Quality
+### Boreal DS — Component Standards
 
-- [x] Story examples are clear and demonstrate realistic use cases
-- [x] "How to use it" section is consistent across all component docs
-- [x] Code examples follow Boreal DS conventions (web components tag naming, prop naming)
-- [x] Examples work with the actual component implementations
-- [x] Tone matches existing Storybook documentation
-
-### Storybook Specifics
-
-- [x] All new stories render without console errors
-- [x] Source panel displays correctly (decorators excluded, scripts visible)
-- [x] Interactive controls (argTypes) update stories as expected
-- [x] MDX documentation renders correctly with proper syntax highlighting
-- [x] Framework Integration guide callout present and working
-
-### Accuracy
-
-- [x] IIFE pattern matches real-world imperative API usage
-- [x] `floatingOptions` properties documented match component interface
-- [x] `data-sb-scheme` contrast detection logic accurate
-- [x] KeyboardDocs component accessibility verified
+- [x] Design tokens used exclusively — no hard-coded colors, spacing, or radii
+- [x] Component tag uses `bds-` prefix
+- [x] All props have explicit TypeScript types
+- [x] Events use bare `@Event()` (no `bubbles`/`composed` unless required)
+- [x] SCSS follows project conventions (no `@use` of the token package in component files)
+- [x] Light DOM patterns documented where used (virtualization spacer rows, pin-offset `ResizeObserver`)
 
 ### Testing
 
-- [x] Storybook builds without errors (`pnpm build:docs`)
-- [x] No type errors in story files (TypeScript strict mode)
-- [x] Manual testing of floating component examples (tooltip/popover)
-- [x] Manual testing of new stories (button-group, list-menu, toggle, pagination, table)
-- [x] Manual testing of "How to use it" consistency across docs
+- [x] Unit test coverage ≥ 90% statements (98.1%)
+- [x] Tests cover happy path, error/warning cases, and edge cases (partial-page skeletons, sticky auto-enable, explicit-`false` override)
+- [x] Manual testing completed via Playwright against the real running dev server for all rendering/DOM-affecting changes
 
-### Boreal DS Specifics
+### Documentation
 
-- [x] All component examples use `bds-*` tag prefix
-- [x] Prop naming follows boolean convention (no `is`, `has`, `show` prefixes)
-- [x] Design tokens used where applicable (colors, spacing, sizing)
-- [x] No inline CSS — uses imported stylesheets or scoped styles
-- [x] JSDoc on story render functions documented
+- [x] JSDoc present on all public APIs (props, events, methods) — internal/private-method JSDoc intentionally removed per `.claude/CLAUDE.md`
+- [x] Storybook story added for row virtualization (`WithVirtualization`)
+- [x] Storybook MDX documentation updated (dataset mode, column footer, server-side mode, loading state, virtualization, guardrail)
+- [x] "Current limitations" table in `bds-table.mdx` updated to remove every closed item
+
+### Performance & Compatibility
+
+- [x] No new console warnings or errors outside the deliberate `maxClientRows`/`virtual` guardrail warnings
+- [x] No new dependency added (`@tanstack/virtual-core` already present)
+- [x] No regression in existing functionality (verified via full suite + manual Playwright pass)
 </content>
