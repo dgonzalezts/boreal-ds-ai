@@ -37,7 +37,7 @@ Every completed task requires a minimal, explicit test scoped to what was just b
 
 - **Steps**: list the exact steps to run (e.g. "Run `pnpm dev` in `apps/boreal-docs`, open the browser, verify X renders without console errors").
 - **Pass/fail criteria**: state what a passing result looks like.
-- Do not mark a task complete until the test passes or is explicitly waived by the user.
+- Manual tests are required, not waiveable. Do not mark a task complete until the test has actually been run and passes — a skipped, deferred, or unwaived-but-unrun test blocks completion the same as a failing one.
 
 ## 5. Read before writing
 

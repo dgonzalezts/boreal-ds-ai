@@ -31,7 +31,8 @@ For each task:
 3. If `@<subagent>` is declared: compose a dispatch message containing the task title, files, acceptance criteria, unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
 4. If no executor declared: execute the task directly on the main thread
 5. Wait for subagent output; review it against acceptance criteria
-6. Mark as completed only when acceptance criteria are met
+6. Run the task's manual test checklist yourself (or confirm with your human partner it was run) — manual tests are required, not waiveable; a failing or skipped manual test is a blocker, not a pass
+7. Mark as completed only when acceptance criteria are met AND the manual test checklist passes
 
 ### Step 3: Complete Development
 

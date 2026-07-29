@@ -199,7 +199,7 @@ Every task in a plan must declare an `**Executor:**` field. Use this table to as
 - Tests confirm behavior through the shared utility integration path (or validate the documented fallback path when no reusable utility exists)
 - ...
 
-**Manual test _(waiveable)_:**
+**Manual test _(required — not waiveable)_:**
 
 For logic or styling tasks, first list the playground scenarios to implement in `packages/boreal-web-components/src/index.html`. Each entry is a short description — no code, no markup:
 
