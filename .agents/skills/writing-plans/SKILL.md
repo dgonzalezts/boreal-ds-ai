@@ -128,10 +128,10 @@ Use this checklist during planning and include a short "utility discovery" note 
 
 ```markdown
 ---
-ticket: EOA-XXXXX          # Jira ticket ID; use — for non-ticket work (AI-XXX, etc.)
-component: bds-component   # bds-* tag name; omit this line for non-component plans
-status: pending            # always pending for new plans; sync-plans updates this
-created: YYYY-MM-DD        # date this plan was written
+ticket: EOA-XXXXX # Jira ticket ID; use — for non-ticket work (AI-XXX, etc.)
+component: bds-component # bds-* tag name; omit this line for non-component plans
+status: pending # always pending for new plans; sync-plans updates this
+created: YYYY-MM-DD # date this plan was written
 ---
 
 # [Feature Name] Implementation Plan
@@ -258,7 +258,3 @@ After saving the plan, offer execution choice:
 
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses `executing-plans`
-
-```
-
-```
