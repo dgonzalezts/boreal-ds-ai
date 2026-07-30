@@ -15,13 +15,13 @@ created: 2026-07-29
 
 Two things intentionally stayed out of scope after review: the responsive toolbar (and its `bds-pagination` text-wrap prerequisite) remains blocked on an unscheduled UX/UI cross-component review and is excluded entirely (not even a placeholder task) until that review is scheduled; and the row-expansion feature was re-scoped mid-planning away from the ticket's original literal text (`children?: RowData[]` tree data) to a **master-detail slot** model, after a provided design reference showed a single full-width detail panel per row rather than nested child rows — this turned out to simplify the feature substantially, since it removes the selection-cascading, tree-sort, and indentation concerns tree data would have introduced.
 
-**Goal:** Close out the remaining `bds-table` v2 backlog that `EOA-15507` (v3, shipped) did not schedule: column grouping (`bds-table-column-group`), column drag/drop reorder, column resizing, right-edge column pinning, row expand/collapse via a master-detail slot, custom cell content via `<template slot="cell">`, five row-selection refinements (`pagedSelectAll`, `rowSelectable`, shift+range selection, `persistSelection`, `rowClickSelects`), and opt-in `filterable`/`columnLayoutToggle` toolbar-button props — finishing with one consolidated Stryker mutation-testing pass across the combined v2+v3+v4 surface.
+**Goal:** Close out the remaining `bds-table` v2 backlog that `EOA-15507` (v3, shipped) did not schedule: column grouping (`bds-table-column-group`), column drag/drop reorder, column resizing, right-edge column pinning, row expand/collapse via a master-detail slot, custom cell content via `<template slot="cell">`, five row-selection refinements (`selectAllPages`, `rowSelectable`, shift+range selection, `persistSelection`, `rowClickSelects`), and opt-in `filterable`/`columnLayoutToggle` toolbar-button props — finishing with one consolidated Stryker mutation-testing pass across the combined v2+v3+v4 surface.
 
 **Ticket brief:** [`ai-work/tickets/EOA-16000-bds-table-v4.md`](../tickets/EOA-16000-bds-table-v4.md)
 
 **Relationship to v3:** This plan is a direct continuation of `ai-work/plans/EOA-15507-bds-table-v3.md` (status: `done`). It reuses v3's virtualization (`@tanstack/virtual-core` `Virtualizer`), pin-offset `ResizeObserver` (`updatePinnedColumnOffsets`), and formatter cache (`_formatterNodes`) as direct building blocks rather than re-deriving any of that infrastructure. Explicitly out of this plan: the responsive toolbar (V2-9) and its `bds-pagination` text-wrap prerequisite (V2-10) — both blocked on an unscheduled UX/UI review.
 
-**Architecture:** Fourteen tasks land as incremental, independently committable additions to `bds-table` and its two column-declaration children (`bds-table-column`, plus a new `bds-table-column-group`). Tasks are sequenced so later tasks build on infrastructure earlier tasks introduce: the shared cell-content cache (Task 1) is extracted *first*, since both row expand/collapse (Task 2) and `<template slot="cell">` (Task 3) write into it rather than each building a separate cache. Column grouping (Task 4) lands before reorder (Task 5) so reorder's header-rendering assumptions already account for grouped headers. Resizing (Task 6) and right-edge pinning (Task 7) share one offset-recompute path, so pinning is sequenced immediately after resizing rather than earlier. The five selection refinements (Tasks 8–12) are ordered so each can assume the guards introduced by the one before it. The final task (14) is a single consolidated Stryker pass across every file touched by `EOA-14935` (v2), `EOA-15507` (v3), and this ticket — carried forward unchanged from v3's deferred Task 12.
+**Architecture:** Fifteen tasks land as incremental, independently committable additions to `bds-table` and its two column-declaration children (`bds-table-column`, plus a new `bds-table-column-group`). Tasks are sequenced so later tasks build on infrastructure earlier tasks introduce: the shared cell-content cache (Task 1) is extracted *first*, since both row expand/collapse (Task 2) and `<template slot="cell">` (Task 3) write into it rather than each building a separate cache. Column grouping (Task 4) lands before reorder (Task 5) so reorder's header-rendering assumptions already account for grouped headers. Resizing (Task 6) and right-edge pinning (Task 7) share one offset-recompute path, so pinning is sequenced immediately after resizing rather than earlier. The five selection refinements (Tasks 8–12) are ordered so each can assume the guards introduced by the one before it. Task 14 is a documentation-only addition (actions-column and CSV-export story examples) needing no new component code. The final task (15) is a single consolidated Stryker pass across every file touched by `EOA-14935` (v2), `EOA-15507` (v3), and this ticket — carried forward unchanged from v3's deferred Task 12.
 
 **Tech Stack:** Stencil (TSX + scoped SCSS), `@tanstack/virtual-core` (already a direct dependency), native HTML5 Drag and Drop API and Pointer Events (no new dependency), Jest + Stryker for the two-phase unit-test/mutation-score gate.
 
@@ -29,11 +29,13 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Testing policy for this plan (unchanged from v3)
 
-**Each task below adds unit tests only** (coverage-phase). Mutation testing (Stryker) is deliberately not run per task — it is consolidated into Task 14, run once after every other task in this plan is complete, across every component this plan *and* `EOA-15507` *and* `EOA-14935` touched. Do not install Stryker, create `stryker.*.config.mjs` files, or attempt the two-phase gate until Task 14.
+**Each task below adds unit tests only** (coverage-phase). Mutation testing (Stryker) is deliberately not run per task — it is consolidated into Task 15, run once after every other task in this plan is complete, across every component this plan *and* `EOA-15507` *and* `EOA-14935` touched. Do not install Stryker, create `stryker.*.config.mjs` files, or attempt the two-phase gate until Task 15.
 
 **Manual tests are mandatory gates, not waiveable, for this plan** — this deliberately overrides `.agents/rules/plan-execution.md`'s default ("the test passes or is explicitly waived by the user"). No task in this plan may be marked complete until its manual test has been run and passes; do not proceed to the next task on a waiver.
 
 **Each task's manual test uses its own fresh `src/index.html` playground scenario, built from scratch — do not extend or reuse v3's `#skeleton-table`/`#pin-table`/`#virtual-table` sections.** This is deliberate: v3's fixtures back v3-shipped behavior, and this plan's tasks must be manually verifiable in isolation from v3's component version, not coupled to fixture state a different version of the component produced. Each task below names its own dedicated scenario. `src/index.html` remains dev-only scratch content and is never committed, per existing convention.
+
+**Every implementation task's manual test (Tasks 1–13) includes a final React/Vue parity check** — confirm the same scenario behaves identically through the `boreal-react` and `boreal-vue` output-target wrapper playgrounds, not just the raw web-component. This component has 15+ opt-in features crossing three framework surfaces; checking parity per-task, scoped to the one feature that just landed, catches framework-specific regressions (synthetic event handling, prop/attribute forwarding) immediately rather than in one large, hard-to-debug pass at the end. Task 14 (documentation-only) and Task 15 (mutation testing) are exempt — neither touches framework-wrapper behavior.
 
 ---
 
@@ -65,8 +67,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column-group/types/ITableColumnGroup.ts` | new | 4 |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column-group/__test__/bds-table-column-group.basics.spec.ts` | new | 4 |
 | `packages/boreal-web-components/src/utils/constants/common/Icons.ts` | modify | 5 (drag-handle icon, verify existing chevron for 2) |
-| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
-| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
+| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 |
+| `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 |
 
 `packages/boreal-web-components/src/components.d.ts` and the `boreal-react`/`boreal-vue` output-target proxy files are auto-generated by the Stencil build — not listed above, never hand-edited.
 
@@ -137,6 +139,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Run `pnpm dev:components`; render the existing formatter-driven "Status" pill column playground scenario used in v3.
 - Validate:
   - [ ] Given the existing formatter-driven pill column, when the table re-renders (e.g. after a row selection), then the pill content is unchanged and does not flash/re-clone — confirming the extraction preserved the identity-guard optimization exactly.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "refactor(bds-table): EOA-16000 extract shared cell-content cache from formatter path"`
 
@@ -201,6 +204,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given `virtual` is enabled, when a row near the visible edge is expanded, then no rows overlap or jump after the toggle.
   - [ ] Given `selectable` is also enabled, when the toggle button is clicked (not the checkbox), then no row selection state changes.
   - [ ] Given the detail template contains its own interactive content (e.g. a mini checklist the consumer built), when interacted with, then `bds-table`'s own selection state is completely unaffected.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add row expand/collapse via master-detail slot"`
 
@@ -244,6 +248,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Validate:
   - [ ] Given a templated column, when the table renders, then each cell shows the cloned template content correctly reflecting that row's data.
   - [ ] Given `virtual` is enabled with a scrollable dataset, when scrolling recycles rows, then no cell shows another row's stale templated content.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add template slot=cell custom cell content"`
 
@@ -302,6 +307,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Validate:
   - [ ] Given the grouped table, when rendered, then the group header correctly spans its two leaf columns and ungrouped columns' headers correctly span both header rows with no visual gap or misalignment.
   - [ ] Given a pinned column exists inside a group, when scrolled horizontally, then its offset still computes correctly across the two-row header.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add bds-table-column-group for grouped column headers"`
 
@@ -370,6 +376,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given a reorderable column, when its Move-right button is clicked repeatedly, then it moves one position at a time until reaching the boundary, where the button becomes disabled.
   - [ ] Given a pinned column, when a drag is attempted over it, then it is not a valid drop target and pin offsets remain correct afterward.
   - [ ] Cross-browser check (Chrome, Firefox, Safari): drag reorder combined with a pinned `position: sticky` column behaves consistently in all three; note and file any divergence rather than assuming parity.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then native drag/drop and the Move-left/Move-right buttons behave identically to the web-components version — no framework-specific regression (React's synthetic event system in particular is worth double-checking against native `dragstart`/`dragover`/`drop`).
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add column drag/drop reorder with Move left/right fallback"`
 
@@ -434,6 +441,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given a drag-resize in progress, when a pinned column is present, then its `left` offset stays correct throughout the drag, not just after release.
   - [ ] Given `virtual` is enabled, when resizing a column while scrolled, then no visible layout thrash/jank occurs.
   - [ ] Keyboard: focus the handle via Tab, use ArrowLeft/ArrowRight to resize, Home to reset.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression (Pointer Events forwarding through React/Vue synthetic props is worth double-checking).
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add column resizing sharing the pin-offset recompute path"`
 
@@ -496,12 +504,13 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given a right-pinned column, when scrolled horizontally, then it stays anchored to the right edge with a visible divider on its left edge.
   - [ ] Given both left- and right-pinned columns, when scrolled, then both remain correctly anchored simultaneously with no visual overlap.
   - [ ] Given a resizable, right-pinned column, when resized, then its offset and any other right-pinned columns' offsets remain correct throughout the drag.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add right-edge column pinning via pinDirection"`
 
 ---
 
-## Task 8: `bds-table` — `pagedSelectAll`
+## Task 8: `bds-table` — `selectAllPages`
 
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
 **Depends on:** none (first of the five independent selection-refinement tasks)
@@ -513,25 +522,25 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (modify)
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` (modify)
 
-**Context:** **This is a real default-behavior change, not additive-only — call this out clearly during execution.** Today (shipped in v3), `handleSelectAll()`/`renderSelectAllTh()` both scope over `this.activeRows`, which in `rows` mode already resolves to only the *current page*. The spike's stated default for `pagedSelectAll` is `false` = "select-all covers the entire dataset" (MUI convention), meaning this task must introduce a new `selectAllScope` getter that, by default, selects across the **full** `rows` array in rows-mode (cross-page), and only restricts to the current page when `pagedSelectAll={true}`. In `data` mode, `activeRows` is already the full dataset, so behavior there is unchanged either way.
+**Context:** **Re-polarized from the spike's original `pagedSelectAll`/`checkboxSelectionVisibleOnly` framing (default `false` = select-all spans the full dataset, MUI convention), which was flagged as a real default-behavior change against today's shipped v3 behavior.** Today, `handleSelectAll()`/`renderSelectAllTh()` both scope over `this.activeRows`, which in `rows` mode already resolves to only the *current page*. Naming this prop `selectAllPages` and defaulting it to `false` removes that risk entirely: default `false` means select-all stays page-scoped, byte-for-byte identical to today's shipped behavior with zero migration impact, and `true` opts a consumer into the more powerful cross-page select-all. This matches the opt-in/default-`false` convention every other prop in this plan follows.
 
-**Documentation:** Extend the existing `rows`+`bds-pagination`+`selectable` story with a `pagedSelectAll` control toggle so both scopes are directly comparable in Storybook. `bds-table.mdx`'s selection section gets a new "Select-all scope" subsection explaining the cross-page-by-default behavior change and how `pagedSelectAll` restricts it, called out prominently since it changes today's shipped select-all scope.
+**Documentation:** Extend the existing `rows`+`bds-pagination`+`selectable` story with a `selectAllPages` control toggle so both scopes are directly comparable in Storybook. `bds-table.mdx`'s selection section gets a new "Select-all scope" subsection documenting `selectAllPages` as an explicit opt-in for cross-page select-all, noting the default introduces no behavior change from today.
 
 **Acceptance criteria:**
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `pagedSelectAll` | `boolean` | `false` | When `true`, the header select-all checkbox scopes to the currently visible page only; when `false` (default), it scopes to the full dataset in `rows` mode |
+| `selectAllPages` | `boolean` | `false` | When `true`, the header select-all checkbox spans every page of the dataset in `rows` mode; when `false` (default), it scopes to the currently visible page only (today's shipped behavior, unchanged) |
 
-- New `selectAllScope` getter: `pagedSelectAll ? this.activeRows : (this.isRowsMode ? this.rows : this.activeRows)`.
+- New `selectAllScope` getter: `selectAllPages && this.isRowsMode ? this.rows : this.activeRows`.
 - `handleSelectAll()` and `renderSelectAllTh()`'s `checked`/`indeterminate` computations both read from `selectAllScope` instead of `activeRows`.
-- In `data` mode, behavior is unchanged (already full-dataset).
-- In `rows` mode with the new default (`false`), select-all selects/deselects every row across all pages; with `pagedSelectAll={true}`, it restricts to the current page only (matching today's pre-this-task behavior).
+- In `data` mode, behavior is unchanged (already full-dataset via `activeRows`).
+- Default (`false`) is a pure regression guard — select-all continues to scope to the current page exactly as it does today, in every mode. `selectAllPages={true}` is required to opt into cross-page select-all in `rows` mode.
 
 **Unit tests to cover:**
 
-- Default (`false`) in `rows` mode: clicking select-all on page 1 selects rows from every page, not just the visible one.
-- `pagedSelectAll={true}` in `rows` mode: select-all only affects the current page's rows; navigating pages and re-checking does not accumulate cross-page selections via select-all.
+- Default (`false`) in `rows` mode: clicking select-all on page 1 selects only that page's rows — no behavior change from today (regression guard).
+- `selectAllPages={true}` in `rows` mode: clicking select-all on page 1 selects rows from every page, not just the visible one.
 - Header checkbox `checked`/`indeterminate` reflect the correct scope in both modes.
 - `data` mode is unaffected by the prop either way (regression guard).
 
@@ -539,10 +548,11 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 - Run `pnpm dev:components`; render `bds-table` with `rows` (30+ rows) + `bds-pagination` (`items-per-page="10"`), `selectable`.
 - Validate:
-  - [ ] Given default props, when clicking the header checkbox on page 1, then all 30 rows become selected (verify via `getSelectedRows()`), not just page 1's 10.
-  - [ ] Given `pagedSelectAll`, when clicking the header checkbox on page 1, then only that page's 10 rows are selected; navigating to page 2 shows an unchecked header checkbox.
+  - [ ] Given default props, when clicking the header checkbox on page 1, then only that page's 10 rows become selected (verify via `getSelectedRows()`) — matching today's shipped behavior exactly.
+  - [ ] Given `selectAllPages`, when clicking the header checkbox on page 1, then all 30 rows become selected across every page.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
-**Commit:** `git commit -m "feat(bds-table): EOA-16000 add pagedSelectAll for select-all scope"`
+**Commit:** `git commit -m "feat(bds-table): EOA-16000 add selectAllPages for cross-page select-all opt-in"`
 
 ---
 
@@ -583,6 +593,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Validate:
   - [ ] Given locked rows, when rendered, then their checkboxes are visibly disabled and unclickable.
   - [ ] Given a mix of locked/unlocked rows, when select-all is clicked, then only unlocked rows become selected, and the header checkbox shows fully checked (not indeterminate) once all unlocked rows are selected.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add rowSelectable for conditional row selectability"`
 
@@ -635,6 +646,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given rows 2 and 5, when row 2 is clicked then row 5 is shift+clicked, then rows 2–5 are all selected.
   - [ ] Given `rows` mode across two pages, when a row on page 1 is clicked and a row on page 2 is shift+clicked, then every row in between (spanning both pages) is selected.
   - [ ] Given a non-selectable row inside a shift+click range, then it remains unselected/disabled after the range-select.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression (shiftKey capture-phase delegation is worth double-checking against React/Vue synthetic event wiring).
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add shift+click range selection"`
 
@@ -677,6 +689,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Run `pnpm dev:components`; render `bds-table` with `data`+`serverSide`+`persistSelection`, simulating a page-2 fetch that replaces `data` entirely.
 - Validate:
   - [ ] Given rows selected on a simulated "page 1" `data` set, when `data` is replaced with a simulated "page 2" set and the consumer re-passes the previously selected IDs via `selectedRows`, then selection state is preserved rather than cleared by the table itself.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add persistSelection for server-side selection persistence"`
 
@@ -694,7 +707,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (modify)
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` (modify)
 
-**Context:** **Renamed and re-polarized from the ticket's `disableRowSelectionOnClick`, which resolves the scope ambiguity the spike originally flagged.** The 2026-06-16 spike scoped the ticket's version as a no-op *reservation* ("no implementation change needed... becomes essential once formatter-rendered interactive elements are inside cells"), since v1/v2/v3 never added click-anywhere-in-row selection, and left implementing the real behavior as an open question for this ticket. Naming this prop positively — `rowClickSelects`, default `false` — settles that question by construction: default `false` means row-click selection is **off** (today's shipped checkbox-only behavior, zero migration impact for existing consumers), and `true` opts a consumer into clicking anywhere in the row to select it. This also matches every other new prop in this plan (`reorderable`, `resizable`, `filterable`, `columnLayoutToggle`, `pagedSelectAll`, `persistSelection` all default `false` and require explicit opt-in), rather than the ticket's original negative-polarity, default-on framing — no separate reservation-vs-implementation decision needs to be made during execution.
+**Context:** **Renamed and re-polarized from the ticket's `disableRowSelectionOnClick`, which resolves the scope ambiguity the spike originally flagged.** The 2026-06-16 spike scoped the ticket's version as a no-op *reservation* ("no implementation change needed... becomes essential once formatter-rendered interactive elements are inside cells"), since v1/v2/v3 never added click-anywhere-in-row selection, and left implementing the real behavior as an open question for this ticket. Naming this prop positively — `rowClickSelects`, default `false` — settles that question by construction: default `false` means row-click selection is **off** (today's shipped checkbox-only behavior, zero migration impact for existing consumers), and `true` opts a consumer into clicking anywhere in the row to select it. This also matches every other new prop in this plan (`reorderable`, `resizable`, `filterable`, `columnLayoutToggle`, `selectAllPages`, `persistSelection` all default `false` and require explicit opt-in), rather than the ticket's original negative-polarity, default-on framing — no separate reservation-vs-implementation decision needs to be made during execution.
 
 Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectable && this.rowClickSelects`, calls `handleRowSelect(id, row)` unless the click originated inside an excluded element — checked via `(e.target as HTMLElement).closest('button, a[href], [role="button"], input, select, textarea, .bds-table__resize-handle, [draggable="true"], .bds-table__td-checkbox, .bds-table__td-expand')`. This exclusion list is why the expand toggle (Task 2) and the checkbox cell must never double-fire selection — both are already excluded structurally, and this task's isolation test must prove the expand-toggle exclusion holds regardless of `rowClickSelects`'s value, per the locked decision.
 
@@ -727,6 +740,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
   - [ ] Given default props, when clicking a plain cell, then nothing happens; the checkbox still works.
   - [ ] Given `rowClickSelects`, when clicking a plain cell, then the row toggles selected.
   - [ ] Given either mode, when clicking a formatter-rendered button or the expand toggle, then row selection never changes.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add rowClickSelects opt-in row-click selection"`
 
@@ -747,7 +761,12 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 **Context:** Per the spike's Option B decision, two independent booleans (not one combined flag, not a structured object), matching the existing `searchable`/`selectable`/`serverSide` flat-boolean convention. **Must also gate the loading-state skeleton swap** (`renderTableActionsSkeleton(this.searchable)` inside `renderToolbarRight()`) exactly the same way as the real buttons — otherwise the skeleton placeholder becomes the one remaining always-rendered path once these props ship. A new `hasToolbarRight` getter folds in `searchable`, `filterable`, `columnLayoutToggle`, and the existing slot checks, gating the entire toolbar-right `<div>` so a `subheading`-only table doesn't render a hollow right-side flex container once these buttons stop being unconditional.
 
-**Documentation:** Update the default toolbar story with `filterable`/`columnLayoutToggle` controls (both default `false`) plus a `loading` toggle to show the gated skeletons; add a `subheading`-only variant confirming no hollow container renders. `bds-table.mdx`'s "Filter panel" and "Column visibility" sections' opening sentences are updated from "always rendered" to opt-in via these props; the "Current limitations" row for this item is removed.
+**Documentation:** `bds-table` itself stays inert here — `handleFilter()`/`handleTableLayout()` continue to only emit `bdsFilter`/`bdsTableLayout` (confirmed: no dialog/drawer/dropdown rendering exists anywhere inside `bds-table` today, and this task does not add any). The actual panels are consumer-owned, demonstrated entirely in story script, matching the existing convention already used by `BulkEdit`/`BulkDeleteWithUndo`/`WithAddRow` (each builds its own `bds-dialog` inline in response to a `bds-table` event) — no new internal helper or centralizing abstraction is introduced for only two usages. Concretely:
+
+- `WithToolbar` is trimmed to demonstrate only generic toolbar chrome (subheading, icon, tooltip, `searchable`) — it stops implicitly using `filterable`/`columnLayoutToggle` now that both default `false`, since demonstrating the two new panels deserves its own dedicated stories rather than overloading the generic one.
+- New story `WithFilterDrawer`: sets `filterable`, listens for `bdsFilter`, and opens a `bds-drawer` (`position="right"`, `backdropClose`) containing a small filter form; on apply, filters the story's own `rows` array client-side and reassigns `table.rows`.
+- New story `WithColumnVisibilityDropdown`: sets `columnLayoutToggle`, listens for `bdsTableLayout`, and opens a `bds-dropdown` (multiselect, one entry per column) anchored to the toolbar button; toggling an entry sets that column's `bds-table-column` to `display: none` via the story's own script (no new `bds-table` API — this is purely a story-level demonstration of hiding columns via existing DOM APIs, not a new column-visibility feature on the component).
+- `bds-table.mdx`'s "Filter panel" and "Column visibility" sections' opening sentences are updated from "always rendered" to opt-in via these props, cross-referencing the two new stories as the canonical usage examples; the "Current limitations" row for this item is removed.
 
 **Acceptance criteria:**
 
@@ -775,21 +794,57 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 **Manual test** _(required — not waiveable)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `subheading` only (no other toolbar-right content), then add `filterable`/`columnLayoutToggle` combinations, then toggle `loading`.
+- Run `pnpm dev:docs`; open the `WithFilterDrawer` and `WithColumnVisibilityDropdown` stories.
 - Validate:
   - [ ] Given `subheading` only (no opt-in props), when rendered, then no hollow/empty toolbar-right container appears.
   - [ ] Given `filterable` + `loading=true`, when rendered, then the Filter button's skeleton (not the Column-visibility skeleton) appears alone.
+  - [ ] Given `WithFilterDrawer`, when the Filter button is clicked, then a `bds-drawer` opens from the right and applying a filter narrows the visible rows.
+  - [ ] Given `WithColumnVisibilityDropdown`, when the Column-visibility button is clicked, then a `bds-dropdown` opens listing every column and toggling an entry hides/shows that column.
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add opt-in filterable/columnLayoutToggle toolbar props"`
 
 ---
 
-## Task 14: Consolidated mutation-testing pass across the full v2+v3+v4 surface
+## Task 14: Documentation-only additions — actions column, CSV export (replaces WithRefresh)
+
+**Executor:** @documentation-subagent (only — no component code changes)
+**Depends on:** none (pure Storybook-story additions; both build entirely on already-shipped v2/v3 capabilities)
+**Files:**
+
+- `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` (modify)
+- `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (modify)
+
+**Context:** Both items surfaced during v4 planning as documentation gaps rather than missing component behavior — neither needs a new `bds-table`/`bds-table-column` prop, event, or internal state, so this task is scoped as docs-only, mirroring Task 15's test-only precedent (see below).
+
+- **Actions column:** no story currently demonstrates rendering interactive buttons as cell content (`WithFormatter`/`BulkCustomAction` only render a static `bds-tag` via `formatter`). New story `WithActionsColumn` uses the already-shipped `formatter` capability to render `bds-button` icons (edit/delete/duplicate) per row, wired to a bubbling custom event the story listens for and reacts to (e.g. removing the row from its local `rows` array on a delete action) — structurally identical to v3's `#footer-toolbar-table` playground scenario, whose `actionCol.formatter` already renders a `bds-button` per row and whose script listens for a `bdsDelete`-style event to filter `rows`. No new `bds-table` API is needed; this is purely an additional canonical usage example.
+- **`WithRefresh` → `WithExport` (renamed):** `WithRefresh` (bds-table.stories.ts) currently demonstrates a single `slot="toolbar-actions"` Refresh button that simulates a 1-second async fetch. This task **replaces** that Refresh button with an Export button and renames the story to `WithExport` — the story keeps exactly one slotted `toolbar-actions` element, not two, and the rename avoids a `WithRefresh` story that no longer refreshes anything. No new `bds-table` API is needed: the story's own script serializes its in-memory `rows` to a CSV string and triggers a client-side download (e.g. a `Blob` + temporary `<a download>`), the same consumer-owned-script pattern already established by v3's `#footer-toolbar-table` scenario (where the page's own script kept a live footer count in sync with `selectedRowsChange` rather than `bds-table` doing it internally).
+
+**Acceptance criteria:**
+
+- `WithActionsColumn` renders an "Actions" column via `formatter`, with edit/delete/duplicate `bds-button` icons per row; the delete action removes the row from the story's local dataset and re-assigns `table.rows`.
+- `WithRefresh` is renamed to `WithExport`; its Refresh button in `slot="toolbar-actions"` is replaced with an "Export CSV" button — the story retains only one slotted toolbar-actions element; clicking it downloads a CSV file reflecting the story's current in-memory `rows`.
+- `bds-table.mdx` cross-references `WithActionsColumn` from the existing `formatter` documentation as the canonical "interactive cell content" example, and updates any reference to `WithRefresh` to `WithExport`.
+
+**Manual test** _(required — not waiveable)_:
+
+- Run `pnpm dev:docs`; open `WithActionsColumn` and the renamed `WithExport` story.
+- Validate:
+  - [ ] Given `WithActionsColumn`, when the delete button on a row is clicked, then that row disappears from the table.
+  - [ ] Given `WithExport`, then only one button ("Export CSV") appears in the toolbar-actions slot — the old Refresh button is gone, not duplicated alongside it.
+  - [ ] Given `WithExport`, when "Export CSV" is clicked, then a CSV file downloads containing every row currently in the table.
+
+**Commit:** `git commit -m "docs(bds-table): EOA-16000 add actions-column and CSV export story examples"`
+
+---
+
+## Task 15: Consolidated mutation-testing pass across the full v2+v3+v4 surface
 
 **Executor:** @testing-subagent
-**Depends on:** Tasks 1–13 all complete and merged/committed.
+**Depends on:** Tasks 1–14 all complete and merged/committed.
 **Files:** none directly — this task only adds test cases as needed to kill surviving mutants; no product source changes.
 
-**Context:** Carried forward unchanged from `EOA-15507`'s deferred Task 12 (see that plan's Task 12 and `ai-work/research/2026-06-16-bds-table-column-api-spike.md`'s "Implementation Plan (2026-07-23)" section) — run once here, across every file touched by `EOA-14935` (v2), `EOA-15507` (v3), and this ticket's Tasks 1–13 combined, instead of running it three separate times.
+**Context:** Carried forward unchanged from `EOA-15507`'s deferred Task 12 (see that plan's Task 12 and `ai-work/research/2026-06-16-bds-table-column-api-spike.md`'s "Implementation Plan (2026-07-23)" section) — run once here, across every file touched by `EOA-14935` (v2), `EOA-15507` (v3), and this ticket's Tasks 1–14 combined, instead of running it three separate times. Task 14 is documentation-only and touches no component source, so it contributes no new mutation surface.
 
 **Acceptance criteria:**
 
@@ -807,9 +862,9 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 ## Execution order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14.
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15.
 
-Groups: shared cell-content cache extraction, then row expand/collapse (master-detail slot) and `<template slot="cell">` both built on top of it (1–3) → column grouping, a prerequisite for reorder's header-rendering assumptions (4) → column reorder, then column resizing sharing its recompute path, then right-edge pinning sharing that same recompute path (5–7) → the five selection refinements, ordered so each can assume the guard the previous one introduced — visible-only scope, then per-row selectability, then shift+range (which needs the selectability guard), then server-side persistence (independent, but placed here for thematic grouping), then click-to-select (which needs both the selectability guard and Task 2's expand-isolation guard) (8–12) → opt-in toolbar buttons, independent of everything else in this plan (13) → mutation-testing gate for the full combined v2+v3+v4 surface (14).
+Groups: shared cell-content cache extraction, then row expand/collapse (master-detail slot) and `<template slot="cell">` both built on top of it (1–3) → column grouping, a prerequisite for reorder's header-rendering assumptions (4) → column reorder, then column resizing sharing its recompute path, then right-edge pinning sharing that same recompute path (5–7) → the five selection refinements, ordered so each can assume the guard the previous one introduced — page-scoped-by-default select-all, then per-row selectability, then shift+range (which needs the selectability guard), then server-side persistence (independent, but placed here for thematic grouping), then click-to-select (which needs both the selectability guard and Task 2's expand-isolation guard) (8–12) → opt-in toolbar buttons, independent of everything else in this plan (13) → documentation-only additions needing no new component code (14) → mutation-testing gate for the full combined v2+v3+v4 surface (15).
 
 One item surfaced during exploration is flagged for confirmation rather than silently resolved, and should be settled before or during its task: Task 5's interaction with Task 4 (grouped columns are recommended-excluded from reorder, matching the pinned-column exclusion, pending confirmation). Task 12's scope — real click-to-select behavior vs. the original spike's "reserve the prop, no-op" scoping — is now resolved by naming the prop `rowClickSelects` with a default of `false`: this makes the new behavior purely additive/opt-in, matching every other prop in this plan, so no reservation-vs-implementation ambiguity remains.
 
@@ -823,3 +878,7 @@ One item surfaced during exploration is flagged for confirmation rather than sil
 - Pinned columns (either direction) are excluded from drag/reorder targets entirely.
 - Right-edge column pinning ships in this ticket via an additive `pinDirection: 'left' | 'right' = 'left'` prop (not a breaking change to `pinnable`), sharing Task 6's offset-recompute infrastructure.
 - The responsive toolbar and its `bds-pagination` prerequisite are excluded entirely from this plan, blocked on an unscheduled UX/UI review.
+- `selectAllPages` (Task 8) defaults `false` = page-scoped select-all, identical to today's shipped behavior — the spike's original MUI-derived default (cross-page by default) was rejected specifically to avoid an unnecessary default-behavior change.
+- Task 13's filter drawer and column-visibility dropdown are built entirely in Storybook story script, matching the existing `BulkEdit`/`BulkDeleteWithUndo`/`WithAddRow` convention of consumer-owned `bds-dialog` wiring — `bds-table` itself stays inert (`bdsFilter`/`bdsTableLayout` only), and no centralizing helper is introduced for two usages.
+- Manual tests in this plan are mandatory gates, never waiveable (deviates from `.agents/rules/plan-execution.md`'s default, which allows a user waiver) — no task may be marked complete without its manual test actually passing. Each task's manual test also builds its own fresh `src/index.html` scenario from scratch rather than reusing v3's `#skeleton-table`/`#pin-table`/`#virtual-table`, to keep this plan's manual verification isolated from v3's component version.
+- The bds-dialog backdrop-click-closes-on-inside-click regression (found during Task 13 research) is explicitly out of scope for this ticket — it predates this plan, affects every `bds-dialog` consumer, and should be filed and fixed as its own ticket rather than absorbed here.
