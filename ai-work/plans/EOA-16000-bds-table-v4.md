@@ -94,6 +94,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 1: `bds-table` — extract shared cell-content cache
 
+**Status:** ✅ done
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none (pure refactor of already-shipped v3 code; sequenced first so Tasks 2 and 3 can both write into it)
 **Files:**
@@ -147,6 +148,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 2: `bds-table` — row expand/collapse via master-detail slot
 
+**Status:** ✅ done — implementation, unit tests (`bds-table.expand.spec.ts`, 278/278 passing), docs, and manual QA (web components + React + Vue parity) all verified. Includes a hit-target follow-up fix (expand-toggle enlarged to 24×24px) landed after the original manual-test pass.
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 1 (writes row-detail content through the shared `CellContentCache`)
 **Files:**
@@ -235,6 +237,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 3: `bds-table-column` — custom cell content via `<template slot="cell">`
 
+**Status:** ✅ done — implementation, unit tests (`bds-table.template-cell.spec.ts`, 9/9 passing incl. a late-template-content regression suite), docs (`CustomCellContent`/`CustomCellContentFormatterPrecedence` stories + MDX section), and manual QA (web components + React + Vue parity) all verified. A real bug was found and root-cause-fixed mid-task: `applyCellTemplate` raced React's `useEffect`-driven late population of `template.content` and silently gave up with no retry; fixed via a one-shot, per-column-deduped `MutationObserver` on `template.content` (`watchForLateTemplateContent`) that triggers `forceUpdate` once content lands. Confirmed deterministic across 5 fresh React reloads.
+
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 1 (writes into `CellContentCache`, does not build a second cache)
 **Files:**
@@ -278,6 +282,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 ---
 
 ## Task 4: `bds-table-column-group` — column grouping
+
+**Status:** ✅ done — implementation, unit tests (`bds-table-column-group.basics.spec.ts` + `bds-table.grouping.spec.ts`, 2574/2574 suite-wide passing), docs (`Column grouping` anatomy section, `Grouped headers` preview story), and manual QA (web components + React + Vue parity) all verified. Scope grew slightly beyond the original plan: added an opt-in `info` prop (tooltip via `bds-typography variant="label"`) to `bds-table-column-group`, mirroring `bds-table-column.info`/`bds-card-header.info`. A real bug was found and root-cause-fixed mid-task: `table-layout: fixed` only reads column widths from a table's first `<tr>` (CSS 2.1 §17.5.2.1), so once grouping added a second `<thead>` row, every leaf column's `width` was silently ignored and pinned-column offsets broke; fixed via an unconditional `<colgroup>`/`<col>` per column (`<col>` is exempt from the first-row restriction).
 
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none

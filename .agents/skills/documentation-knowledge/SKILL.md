@@ -153,6 +153,14 @@ Do not override when the prop reflects (`reflect: true`) and is primitive — th
 
 ---
 
+## ArgTypes Name Collisions Across Sub-Components
+
+When a single `.stories.ts` file's shared `meta` documents several related custom elements (e.g. `bds-table`, `bds-table-column`, `bds-table-column-group`), `<ArgTypes include={[...]}>` filters against the whole flat `meta.argTypes` object by resolved display name — never by the raw object key, and never scoped to "the sub-component this block documents." Two sub-components with a same-named prop (e.g. both have `label`) cannot be disambiguated by giving the second one an entry with a `name:` override — that recreates the exact collision `include` exists to solve. Confirmed against installed `storybook@10.2.8`'s `filterArgTypes` source.
+
+**Fix:** declare a CSF3 per-story `argTypes` override (a property sibling to `parameters`/`render` on the story itself) with the sub-component-specific descriptions, then point the MDX block at that story — `<ArgTypes of={BdsXxxStories.SomeStory} include={[...]} />` — instead of at the whole module. Full write-up with the `bds-table-column-group` worked example: `ai-docs/guidelines/storybook-patterns.md` § "MDX include name collisions across sub-components"; memory entry: `.agents/memory/storybook-argtypes-name-collision.md`.
+
+---
+
 ## Storybook + Vite Quirks
 
 ### Vite glob patterns in package exports

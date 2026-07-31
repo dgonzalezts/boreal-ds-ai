@@ -37,7 +37,7 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 This subagent has two memory sources:
 
 **1. Per-scope memory (auto-managed by Claude Code)**
-The `memory: project` frontmatter directive instructs Claude Code to manage a memory directory at `.claude/agent-memory/qa-subagent/`. This directory is created automatically on first write. At every invocation, Claude Code injects the first 200 lines of `.claude/agent-memory/qa-subagent/MEMORY.md` into your context — you do not need to read it manually.
+The `memory: project` frontmatter directive instructs Claude Code to manage a memory directory at `.claude/agent-memory/qa-subagent/`. This directory is created automatically on first write. At every invocation, Claude Code injects the first 200 lines of `.claude/agent-memory/qa-subagent/MEMORY.md` into your context — you do not need to read it manually. This path resolves relative to your shell's current working directory, not a fixed project root — if you `cd`'d into a package/testapp directory (very common for this subagent), `cd` back to the repository root before writing to memory, or you'll create a stray duplicate `.claude/` folder there instead.
 
 Use this memory to accumulate scope-specific learnings: playground scenario locations, framework-specific rendering quirks, dev-server pipeline gotchas.
 

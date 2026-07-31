@@ -41,3 +41,9 @@ npx eslint .
 ```
 
 `vue-tsc --noEmit` from the CLI did **not** catch a real event-handler type mismatch (`BdsExpandEventDetail.row: RowData` vs. a hand-rolled `OrderRow`-typed handler) that the user's IDE language server correctly flagged. Treat IDE diagnostics as authoritative for template-binding type-checking specifically — don't assume a clean CLI `vue-tsc` run means the IDE will also be clean.
+
+## Never launch `dev:pack:react` and `dev:pack:vue` concurrently
+
+Both scripts run `turbo run build --filter=...@telesign/boreal-web-components`, which builds every downstream dependent including `boreal-docs` (Storybook). `boreal-docs`'s build writes to the single shared `apps/boreal-docs/storybook-static` directory regardless of which pipeline triggered it. Launching both pipelines at the same time (e.g. two backgrounded Bash calls in the same turn) races both Storybook builds against that one directory — observed failure: `Error: EEXIST: file already exists, mkdir` inside the Storybook build step, aborting that pipeline's turbo run entirely before it ever reaches the `vite` server-start step for the testapp. The other pipeline (whichever wins the race) completes normally.
+
+**Fix:** run them sequentially — start one, wait for its `vite ... Local: http://localhost:...` line to appear in the log, then start the other. If one fails with this EEXIST error, just re-run that one pipeline alone; no need to touch the other (its dev server is unaffected once already running). Once both are up, both dev servers can be left running for the remainder of a multi-task QA session — no need to re-run either pipeline unless the underlying `boreal-web-components` source changes (see the tarball-snapshot note above).

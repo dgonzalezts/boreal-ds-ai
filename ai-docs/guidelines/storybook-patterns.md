@@ -272,6 +272,31 @@ All three must match. A name present in (3) but missing from (2) is the specific
 
 **Verification:** don't just review the diff — run `pnpm dev:docs` and visually confirm each prop/event row actually renders in the "Properties" panel for the component you touched.
 
+### MDX include name collisions across sub-components
+
+When one `.stories.ts` file documents several related custom elements in a single shared `meta` (e.g. `bds-table`, `bds-table-column`, `bds-table-column-group`), all `<ArgTypes include={[...]}>` blocks for those elements resolve against the same flat `meta.argTypes` object. If two sub-components have a prop with the same displayed name (e.g. both `bds-table-column` and `bds-table-column-group` have `label`/`info`, with different meanings), you cannot add a second `label`/`info` entry with a `name:` override to disambiguate them — that recreates the exact collision `include` is meant to solve.
+
+**Root cause**, read directly from the installed package (`node_modules/.pnpm/storybook@10.2.8*/node_modules/storybook/dist/_browser-chunks/chunk-2N4WE3KZ.js`, the real source behind `storybook/preview-api`'s `filterArgTypes`, which is what `<ArgTypes include={[...]}>` calls under the hood):
+
+```js
+filterArgTypes = (argTypes, include, exclude) => !include && !exclude ? argTypes : argTypes && pickBy(argTypes, (argType, key) => {
+  let name = argType.name || key.toString();
+  return !!(!include || matches(name, include)) && (!exclude || !matches(name, exclude));
+});
+```
+
+`include` matches against each entry's *resolved display name* (`argType.name`, falling back to the object key) — not the raw JS object key. Two entries that both resolve to the same name can never be selectively addressed by `include`, regardless of their underlying object keys. This is a structural Storybook constraint, not a bug in this codebase's usage. Also confirmed via `@storybook/addon-docs`'s `blocks.d.ts`: `ArgTypesProps` always resolves through `of` — there is no way to pass a raw, standalone `argTypes` object bypassing `meta`.
+
+**Fix — CSF3 per-story `argTypes` override.** A Storybook *story* (not just the shared `meta`) can declare its own local `argTypes` property (sibling to `parameters`/`render`) that merges over, and wins against, `meta.argTypes` for that one story's resolved context only — it does not mutate the shared object other stories/components read from.
+
+Applied for `bds-table-column-group` in `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts`: the `GroupedColumns` story declares its own `argTypes.label`/`argTypes.info` with group-specific descriptions. The MDX file then points its `bds-table-column-group` Properties block at that story, not at the whole module:
+
+```mdx
+<ArgTypes of={BdsTableStories.GroupedColumns} include={['label', 'info']} />
+```
+
+instead of `of={BdsTableStories}`. Verified live in Storybook: the `bds-table-column-group` table shows the group-specific descriptions, `bds-table-column`'s own table is unaffected, and there is no bleed-over in either direction.
+
 ### Canvas blocks
 
 Reference story exports by name. Optionally add `<Description of={...} />` before the Canvas to show the story's JSDoc comment:
@@ -340,6 +365,7 @@ Omit the table of contents for simple components with fewer than four sections.
 - **Never use `ColibriStoryMeta` / `ColibriStory`** — these are from a predecessor design system; the correct types are `BorealStoryMeta` / `BorealStory` from `@/types/stories`.
 - **Never omit `parameters` from the meta** — `BorealStoryMeta` makes it required; always include the `docs.source` block with `formatHtmlSource`.
 - **Never add a name to an MDX `<ArgTypes include={[...]}>` array without also adding a matching `argTypes` entry in `.stories.ts`** — see "MDX `include` completeness" above. This is the single most common way a documented-looking prop/event silently never renders.
+- **Never give two `argTypes` entries a matching resolved `name` (via a `name:` override or otherwise) expecting `include` to tell them apart** — `filterArgTypes` matches on resolved name across the whole shared `meta.argTypes` object, not per sub-component; see "MDX include name collisions across sub-components" above for the per-story `argTypes` override that actually resolves this.
 
 ---
 
