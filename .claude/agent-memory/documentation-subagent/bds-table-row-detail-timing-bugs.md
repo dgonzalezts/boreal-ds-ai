@@ -1,0 +1,20 @@
+---
+name: bds-table-row-detail-timing-bugs
+description: Two real (non-docs) timing bugs in bds-table's row-detail/bdsExpand feature, found via mandatory live-browser verification, and the story-level workarounds that make the demo reliable.
+metadata:
+  type: project
+---
+
+While writing the `Row Detail` / `Row Detail Virtualized` stories and MDX for `bds-table`'s `slot="row-detail"` + `bdsExpand` feature, visual verification via Playwright (per the "run `pnpm dev:docs` and visually confirm" rule in `documentation-knowledge`) surfaced two genuine implementation-level bugs in `bds-table.tsx`, not docs mistakes:
+
+**Bug 1 — `hasRowDetail` loses a race on first paint.** `bds-table` renders several real `<slot>` elements (`empty-state`, `row-actions`, `toolbar-actions`, `paginator`). Declaring even one native `<slot>` activates Stencil's non-shadow-DOM slot-relocation polyfill for the *entire* component, which processes every child bearing a `slot` attribute — including `<template slot="row-detail">`, even though `bds-table` has no matching `<slot name="row-detail">` (deliberate; the feature clones the template via JS instead). On the very first `render()` call, `hasRowDetail`'s check of `Array.from(this.el.children)` can run before the polyfill/DOM has settled, so the toggle column silently fails to render at all. Confirmed by forcing any later reactive re-render (e.g. reassigning `.data`) — the toggle then appears correctly. Repro is deterministic whenever `.data` is assigned synchronously right after element creation, which is the exact pattern used by every existing story in `bds-table.stories.ts` and is also a common real consumer pattern (e.g., a framework mounting the table and immediately setting props).
+
+**Bug 2 — `bdsExpand` fires before the detail row's DOM exists.** `toggleExpand()` emits `bdsExpand` synchronously, but the actual `<tr class="bds-table__tr-detail">` (and the cloned template content inside it) is created asynchronously via Stencil's next render commit (the `ref` callback that runs `applyRowDetail`). A `bdsExpand` listener that synchronously queries `[data-row-id="..."]` on the first expansion finds nothing. On the *second* expand it works, because the detail row stays mounted after first expansion (per spec). Symptom reported directly by a user testing the story: "first click shows only the header, closing shows an empty row, reopening shows content."
+
+**Story-level workarounds applied (documentation scope only — did not touch `bds-table.tsx`):**
+- Defer the initial `.data` assignment until `table.componentOnReady()` resolves (`table.componentOnReady().then(() => { table.data = [...] })`) — fixes bug 1. A single `requestAnimationFrame` was tried first and was *not* reliable (Stencil's own first render can be scheduled in the same frame).
+- Wrap the `bdsExpand` listener's DOM lookup/population logic in `requestAnimationFrame(() => { ... })` — fixes bug 2.
+
+Both fixes are visible in `RowDetail` and `RowDetailVirtualized` in `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts`.
+
+**Why this belongs in team memory too:** both races will affect real consumers, not just Storybook — synchronous `.data` assignment right after mount is extremely common, and a `bdsExpand` listener naively reading the DOM synchronously is the natural first thing anyone would write. Neither was caught by the merged unit tests, meaning `newSpecPage`-based tests do not reproduce Stencil's real non-shadow slot-relocation timing or the async render-commit gap between event emission and DOM mutation. Recommend flagging to frontend-subagent/testing-subagent: (a) `bds-table.tsx` should not rely on a single first-render read of `this.el.children` for `hasRowDetail` — re-check in `componentDidLoad` (or on a `MutationObserver`) and force an update if the template arrives late; (b) `applyRowDetail`'s DOM creation should ideally complete (or `toggleExpand` should defer the emit) before `bdsExpand` fires, so consumers don't have to know to defer their own listener logic.

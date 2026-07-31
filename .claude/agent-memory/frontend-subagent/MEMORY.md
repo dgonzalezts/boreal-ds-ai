@@ -1,5 +1,6 @@
 # Frontend Subagent — Per-Scope Memory Index
 
+- [bds-table detail-row collapse inner-wrapper fix (EOA-16000)](stencil-table-detail-row-collapse-inner-wrapper-fix.md) — padding-floor grid-collapse fix via new `.bds-table__detail-content-inner`; follow-up `&__tr-detail td { height: auto }` fix also applied for the residual `td{height:55px}` gap bug
 - [No shadow: false in decorator](feedback_no_shadow_false.md) — Omit `shadow` from `@Component` entirely; Stencil defaults to light DOM without it
 - [No @default tags in JSDoc](feedback_no_jsdoc_default.md) — TypeScript initializers are the authoritative default; `@default` tags duplicate them and can drift
 - [Render helper methods](feedback_render_helpers.md) — Extract `renderRegion()` private methods when `render()` has multiple structural sections
@@ -29,3 +30,9 @@
 - [Virtual table needs maxHeight to bound DOM](stencil-virtual-table-needs-maxheight-to-bound-dom.md) — without a bounded `.bds-table__wrapper` (via `maxHeight`), the virtualizer's window equals full content height and renders nearly all rows anyway; always set `max-height` when manually verifying bounded `<tr>` counts
 - [Pure-reorder verification technique](feedback_pure_reorder_verification_technique.md) — script-driven line-range extraction + assert checks + sorted-diff + before/after real test run, for large no-logic-change class member reorders
 - [CLAUDE.md overrides jsdoc-template.md silence on internal JSDoc](feedback_claude_md_no_internal_jsdoc.md) — "JSDoc on exported public API only" means strip ALL `/** */` from `@State()`/`@Element()`/private methods/render helpers, but only when the user directs it explicitly (not a default); apply once confirmed for the task at hand
+- [Internal types belong in types/ folder](feedback_internal_types_in_types_folder.md) — even non-exported, implementation-only types (e.g. a virtualizer flat-row-entry union) go in types/IComponent.ts, never declared inline in the .tsx
+- [forceUpdate race fix](stencil-forceupdate-race-fix.md) — `forceUpdate(this)` from componentDidLoad/MutationObserver fixes a first-paint light-DOM-read race invisible to newSpecPage (bds-table row-detail, EOA-16000)
+- [Defer event to componentDidRender](feedback_defer_event_to_componentDidRender.md) — queue an @Event's detail and flush it at the end of componentDidRender so listeners can synchronously query DOM a ref callback just created
+- [Descendant-selector false positive on "duplicate row" reports](feedback_descendant_selector_false_positive_bug_report.md) — compare direct-children count vs a broad descendant-selector count before touching render logic
+- [Scoped stencil dev server invocation](stencil-dev-server-direct-invocation.md) — `with-node.sh bash -c 'cd packages/boreal-web-components && exec node_modules/.bin/stencil build --dev --watch --serve --port N'` avoids the heavy monorepo turbo dev pipeline
+- [mock-doc template.content vs childNodes](stencil-mockdoc-template-content-vs-childnodes.md) — `appendChild` on a mock `<template>` writes to `childNodes`, only `innerHTML` populates `.content`; use this to fixture the React/Vue "template children don't populate .content" bug in tests (bds-table row-detail empty-content warning, EOA-16000 follow-up)

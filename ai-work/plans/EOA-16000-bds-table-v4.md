@@ -1,7 +1,7 @@
 ---
 ticket: EOA-16000
 component: bds-table
-status: pending
+status: in progress
 created: 2026-07-29
 ---
 
@@ -47,7 +47,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss` | modify | 2, 4, 5, 6, 7, 8 |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/types/ITable.ts` | modify | 2 (`BdsExpandEventDetail`), 5 (`bdsColumnReorder`), 6 (`bdsColumnResize`), 8, 9, 10, 11, 12, 13 (new props) |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/utils/bds-table-utils.ts` | modify | 10 (range-index helper) |
-| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/utils/bds-table-cell-content-cache.ts` | new | 1 (used by 2, 3) |
+| `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/utils/CellContentCache.ts` | new | 1 (used by 2, 3) |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/helpers/bds-table-skeleton.tsx` | modify | 13 (gate filter/layout skeleton) |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.expand.spec.ts` | new | 2 |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.utils.spec.ts` | modify | 1, 10 |
@@ -66,7 +66,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column-group/bds-table-column-group.tsx` | new | 4 |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column-group/types/ITableColumnGroup.ts` | new | 4 |
 | `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column-group/__test__/bds-table-column-group.basics.spec.ts` | new | 4 |
-| `packages/boreal-web-components/src/utils/constants/common/Icons.ts` | modify | 5 (drag-handle icon, verify existing chevron for 2) |
+| `packages/boreal-web-components/src/utils/constants/common/Icons.ts` | modify | 2 (verify existing expand/collapse chevron glyph — Task 5 needs no icon change, reuses `bds-icon-six-dots`, already shipped for `bds-card-header`) |
 | `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 |
 | `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.stories.ts` | modify | 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 |
 
@@ -98,7 +98,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 **Depends on:** none (pure refactor of already-shipped v3 code; sequenced first so Tasks 2 and 3 can both write into it)
 **Files:**
 
-- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/utils/bds-table-cell-content-cache.ts` (new)
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/utils/CellContentCache.ts` (new)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.utils.spec.ts` (modify — new direct tests of `CellContentCache`)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.formatter.spec.ts` (modify — confirm no behavior change)
@@ -111,7 +111,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 **Acceptance criteria:**
 
-- New `CellContentCache` class in `utils/bds-table-cell-content-cache.ts`:
+- New `CellContentCache` class in `utils/CellContentCache.ts`:
   ```typescript
   export class CellContentCache {
     private readonly nodes = new Map<string, { row: RowData; node: Node }>();
@@ -154,6 +154,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss` (modify — detail-row and expand-toggle styling)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/types/ITable.ts` (modify — `BdsExpandEventDetail`; `RowData` is unchanged, no `children` field needed)
+- `packages/boreal-web-components/src/styles/_interactions.scss` (modify — new `bds-transition-collapse` mixin, reused by a future collapse/accordion component)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.expand.spec.ts` (new)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.virtual.spec.ts` (modify — remeasure regression)
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (modify)
@@ -164,25 +165,44 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - **Re-scoped mid-planning, deliberately:** the ticket's original text ("tree-shaped `RowData` with a `children?: RowData[]` field") described nested child rows. A provided design reference instead showed a single full-width detail panel per row (checkbox + chevron + column cells on top, one full-width "Slot" region below when expanded) — a master-detail pattern, not a tree. This task implements that: `RowData` stays `Record<string, unknown>`, entirely unchanged. This simplifies the feature substantially: there is no cascading-vs-independent selection question (the detail panel is not a row in `bds-table`'s selection model at all), no tree-aware sort requirement, and no indentation/depth CSS.
 - A `<template slot="row-detail">` declared once as a **direct child of `<bds-table>` itself** (not per-column, not per-row) is the row-detail content source, read via the same "read a light-DOM child once, cache by key" pattern as `footerNode()`: a private `rowDetailTemplate` getter — `Array.from(this.el.children).find(child => child.tagName === 'TEMPLATE' && child.getAttribute('slot') === 'row-detail')`.
 - `hasRowDetail` getter is `true` when `rowDetailTemplate` is present. When true, **every** row renders an expand/collapse toggle — there is no per-row gating in this task's scope (e.g. no `isRowExpandable`); if a future need arises to exclude specific rows from expansion, that is a small, separately-scoped follow-up, not built speculatively here.
-- Expanding a row clones `rowDetailTemplate.content` through the shared `_cellContentCache` from Task 1, keyed `` `detail:${rowId}` ``, with the same row-identity guard already proven correct for the formatter path — reusing the exact mechanism Task 3 also uses for per-cell templates, rather than inventing a third caching path. The cloned fragment's root element receives the row's data stamped as `data-*` attributes, the same convention Task 3 uses, so consumer markup/listeners inside the detail template can read `element.dataset`.
+- Expanding a row clones `rowDetailTemplate.content` through the shared `_cellContentCache` from Task 1, keyed `` `detail:${rowId}` ``, with the same row-identity guard already proven correct for the formatter path — reusing the exact mechanism Task 3 also uses for per-cell templates, rather than inventing a third caching path. The cloned fragment's root element receives the row's data stamped as `data-*` attributes, the same convention Task 3 uses, so consumer markup/listeners inside the detail template can read `element.dataset`. **In addition, `bdsExpand`'s event detail carries the full `row` object** (see event shape below) — MUI's own reference example (`Collapse` + nested `<Table>` built from `row.history`, a nested array field) can't be reproduced through `data-*` attributes alone, since HTML attributes can't carry array/object values. Passing the full row lets a consumer's own `bdsExpand` listener build and populate arbitrarily nested content (e.g. a mini sub-table) into the already-cloned template region themselves, without `bds-table` needing any new "nested renderable data" concept.
 - **Rendering:** when a row is expanded, a `<tr class="bds-table__tr-detail">` renders immediately after that row's own `<tr>`, containing one `<td colSpan={totalColumnCount}>` (leaf columns + checkbox column if `selectable` + this task's own expand-toggle column) wrapping the cloned content.
 - **Expand toggle isolation (locked decision):** the toggle is a dedicated `<td class="bds-table__td-expand">`, rendered only when `hasRowDetail` is true, positioned after the checkbox column (if `selectable`) and before the first data column. Its `<button>`'s `onClick` calls only `toggleExpand(rowId)` — it must never call `handleRowSelect`, verified via MUI's own bug history (`mui-x#3945`, where an identical leak — clicking a master-detail expand icon also selecting the row — was treated as a bug and fixed) rather than left to `rowClickSelects` (Task 12) to guard.
-- **Virtualizer remeasure:** since there's no tree to flatten, the existing flat row list is unaffected in shape — only each expanded row now conceptually occupies an extra slot for its detail `<tr>`. Add a `visibleFlatRows` getter that maps `sortedData` and inserts a synthetic `{ type: 'detail', rowId }` entry immediately after any `{ type: 'row', row }` entry whose row is expanded; `initVirtualizer`'s `count` and `syncVirtualizerOptions` read `visibleFlatRows.length` instead of `sortedData.length`. `toggleExpand(rowId)` updates `expandedRowIds` (changing `visibleFlatRows`), then explicitly calls `this.virtualizer?.measureElement(rowEl)` for the **toggled row's own** `<tr>` (tracked via a `_rowElRefs: Map<string, HTMLTableRowElement>` populated by the existing `ref` callback in `renderRow`), since the toggle can change that row's own rendered height too (e.g. chevron rotation reflow). The new detail `<tr>` itself is measured for free through the existing `renderVirtualRows` ref-based `measureElement` call, same as any other row entering the flat list.
+- **Chevron rotation:** reuses `_form-field-elements.scss`'s existing dropdown-chevron pattern verbatim — `@include bds-transition-action` (already transitions `transform`, `_interactions.scss:40-45`) on the toggle icon, plus `[aria-expanded='true'] .bds-table__td-expand-icon { transform: rotate(180deg); }` mirroring `_form-field-elements.scss:54-58`'s `&[aria-expanded='true'] ~ .#{$prefix}__actions .#{$prefix}__action--icon-right` rule. No new mixin needed for the chevron itself.
+- **Detail-panel reveal transition (non-virtualized mode only — confirmed):** in non-`virtual` mode, the detail `<tr>` stays mounted once a row is first expanded and toggles a `.is-expanded` class rather than being added/removed from the DOM outright, so the reveal can animate via a new `@mixin bds-transition-collapse` added to `_interactions.scss` (the `grid-template-rows: 0fr → 1fr` technique — no JS height measurement, works for arbitrary/dynamic content height, and is written generically enough for a future `bds-collapse`/accordion component to reuse verbatim):
+  ```scss
+  @mixin bds-transition-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+
+    > * {
+      overflow: hidden;
+    }
+
+    &.is-expanded {
+      grid-template-rows: 1fr;
+    }
+  }
+  ```
+  This wraps the content *inside* the `<td>` (a `<div>`), not the `<tr>`/`<td>` themselves, since CSS Grid track-sizing transitions don't apply to table-display elements directly. **In `virtual` mode, this task keeps the current instant show/hide** (detail `<tr>` added/removed outright as a synthetic virtualizer entry, no animation) — animating height while the virtualizer concurrently tracks that row's scroll position is a materially harder problem (continuous remeasurement mid-transition, not a single post-toggle `measureElement` call), and was explicitly scoped out rather than attempted speculatively. If a future ticket wants animated reveal under `virtual` too, it needs its own design pass.
+- **Virtualizer remeasure:** since there's no tree to flatten, the existing flat row list is unaffected in shape — only each expanded row now conceptually occupies an extra slot for its detail `<tr>`. Add a `visibleFlatRows` getter that maps `sortedData` and inserts a synthetic `{ type: 'detail', rowId }` entry immediately after any `{ type: 'row', row }` entry whose row is expanded; `initVirtualizer`'s `count` and `syncVirtualizerOptions` read `visibleFlatRows.length` instead of `sortedData.length`. `toggleExpand(rowId)` updates `expandedRowIds` (changing `visibleFlatRows`), then explicitly calls `this.virtualizer?.measureElement(rowEl)` for the **toggled row's own** `<tr>` (tracked via a `_rowElRefs: Map<string, HTMLTableRowElement>` populated by the existing `ref` callback in `renderRow`), since the toggle can change that row's own rendered height too (e.g. chevron rotation reflow). The new detail `<tr>` itself is measured for free through the existing `renderVirtualRows` ref-based `measureElement` call, same as any other row entering the flat list. This remeasure path is unchanged by the animated-reveal decision above, since `virtual` mode keeps the instant show/hide.
 - **Selection requires zero changes:** because the detail panel is not a row in `bds-table`'s data/selection model, `selectedRowIds`, `handleSelectAll()`, and `getSelectedRows()` need no modification in this task. Document in `bds-table.mdx` that content inside the detail slot is entirely consumer-owned, including any selection UI a consumer chooses to build inside it — `bds-table` has no awareness of it and does not count it toward `getSelectedRows()`.
 - Verify an existing chevron/expand icon is available in the icon set before wiring it (mirroring Task 5's own "verify the glyph exists" note) — reuse an existing icon (e.g. one already used by `bds-select`/`bds-accordion`-style disclosure affordances) rather than assuming one exists.
 
-**Documentation:** New story `Row Detail` (or `Expandable Rows`) in `bds-table.stories.ts` demonstrating `<template slot="row-detail">` against a realistic dataset (e.g. an order with line-items), with and without `virtual`+`maxHeight`. `bds-table.mdx` gets a new "Row expand/collapse" section documenting the `slot="row-detail"` contract, the `bdsExpand` event shape, and the explicit note that detail-slot content is entirely consumer-owned and never counted toward `getSelectedRows()`; its "Current limitations" row #1 is removed per the acceptance criteria below.
+**Documentation:** New story `Row Detail` (or `Expandable Rows`) in `bds-table.stories.ts`, deliberately modeled on the MUI Collapsible Table reference reviewed during planning: each row carries a nested array field (e.g. `row.history`, an order's line-items or a customer's transaction history), and the story's own `bdsExpand` listener reads `event.detail.row.history` to build and populate a small nested `<table>` inside the cloned `<template slot="row-detail">` region — demonstrating the full-row-payload pattern end-to-end, not just flat `data-*` stamped fields. Include a variant with and without `virtual`+`maxHeight`. `bds-table.mdx` gets a new "Row expand/collapse" section documenting the `slot="row-detail"` contract, the `bdsExpand` event shape (including the full `row` field and why it exists — nested/array fields can't be expressed as `data-*` attributes), an explicit callout that this pattern is *master-detail only* (one detail panel per row) and does **not** support MUI/simple-table-style recursive tree row grouping, and the existing note that detail-slot content is entirely consumer-owned and never counted toward `getSelectedRows()`. Its "Current limitations" row #1 is removed per the acceptance criteria below.
 
 **Acceptance criteria:**
 
 | Prop/State/Event | Type | Default | Description |
 |---|---|---|---|
 | `expandedRowIds` (State, private) | `Set<string>` | `new Set()` | Currently expanded row IDs |
-| `bdsExpand` (Event) | `EventEmitter<{ rowId: string; expanded: boolean }>` | — | Emitted on every toggle |
+| `bdsExpand` (Event) | `EventEmitter<{ rowId: string; expanded: boolean; row: RowData }>` | — | Emitted on every toggle, carrying the full row so consumers can populate nested/complex detail content (e.g. a sub-table from a nested array field) themselves |
 
 - A `<template slot="row-detail">` declared on `<bds-table>` enables an expand/collapse toggle on every row; omitting it renders the table exactly as today, with no toggle column at all (zero visual change for existing consumers).
-- Clicking the toggle expands/collapses that row's detail panel (a full-width `<tr class="bds-table__tr-detail">` immediately below it), emits `bdsExpand`, and never mutates `selectedRowIds`.
+- Clicking the toggle expands/collapses that row's detail panel (a full-width `<tr class="bds-table__tr-detail">` immediately below it), emits `bdsExpand` (with `rowId`, `expanded`, and the full `row`), and never mutates `selectedRowIds`.
 - The detail panel's cloned content is stamped with the row's data via `data-*` attributes, cached identically to Task 3's per-cell templates, so virtualized row recycling never leaks stale detail content onto the wrong row.
+- In non-`virtual` mode, the detail `<tr>` stays mounted after first expansion and animates open/close via the new `bds-transition-collapse` mixin (`.is-expanded` class toggling `grid-template-rows`); in `virtual` mode, the detail `<tr>` is added/removed instantly as a synthetic virtualizer entry, no animation.
 - Under `virtual`, expanding/collapsing correctly adjusts the virtualizer's `count` (accounting for the synthetic detail entry) and remeasures with no visible layout jump.
 - `bds-table.mdx`'s "Current limitations" row #1 is removed and replaced with documentation of `slot="row-detail"` usage.
 
@@ -190,20 +210,23 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 - No `template[slot="row-detail"]` present: no expand-toggle column renders at all (regression guard).
 - With the template present: every row renders a toggle button.
-- Clicking the toggle expands/collapses, renders/hides the detail `<tr>` immediately after the row, and emits `bdsExpand` with the correct `{ rowId, expanded }`.
+- Clicking the toggle expands/collapses, renders/hides the detail `<tr>` immediately after the row, and emits `bdsExpand` with the correct `{ rowId, expanded, row }` (including the full row object, not just its `id`).
 - Clicking the toggle button does not call `handleRowSelect` / does not change `selectedRowIds` (regression guard, including when `selectable` is also `true`).
 - The detail row's `<td colSpan>` matches the actual total rendered column count (varies with `selectable`).
 - Detail content is cloned per row via the shared cache, keyed `detail:${rowId}`, with correct row-identity-guard behavior (mirrors Task 1/3's cache tests).
-- Virtualized mode: expanding a row updates the virtualizer's `count` by one (the synthetic detail entry); the toggled row's `measureElement` is called on toggle (spy-asserted); scrolling/recycling never leaks one row's detail content into another's.
+- Non-virtualized mode: expanding a row adds the `.is-expanded` class (triggering the `bds-transition-collapse` reveal) rather than an instant DOM insert; the detail `<tr>` remains mounted after collapse (class removed, not the element).
+- Virtualized mode: expanding a row updates the virtualizer's `count` by one (the synthetic detail entry, added/removed instantly, no `.is-expanded` class involved); the toggled row's `measureElement` is called on toggle (spy-asserted); scrolling/recycling never leaks one row's detail content into another's.
 
 **Manual test** _(required — not waiveable)_:
 
 - Run `pnpm dev:components`; render `bds-table` with a `<template slot="row-detail">` (e.g. an order's line-items) both with and without `virtual`+`maxHeight`.
 - Validate:
-  - [ ] Given the row-detail template, when a row's toggle is clicked, then a full-width detail panel appears directly below it with the correct row's data, no layout jump.
+  - [ ] Given the row-detail template in non-virtualized mode, when a row's toggle is clicked, then the detail panel smoothly animates open (no snap), showing the correct row's data with no layout jump.
+  - [ ] Given the row-detail template in `virtual` mode, when a row's toggle is clicked, then the detail panel appears instantly (no animation), matching the documented virtual-mode exception.
   - [ ] Given `virtual` is enabled, when a row near the visible edge is expanded, then no rows overlap or jump after the toggle.
   - [ ] Given `selectable` is also enabled, when the toggle button is clicked (not the checkbox), then no row selection state changes.
   - [ ] Given the detail template contains its own interactive content (e.g. a mini checklist the consumer built), when interacted with, then `bds-table`'s own selection state is completely unaffected.
+  - [ ] Given a `bdsExpand` listener reading `event.detail.row` (including a nested array field), when a row expands, then the listener can populate a nested sub-table into the detail region using that data (confirming the full-row event payload works end-to-end).
   - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add row expand/collapse via master-detail slot"`
@@ -274,7 +297,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `bds-table-column-group` is configuration-only, matching `bds-table-column`'s own pattern: `@Prop() readonly label: string = ''`, renders `<Host style={{ display: 'none' }} />`. Groups are **two-level only** in this ticket's scope — a group contains `bds-table-column` leaves directly; nested groups are not supported.
 - `bds-table.tsx`'s column discovery switches from the flat `querySelectorAll('bds-table-column')` to a recursive walk of `Array.from(this.el.children)`, producing both: a `columnTree` (ordered list of `bds-table-column | bds-table-column-group` direct children, used only by header rendering) and the existing flattened `columns: HTMLBdsTableColumnElement[]` (leaf-only, unchanged shape — every other consumer of `this.columns` — cells, sort, footer, pin-offsets, skeleton — is unaffected).
 - The `MutationObserver` in `componentDidLoad` upgrades from `{ childList: true }` to `{ childList: true, subtree: true }`, since shallow mutation detection is blind to a `<bds-table-column>` being added/removed *inside* a `bds-table-column-group`.
-- **Header rendering:** when any group is present (`hasGroups`), `<thead>` renders two `<tr>`s: row 1 has one `<th colSpan={leafCount}>` per group plus, for any *ungrouped* top-level leaf column, a `<th rowSpan={2}>` spanning both rows; row 2 has the leaf `<th>` for every column that belongs to a group only. The `selectable` checkbox `<th>` also needs `rowSpan={2}` in this mode.
+- **Header rendering (corrected against Figma nodes [53:38140](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY29?node-id=53-38140) [grouped] and [53:42699](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY29?node-id=53-42699) [ungrouped baseline]):** the design does **not** use `rowSpan={2}` for ungrouped columns. In the grouped reference (a 4-col group, a 2-col group, 4 *ungrouped* columns positioned between them, then a 2-col group — groups can be interspersed with plain columns, not just trailing), row 1 shows a group-label bar only over the grouped ranges — nothing at all above the ungrouped columns, not a merged cell. Row 2 shows every column's own label at identical vertical alignment, including the ungrouped ones — confirming their label lives in row 2, not centered across both rows. When any group is present (`hasGroups`), `<thead>` renders two `<tr>`s: row 1 has one `<th colSpan={leafCount}>` per group, plus an **empty, borderless filler `<th>`** (no label, no background) for every ungrouped top-level column and for the `selectable` checkbox column if present; row 2 has a normal leaf `<th>` for **every** column, grouped or not — this is simpler than the original `rowSpan` design, not more complex, since every row-2 cell is now treated identically regardless of grouping.
 - **Width constraint (locked decision):** group header `<th>`s must never carry an explicit `width` — only leaf-row `<th>`s do, since `table-layout: fixed` only reads width from cells that actually appear in the sizing row. This must be an explicit, commented constraint in the header-group renderer, not an implicit omission.
 - `colSpan` per group = count of immediate `bds-table-column` children (two-level only, no recursive descendant counting needed).
 
@@ -287,7 +310,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 | `bds-table-column-group` | `label` | `string` | `''` | Group header text |
 
 - `<bds-table-column-group label="...">` wrapping one or more `<bds-table-column>` renders a correctly `colSpan`'d group header above the wrapped columns' own leaf headers, in a two-row `<thead>`.
-- Ungrouped top-level columns continue to render exactly as before (single-row header, `rowSpan={2}` when at least one group exists elsewhere in the table so the header grid stays rectangular).
+- Ungrouped top-level columns (and the `selectable` checkbox column) render an **empty, borderless filler `<th>` in row 1** and their normal label `<th>` in row 2 whenever at least one group exists elsewhere in the table — never a `rowSpan={2}` merged cell (confirmed against the Figma reference: ungrouped labels sit at row 2's baseline, not vertically centered across both rows).
 - No group `<th>` ever has an inline `width` style; only leaf `<th>`s do.
 - Adding/removing a `bds-table-column` inside an existing `bds-table-column-group` after initial mount is detected (via the upgraded `subtree: true` observer) and re-renders correctly.
 - Sorting, pinning, formatter/template cells, and footer rendering are all unaffected by grouping (leaf `columns` array is unchanged in shape).
@@ -295,7 +318,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 **Unit tests to cover:**
 
-- A table with one group + two ungrouped columns renders a two-row `<thead>` with correct `colSpan`/`rowSpan` values.
+- A table with one group + two ungrouped columns renders a two-row `<thead>` with a correctly `colSpan`'d group `<th>`, empty filler `<th>`s in row 1 above the ungrouped columns (not `rowSpan`), and a leaf `<th>` for every column in row 2.
+- A group positioned between two ungrouped columns (not just trailing) renders correctly — groups and plain columns can be interspersed in any order, matching the Figma reference's 4-group / 2-group / 4-ungrouped / 2-group layout.
 - The group `<th>` has no `width` style even when its child columns individually specify `width`.
 - Adding a `bds-table-column` to a `bds-table-column-group` after mount (simulating the `MutationObserver` firing) is picked up and re-renders.
 - `columns` (flat leaf array) is unaffected by grouping — sort/pin/footer/formatter tests from other spec files continue to pass with a grouped table fixture.
@@ -305,7 +329,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 - Run `pnpm dev:components`; render `bds-table` with a mix of one `bds-table-column-group` (2 leaf columns) and 2 ungrouped columns, some pinnable/sortable.
 - Validate:
-  - [ ] Given the grouped table, when rendered, then the group header correctly spans its two leaf columns and ungrouped columns' headers correctly span both header rows with no visual gap or misalignment.
+  - [ ] Given the grouped table, when rendered, then the group header correctly spans its two leaf columns, and ungrouped columns show an empty row-1 cell with their label sitting at row 2's baseline — vertically aligned with every other column's row-2 label, not centered across both rows.
   - [ ] Given a pinned column exists inside a group, when scrolled horizontally, then its offset still computes correctly across the two-row header.
   - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
@@ -320,12 +344,11 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 **Files:**
 
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.tsx` (modify)
-- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss` (modify — drag-handle/Move-button styling, drop-target highlight)
+- `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/bds-table.scss` (modify — reorder-handle styling, drop-target highlight)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/types/ITable.ts` (modify — `BdsColumnReorderEventDetail`)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column/bds-table-column.tsx` (modify — `reorderable` prop)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column/types/ITableColumn.ts` (modify)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table-column/__test__/bds-table-column.basics.spec.ts` (modify)
-- `packages/boreal-web-components/src/utils/constants/common/Icons.ts` (modify — add a drag-handle icon constant)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.reorder.spec.ts` (new)
 - `packages/boreal-web-components/src/components/data-visualization/bds-table/bds-table/__test__/bds-table.pin-offsets.spec.ts` (modify — reorder+pin regression)
 - `apps/boreal-docs/src/stories/data-visualization/bds-table/bds-table.mdx` (modify)
@@ -333,38 +356,42 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 **Context:**
 
+- **Design corrected against two verified sources, not the originally-cited AG Grid/Fluent UI precedent:** (1) the Figma `_Header` component (node [2:47879](https://www.figma.com/design/XIpn2Us0GpDNUxB1D2BY29?node-id=2-47879)) defines a single `buttonReorder` boolean that renders exactly one icon, layer-named "Order," glyph `chevron-up-down` — never two Move-left/right buttons; (2) this codebase already ships an equivalent pattern on `bds-card-header.tsx` (`reorder: boolean` prop, `bds-icon-six-dots` glyph, `role="button"`/`tabIndex`/`KeyboardController`-driven `Enter`/`Space`, native `draggable` armed only for the duration of a press gesture via the `bdsReorderCard` event). `bds-table`'s reorder handle now mirrors `bds-card-header`'s exact shape rather than inventing a new one, with one deliberate addition (see below) since `bds-card-header` itself has no solved keyboard-move mechanism — its `Enter`/`Space` path only re-arms `draggable`, it doesn't move anything, because `bds-card` delegates all actual reordering to consumer script. `bds-table` can't delegate that way — it owns `columnOrder` itself — so this gap has to be closed here, not copied as-is.
 - New per-column opt-in `@Prop() readonly reorderable: boolean = false` on `bds-table-column` (matching the existing `sortable`/`pinnable` per-column boolean convention rather than a table-level flag).
 - `@State() private columnOrder: string[] = []`, initialized from `this.columns.map(c => c.colKey)` in `componentDidLoad`. Add an `orderedColumns` getter that maps `columnOrder` back to live `HTMLBdsTableColumnElement`s and appends any column not yet present in `columnOrder` (self-healing against dynamically added/removed columns). `renderHeader`, `renderRow`, `renderFooterCell`, and `skeletonColumns` all iterate `orderedColumns` instead of `this.columns` directly (`this.columns.length` — used for `colSpan` math — is unaffected by order).
-- **Pinned columns excluded from drag targets (locked decision):** `<th draggable={col.reorderable && !isPinned}>`; `onDragOver`/`onDrop` handlers are only attached to non-pinned, `reorderable` `<th>`s, so a pinned column's `<th>` is never a valid drop target either. This exclusion must read `col.pinnable` **regardless of `pinDirection`** (Task 7), so right-pinned columns (once that task lands) are excluded too — confirm during implementation rather than assuming it falls out for free.
-- **Keyboard fallback — explicit Move left/right buttons, not a bare shortcut (locked decision):** each reorderable `<th>` renders a drag-handle icon plus two small icon `<button>`s (`aria-label="Move column left"` / `"Move column right"`) next to the sort/pin action icons in `${PREFIX}__th-actions`. Each button is disabled at the boundary of the reorderable range and, on click, swaps the column with its adjacent reorderable neighbor in `columnOrder` and emits `bdsColumnReorder`. This exists because no ARIA-blessed keyboard equivalent for native HTML5 DnD exists (`aria-grabbed`/`aria-dropeffect` are deprecated; there is no APG reorder pattern) — verified against MDN/W3C APG during scoping, matching AG Grid/Fluent UI DetailsList precedent (both pair drag with an explicit discoverable control rather than a hidden shortcut alone).
-- Native DnD: `handleDragStart` sets `e.dataTransfer.setData('text/plain', col.colKey)` + `effectAllowed = 'move'`; `handleDragOver` calls `e.preventDefault()` (required to allow a drop) and may add a drop-target highlight class; `handleDrop` reads the source `colKey` from `dataTransfer`, computes the new `columnOrder` with the source moved to the target's position, and emits `bdsColumnReorder: EventEmitter<{ order: string[] }>` with the **full** column order (including non-reorderable/pinned columns), same event for both the native-drop and Move-button paths.
-- Verify the icon-font actually contains a drag-handle glyph before wiring `ICONS.DragHandle` — if none exists, fall back to an existing icon rather than referencing a non-existent class.
-- **Known UX note, not a blocker:** `draggable="true"` disables normal text selection within the `<th>` (Alt+drag restores it) — document as a minor known behavior.
+- **Reorder handle — single icon, always visible, matching `bds-card-header` (locked decision, revised):** each reorderable `<th>` renders exactly one `<i class="bds-table__reorder-icon bds-icon-six-dots" role="button" tabIndex={0}>` next to the sort/pin action icons in `${PREFIX}__th-actions` — no separate Move-left/Move-right buttons. Visibility is gated by `reorderable` alone (`visibility: hidden` when not reorderable, matching `bds-card-header`'s own show/hide convention), **not** by hover — a hover-only reveal would make the handle undiscoverable on touch devices, which have no hover state at all; this differs deliberately from Task 6's resize handle, which is a transient per-interaction affordance rather than a persistent structural control.
+- **Native DnD, press-scoped arming (revised to match `bds-card-header`'s pattern):** the `<th>` itself is **not** unconditionally `draggable` whenever `reorderable`. Instead, `onMouseDown` on the six-dot icon sets `draggable = true` on the parent `<th>` (mirroring `bds-card-header`'s `bdsReorderCard`-driven `card.draggable = true`/`false` arming exactly), and it's reset to `false` on `dragend`/`drop`. This avoids accidentally arming a drag from clicking anywhere else in the header cell (e.g. its sort/pin icons or title text) — a precision improvement over unconditionally-draggable `<th>`s. `handleDragStart` sets `e.dataTransfer.setData('text/plain', col.colKey)` + `effectAllowed = 'move'`; `handleDragOver` calls `e.preventDefault()` (required to allow a drop) and may add a drop-target highlight class; `handleDrop` reads the source `colKey` from `dataTransfer`, computes the new `columnOrder` with the source moved to the target's position, and emits `bdsColumnReorder: EventEmitter<{ order: string[] }>` with the **full** column order (including non-reorderable/pinned columns).
+- **Keyboard — `Enter`/`Space` wiring reused from `bds-card-header`, `ArrowLeft`/`ArrowRight` added as new behavior (locked decision):** the six-dot icon is wired via the same `KeyboardController` utility `bds-card-header` already uses. `Enter`/`Space` on the focused icon are kept for consistency (announce/confirm interaction, no-op beyond that here since there's nothing to "arm" further) but the actual move is driven by `ArrowLeft`/`ArrowRight` on the same focused element, swapping the column with its adjacent reorderable neighbor in `columnOrder` and emitting `bdsColumnReorder` — same event, same payload shape, as the native-drop path. This is new behavior beyond what `bds-card-header` does today, since nothing in this codebase (or AG Grid, or Fluent UI, per the earlier research) has a solved keyboard-move mechanism to copy; `bds-table` can close this gap because, unlike `bds-card`, it owns the list being reordered and can execute a well-defined move immediately, without needing a consumer script in between.
+- **Pinned columns excluded from drag targets (locked decision, unchanged):** `onDragOver`/`onDrop` handlers (and `ArrowLeft`/`ArrowRight` moves) are only enabled for non-pinned, `reorderable` `<th>`s, so a pinned column's `<th>` is never a valid drop target either. This exclusion must read `col.pinnable` **regardless of `pinDirection`** (Task 7), so right-pinned columns (once that task lands) are excluded too — confirm during implementation rather than assuming it falls out for free.
+- **Known UX note, not a blocker:** `draggable="true"` (while armed) disables normal text selection within the `<th>` (Alt+drag restores it) — document as a minor known behavior.
 - **Cross-browser `<th>` + `position: sticky` interaction — flagged, not assumed safe:** no authoritative documentation confirms native `<th>`-specific DnD behaves identically across browsers combined with sticky-pinned columns. This task's manual-test step must include cross-browser verification (Chrome + Firefox + Safari), not just a single-browser pass.
-- **Open interaction with Task 4 (grouping) — flagged for confirmation, not silently decided:** a `bds-table-column-group`'s `colSpan` is computed from its *light-DOM* children count/order, which `columnOrder` does not touch. Dragging a leaf column out of its group's DOM containment would desynchronize the group header's `colSpan` from the rendered leaf order underneath it. **Recommended default: grouped columns (any leaf that is a child of a `bds-table-column-group`) are excluded from `reorderable` drag targets and Move buttons, the same treatment as pinned columns** — only top-level (ungrouped) columns are reorderable in this ticket. Confirm this default during execution before building; reordering *within* a group needs its own design pass and should be a follow-up task, not absorbed silently here.
+- **Open interaction with Task 4 (grouping) — flagged for confirmation, not silently decided:** a `bds-table-column-group`'s `colSpan` is computed from its *light-DOM* children count/order, which `columnOrder` does not touch. Dragging a leaf column out of its group's DOM containment would desynchronize the group header's `colSpan` from the rendered leaf order underneath it. **Recommended default: grouped columns (any leaf that is a child of a `bds-table-column-group`) are excluded from `reorderable` drag targets, the same treatment as pinned columns** — only top-level (ungrouped) columns are reorderable in this ticket. Confirm this default during execution before building; reordering *within* a group needs its own design pass and should be a follow-up task, not absorbed silently here.
+- **Future opportunity, not built now:** the six-dot handle's render markup + `KeyboardController` wiring + press-scoped `draggable` arming is structurally identical to `bds-card-header`'s own implementation. A future ticket could extract a shared `ReorderHandleController` (or similar) reusable by both components — deliberately not attempted in this ticket, since `bds-card-header` is an already-shipped, released component and touching it here would be scope creep on a `bds-table`-scoped plan. Building `bds-table`'s handle to mirror the existing shape now keeps that future extraction close to mechanical.
 
-**Documentation:** New story `Reorderable Columns` in `bds-table.stories.ts` with 4+ `reorderable` columns (one pinned, one inside a `bds-table-column-group` if Task 4's default holds), demonstrating both native drag/drop and the Move-left/Move-right buttons; wire `bdsColumnReorder` to the Storybook Actions panel. `bds-table.mdx` gets a new "Column reorder" section documenting `reorderable`, the pinned/grouped exclusion, and the keyboard fallback rationale; its "Current limitations" row for reorder is removed.
+**Documentation:** New story `Reorderable Columns` in `bds-table.stories.ts` with 4+ `reorderable` columns (one pinned, one inside a `bds-table-column-group` if Task 4's default holds), demonstrating both native drag/drop and `ArrowLeft`/`ArrowRight` keyboard reordering; wire `bdsColumnReorder` to the Storybook Actions panel. `bds-table.mdx` gets a new "Column reorder" section documenting `reorderable`, the pinned/grouped exclusion, and the keyboard interaction; its "Current limitations" row for reorder is removed.
 
 **Acceptance criteria:**
 
 | Prop/Event | Type | Default | Description |
 |---|---|---|---|
-| `bds-table-column.reorderable` (Prop) | `boolean` | `false` | Opts the column into drag/drop + Move left/right reordering |
-| `bdsColumnReorder` (Event) | `EventEmitter<{ order: string[] }>` | — | Emitted after a successful drop or Move-button click, with the full new colKey order |
+| `bds-table-column.reorderable` (Prop) | `boolean` | `false` | Opts the column into drag/drop + keyboard reordering via its six-dot handle |
+| `bdsColumnReorder` (Event) | `EventEmitter<{ order: string[] }>` | — | Emitted after a successful drop or `ArrowLeft`/`ArrowRight` move, with the full new colKey order |
 
-- Reorderable, non-pinned, non-grouped `<th>`s are draggable and show a drag-handle icon plus Move-left/Move-right buttons.
-- Dropping a dragged column onto another reorderable `<th>` reorders `columnOrder`, re-renders header/body/footer cells in the new order, and emits `bdsColumnReorder`.
-- Move-left/Move-right buttons perform the same reorder via click, are keyboard-operable (native `<button>`), and are disabled at the reorderable range's boundaries.
-- Pinned columns (either direction) and grouped-leaf columns are never draggable and never valid drop targets.
+- Reorderable, non-pinned, non-grouped `<th>`s show exactly one `bds-icon-six-dots` handle (always visible when `reorderable`, never hover-gated) — no additional Move buttons.
+- Pressing (mouse) the handle arms `draggable` on the `<th>` for the duration of that gesture only; dropping a dragged column onto another reorderable `<th>` reorders `columnOrder`, re-renders header/body/footer cells in the new order, and emits `bdsColumnReorder`; `draggable` resets to `false` on `dragend`/`drop`.
+- Focusing the handle and pressing `ArrowLeft`/`ArrowRight` swaps the column with its adjacent reorderable neighbor and emits `bdsColumnReorder`, identical payload shape to the drop path.
+- Pinned columns (either direction) and grouped-leaf columns are never draggable, never valid drop targets, and their handles (if rendered) do not respond to `ArrowLeft`/`ArrowRight`.
 - Pin-offset computation (`updatePinnedColumnOffsets`) continues to compute correct offsets after a reorder, with no code change to that method itself.
 - `bds-table.mdx`'s "Current limitations" row for column reorder is removed.
 
 **Unit tests to cover:**
 
-- A `reorderable` column is `draggable`; a non-`reorderable` column is not.
+- A `reorderable` column renders exactly one `bds-icon-six-dots` handle, always visible (not hover-gated); a non-`reorderable` column renders none.
+- `<th>` is not `draggable` until the handle receives `mousedown`; it becomes `draggable` at that point and resets to non-`draggable` on `dragend`.
 - Simulated `dragstart`/`dragover`/`drop` between two reorderable columns updates render order and emits `bdsColumnReorder` with the correct full order.
-- Move-left/Move-right buttons swap adjacent reorderable columns and emit `bdsColumnReorder`; boundary buttons are `disabled`.
-- A pinned column is never `draggable`, and dropping onto it is a no-op.
+- `ArrowLeft`/`ArrowRight` on a focused handle swap adjacent reorderable columns and emit `bdsColumnReorder`; boundary positions are no-ops (no event, no state change).
+- `Enter`/`Space` on a focused handle do not error and do not change `columnOrder` (parity check against `bds-card-header`'s own `Enter`/`Space` handling, confirming it's retained but inert beyond arming).
+- A pinned column never renders an armable handle, and dropping onto it is a no-op.
 - Reorder + pinning together: after reordering, `updatePinnedColumnOffsets` still computes correct `left` offsets matching the new rendered order (regression test added to `bds-table.pin-offsets.spec.ts`).
 - A dynamically added column (after initial `componentDidLoad`) appends to the end of `columnOrder` via the self-healing `orderedColumns` getter.
 
@@ -372,13 +399,14 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 - Run `pnpm dev:components`; render `bds-table` with 4+ `reorderable` columns, at least one pinned and (if Task 4's confirmed default holds) one inside a `bds-table-column-group`.
 - Validate:
-  - [ ] Given two reorderable columns, when one is dragged and dropped on the other, then column order updates correctly across header, body, and footer, and `bdsColumnReorder` fires with the correct order.
-  - [ ] Given a reorderable column, when its Move-right button is clicked repeatedly, then it moves one position at a time until reaching the boundary, where the button becomes disabled.
+  - [ ] Given two reorderable columns, when one is dragged (via its six-dot handle) and dropped on the other, then column order updates correctly across header, body, and footer, and `bdsColumnReorder` fires with the correct order.
+  - [ ] Given a reorderable column, when its handle is focused via Tab and `ArrowRight` is pressed repeatedly, then it moves one position at a time until reaching the boundary, where further presses are a no-op.
+  - [ ] Given a touch device (or Chrome DevTools touch emulation), when no hover is available, then the six-dot handle is still visible and usable (confirms the always-visible, non-hover-gated decision).
   - [ ] Given a pinned column, when a drag is attempted over it, then it is not a valid drop target and pin offsets remain correct afterward.
   - [ ] Cross-browser check (Chrome, Firefox, Safari): drag reorder combined with a pinned `position: sticky` column behaves consistently in all three; note and file any divergence rather than assuming parity.
-  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then native drag/drop and the Move-left/Move-right buttons behave identically to the web-components version — no framework-specific regression (React's synthetic event system in particular is worth double-checking against native `dragstart`/`dragover`/`drop`).
+  - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then native drag/drop and `ArrowLeft`/`ArrowRight` keyboard reordering behave identically to the web-components version — no framework-specific regression (React's synthetic event system in particular is worth double-checking against native `dragstart`/`dragover`/`drop`).
 
-**Commit:** `git commit -m "feat(bds-table): EOA-16000 add column drag/drop reorder with Move left/right fallback"`
+**Commit:** `git commit -m "feat(bds-table): EOA-16000 add column drag/drop reorder via six-dot handle, mirroring bds-card-header"`
 
 ---
 
@@ -873,7 +901,10 @@ One item surfaced during exploration is flagged for confirmation rather than sil
 - Five selection refinements ship as five separate tasks (Tasks 8–12), not one combined task.
 - Row expand/collapse is a **master-detail slot** (`<template slot="row-detail">` on `<bds-table>`), not tree-shaped `children?: RowData[]` — re-scoped after review of a design reference. Selection is entirely unaffected by expansion (the detail panel is not a selectable row).
 - The expand/collapse toggle is structurally isolated from row selection in all cases, verified against MUI's own bug history (`mui-x#3945`).
-- Column reorder ships with explicit "Move left"/"Move right" icon buttons alongside native HTML5 DnD, since no ARIA-blessed keyboard equivalent exists for drag-and-drop (verified against MDN/W3C APG; AG Grid and Fluent UI DetailsList both pair drag with an explicit control).
+- `bdsExpand`'s event detail carries the full `row` object (not just `rowId`), so consumers can populate nested/complex detail content (e.g. a sub-table from a nested array field, matching MUI's own reference example) without any new `bds-table` API.
+- The detail-panel reveal animates via a new `bds-transition-collapse` mixin (`_interactions.scss`, `grid-template-rows: 0fr → 1fr`) in non-`virtual` mode only; `virtual` mode keeps the existing instant show/hide to avoid animating a row's height while the virtualizer concurrently tracks its position — confirmed as an explicit scope boundary, not an oversight.
+- Task 4's grouped-column header uses an **empty filler `<th>`** in row 1 for ungrouped columns (and the `selectable` checkbox column), not `rowSpan={2}` — corrected against Figma nodes `53:38140`/`53:42699`, whose ungrouped-column labels sit at row 2's baseline rather than centered across both header rows. Groups may also be interspersed between ungrouped columns (not just trailing), per the same reference (4-group / 2-group / 4-ungrouped / 2-group layout).
+- **RESOLVED:** Column reorder's original citation ("verified against... AG Grid and Fluent UI DetailsList both pair drag with an explicit control") was checked against real sources and found inaccurate — neither library uses inline Move-left/right buttons (AG Grid uses `Shift+←/→` on the focused header; Fluent UI uses a header context menu). Rather than adopt either external pattern, Task 5 now mirrors an **internal** precedent instead: `bds-card-header.tsx`'s already-shipped `reorder` prop (single `bds-icon-six-dots` handle, `role="button"`/`tabIndex`/`KeyboardController`-driven `Enter`/`Space`, press-scoped native `draggable` arming). This also matches the Figma `_Header` component (node `2:47879`), which defines exactly one `buttonReorder` icon, never two Move buttons. `ArrowLeft`/`ArrowRight` keyboard movement is added on top, since `bds-card-header` itself has no solved keyboard-move mechanism (its `Enter`/`Space` only re-arms dragging, it doesn't move anything) — this is new behavior `bds-table` needs and no internal or external precedent already solves, not something borrowed from elsewhere. The handle is always visible when `reorderable` (never hover-gated), since hover has no touch equivalent. A future ticket could extract a shared `ReorderHandleController` reusable by both `bds-card-header` and `bds-table` — not attempted in this ticket, since `bds-card` is an already-shipped, released component and refactoring it is out of this plan's scope.
 - The column resize handle is hover/focus-only visible, never always-rendered.
 - Pinned columns (either direction) are excluded from drag/reorder targets entirely.
 - Right-edge column pinning ships in this ticket via an additive `pinDirection: 'left' | 'right' = 'left'` prop (not a breaking change to `pinnable`), sharing Task 6's offset-recompute infrastructure.

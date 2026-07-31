@@ -21,7 +21,7 @@
 | [EOA-13696-bds-text-field-refactor.md](./EOA-13696-bds-text-field-refactor.md) | done | bds-text-field: Shared Utilities Refactoring + Suffix Slot |
 | [EOA-14935-bds-table-v2.md](./EOA-14935-bds-table-v2.md) | done | bds-table v2 High-Priority Limitations Implementation Plan |
 | [EOA-15507-bds-table-v3.md](./EOA-15507-bds-table-v3.md) | done | bds-table v3 — Dataset Mode, Column Footer, Server-Side/Loading, Virtualization, Guardrail |
-| [EOA-16000-bds-table-v4.md](./EOA-16000-bds-table-v4.md) | pending | bds-table v4 — Column Grouping, Drag/Drop Reorder, Resizing, Right-Edge Pinning, Row Expand/Collapse, Selection Refinements, Opt-in Toolbar |
+| [EOA-16000-bds-table-v4.md](./EOA-16000-bds-table-v4.md) | in | bds-table v4 — Column Grouping, Drag/Drop Reorder, Resizing, Right-Edge Pinning, Row Expand/Collapse, Selection Refinements, Opt-in Toolbar |
 | [EOA-8845-code-snippetformatter.md](./EOA-8845-code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
 | [EOA-8845-plop-implementation-plan.md](./EOA-8845-plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
 | [EOA-8845-shared-storybook-components.md](./EOA-8845-shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |
