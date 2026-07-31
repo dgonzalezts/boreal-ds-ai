@@ -94,7 +94,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 1: `bds-table` — extract shared cell-content cache
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none (pure refactor of already-shipped v3 code; sequenced first so Tasks 2 and 3 can both write into it)
 **Files:**
 
@@ -134,7 +134,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `CellContentCache.clear()` empties all entries.
 - Full existing formatter suite (`bds-table.formatter.spec.ts`) still passes with zero behavior changes.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render the existing formatter-driven "Status" pill column playground scenario used in v3.
 - Validate:
@@ -147,7 +147,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 2: `bds-table` — row expand/collapse via master-detail slot
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 1 (writes row-detail content through the shared `CellContentCache`)
 **Files:**
 
@@ -217,7 +217,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Non-virtualized mode: expanding a row adds the `.is-expanded` class (triggering the `bds-transition-collapse` reveal) rather than an instant DOM insert; the detail `<tr>` remains mounted after collapse (class removed, not the element).
 - Virtualized mode: expanding a row updates the virtualizer's `count` by one (the synthetic detail entry, added/removed instantly, no `.is-expanded` class involved); the toggled row's `measureElement` is called on toggle (spy-asserted); scrolling/recycling never leaks one row's detail content into another's.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with a `<template slot="row-detail">` (e.g. an order's line-items) both with and without `virtual`+`maxHeight`.
 - Validate:
@@ -235,7 +235,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 3: `bds-table-column` — custom cell content via `<template slot="cell">`
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 1 (writes into `CellContentCache`, does not build a second cache)
 **Files:**
 
@@ -265,7 +265,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Under virtualized scroll, recycling a `<tr>` to a different row re-clones the template content (not stale content from the previous row) — same regression style as the existing formatter identity-guard test.
 - A column with neither `formatter` nor a template still renders plain text via `toCellString`, unaffected.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; add a column with `<template slot="cell"><span class="badge" data-row-id></span></template>` styled/scripted to read `data-*` values.
 - Validate:
@@ -279,7 +279,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 4: `bds-table-column-group` — column grouping
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none
 **Files:**
 
@@ -325,7 +325,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `columns` (flat leaf array) is unaffected by grouping — sort/pin/footer/formatter tests from other spec files continue to pass with a grouped table fixture.
 - A table with zero groups renders the original single-row `<thead>` unchanged (regression guard).
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with a mix of one `bds-table-column-group` (2 leaf columns) and 2 ungrouped columns, some pinnable/sortable.
 - Validate:
@@ -339,7 +339,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 5: `bds-table` — column drag/drop reorder
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 4 (must render header cells consistently whether or not groups exist)
 **Files:**
 
@@ -395,7 +395,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Reorder + pinning together: after reordering, `updatePinnedColumnOffsets` still computes correct `left` offsets matching the new rendered order (regression test added to `bds-table.pin-offsets.spec.ts`).
 - A dynamically added column (after initial `componentDidLoad`) appends to the end of `columnOrder` via the self-healing `orderedColumns` getter.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with 4+ `reorderable` columns, at least one pinned and (if Task 4's confirmed default holds) one inside a `bds-table-column-group`.
 - Validate:
@@ -412,7 +412,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 6: `bds-table` — column resizing
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 5 (renders columns via `orderedColumns`; resize handles attach to the same rendered `<th>`s)
 **Files:**
 
@@ -461,7 +461,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Resize + pinning together: pin offsets remain correct after a resize (regression test added to `bds-table.pin-offsets.spec.ts`).
 - The resize handle has no visible/opacity-1 state by default (class/attribute assertion; visual opacity itself is a manual-test concern).
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with a `resizable` + pinned column combination, and one under `virtual`+`maxHeight`.
 - Validate:
@@ -477,7 +477,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 7: `bds-table-column` — right-edge column pinning
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 6 (shares the resize task's `ResizeObserver`-driven recompute callback; left- and right-pinned offset functions are invoked from the same observer callback)
 **Files:**
 
@@ -525,7 +525,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Right-pinned columns are excluded from drag targets (regression test alongside Task 5's existing left-pinned exclusion test).
 - Resizing a right-pinned column triggers the right-side recompute correctly.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with one left-pinned and one right-pinned column, plus resizing/reorder enabled on non-pinned columns.
 - Validate:
@@ -540,7 +540,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 8: `bds-table` — `selectAllPages`
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none (first of the five independent selection-refinement tasks)
 **Files:**
 
@@ -572,7 +572,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Header checkbox `checked`/`indeterminate` reflect the correct scope in both modes.
 - `data` mode is unaffected by the prop either way (regression guard).
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `rows` (30+ rows) + `bds-pagination` (`items-per-page="10"`), `selectable`.
 - Validate:
@@ -586,7 +586,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 9: `bds-table` — `rowSelectable`
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 8 (shares `selectAllScope`)
 **Files:**
 
@@ -615,7 +615,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Select-all skips non-selectable rows entirely (never added, excluded from the "all selected" count so the header checkbox can still show `checked` when every *selectable* row is selected).
 - No `rowSelectable` prop set: all rows behave exactly as before (regression guard).
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `rowSelectable={row => row.status !== 'locked'}` against a dataset with some `locked` rows.
 - Validate:
@@ -629,7 +629,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 10: `bds-table` — shift+range selection
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 9 (range fill must respect `rowSelectable`)
 **Files:**
 
@@ -667,7 +667,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - Cross-page range in `rows` mode: click a row on page 1, shift+click a row on page 2, all rows between (across both pages) become selected.
 - The range computation never calls any DOM query method (`querySelector`/`querySelectorAll`) — asserted via a spy on those methods staying uncalled during the range-select code path.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `selectable` and, separately, with `rows`+pagination for the cross-page case.
 - Validate:
@@ -682,7 +682,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 11: `bds-table` — `persistSelection`
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none (independent of Tasks 8–10; only touches `onDataChange`)
 **Files:**
 
@@ -712,7 +712,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 - `persistSelection={true}`: replacing `data` with a completely different page of rows does **not** clear `selectedRowIds`, even though none of the previously selected IDs exist in the new `data`.
 - `onRowsChange` clearing behavior is unaffected by this prop either way.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `data`+`serverSide`+`persistSelection`, simulating a page-2 fetch that replaces `data` entirely.
 - Validate:
@@ -725,7 +725,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 12: `bds-table` — `rowClickSelects`
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 9 (row-click selection must respect `rowSelectable`), Task 2 (expand toggle isolation must hold regardless of this prop's value, per the locked decision)
 **Files:**
 
@@ -761,7 +761,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 - Clicking the expand-toggle button (Task 2's dedicated cell) does not toggle row selection in either mode (explicit regression test for the locked isolation decision).
 - A non-selectable row (`rowSelectable` returns `false`) does not toggle via row-click even when `rowClickSelects` is `true`.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `selectable`, a formatter-rendered `<bds-button>` column, and expandable rows (Task 2), toggling `rowClickSelects`.
 - Validate:
@@ -776,7 +776,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 ## Task 13: `bds-table` — opt-in `filterable`/`columnLayoutToggle` toolbar props
 
-**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs)
+**Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none
 **Files:**
 
@@ -819,7 +819,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 - `loading={true}` with `filterable={true}`: the Filter button's skeleton placeholder renders instead of the real button; with `filterable={false}`, no skeleton for it renders either.
 - `hasToolbarRight` correctly reflects all four contributing conditions (`searchable`, `filterable`, `columnLayoutToggle`, slot content).
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:components`; render `bds-table` with `subheading` only (no other toolbar-right content), then add `filterable`/`columnLayoutToggle` combinations, then toggle `loading`.
 - Run `pnpm dev:docs`; open the `WithFilterDrawer` and `WithColumnVisibilityDropdown` stories.
@@ -836,7 +836,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 ## Task 14: Documentation-only additions — actions column, CSV export (replaces WithRefresh)
 
-**Executor:** @documentation-subagent (only — no component code changes)
+**Executor:** @documentation-subagent (only — no component code changes) then @qa-subagent (manual test)
 **Depends on:** none (pure Storybook-story additions; both build entirely on already-shipped v2/v3 capabilities)
 **Files:**
 
@@ -854,7 +854,7 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 - `WithRefresh` is renamed to `WithExport`; its Refresh button in `slot="toolbar-actions"` is replaced with an "Export CSV" button — the story retains only one slotted toolbar-actions element; clicking it downloads a CSV file reflecting the story's current in-memory `rows`.
 - `bds-table.mdx` cross-references `WithActionsColumn` from the existing `formatter` documentation as the canonical "interactive cell content" example, and updates any reference to `WithRefresh` to `WithExport`.
 
-**Manual test** _(required — not waiveable)_:
+**Manual test** _(required — not waiveable; executed by @qa-subagent)_:
 
 - Run `pnpm dev:docs`; open `WithActionsColumn` and the renamed `WithExport` story.
 - Validate:
