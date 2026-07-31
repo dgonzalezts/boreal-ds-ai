@@ -170,6 +170,7 @@ Every task in a plan must declare an `**Executor:**` field. Use this table to as
 | Unit tests (all spec files)                                      | `@testing-subagent`       |
 | Storybook story, MDX documentation                               | `@documentation-subagent` |
 | Framework output targets, build scripts, CI fixes, release steps | `@release-subagent`       |
+| Manual QA, React/Vue wrapper parity, live-browser verification   | `@qa-subagent`            |
 | Utility/config tasks with no component code                      | main thread (no executor) |
 
 ## Task Structure

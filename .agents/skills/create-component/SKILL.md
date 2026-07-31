@@ -18,6 +18,7 @@ description: Entry point for the full Boreal DS component SDLC. Sequences brains
 - Only tests are needed → invoke `@testing-subagent` directly
 - Only documentation is needed → invoke `@documentation-subagent` directly
 - Only a bug fix is needed → invoke `@frontend-subagent` directly with the issue
+- Only manual/cross-framework QA verification is needed → invoke `@qa-subagent` directly
 - A plan already exists → skip to Phase 3 only
 
 ---
@@ -76,6 +77,7 @@ Knowledge-keeper will classify the findings and write them to the appropriate ar
 | Only documentation needed     | Invoke `@documentation-subagent` directly |
 | Only tests needed             | Invoke `@testing-subagent` directly       |
 | Only implementation (no plan) | Invoke `@frontend-subagent` directly      |
+| Only manual/cross-framework QA needed | Invoke `@qa-subagent` directly    |
 
 ---
 
