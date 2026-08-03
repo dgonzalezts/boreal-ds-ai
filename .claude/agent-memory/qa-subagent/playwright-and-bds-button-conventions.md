@@ -1,8 +1,15 @@
 # Browser-automation conventions for this repo's manual QA
 
-## The Playwright browser instance may be shared with the user's own manual browsing
+## Use playwright-cli (Bash), not the Playwright MCP — it's disabled
 
-Always call `mcp__playwright__browser_tabs` with `action: "list"` **first**, before navigating or asserting anything. If a tab unexpectedly changes URL between your own actions, it's very likely the user browsing concurrently in the same shared browser (e.g. checking a Storybook story you just built), not a bug in what you're testing. Open a **dedicated new tab** via `action: "new"` and do all verification work in that one tab for the rest of the session — never assume a tab you didn't just navigate is still on the page you expect; re-check `Page URL` in every tool result.
+The Playwright MCP server is disabled (high token consumption). Drive the browser via
+the `playwright-cli` CLI over Bash instead (`@playwright/cli`, already installed
+globally). Use a named session per surface — `playwright-cli -s=web-components open ...`,
+`-s=react-app`, `-s=vue-app` — rather than a single shared browser instance. Sessions are
+separate browser processes, so there's no risk of the user's own manual browsing (e.g. a
+Storybook tab they have open) interfering with a run — no dedicated-tab workaround needed.
+Never assume a tab you didn't just navigate is still on the page you expect; re-check
+`Page URL` in every command's output, or run `playwright-cli -s=<name> tab-list`.
 
 ## `bds-button` swallows native `click`
 

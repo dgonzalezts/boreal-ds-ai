@@ -9,13 +9,13 @@
 - The dev server process is alive, `--watch` is running, and the server's HTTP response headers correctly say `cache-control: no-cache, no-store, must-revalidate, max-age=0` (so it is not a browser HTTP-caching problem either).
 - Restarting the dev server process (plain `kill` + `pnpm dev:components` again) does **not** fix it — the stale hashed chunk persists across restarts, because it survives in whatever `www/build/` output or `.stencil/` build cache the restarted process picks back up.
 
-The browser's `<script type="module">` entry actually resolves to the stale hashed filename, not the friendly-named one — so checking the friendly-named file (an easy thing to reach for, since it is stable and easy to `curl`) gives false confidence that the fix is live. Confirm what the browser is *actually* loading via `mcp__playwright__browser_network_requests` (or the Network tab) before trusting any content check against a differently-named file.
+The browser's `<script type="module">` entry actually resolves to the stale hashed filename, not the friendly-named one — so checking the friendly-named file (an easy thing to reach for, since it is stable and easy to `curl`) gives false confidence that the fix is live. Confirm what the browser is *actually* loading via `playwright-cli -s=<name> requests` (the Playwright MCP server is disabled; drive the browser via the `playwright-cli` Bash CLI, or the Network tab) before trusting any content check against a differently-named file.
 
 ## Repro Signature
 
 - A code fix is verified correct via `grep`/`cat` against the on-disk source and the "obvious" build output file, and the full unit test suite passes.
 - The live browser (including a freshly-navigated Playwright page, not just a stale tab) still exhibits the pre-fix behavior, repeatedly, across multiple reload attempts.
-- `mcp__playwright__browser_network_requests` (filtered to the component name) shows the actual `<script>`/dynamic-import request resolves to a **different filename** than the one being checked (a `p-[hash].entry.js` chunk, not the component's own `.entry.js`).
+- `playwright-cli -s=<name> requests` (filtered to the component name) shows the actual `<script>`/dynamic-import request resolves to a **different filename** than the one being checked (a `p-[hash].entry.js` chunk, not the component's own `.entry.js`).
 
 ## Fix
 

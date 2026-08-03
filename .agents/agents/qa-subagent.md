@@ -70,16 +70,33 @@ Any Boreal DS feature relying on a raw `<template>` light-DOM child (e.g. `bds-t
 **Before verifying any `<template>`-based feature in React/Vue, check this first**, e.g.:
 
 ```js
-document.querySelector('template[slot="row-detail"]').content.childNodes.length
+document.querySelector('template[slot="row-detail"]').content.childNodes.length;
 ```
 
-If it's `0` despite JSX/Vue-template children being written, that's the bug — not a fluke. The correct workaround for a consumer (and the thing to verify actually works, if this is confirmed) is populating `.content` imperatively via a ref/mounted-hook, e.g. `templateRef.current.innerHTML = '...'` (setting `.innerHTML` on a real `<template>` element *does* go through parser semantics and correctly populates `.content`), rather than relying on JSX/template children. If you confirm this limitation reproduces, report it clearly — it changes the React/Vue integration story for the feature and needs its own documentation callout, not a silent workaround.
+If it's `0` despite JSX/Vue-template children being written, that's the bug — not a fluke. The correct workaround for a consumer (and the thing to verify actually works, if this is confirmed) is populating `.content` imperatively via a ref/mounted-hook, e.g. `templateRef.current.innerHTML = '...'` (setting `.innerHTML` on a real `<template>` element _does_ go through parser semantics and correctly populates `.content`), rather than relying on JSX/template children. If you confirm this limitation reproduces, report it clearly — it changes the React/Vue integration story for the feature and needs its own documentation callout, not a silent workaround.
 
-## Playwright Browser Conventions
+## Browser Automation Conventions (playwright-cli)
 
-- **Always call `mcp__playwright__browser_tabs` with `action: "list"` first.** The browser instance may be shared with the user's own manual browsing (e.g. they may have Storybook open). If a tab unexpectedly navigates between your actions, that's very likely the user browsing concurrently, not a bug in your test — open your **own dedicated tab** via `action: "new"` and work only in that tab for the rest of the session.
-- Never assume a tab you didn't just navigate is still on the page you expect — re-check `Page URL` in each tool result.
-- Prefer `browser_evaluate` for precise DOM/timing assertions (heights, class lists, event payloads) over screenshots alone — screenshots are for visual confirmation, not the source of truth for pass/fail.
+The Playwright MCP server is disabled (high token consumption). Use the `playwright-cli` CLI via Bash instead — it's already installed globally (`@playwright/cli`). Load the `playwright-cli` skill at the start of any browser-driven QA task for the full command reference.
+
+- **Use one named session per surface** instead of juggling tabs in a shared browser:
+  `playwright-cli -s=web-components open http://localhost:3333`,
+  `playwright-cli -s=react-app open http://localhost:<port>`,
+  `playwright-cli -s=vue-app open http://localhost:<port>`.
+  Sessions are fully separate browser processes, so there's no risk of the user's own
+  manual browsing (e.g. Storybook open) interfering with your run — no need to detect
+  and dodge a shared tab.
+- Always pass the session flag consistently for a given surface
+  (`playwright-cli -s=react-app click e3`, not a bare `playwright-cli click e3` once
+  you have more than one session open) — a bare invocation targets the default session.
+- Check `Page URL` in each command's output (or run `playwright-cli -s=<name> tab-list`)
+  before assuming which page you're on.
+- Prefer `playwright-cli -s=<name> eval "<expr>" [target]` (add `--raw` when piping the
+  result) for precise DOM/timing assertions (heights, class lists, event payloads) over
+  screenshots alone — `playwright-cli -s=<name> screenshot` is for visual confirmation,
+  not the source of truth for pass/fail.
+- Close sessions when done: `playwright-cli -s=<name> close`, or `playwright-cli close-all`
+  to tear down every session at the end of a full three-surface run.
 
 ## `src/index.html` Playground Conventions
 
@@ -92,6 +109,7 @@ If it's `0` despite JSX/Vue-template children being written, that's the bug — 
 ## Reporting
 
 For every checklist item, report one of:
+
 - **Pass** — with the concrete evidence (measured value, screenshot, or DOM query result) that proves it, not just "looks fine."
 - **Fail** — with the exact repro steps and observed vs. expected values.
 - **Not verifiable in this environment** — state why (e.g. a framework-specific limitation you couldn't work around), rather than silently skipping it.
