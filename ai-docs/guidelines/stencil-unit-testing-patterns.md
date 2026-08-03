@@ -234,6 +234,28 @@ describe("bds-my-component basics", () => {
 
 ---
 
+## Simulating native drag/drop events
+
+Stencil's `newSpecPage` test environment (`@stencil/core/mock-doc`) does not define `DragEvent` or `DataTransfer` globally — `typeof DragEvent` and `typeof DataTransfer` are both `'undefined'`, unlike `KeyboardEvent`/`MouseEvent`/`Event`, which are available. `new DragEvent(...)` or `new DataTransfer()` throws `ReferenceError` immediately in a spec file.
+
+Use the shared helper — `src/utils/testing/mocks/dragDrop.ts`, resolved via `@/utils` — rather than hand-rolling this per spec file:
+
+```ts
+import { createDragDataTransferMock, createDragEvent } from '@/utils';
+
+const dataTransfer = createDragDataTransferMock();
+sourceTh.dispatchEvent(createDragEvent('dragstart', dataTransfer));
+targetTh.dispatchEvent(createDragEvent('dragover', dataTransfer));
+targetTh.dispatchEvent(createDragEvent('drop', dataTransfer));
+sourceTh.dispatchEvent(createDragEvent('dragend', dataTransfer));
+```
+
+Reuse the *same* `dataTransfer` instance across the whole `dragstart`/`dragover`/`drop`/`dragend` dispatch sequence so `setData` during `dragstart` is readable via `getData` during `drop` — mirrors real browser behaviour where a single `DataTransfer` is shared for the whole drag gesture.
+
+`event.target`/`event.currentTarget` still populate correctly on the plain `Event` this helper dispatches (standard `EventTarget` behaviour), so component code reading `(e.currentTarget as HTMLElement)` or `(e.target as HTMLElement).closest(...)` needs no special handling. See `.agents/memory/stencil-mock-doc-no-dragevent-datatransfer.md` for the full finding.
+
+---
+
 ## Child Component Prop Assertions
 
 When a child custom element is **not** listed in the `components` array of `newSpecPage`, Stencil treats it as an unknown HTML element and sets JSX props as JavaScript properties — not HTML attributes. `getAttribute` returns `null` even if the prop is set.
