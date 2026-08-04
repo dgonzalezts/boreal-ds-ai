@@ -546,6 +546,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add right-edge column pinning via pinDirection"`
 
+**Status:** ✅ done — implementation (`pinDirection` prop, `updatePinnedColumnOffsetsRight()`, five render sites made direction-aware, `data-pin-first` divider), unit tests (8 new tests across `pin-offsets`/`reorder`/`resize`/`extras` specs, 239/239 suites, 2625/2625 tests suite-wide passing), docs (new "Column pinning" anatomy section — pinning previously had none, unlike reorder/resize — plus extended `WithPinnedColumn` and a new `ResizableRightPinnedColumn` story, and the ticket's deferred open question marked resolved), and manual QA (web components + React + Vue parity) all verified. One real bug was found via manual testing and fixed mid-task, in code that predates this task: `updatePinnedColumnOffsets()`/`updatePinnedColumnOffsetsRight()` only ever *set* `style.left`/`style.right` on currently-pinned cells, never *cleared* it on unpin — invisible for three prior tasks because `th { position: relative }` is unconditional and every earlier manual test only ever unpinned the single outermost (offset-`0`) pinned column, where the stale leftover has no visible effect. Unpinning a *non-outermost* pinned column (e.g. pin Role then Actions right, unpin Role) exposed it: the stale `right: 120px` visibly displaced Role's header 120px left, overlapping Email's header by exactly that amount (confirmed via `getBoundingClientRect()`). Fixed by capturing outgoing `<th>` element references at write-time (avoiding a `data-col-key`-disappears-on-unpin trap) and clearing both `<th>` and `<td>` inline styles for any column that drops out of the pinned set, mirrored identically for both directions; covered by two new regression tests and confirmed live via Playwright.
+
 ---
 
 ## Task 8: `bds-table` — `selectAllPages`
@@ -592,6 +594,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add selectAllPages for cross-page select-all opt-in"`
 
+**Status:** ✅ done — implementation, unit tests (`bds-table.selection.spec.ts`, 25/25 passing incl. 6 new selectAllPages tests), docs (Select-all scope subsection, WithRowsPagination story toggle, performance warning callout), and manual QA (web components + React + Vue parity) all verified. Follow-up: simplified test helper to match existing patterns (removed `mountRowsSelectable`), fixed event name in playground docs (`selectedRowsChange`, not `bdsSelectedRowsChange`), added performance warning for large datasets.
+
 ---
 
 ## Task 9: `bds-table` — `rowSelectable`
@@ -634,6 +638,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
   - [ ] Given the same scenario rendered through the `boreal-react` and `boreal-vue` wrapper playgrounds, then behavior is identical to the web-components version — no framework-specific regression.
 
 **Commit:** `git commit -m "feat(bds-table): EOA-16000 add rowSelectable for conditional row selectability"`
+
+**Status:** ✅ done — implementation, unit tests (`bds-table.selection.spec.ts`, 29/29 passing incl. 4 new rowSelectable tests), docs (Conditional row selectability subsection, WithConditionalSelection story), playground examples (index.html, Vue App.vue, React App.tsx), and manual QA (web components + React + Vue parity) all verified.
 
 ---
 
