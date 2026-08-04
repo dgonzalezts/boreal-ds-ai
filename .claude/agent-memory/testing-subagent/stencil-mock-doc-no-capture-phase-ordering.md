@@ -1,0 +1,16 @@
+---
+name: stencil-mock-doc-no-capture-phase-ordering
+description: mock-doc dispatchEvent has no real capture-before-target ordering — dispatching a click directly on a child fires the child's own bubble-order listener before an ancestor's capture-phase listener runs
+metadata:
+  type: project
+---
+
+`@stencil/core/mock-doc`'s `dispatchEvent`/`triggerEventListener` (mock-doc/index.js) does not implement true two-phase (capture-then-bubble) propagation. It fires listeners starting at the exact node `dispatchEvent()` was called on, then walks up via `parentElement`, treating `{ capture: true }` and bubble-phase listeners identically — always target-first, then ancestors, regardless of the `capture` flag.
+
+**Why this matters:** a capture-phase listener registered on an ancestor (e.g. `_tableWrapperEl.addEventListener('click', handler, { capture: true })`, used in `bds-table` to stash `e.shiftKey` before a child `bds-checkbox`'s own click handler runs) will NOT fire before the target's own listeners in this test environment — the opposite of real-browser/jsdom semantics. If the target itself has a listener for the same event type (e.g. `bds-checkbox`'s `onClick={this.handleClick}` bound to its own host element), that listener runs first and any synchronously-emitted follow-on event (e.g. `bdsChange`) will see stale ancestor-capture state, since the ancestor capture listener hasn't run yet.
+
+**How to apply:** when a spec needs to simulate "some ancestor capture-phase listener already ran by the time a descendant's own click handler fires" (e.g. shift-click / modifier-key detection patterns), dispatch the triggering `click`/`keydown` event on a plain DOM ancestor within the target subtree that has no listener of its own (e.g. the `<td>` cell wrapping a `bds-checkbox`, not the `bds-checkbox` itself) — `e.target.closest(selector)` still matches since `.closest()` includes the element itself. This lets the ancestor's capture listener run (via the normal bubble walk) before you separately fire the child component's own custom event (e.g. `bdsChange`) to trigger the downstream handler. Verified in `bds-table.selection.spec.ts`'s `shiftClickCheckbox` helper (EOA-16000 Task 10, shift+range selection).
+
+**Extension — real activation on the target itself:** when the test also needs the target's own real controller to fire (e.g. proving `bds-checkbox`'s `KeyboardController` really activates on `Shift+Space`, not just checking the ancestor's capture state), dispatch the triggering event *twice*: once on the plain ancestor (seeds the ancestor's capture-derived state, e.g. `_pendingShiftKey`), then again directly on the actual target (drives its real listener/controller, e.g. `KeyboardController.attach(this.el)`, which synchronously emits real follow-on events like `bdsChange`). Neither dispatch is synthetic-event-type override — both are real `KeyboardEvent`s; only the two-dispatch split compensates for mock-doc's ordering gap. Verified end-to-end in `bds-table.selection.spec.ts` "selects the inclusive range when a real Shift+Space keydown activates the target checkbox after a normal click anchor" (EOA-16000, Shift+Space regression).
+
+See [[stencil-mock-doc-mouseevent-relatedtarget]] for a related mock-doc event-construction quirk.
