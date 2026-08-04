@@ -1,5 +1,8 @@
 # Frontend Subagent — Per-Scope Memory Index
 
+- [bds-table column resize pattern (EOA-16000 Task 6)](stencil-table-column-resize-pattern.md) — colgroup `<col>` is the actual resize target, not `<th>`; imperative DOM write before throttled state commit; ArrowLeft/Right dispatcher branching since KeyboardController holds one handler per key
+- [table-layout:fixed width:auto GRIDMIN floor bug (EOA-16000 resize fix)](stencil-table-layout-fixed-width-auto-gridmin-floor.md) — width:100% causes redistribution-inflation when all columns are explicit-width; width:auto "fixes" that but adds a real-browser-only min-content shrink floor invisible to jsdom; the real fix is an explicit calc()-summed table width
+- [react/vue example apps serve stale boreal-web-components code (EOA-16000)](example-apps-file-protocol-dep-staleness.md) — pnpm file: link + Vite caching didn't pick up a fresh stencil rebuild even after clearing node_modules/.vite; don't trust React/Vue example-app repros without an unambiguous freshness marker
 - [bds-table detail-row collapse inner-wrapper fix (EOA-16000)](stencil-table-detail-row-collapse-inner-wrapper-fix.md) — padding-floor grid-collapse fix via new `.bds-table__detail-content-inner`; follow-up `&__tr-detail td { height: auto }` fix also applied for the residual `td{height:55px}` gap bug
 - [No shadow: false in decorator](feedback_no_shadow_false.md) — Omit `shadow` from `@Component` entirely; Stencil defaults to light DOM without it
 - [No @default tags in JSDoc](feedback_no_jsdoc_default.md) — TypeScript initializers are the authoritative default; `@default` tags duplicate them and can drift
