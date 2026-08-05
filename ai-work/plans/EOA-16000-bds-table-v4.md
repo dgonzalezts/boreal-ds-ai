@@ -1,7 +1,7 @@
 ---
 ticket: EOA-16000
 component: bds-table
-status: in progress
+status: done
 created: 2026-07-29
 ---
 
@@ -704,6 +704,7 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 11: `bds-table` — `persistSelection`
 
+**Status:** ✅ done — implementation (`persistSelection` prop gating `onDataChange` selection clear), unit tests (4 new tests in `bds-table.selection.spec.ts`, 2659/2659 suite-wide passing), docs ("Selection persistence" subsection in Server-side mode, `WithServerSideMode` story extended with `persistSelection` toggle), and manual QA (web components + React + Vue parity, 12/12 checklist items) all verified.
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none (independent of Tasks 8–10; only touches `onDataChange`)
 **Files:**
@@ -747,6 +748,8 @@ Two things intentionally stayed out of scope after review: the responsive toolba
 
 ## Task 12: `bds-table` — `rowClickSelects`
 
+**Status:** ✅ done — implementation (`rowClickSelects` prop, `ROW_CLICK_EXCLUDED_SELECTOR` exclusion match, `handleRowClick` delegating to the existing `rowSelectable`-aware `handleRowSelect`), unit tests (9 new tests in `bds-table.selection.spec.ts`, 52/52 file-suite passing, 2668/2668 component-suite passing), docs, and manual QA (web components + React + Vue parity, all 6 checklist items) all verified.
+**Follow-up (same session, folded in before commit):** the docs were reworked after initial QA — `rowClickSelects` now has its own dedicated `RowClickSelection` story instead of being bolted onto `WithSelection` (which was reverted to its plain pre-Task-12 form), and a real bug was found and fixed in the new story's `slot="row-detail"` template: `data-notes` was on the template's own root element, but the lookup code (`detailRoot.querySelector('[data-notes]')`) only searches descendants, so the detail row always rendered blank — fixed by nesting `data-notes` on a child element, matching the already-working `RowDetail` story's pattern. This was a story-authoring bug, not a `bds-table.tsx` bug. Separately, all 6 of `bds-table.tsx`'s module-level constants (including `ROW_CLICK_EXCLUDED_SELECTOR`, restructured into an array joined once at module load) were extracted to a new `utils/constants.ts`, matching the sibling `bds-pagination` component's existing convention — full suite re-verified green (239 suites / 2668 tests) after the refactor.
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** Task 9 (row-click selection must respect `rowSelectable`), Task 2 (expand toggle isolation must hold regardless of this prop's value, per the locked decision)
 **Files:**
@@ -797,6 +800,12 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 ---
 
 ## Task 13: `bds-table` — opt-in `filterable`/`columnLayoutToggle` toolbar props
+
+**Status:** ✅ done — implementation (`filterable`/`columnLayoutToggle` props, individually-gated toolbar buttons + button-group wrapper, gated skeleton equivalents, new `hasToolbarRight` getter, and a necessary extension of the existing `hasToolbar` getter not explicitly named in the plan's acceptance criteria but required for them to hold), unit tests (44/44 in `bds-table.toolbar.spec.ts`, full suite 384/384 passing, 10 pre-existing tests fixed for the new opt-in defaults), docs (`WithToolbar` trimmed to generic chrome only, new `WithFilterDrawer`/`WithColumnVisibilityDropdown` stories, `bds-table.mdx` updated), and manual QA (all 5 checklist items, web components + React + Vue parity) all verified.
+**Follow-up (same session, found during docs/QA, fixed before considering the task done):** the `WithColumnVisibilityDropdown` story's dropdown originally used hand-rolled `getBoundingClientRect()` + manual `style.left/top` positioning, which broke specifically on the MDX Docs page (double-nested iframe context) — the dropdown rendered ~29,600px down the page, fully off-canvas. Root cause and fix confirmed independently by two agents: replaced the manual math with `bds-popover`'s own `setAnchorElement()` method (proper `managed`-mode floating-ui anchoring, already used internally by `bds-dropdown`), verified correctly anchored on the exact Docs-page path where the bug was found. A brief e2e-review note was added to `bds-table.mdx` documenting this finding.
+**Follow-up 2 (same session, found via user's own manual review after QA):** the toolbar-right area's corner rounding didn't correctly merge into a single seamless pill when `searchable` was combined with exactly one of `filterable`/`columnLayoutToggle` (the search-bar and the lone button rendered as two visually separate rounded pieces), and a `searchable`-only table always rendered the search-bar with its right side squared instead of fully rounded. Root cause: `bds-table.scss` unconditionally squared the search-bar's right corners assuming a button-group always sits beside it, and `bds-button-group.scss`'s own `:only-child` rule (a shared component, deliberately left untouched per the user's explicit instruction) hardcodes full rounding on a single-button group regardless of the `--bds-button-group-first-radius` override `bds-table.scss` was already trying to apply. Fixed entirely within `bds-table.scss` (no shared-component or rendering-logic changes): the search-bar's merged-radius vars and the button-group's first-radius override are now both scoped inside a combined `&:has(.bds-table__search-bar-slot):has(bds-button-group)` condition, plus a targeted `bds-button:only-child button` override (higher specificity, local to `bds-table.scss`) for the single-button-merged case. Verified across all 4 toolbar-control combinations via a new interactive toggle scenario added to `index.html` (checkboxes for `searchable`/`filterable`/`columnLayoutToggle`), alongside the 4 static case-demonstration tables already there.
+
+**Follow-up 3 (same session, found via user's own visual review of the Export story):** the vertical `bds-divider` preceding `slot="toolbar-actions"` content rendered even when the `bds-table__toolbar-table-actions` container (search bar / filter+column-vis buttons) was empty — i.e. `searchable`/`filterable`/`columnLayoutToggle` all false with only `toolbar-actions` slotted (e.g. `WithExport`), producing a stray divider with nothing to its left to divide from. Root cause: the divider's render condition (`bds-table.tsx`) only checked `hasToolbarActionsSlot && !loading`, never whether the left side had any content. Fixed by adding a `hasToolbarTableActions` getter (`searchable || filterable || columnLayoutToggle`) and gating the divider on it too; `hasToolbarRight` refactored to reuse the same getter (dedup only, no behavior change). Test coverage added in `bds-table.toolbar.spec.ts` (new "toolbar-actions divider gating" describe block: divider absent when all three flags are false, present when each is independently true) plus one pre-existing loading-transition test's fixture fixed to set `filterable="true"` since it had implicitly relied on the old always-on divider behavior. Full file: 48/48 passing.
 
 **Executor:** @frontend-subagent (implementation) then @testing-subagent (tests) then @documentation-subagent (docs) then @qa-subagent (manual test)
 **Depends on:** none
@@ -886,9 +895,16 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 **Commit:** `git commit -m "docs(bds-table): EOA-16000 add actions-column and CSV export story examples"`
 
+**Status:** ✅ done.
+
+- **Docs:** `WithActionsColumn` (bds-table.stories.ts:3116-3252) added between `BulkCustomAction` and `WithAddRow` — `formatter` on a `col-key="actions"` column renders edit/delete/duplicate icon-only `bds-button`s per row (chosen over `<template slot="cell">` after explicit tradeoff discussion: `formatter`'s closure over `row` avoids string-attribute lookups for the delete-splice and avoids dragging the React/Vue `<template>`-content caveat into what's meant to be the canonical framework-agnostic interactive-cell-content example). Each button dispatches a bubbling `rowAction` event; a single table-level listener filters `rows` on `delete`, `console.log`s on `edit`/`duplicate`. `WithRefresh` renamed to `WithExport` (bds-table.stories.ts:3393-3486) — single toolbar-actions button now downloads a CSV (`Blob` + temp `<a download>`) of the in-memory dataset. `bds-table.mdx`: `### Formatter` section cross-references the new `#row-actions-column` anchor; new `### Row actions column` entry added under "Common use cases" (after "Bulk custom action"); `### Refresh` renamed in place to `### Export`. No component source files touched (confirmed via `git diff --stat`).
+- **QA:** all 3 manual-test items passed with concrete evidence — delete removed exactly the targeted row (5→4, name-verified); toolbar-actions slot held exactly 1 button ("Export CSV", no leftover Refresh); downloaded `users.csv` verified byte-for-byte against the story's 5-row/4-field dataset. Edit/duplicate spot-checked with no new console errors.
+
 ---
 
 ## Task 15: Consolidated mutation-testing pass across the full v2+v3+v4 surface
+
+**Status:** ❌ Dropped — intentionally out of scope for this ticket, per explicit user decision on 2026-08-05. Tasks 1–14 are the full delivered scope of `EOA-16000`.
 
 **Executor:** @testing-subagent
 **Depends on:** Tasks 1–14 all complete and merged/committed.
@@ -912,9 +928,9 @@ Add an `onClick` handler on each `<tr>` (`renderRow`) that, when `this.selectabl
 
 ## Execution order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15.
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14. (Task 15 dropped — see its Status note above.)
 
-Groups: shared cell-content cache extraction, then row expand/collapse (master-detail slot) and `<template slot="cell">` both built on top of it (1–3) → column grouping, a prerequisite for reorder's header-rendering assumptions (4) → column reorder, then column resizing sharing its recompute path, then right-edge pinning sharing that same recompute path (5–7) → the five selection refinements, ordered so each can assume the guard the previous one introduced — page-scoped-by-default select-all, then per-row selectability, then shift+range (which needs the selectability guard), then server-side persistence (independent, but placed here for thematic grouping), then click-to-select (which needs both the selectability guard and Task 2's expand-isolation guard) (8–12) → opt-in toolbar buttons, independent of everything else in this plan (13) → documentation-only additions needing no new component code (14) → mutation-testing gate for the full combined v2+v3+v4 surface (15).
+Groups: shared cell-content cache extraction, then row expand/collapse (master-detail slot) and `<template slot="cell">` both built on top of it (1–3) → column grouping, a prerequisite for reorder's header-rendering assumptions (4) → column reorder, then column resizing sharing its recompute path, then right-edge pinning sharing that same recompute path (5–7) → the five selection refinements, ordered so each can assume the guard the previous one introduced — page-scoped-by-default select-all, then per-row selectability, then shift+range (which needs the selectability guard), then server-side persistence (independent, but placed here for thematic grouping), then click-to-select (which needs both the selectability guard and Task 2's expand-isolation guard) (8–12) → opt-in toolbar buttons, independent of everything else in this plan (13) → documentation-only additions needing no new component code (14).
 
 One item surfaced during exploration is flagged for confirmation rather than silently resolved, and should be settled before or during its task: Task 5's interaction with Task 4 (grouped columns are recommended-excluded from reorder, matching the pinned-column exclusion, pending confirmation). Task 12's scope — real click-to-select behavior vs. the original spike's "reserve the prop, no-op" scoping — is now resolved by naming the prop `rowClickSelects` with a default of `false`: this makes the new behavior purely additive/opt-in, matching every other prop in this plan, so no reservation-vs-implementation ambiguity remains.
 
