@@ -35,3 +35,4 @@
 | [EOA-9609-storybook-chromatic-deployment.md](./EOA-9609-storybook-chromatic-deployment.md) | done | Storybook Deployment — Chromatic |
 | [EOA-9609-storybook-plan.md](./EOA-9609-storybook-plan.md) | done | Storybook Baseline Implementation Plan |
 | [EOA-9609-welcome-page-content-plan.md](./EOA-9609-welcome-page-content-plan.md) | done | Implementation Plan: Welcome Page Content for Boreal DS Storybook |
+| [bds-table-stories-maintainability-refactor.md](./bds-table-stories-maintainability-refactor.md) | in | bds-table Storybook stories — maintainability refactor |

@@ -194,6 +194,16 @@ html`<bds-text-field value=${args.value || nothing} placeholder=${args.placehold
 
 `nothing` behaves differently by position: in a **child position** (above) it suppresses a text/element node; in an **attribute position** (`attr=${...}`) it removes the attribute entirely rather than rendering `attr=""`. Use `args.value || nothing` for optional string args so the "Show code" snippet stays clean when the arg is empty. This is distinct from `?attr=${bool}` (boolean-attribute binding, table above) — different binding syntax, different purpose.
 
+**`ifDefined` as an alternative to `|| nothing`:**
+
+```ts
+import { ifDefined } from "lit/directives/if-defined.js";
+
+html`<bds-table subheading=${ifDefined(args.subheading)}></bds-table>`;
+```
+
+`ifDefined` removes the attribute only when the value is strictly `undefined` — unlike `value || nothing`, it does not also strip an explicit empty string. This is the better fit when `meta.args` leaves an optional prop's default as `undefined` (rather than `''`), since that's the only state that should omit the attribute. Prefer `ifDefined` for that case; prefer `args.value || nothing` when the arg's "unset" state is genuinely an empty string. Both are sanctioned — pick based on what the arg's default actually is.
+
 **Icon font styles:**
 
 When a story needs the icon font, inject it via a Lit `css` tagged template inside the template:
@@ -214,6 +224,46 @@ const renderButton: Story["render"] = (args) => html`
 ```
 
 The `formatHtmlSource` transform strips `<style>` blocks before showing the source snippet, so these styles never appear in the "Show code" panel.
+
+---
+
+## When `docs.source.code` is unavoidable — and how to keep it formatted
+
+`parameters.docs.source.code` overrides the auto-generated Source panel with a literal string. Storybook only runs `docs.source.transform` (the `formatHtmlSource` pipeline above) when `code` is **absent** — an explicit `code` string is displayed verbatim, bypassing that pipeline entirely (verified against the installed `@storybook/addon-docs` source, `useCode` in `blocks.js`: it computes the transformed snippet but discards it whenever `sourceParameters.code !== undefined`).
+
+**Only reach for `code:` when the real `render` output would fail to teach the API correctly.** Concretely:
+
+- The story demonstrates a JS-only prop or event (`.data=`, `.formatter=`, `@bdsSort=${...}`) — Lit's attribute/property/event bindings never appear in the rendered DOM's `outerHTML`, so the auto-transform silently omits them. This is the single most common reason `bds-table.stories.ts` overrides `code`.
+- The real render uses a `Math.random()`-based id to avoid cross-story collisions — the docs should show a stable, copy-pasteable id like `#my-table` instead.
+- The real render wraps setup in a Storybook/Lit-specific workaround (`componentOnReady().then(...)`, `requestAnimationFrame(...)`) that a real consumer never needs — the docs should show the direct, real-world call.
+
+If none of those apply, don't add `code:` — let the real render and `formatHtmlSource` stay the single source of truth. Never write a `code:` override "just for consistency" or "just because a neighboring story has one" — every override is a second copy of behavior that must be kept in sync by hand, and un-synced copies are exactly the failure mode that has already shipped a live bug in this codebase (a story's interactive behavior broke while its `code:` string kept showing the old, working version).
+
+**Formatting a `code:` string.** Because it bypasses `transform`, it gets none of `formatHtmlSource`'s formatting for free — left as a hand-typed literal, it drifts from the visual convention (multi-line attributes, trailing commas, arrow-function spacing) that every non-overridden story already shows via the transform. Fix this with Prettier's built-in embedded-language pragma — no custom script, no Storybook config, works automatically via the project's normal `pnpm format` / `prettier --write`:
+
+```ts
+const myStoryDocsSource = /* HTML */ `<bds-table id="my-table" subheading="Users">
+  <bds-table-column col-key="name" label="Name"></bds-table-column>
+</bds-table>
+
+<script>
+  document.querySelector('#my-table').data = [...];
+</script>`;
+
+export const MyStory: Story = {
+  parameters: {
+    docs: { source: { code: myStoryDocsSource } },
+  },
+  render: () => html`...`,
+};
+```
+
+Two rules for this to work correctly:
+
+1. **The `/* HTML */` comment must immediately precede the template literal.** Prettier's embedded-HTML formatter (also used for `lit-html`-tagged templates) triggers on this exact comment pragma, regardless of whether the literal is tagged — confirmed directly in `prettier/plugins/estree.mjs`'s `Do()`/`rn()` functions.
+2. **Always hoist the string to a top-level `const` right before the story, never write it inline inside `parameters.docs.source.code`.** Prettier indents embedded content to match the *surrounding* nesting depth — inline inside `{ parameters: { docs: { source: { code: \`...\` } } } }` (5–6 levels deep), that indentation becomes literal leading whitespace baked into the string itself, which then renders as visibly over-indented code in the actual Docs panel. Hoisted to a top-level `const` (column 0, same pattern already used for `iconStyles`, `makeBasicTableRender`, etc.), the embedded content formats flush-left instead — matching how the Docs panel is supposed to look.
+
+This pattern (pragma + top-level hoist) is standard Prettier behavior, not a project-specific tool — it applies to any `.stories.ts` file the same way, with zero setup beyond following the two rules above.
 
 ---
 

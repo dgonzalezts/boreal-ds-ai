@@ -120,9 +120,18 @@ When a story uses Lit property binding (`.propName=${value}`) for a non-primitiv
 2. The prop type is non-primitive (array, object, function)
 3. The story uses Lit property binding (`.propName=${...}`)
 
-**Fix — override with `parameters.docs.source.code`:**
+**Fix — override with `parameters.docs.source.code`, as a top-level `const` tagged with the `/* HTML */` pragma:**
 
 ```typescript
+const withValueDocsSource = /* HTML */ `<bds-checkbox-group id="my-group">
+  <bds-checkbox-button value="Option-A">Option A</bds-checkbox-button>
+</bds-checkbox-group>
+
+<script>
+  const group = document.querySelector('#my-group');
+  group.value = ['Option-A', 'Option-C'];
+</script>`;
+
 export const WithValue: BorealStory = {
   args: { value: ["Option-A", "Option-C"] },
   render: (args) => html`
@@ -132,16 +141,7 @@ export const WithValue: BorealStory = {
   `,
   parameters: {
     docs: {
-      source: {
-        code: `<bds-checkbox-group id="my-group">
-  <bds-checkbox-button value="Option-A">Option A</bds-checkbox-button>
-</bds-checkbox-group>
-
-<script>
-  const group = document.querySelector('#my-group');
-  group.value = ['Option-A', 'Option-C'];
-</script>`,
-      },
+      source: { code: withValueDocsSource },
     },
   },
 };
@@ -149,7 +149,12 @@ export const WithValue: BorealStory = {
 
 Pattern: add a unique `id`, show complete markup, include a `<script>` block with the DOM property assignment.
 
-Do not override when the prop reflects (`reflect: true`) and is primitive — the auto-generated snippet will be correct.
+**Always write the override this way — never inline inside `parameters.docs.source.code`.** An explicit `code:` string bypasses `docs.source.transform` (the `formatHtmlSource`/Prettier pipeline) entirely, so it gets none of that formatting for free unless you provide it yourself. Two rules, both required:
+
+1. **Precede the template literal with `/* HTML */`.** Prettier's embedded-language formatter recognizes this exact pragma on any plain (untagged) template literal and formats its contents as HTML — confirmed against the installed `prettier` package's `estree` plugin (`Do()`/`rn()` in `plugins/estree.mjs`). No custom script or Storybook config needed; the project's existing `pnpm format` / pre-commit `lint-staged` hook picks it up automatically.
+2. **Hoist it to a top-level `const` right before the story, never write it inline inside the nested `parameters` object.** Prettier indents embedded content to match its surrounding nesting depth — 5–6 levels deep inside `parameters.docs.source.code`, that indentation becomes literal leading whitespace baked into the string, rendering as visibly over-indented code in the actual Docs panel. At the top level (column 0), it formats flush-left as intended.
+
+Do not override when the prop reflects (`reflect: true`) and is primitive — the auto-generated snippet will be correct. Full rationale and a worked before/after: `ai-docs/guidelines/storybook-patterns.md` § "When `docs.source.code` is unavoidable — and how to keep it formatted".
 
 ---
 
