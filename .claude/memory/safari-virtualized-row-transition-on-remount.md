@@ -1,0 +1,1 @@
+../../.agents/memory/safari-virtualized-row-transition-on-remount.md

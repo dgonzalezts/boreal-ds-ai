@@ -69,14 +69,18 @@ These are full `turbo run build --filter=...@telesign/boreal-web-components` inv
 
 Currently that section commits to Chrome/Edge ≥ 79, Firefox ≥ 67, and Safari ≥ 14 (desktop only — no iOS Safari is claimed, since there is no testing path, automated or manual, currently available for real iOS Safari in this environment; desktop Safari.app and iOS Safari are different engine builds, so testing one does not verify the other).
 
-**Safari is mandatory, not optional**, for any component touching focus management/outline styling, native drag-and-drop, CSS transitions/animations, or virtualized/windowed rendering — a single EOA-16000 QA session found five distinct Safari-specific defects across `bds-button-group`, `bds-drawer`, `bds-checkbox`, and `bds-table` that were completely invisible in Chrome-only testing. See `.agents/memory/MEMORY.md` § "Cross-Browser — Safari-Specific Rendering & Interaction Bugs" for the specific risk categories to proactively check, not just react to bug reports about:
+**Safari is mandatory, not optional**, for any component touching focus management/outline styling, native drag-and-drop, CSS transitions/animations, virtualized/windowed rendering, Shadow DOM/slotted content, Form-Associated Custom Elements or native form inputs, flexbox layout, or SVG/icon rendering — past QA sessions have found multiple distinct Safari-specific defects that were completely invisible in Chrome-only testing. Beyond this list, proactively check components against well-known Safari-vs-Chromium rendering and behavior differences rather than assuming Chrome coverage is representative. See `.agents/memory/MEMORY.md` § "Cross-Browser — Safari-Specific Rendering & Interaction Bugs" for the specific risk categories to proactively check, not just react to bug reports about:
 
 - Native `outline` focus ring + a CSS-transform-animated child (ghosting/duplicated render)
 - Virtualized/windowed row content with any CSS transition (spurious animation on remount)
 - Native HTML5 drag-and-drop with nested interactive children in the drag source/target (cursor flicker, most visible on Windows but check regardless)
 - Resolved/computed ARIA role branching in composite components (e.g. explicit `role` prop vs. inferred ancestor context)
+- Inline SVG using `currentColor`, `fill`, or `mask-image` (Safari resolves these less reliably than Blink/Gecko)
+- `::slotted()` styling, slotted-content restyling, and CSS custom property inheritance across Shadow DOM boundaries
+- Form-Associated Custom Elements (`ElementInternals`) and native inputs (e.g. `type="date"`/`type="time"` rendering, autofill styling)
+- Flexbox sizing quirks (`min-width: auto` resolution, `flex-basis` interactions) affecting layout or truncation
 
-`playwright-cli --browser=webkit` can drive WebKit for automated checks where installed. If WebKit browser installation is blocked by machine restrictions (a known constraint on some setups), fall back to a live, manually-driven Safari.app session for the same checklist items rather than skipping Safari coverage entirely or assuming Chrome/WebKit-automation parity is sufficient — desktop Safari remains reachable and verifiable by hand even when it isn't scriptable.
+`playwright-cli --browser=webkit` drives WebKit and is the default path for Safari coverage — install it with `playwright-cli install-browser webkit` if it isn't already present. Only fall back to a live, manually-driven Safari.app session if WebKit installation genuinely fails in the current environment; don't skip Safari coverage entirely or assume Chrome/WebKit-automation parity is sufficient when the automated path is available.
 
 ## Critical Cross-Framework Gotcha: `<template>` Elements
 

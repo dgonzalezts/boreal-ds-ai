@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-getcomputedstyle-custom-property-unmockable.md
