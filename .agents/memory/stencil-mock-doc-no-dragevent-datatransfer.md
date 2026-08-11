@@ -7,7 +7,7 @@ Stencil's custom Jest test environment (`@stencil/core/testing`'s `jest-environm
 `src/utils/testing/mocks/dragDrop.ts` exports:
 
 - `createDragDataTransferMock(): MockDataTransfer` — an in-memory-store-backed object implementing `dropEffect`/`effectAllowed`/`getData`/`setData`. Reuse the same instance across a `dragstart`/`dragover`/`drop`/`dragend` sequence so `setData` during `dragstart` is readable via `getData` during `drop`, mirroring real browser behaviour where one `DataTransfer` is shared for the whole drag gesture.
-- `createDragEvent(type: string, dataTransfer: MockDataTransfer): Event` — builds a plain `Event` with `dataTransfer` attached as a property, ready to `dispatchEvent`.
+- `createDragEvent(type: string, dataTransfer: MockDataTransfer, relatedTarget?: EventTarget | null): Event` — builds a plain `Event` with `dataTransfer` (and, since EOA-16000's column-reorder cursor-flicker fix, an optional `relatedTarget`) attached as properties, ready to `dispatchEvent`. The `relatedTarget` parameter is backward-compatible — omit it and it defaults to `null`, matching every pre-existing 2-argument call site. Needed for testing `dragleave` handlers that inspect where the pointer is heading (e.g. a `th.contains(e.relatedTarget as Node)` guard to avoid clearing a drop-target highlight when the pointer is still within the same element's subtree).
 
 Both are exported through the `mocks/index.ts` barrel, so they resolve via `@/utils` exactly like `setupMutationObserverMock`/`setupResizeObserverMock`.
 

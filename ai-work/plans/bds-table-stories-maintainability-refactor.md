@@ -1,8 +1,9 @@
 ---
 ticket: N/A
 component: bds-table
-status: in progress
+status: done
 created: 2026-08-05
+completed: 2026-08-06
 ---
 
 # bds-table Storybook stories — maintainability refactor
@@ -60,6 +61,8 @@ A documentation review of `apps/boreal-docs/src/stories/data-visualization/bds-t
 
 **Executor:** documentation-subagent
 
+**Outcome (2026-08-06): evaluated, no change made.** The 7 candidate stories are structurally heterogeneous — flat vs. grouped columns, present vs. absent event bindings, hardcoded vs. generated data, differing host attributes — in exactly the ways this task's own write-up anticipated. A `renderColumnDemoTable`-style helper covering all of it would need enough optional parameters to become a wider surface than the code it replaces. The fallback idea (wrapping just the shared `<style>${iconStyles}</style>` line) was also rejected: `iconStyles` is used at 35 call sites across the whole file, not just these 7, and several of those other sites interpolate additional CSS after it — extracting a helper for only 7 of 35 identical call sites would create a visible inconsistency rather than remove one. No files touched. If a file-wide `iconStyles` wrapper is still wanted, it should be scoped as its own task covering all 35 sites, not folded into this one.
+
 ---
 
 ## Task 3 — Normalize embedded `<script>` blocks to ES6 (arrow functions, `const`/`let`)
@@ -74,6 +77,10 @@ A documentation review of `apps/boreal-docs/src/stories/data-visualization/bds-t
 
 **Executor:** documentation-subagent
 
+**Outcome (2026-08-06): done, scope relocated by Task 1.** The 4 named stories' own `render:` bodies were already ES6 (Task 1's shared-logic extraction replaced their inline scripts with references to top-level `const xyzLogic` strings). The actual ES5 `function name() {}` declarations had moved into those extracted constants instead: `rowClickSelectionLogic` (`createViewButton`, `updateRowDetail`), `rowDetailPopulateLogic` (`populateOrderHistory`, shared by `RowDetail` and `RowDetailVirtualized`), `withActionsColumnLogic` (`makeActionButton`, `renderRowActions`, `removeRowById`). Converted all 6 to `const name = (...) => {...}` (arrow-expression body for the one single-statement case, `removeRowById`), matching the file's dominant style. Applied directly (small, mechanical, fully diagnosed — no subagent dispatch needed). Verified via `pnpm --filter @telesign/boreal-docs exec eslint` (clean, zero warnings). The IIFE `(function () { ... })();` wrapper used at the top of nearly every story's live-render script was deliberately left untouched — confirmed (during Task 2's evaluation) to be the file's established convention across ~30+ stories, not an ES5 holdover specific to these 4.
+
+**Manual test result: PASS (2026-08-06, `table-task3-qa`).** All 4 stories exercised live in the browser: `RowClickSelection` (row select, expand + `updateRowDetail` detail text, View button → console log via `createViewButton`), `RowDetail` and `RowDetailVirtualized` (both populate order-history correctly via `populateOrderHistory`), `WithActionsColumn` (Edit/Duplicate/Delete all dispatch and update the results text correctly, Delete actually removes the row via `removeRowById`). Zero new console errors on any of the 4 — only pre-existing, unrelated noise (favicon 404, icon-font CORS block, Lit dev-mode warnings). Task 3 fully closed.
+
 ---
 
 ## Task 4 — Trim JSDoc comments to consumer-facing description only
@@ -83,6 +90,12 @@ A documentation review of `apps/boreal-docs/src/stories/data-visualization/bds-t
 **Fix:** for each verbose JSDoc, keep the lead sentence(s) describing what the story demonstrates and how to interact with it; move or drop sentences that only explain *why* an internal implementation choice was made and don't change how a consumer uses the prop.
 
 **Acceptance criteria:** every story keeps a JSDoc (still required by `storybook-patterns.md`); no story's Docs-panel description loses information a consumer actually needs to use the feature correctly (e.g. keep "the ID column is pinnable but not sortable" since that's user-relevant; drop "mirrors the throttled recompute path pinning already uses" since that's not).
+
+**Outcome (2026-08-06): done, with a corrected understanding of what this task actually affects.** A first pass trimmed only the rationale clauses from 7 stories, keeping full behavior-contract prose (prop names, event names, interaction steps). The user then asked for a stricter standard — general description only, no attribute/event names, no step-by-step instructions, no internal mechanism explanations — and all 42 story JSDoc blocks were rewritten to one short sentence each (e.g. `WithSelection`: "Row selection with a checkbox column, including range selection." — down from a 2-paragraph block naming `selectable`, `bdsSelect`, and the shift-click/anchor-reset mechanics).
+
+**Important correction discovered during QA:** `bds-table.stories.ts`'s `meta` has no `tags: ['autodocs']`, and `bds-table.mdx` embeds every story via `<Canvas of={...}>` only — zero `<Description of={...}/>` blocks. Per `ai-docs/guidelines/storybook-patterns.md`'s own "Canvas blocks" section, `<Description>` is the explicit, opt-in mechanism that surfaces a story's JSDoc in the rendered Docs page; `<Canvas>` alone never does. Confirmed independently (grep for both signals) — **the JSDoc text in this file was never rendered anywhere in bds-table's actual published documentation**, before or after this task. `bds-table.mdx`'s own hand-written prose above each `<Canvas>` block is the real, unrelated, untouched published description.
+
+**Decision (user, 2026-08-06):** keep the JSDoc trim as in-repo comment cleanup only — still a legitimate readability win for anyone editing this file directly (matches this repo's own no-verbose-comments philosophy) — and leave `bds-table.mdx` untouched; no `<Description>` blocks added. No manual browser test applies to this task as a result (there is nothing rendered to check). Verified via `pnpm --filter @telesign/boreal-docs exec eslint` (clean) and a scripted check confirming all 42 story exports still have a JSDoc immediately above them.
 
 **Manual test:** Run `pnpm dev:docs`, open each trimmed story's Docs page, and read the rendered description — confirm it's still accurate and sufficient to understand the demonstrated feature at a glance.
 
@@ -101,6 +114,10 @@ A documentation review of `apps/boreal-docs/src/stories/data-visualization/bds-t
 **Manual test:** Run `pnpm dev:docs`. For each story touched, open the Actions panel, trigger the feature (click to sort, drag to reorder, drag to resize), and confirm an action log entry appears.
 
 **Executor:** documentation-subagent
+
+**Outcome (2026-08-06): done.** Audited every `sortable`/`reorderable`/`resizable` column across the file (`pinnable` has no corresponding event — confirmed via `bds-table.tsx`'s `@Event()` list, so it was excluded from the audit). Found 4 stories with an unwired `sortable` column: `WithPinnedColumn`, `GroupedColumns`, `ReorderableColumns` (already had `@bdsColumnReorder`, was missing `@bdsSort`), and `WithLoadingState` (also required promoting its `render: () =>` to `render: args =>` to get access to the args logger). Added `@bdsSort=${(e) => args.bdsSort?.(e.detail)}` to all 4, matching the existing pattern used elsewhere. `resizable` columns (`ResizableColumns`, `ResizableColumnsVirtualized`, `ResizableRightPinnedColumn`) were already correctly wired — no gap found there. Verified via `pnpm --filter @telesign/boreal-docs exec eslint` (clean).
+
+**Manual test result: PASS (2026-08-06, `table-task5-qa`).** All 4 stories exercised live: clicking each Name/City header logged the expected `bdsSort: { colKey, direction }` payload in the Actions panel and rows visibly re-sorted. `ReorderableColumns`'s pre-existing `bdsColumnReorder` wiring was independently confirmed still intact (mouse-drag simulation doesn't trigger `bds-table`'s native HTML5 drag-and-drop in headless Chromium — QA worked around it with synthetic `DragEvent`s dispatched directly). No regressions, no new console errors.
 
 ---
 

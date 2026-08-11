@@ -45,3 +45,7 @@ producing a visibly non-square button that was easy to miss without an explicit 
 **Takeaway**: never trust Sass arithmetic on any `$boreal-*` token in component SCSS — always use
 `calc()`, and always wrap composed/summed tokens in their own nested `calc()` before combining them
 further.
+
+## Second confirmed occurrence
+
+Hit again during EOA-16000 (`bds-table` v4, dynamic column min-width feature): `--bds-table-decorator-width: #{$boreal-icons-s + $boreal-spatial-gap-3xs};` compiled to the invalid `var(--boreal-icons-s) var(--boreal-spatial-gap-3xs)` (no operator between the two — confirmed via DevTools inspection of the computed custom property value), silently discarded by the browser. Fixed by wrapping in `calc()` per the pattern above. A second real occurrence of the exact same mistake, in a different component, months apart, is a signal this file needs more visibility in the implementation workflow, not just passive existence in memory — see the `frontend-subagent` Cross-Browser Safety checklist addition from the same session, which references this file directly.
