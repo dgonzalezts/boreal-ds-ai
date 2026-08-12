@@ -5,6 +5,8 @@
 | [AI-001-ai-scaffold-restructure.md](./AI-001-ai-scaffold-restructure.md) | done | AI Scaffold Restructure Implementation Plan |
 | [AI-001-bds-button-accessibility-docs.md](./AI-001-bds-button-accessibility-docs.md) | done | bds-button Accessibility & Documentation Improvements |
 | [AI-002-ai-scaffold-knowledge-consolidation.md](./AI-002-ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
+| [AI-003-release-process-remediation-migrate-changesets.md](./AI-003-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
+| [AI-003-release-process-remediation-patch-release-it.md](./AI-003-release-process-remediation-patch-release-it.md) | pending | Release Process Remediation — Option A: Patch `release-it` in place |
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |
 | [EOA-10533-bds-radio-button.md](./EOA-10533-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
