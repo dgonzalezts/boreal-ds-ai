@@ -66,6 +66,7 @@ For **breaking changes**, add `!` after the scope:
 - **scope:** affected package short-name (e.g. `web-components`, `boreal-docs`, `boreal-react`)
 - **TICKET:** always present, always before the description (e.g. `EOA-10099`)
 - **`!`:** signals breaking change (breaking-change-template.md only)
+- **Max length:** 100 characters total, matching `header-max-length` in `commitlint.config.js`
 
 ## Step 4: Fill in the Template
 
