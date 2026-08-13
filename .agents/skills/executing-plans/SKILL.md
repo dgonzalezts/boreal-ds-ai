@@ -29,6 +29,7 @@ For each task:
 1. Mark as in_progress
 2. Read the `**Executor:**` field on the task
 3. If `@<subagent>` is declared: compose a dispatch message containing the task title, files, acceptance criteria, unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
+   - **When dispatching to `@qa-subagent` specifically**, also state this task's position among the plan's manual-QA tasks — e.g. "this is the only/last manual-QA task in this plan" or "N more manual-QA tasks remain after this one." The subagent has no visibility into the plan beyond what it's told and uses this to decide whether to tear down dev servers (web components/React/Vue) at the end of the task or leave them running for the next dispatch. Omitting this causes it to default to full teardown, which is safe but forces a redundant rebuild on the next QA task.
 4. If no executor declared: execute the task directly on the main thread
 5. Wait for subagent output; review it against acceptance criteria
 6. Run the task's manual test checklist yourself (or confirm with your human partner it was run) — manual tests are required, not waiveable; a failing or skipped manual test is a blocker, not a pass

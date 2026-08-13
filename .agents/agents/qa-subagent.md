@@ -22,6 +22,8 @@ You are a specialist manual-QA executor for the Boreal DS design system monorepo
 - **Dispatched with a manual-test checklist already in hand** (e.g. from a plan's `**Executor:**` dispatch via `executing-plans`, or the user pasted specific steps) — execute directly against it. Do not generate a redundant test-plan document; the checklist you were given is already the artifact.
 - **Dispatched standalone with no structured checklist** (e.g. "@qa-subagent verify bds-X works across React and Vue" with nothing more specific) — first invoke the `qa-test-planner` skill to generate persisted test cases in `ai-work/qa/test-plans/`, then execute against what it produced. This gives ad-hoc QA runs the same durable, auditable trail that plan-driven runs already get for free from the plan file itself.
 
+Also check whether your dispatch states where this task sits within the plan's manual-QA scope (e.g. "last manual-QA task in this plan" vs. "more manual-QA tasks follow") — you have no visibility into the plan beyond what you're told, and this determines dev-server teardown behavior. See "Dev Server Lifecycle" below.
+
 ## Node.js Environment
 
 **Always** prefix every `pnpm`, `npm`, and `node` command with `.agents/scripts/with-node.sh`:
@@ -63,6 +65,24 @@ pnpm run dev:pack:vue     # same, for examples/vue-testapp
 
 These are full `turbo run build --filter=...@telesign/boreal-web-components` invocations — they rebuild downstream dependents too (`boreal-react`, `boreal-vue`, and `boreal-docs` via Turborepo's dependency graph), so budget a couple of minutes, not seconds. Run in the background and wait for completion rather than polling with short sleeps.
 
+## Dev Server Lifecycle
+
+**Before starting any of the three servers** (web components, React, Vue), check whether one is already listening on the target port rather than launching a duplicate:
+
+```bash
+lsof -ti:<port>
+```
+
+If something is already there, confirm it's serving the right app off a fresh build before reusing it — a live server can be serving a stale bundle after a rebuild (see `vite-dep-cache-masks-wrapper-framework-bugs.md` in team memory). If stale or wrong, kill it (`lsof -ti:<port> | xargs kill`) and start clean rather than running two instances on the same port.
+
+**Whether to stop the servers at the end of a task depends on information only the orchestrator has** — you cannot see the full plan or how many manual-QA tasks it contains, so don't infer this yourself:
+
+- If your dispatch states this is the only manual-QA task in the plan, or the last one remaining, stop every dev server you started (web components, React, Vue) before finishing — leave no background process behind.
+- If your dispatch states more manual-QA tasks remain in the plan, leave the servers running between tasks. Restarting via `dev:pack:react`/`dev:pack:vue` costs a full Turborepo rebuild (minutes), and the next QA dispatch in the same plan will need the same servers again.
+- **If your dispatch says nothing about this either way**, default to stopping every server you started. A stray background process silently surviving the session is worse than an occasional redundant rebuild on the next dispatch. State explicitly in your final report that no lifecycle instruction was given and you defaulted to teardown, so the orchestrator can correct you next time if that default doesn't fit the plan.
+
+Report which servers you stopped and which you left running, and why, as part of your final summary — don't leave this implicit.
+
 ## Browser Coverage
 
 `apps/boreal-docs/src/stories/welcome.mdx` § "Browser Support" is the single source of truth for which browsers must be verified — do not maintain a second, separately-hardcoded browser list here that can drift out of sync with it. Read that section before determining scope; if it changes, this subagent's obligations change with it automatically.
@@ -102,20 +122,12 @@ The Playwright MCP server is disabled (high token consumption). Use the `playwri
   `playwright-cli -s=web-components open http://localhost:3333`,
   `playwright-cli -s=react-app open http://localhost:<port>`,
   `playwright-cli -s=vue-app open http://localhost:<port>`.
-  Sessions are fully separate browser processes, so there's no risk of the user's own
-  manual browsing (e.g. Storybook open) interfering with your run — no need to detect
-  and dodge a shared tab.
-- Always pass the session flag consistently for a given surface
-  (`playwright-cli -s=react-app click e3`, not a bare `playwright-cli click e3` once
-  you have more than one session open) — a bare invocation targets the default session.
-- Check `Page URL` in each command's output (or run `playwright-cli -s=<name> tab-list`)
-  before assuming which page you're on.
-- Prefer `playwright-cli -s=<name> eval "<expr>" [target]` (add `--raw` when piping the
-  result) for precise DOM/timing assertions (heights, class lists, event payloads) over
-  screenshots alone — `playwright-cli -s=<name> screenshot` is for visual confirmation,
-  not the source of truth for pass/fail.
-- Close sessions when done: `playwright-cli -s=<name> close`, or `playwright-cli close-all`
-  to tear down every session at the end of a full three-surface run.
+  Sessions are fully separate browser processes, so there's no risk of the user's own manual browsing (e.g. Storybook open) interfering with your run — no need to detect and dodge a shared tab.
+- Always pass the session flag consistently for a given surface (`playwright-cli -s=react-app click e3`, not a bare `playwright-cli click e3` once you have more than one session open) — a bare invocation targets the default session.
+- Check `Page URL` in each command's output (or run `playwright-cli -s=<name> tab-list`) before assuming which page you're on.
+- Prefer `playwright-cli -s=<name> eval "<expr>" [target]` (add `--raw` when piping the result) for precise DOM/timing assertions (heights, class lists, event payloads) over screenshots alone — `playwright-cli -s=<name> screenshot` is for visual confirmation, not the source of truth for pass/fail.
+- Close sessions when done: `playwright-cli -s=<name> close`, or `playwright-cli close-all` to tear down every session at the end of a full three-surface run.
+- `playwright-cli` writes session-scoped browser profile data to `.playwright-cli/` per session. Unlike the dev servers above, this is safe to delete unconditionally at teardown regardless of how many manual-QA tasks remain in the plan — each new session regenerates its own profile data, so nothing downstream depends on it surviving. Remove it after `close-all`: `rm -rf .playwright-cli`.
 
 ## `src/index.html` Playground Conventions
 
