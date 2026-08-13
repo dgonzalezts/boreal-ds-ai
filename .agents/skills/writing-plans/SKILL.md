@@ -173,6 +173,16 @@ Every task in a plan must declare an `**Executor:**` field. Use this table to as
 | Manual QA, React/Vue wrapper parity, live-browser verification (Safari included) | `@qa-subagent`            |
 | Utility/config tasks with no component code                      | main thread (no executor) |
 
+### Chaining Executors for Visual/Behavioral Tasks
+
+A task's `**Executor:**` line may chain a second subagent when the task produces output a human needs to actually look at or interact with:
+
+```
+**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
+```
+
+Apply the chain only to tasks whose manual test is a real interaction or visual scenario — a rendered component, a styling change, a wired-up event flow. Do not chain it onto tasks whose "manual test" is just a compiler check or a Jest run (type interfaces, config/dependency tasks, barrel files, non-visual utility logic) — those are already fully verified by their primary executor, and dispatching `@qa-subagent` there means reviewing nothing. As a rule of thumb: if the task's Manual Test section under Task Structure below has playground scenarios and a Given/When/Then checklist, chain `@qa-subagent`; if it says "validate with compiler/tests only," don't.
+
 ## Task Structure
 
 ```markdown
@@ -222,6 +232,44 @@ Use `pnpm dev:docs` only for Storybook/MDX tasks (typically the final documentat
 ```bash
 git commit -m "type(scope): TICKET-ID description"
 ```
+
+## Framework Wrapper Parity (React/Vue)
+
+Any component shipping through the React and Vue output-target wrappers needs its behavior verified through both wrappers, not just the raw web component — but *when* that verification happens depends on the component's maturity, and the two cases call for opposite defaults.
+
+**Brand-new component, or a version introducing its first meaningful interactive behavior:** default to **consolidated** parity-check tasks, not one per implementation task. Early tasks in a new component (type interfaces, scaffolding, a stub `render()`) produce nothing a framework wrapper could diverge on — there's no behavior yet to compare. Checking parity on those tasks anyway just repeats the wrapper-verification pipeline for no signal. Instead, add one parity-check task at each meaningful checkpoint — typically once per version, right after that version's documentation task — that re-runs the version's key manual-test scenarios through both wrappers in one pass.
+
+**Established component receiving incremental enhancements**, where the component already ships production behavior through both wrappers and each task in the plan adds one complete, independently-usable feature on top of that stable base: parity-per-task is the better default instead. Each such task genuinely *could* introduce a framework-specific regression (event handling, prop/attribute forwarding, two-way-binding behavior) the moment it lands, and catching it immediately — scoped to the one feature that just shipped — is cheaper than debugging it later in one large combined pass.
+
+The dividing line is whether the task under consideration has real behavior to diverge on yet, not the size of the plan. A large plan for a still-new component stays consolidated until the component is actually composable and interactive; a small plan adding one feature to a mature, already-shipping component can reasonably check parity every task.
+
+**Task shape for a parity-check task:**
+
+```markdown
+**Executor:** @qa-subagent
+**Files:** none (verification-only task; no new source files)
+
+**Acceptance criteria:**
+- States which prior task(s)' scenarios are being re-verified through both wrappers
+- Uses a pack-based verification pipeline (not a live dev server against wrapper packages) — a live dev server can serve a stale wrapper bundle after a rebuild, producing false framework-specific bug reports
+- Any regression found is logged as a new task, not fixed inline in the verification task itself
+
+**Manual test (required):**
+Repeat the referenced scenario(s) through both the React and Vue wrapper playgrounds using the pack-based pipeline, then validate:
+- [ ] Given <scenario>, when repeated through the React wrapper, then behavior matches the raw web component exactly. Pass: no divergence.
+- [ ] Given <scenario>, when repeated through the Vue wrapper (including two-way binding where applicable), then behavior matches exactly. Pass: no divergence.
+
+**Commit:** N/A — verification-only task; no code changes expected unless a regression is found.
+```
+
+## Testing Phases: Coverage vs. Mutation Testing
+
+Two distinct test-quality gates apply to every component, and they belong at different points in a plan:
+
+- **Coverage-phase** (standard Jest test execution, ≥90% coverage) is cheap and fast. Write and gate it per task, as already described in Task Structure above — every unit-test task validates its own coverage immediately.
+- **Mutation-phase** (Stryker, ≥90% mutation score) is comparatively expensive in both time and hardware. Never run it per task. Consolidate it into a single dedicated task, placed at (or near) the end of the plan, that runs mutation testing once across every testable unit the plan created or modified — each unit keeping its own config file, per the one-config-per-component convention. Every unit-test task earlier in the plan should explicitly note "coverage-phase only; mutation testing deferred to the consolidated task" so it's clear the gate isn't being skipped, just deferred.
+
+If a mutant survivor reveals a genuine gap in an earlier task's test coverage, close it by extending that task's existing spec file — the consolidated task's job is closing test gaps the coverage phase missed, not introducing new behavior.
 
 ## Remember
 
