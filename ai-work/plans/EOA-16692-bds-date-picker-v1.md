@@ -1,7 +1,7 @@
 ---
 ticket: EOA-16692
 component: bds-date-picker
-status: pending
+status: in progress
 created: 2026-08-12
 ---
 
@@ -34,55 +34,56 @@ created: 2026-08-12
 
 ## Files to create / modify
 
-| File | Notes |
-| --- | --- |
-| `packages/boreal-web-components/package.json` | Modify — add `date-fns@^4.4.0`, `@date-fns/tz@^1.5.0` |
-| `packages/boreal-web-components/src/services/date-engine/types.ts` | New — `MonthGrid`, `DayCell`, `WeekdayLabel`, `DateEngineLocale` alias |
-| `packages/boreal-web-components/src/services/date-engine/grid.ts` | New — `generateMonthGrid`, `getWeekdayLabels` |
-| `packages/boreal-web-components/src/services/date-engine/date-math.ts` | New — `addMonths`/`subMonths`/`isSameDay`/`isSameMonth`/`isWithinRange`/`compareDates`/`toNaiveISODate`/`fromNaiveISODate` |
-| `packages/boreal-web-components/src/services/date-engine/format.ts` | New — `formatDisplayDate`, `getMonthYearLabel` |
-| `packages/boreal-web-components/src/services/date-engine/value.ts` | New (Phase 2) — `combineDateTimeToUTC`, `extractDateTimeFromUTC` via `@date-fns/tz` |
-| `packages/boreal-web-components/src/services/date-engine/index.ts` | New — public barrel |
-| `packages/boreal-web-components/src/services/date-engine/__test__/grid.spec.ts` | New — plain Jest |
-| `packages/boreal-web-components/src/services/date-engine/__test__/date-math.spec.ts` | New — plain Jest |
-| `packages/boreal-web-components/src/services/date-engine/__test__/format.spec.ts` | New — plain Jest |
-| `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts` | New (Phase 2) — plain Jest |
-| `packages/boreal-web-components/src/services/date-engine/stryker.date-engine.config.mjs` | New (Task 30) — per-component Stryker config |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.tsx` | New — renders as `<table role="grid">` |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.scss` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/ICalendarGrid.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/types.ts` | New — event detail types |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/index.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/__test__/bds-calendar-grid.basics.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/__test__/bds-calendar-grid.events.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` | New (Task 30) — per-component Stryker config |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.scss` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderCalendarPanel.tsx` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderFooter.tsx` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderTimeSelector.tsx` | New (Phase 2) |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/draft-state.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/value-mapping.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/index.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/types/IDatePicker.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/types/enum.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/types/types.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/types/index.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.events.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.variants.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.form.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` | New |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.time.spec.ts` | New (Phase 2) |
-| `packages/boreal-web-components/src/components/forms/bds-date-picker/stryker.bds-date-picker.config.mjs` | New (Task 30) — per-component Stryker config |
-| `packages/boreal-web-components/src/index.html` | Modify — playground scenarios per task (never committed, per project memory) |
-| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` | New |
-| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx` | New — includes internal `bds-calendar-grid` implementation note |
+| File                                                                                                                | Notes                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `packages/boreal-web-components/package.json`                                                                       | Modify — add `date-fns@^4.4.0`, `@date-fns/tz@^1.5.0`                                                                      |
+| `packages/boreal-web-components/src/services/date-engine/types.ts`                                                  | New — `MonthGrid`, `DayCell`, `WeekdayLabel`, `DateEngineLocale` alias                                                     |
+| `packages/boreal-web-components/src/services/date-engine/grid.ts`                                                   | New — `generateMonthGrid`, `getWeekdayLabels`                                                                              |
+| `packages/boreal-web-components/src/services/date-engine/date-math.ts`                                              | New — `addMonths`/`subMonths`/`isSameDay`/`isSameMonth`/`isWithinRange`/`compareDates`/`toNaiveISODate`/`fromNaiveISODate` |
+| `packages/boreal-web-components/src/services/date-engine/format.ts`                                                 | New — `formatDisplayDate`, `getMonthYearLabel`                                                                             |
+| `packages/boreal-web-components/src/services/date-engine/value.ts`                                                  | New (Phase 2) — `combineDateTimeToUTC`, `extractDateTimeFromUTC` via `@date-fns/tz`                                        |
+| `packages/boreal-web-components/src/services/date-engine/index.ts`                                                  | New — public barrel                                                                                                        |
+| `packages/boreal-web-components/src/services/date-engine/__test__/grid.spec.ts`                                     | New — plain Jest                                                                                                           |
+| `packages/boreal-web-components/src/services/date-engine/__test__/date-math.spec.ts`                                | New — plain Jest                                                                                                           |
+| `packages/boreal-web-components/src/services/date-engine/__test__/format.spec.ts`                                   | New — plain Jest                                                                                                           |
+| `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts`                                    | New (Phase 2) — plain Jest                                                                                                 |
+| `packages/boreal-web-components/src/services/date-engine/stryker.date-engine.config.mjs`                            | New (Task 30) — per-component Stryker config                                                                               |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx`                       | New — renders as `<table role="grid">`                                                                                     |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.scss`                      | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/ICalendarGrid.ts`                      | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/types.ts`                              | New — event detail types                                                                                                   |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/index.ts`                              | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/__test__/bds-calendar-grid.basics.spec.ts`   | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/__test__/bds-calendar-grid.events.spec.ts`   | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts` | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts`     | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/stryker.bds-calendar-grid.config.mjs`        | New (Task 30) — per-component Stryker config                                                                               |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx`                           | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss`                          | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx`               | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderFooter.tsx`                      | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx`                | New (Phase 2)                                                                                                              |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/draft-state.ts`                          | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/value-mapping.ts`                        | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/index.ts`                                | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/IDatePicker.ts`                          | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/enum.ts`                                 | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/types.ts`                                | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/index.ts`                                | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.basics.spec.ts`       | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.events.spec.ts`       | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.variants.spec.ts`     | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.form.spec.ts`         | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts`     | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts`         | New                                                                                                                        |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts`         | New (Phase 2)                                                                                                              |
+| `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/stryker.bds-date-picker.config.mjs`            | New (Task 30) — per-component Stryker config                                                                               |
+| `packages/boreal-web-components/src/index.html`                                                                     | Modify — playground scenarios per task (never committed, per project memory)                                               |
+| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts`                                     | New                                                                                                                        |
+| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx`                                            | New — includes internal `bds-calendar-grid` implementation note                                                            |
 
 **Critical reference files** (read before implementing):
+
 - `packages/boreal-web-components/src/components/forms/bds-select/bds-select.tsx` — popover/trigger composition wiring, `getter` pattern for `bdsPopover`/`bdsField`
 - `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx` — `footer`/`footer-button`/`footer-helper` slots, `floatingOptions.hideArrow`
 - `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.tsx` — FACE pattern, `selectable` non-editable trigger mechanism
@@ -98,20 +99,25 @@ created: 2026-08-12
 
 ### Task 1: Add `date-fns` and `@date-fns/tz` dependencies
 
+**Status:** ✅ done — `date-fns@^4.4.0`/`@date-fns/tz@^1.5.0` added under `dependencies`, verified in `package.json`, `pnpm-lock.yaml`, and `node_modules`. An initial manual `pnpm install` pass added `date-fns-tz@^3.2.0` (an unrelated third-party package) instead of `@date-fns/tz`; caught, corrected, and documented in the Task 1 acceptance-criteria note below.
 **Executor:** main thread (no executor)
 **Files:**
+
 - `packages/boreal-web-components/package.json` (modify)
 
 **Acceptance criteria:**
+
 - `date-fns@^4.4.0` and `@date-fns/tz@^1.5.0` (latest per npm registry as of this plan's writing) added under `dependencies` — not `devDependencies`, since both ship at runtime inside `date-engine`.
 - `@date-fns/tz` requires date-fns v4+; confirm the installed date-fns major is 4.x before proceeding to Task 23.
 - `pnpm install` run at the workspace root; lockfile updated.
 - Utility discovery note: searched `package.json` dependencies for any existing date library — none found (`@braintree/sanitize-url`, `@floating-ui/dom`, `@tanstack/virtual-core`, `dompurify` only). No suitable existing utility; new dependency justified per the spike doc's Finding 1.
+- **Resolved (2026-08-13):** an install pass initially added `date-fns-tz@^3.2.0` (a similarly-named but unrelated third-party package, maintained by `marnusw`, built for date-fns v3's pre-native-timezone era) instead of `@date-fns/tz@^1.5.0` (the official companion package from the date-fns team itself, confirmed via the date-fns v4 announcement blog post — https://blog.date-fns.org/v40-with-time-zone-support/ — and via npm registry metadata showing its repo under `date-fns/date-fns`). Corrected to `@date-fns/tz@^1.5.0`; verified in `package.json`, `pnpm-lock.yaml` (no `date-fns-tz` entries remain), and `node_modules` (`@date-fns/tz@1.5.0`, `date-fns@4.4.0` both resolved). Task 23's `combineDateTimeToUTC`/`extractDateTimeFromUTC` design depends on `@date-fns/tz`'s `TZDate` object specifically — `date-fns-tz`'s `zonedTimeToUtc`/`utcToZonedTime` function-based API is not a drop-in substitute.
 
 **Manual test (required):**
 Non-visual/config task — validate with `pnpm install` completing without errors and `pnpm -w list date-fns @date-fns/tz` (or equivalent) showing the resolved versions inside `packages/boreal-web-components`.
 
 **Commit:**
+
 ```bash
 git commit -m "chore(boreal-web-components): EOA-16692 add date-fns and @date-fns/tz dependencies"
 ```
@@ -120,11 +126,14 @@ git commit -m "chore(boreal-web-components): EOA-16692 add date-fns and @date-fn
 
 ### Task 2: `date-engine` core types
 
+**Status:** ✅ done — `types.ts` created (`DayCell`, `MonthGrid`, `WeekdayLabel`, `DateEngineLocale`), verified compliant with the project's Component Naming Conventions guideline (not directly applicable — this is a `services/` module, not a component — but PascalCase type naming and directory precedent both satisfied). `tsc --noEmit` introduces no new errors.
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/types.ts` (create)
 
 **Acceptance criteria:**
+
 - Defines `DayCell`: native `Date`, naive-ISO string, `isCurrentMonth`, `isToday`, `isDisabled`, `isSelected` — the latter two are consumer-computed flags this type carries, not flags `date-engine` itself computes.
 - Defines `MonthGrid` as a 6×7 (`DayCell[][]`, 6 weeks × 7 days) matrix plus `monthLabel`, `year`, `month` (0-indexed, matching native `Date`).
 - Defines `WeekdayLabel` (short/long name + index) for the weekday row.
@@ -136,6 +145,7 @@ git commit -m "chore(boreal-web-components): EOA-16692 add date-fns and @date-fn
 Non-visual task — validate with `pnpm --filter boreal-web-components exec tsc --noEmit` passing with no errors.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add core type definitions"
 ```
@@ -144,11 +154,14 @@ git commit -m "feat(date-engine): EOA-16692 add core type definitions"
 
 ### Task 3: `date-engine` month-grid generation
 
+**Status:** ✅ done — implementation (`grid.ts`: `generateMonthGrid`/`getWeekdayLabels`, date-fns only, pure) by `@frontend-subagent`; unit tests (`grid.spec.ts`) independently reviewed and strengthened by `@testing-subagent` (21 → 25 tests, closing an unasserted-return-shape gap on `isDisabled`/`isSelected`/`year`/`month`/`monthLabel`). 25/25 passing, 100% coverage on `grid.ts`, no new `tsc`/ESLint errors. Mutation testing correctly deferred to Task 30. Going forward, implementation and unit-test authorship for each task are dispatched as separate subagent calls (`@frontend-subagent` then `@testing-subagent`), per explicit direction — a change from this plan's original per-task executor tagging.
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/grid.ts` (create)
 
 **Acceptance criteria:**
+
 - Exports `generateMonthGrid(year, month, options: { locale?: DateEngineLocale; weekStartsOn?: 0-6 })` producing a fixed 6×7 (42-cell) matrix, including leading/trailing days from adjacent months marked `isCurrentMonth: false`.
 - `weekStartsOn` defaults to the supplied locale's own convention (date-fns `Locale.options.weekStartsOn`) when a `Locale` is given, else `0` (Sunday).
 - Uses date-fns functions only (`startOfMonth`, `endOfMonth`, `startOfWeek`, `addDays`, etc.) — no hand-rolled calendar math.
@@ -156,6 +169,7 @@ git commit -m "feat(date-engine): EOA-16692 add core type definitions"
 - Pure function — no mutation of inputs, no module-level state.
 
 **Unit tests to cover** _(spec file: `services/date-engine/__test__/grid.spec.ts`)_:
+
 - Grid always has exactly 6 rows × 7 columns regardless of month length or starting weekday.
 - Leading/trailing adjacent-month days are flagged `isCurrentMonth: false` with the correct calendar date.
 - `isToday` is computed correctly relative to an injected/mocked "now" (avoid real-clock flakiness).
@@ -168,6 +182,7 @@ git commit -m "feat(date-engine): EOA-16692 add core type definitions"
 Non-visual task — validate via `pnpm --filter boreal-web-components test -- date-engine` passing.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add month-grid generation"
 ```
@@ -176,16 +191,20 @@ git commit -m "feat(date-engine): EOA-16692 add month-grid generation"
 
 ### Task 4: `date-engine` date math
 
+**Status:** ✅ done — implementation (`date-math.ts`: `addMonths`/`subMonths`/`isSameDay`/`isSameMonth`/`isWithinRange`/`compareDates`/`toNaiveISODate`/`fromNaiveISODate`) by `@frontend-subagent`; unit tests (`date-math.spec.ts`) by `@testing-subagent`. Note: `date-fns`'s `compareAsc` is typed as plain `number`, not a `-1 | 0 | 1` literal union — `compareDates` clamps explicitly via `if/else` rather than a type assertion. **Trimmed post-review (2026-08-13):** the original spec over-tested pure pass-through wrappers (`addMonths`/`subMonths`/`isSameDay`/`isSameMonth`/`isWithinRange`) with exhaustive boundary cases that were really re-testing date-fns's own already-tested correctness, not any logic of ours — these had zero branching/transformation, so only a date-fns bug could ever fail them. Trimmed each to one delegation smoke test (21 → 15 tests); `toNaiveISODate`/`fromNaiveISODate` (deliberate `format`/`parse` choice, avoiding `toISOString`/`new Date(iso)` pitfalls) and `compareDates` (real `number` → `-1|0|1` narrowing) were left untouched since those test genuine logic of ours. Coverage held at 100% on `date-math.ts` after the trim, confirming the dropped assertions added no real signal. 39/39 tests passing across the `date-engine` suite, no new `tsc`/ESLint errors.
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/date-math.ts` (create)
 
 **Acceptance criteria:**
+
 - Exports `addMonths`/`subMonths` thin wrappers over date-fns, kept inside `date-engine` so all date-fns usage stays in this module.
 - Exports `isSameDay`/`isSameMonth` (used now) and `isWithinRange`/`compareDates` (reserved for Phase 3/4 reuse — implemented now since trivial, but not wired into any Phase 0-2 component; JSDoc must state they're currently unused).
 - Exports `toNaiveISODate(date): string` (→ `yyyy-MM-dd`, no timezone conversion) and `fromNaiveISODate(iso): Date` for the reverse.
 
 **Unit tests to cover** _(spec file: `services/date-engine/__test__/date-math.spec.ts`)_:
+
 - `addMonths`/`subMonths` correctly roll over year boundaries.
 - `isSameDay`/`isSameMonth` ignore time-of-day components.
 - `toNaiveISODate` produces zero-padded `yyyy-MM-dd` with **no timezone shift** — the test most likely to catch a `toISOString()`-style bug near UTC offset boundaries.
@@ -197,6 +216,7 @@ git commit -m "feat(date-engine): EOA-16692 add month-grid generation"
 Non-visual task — validate via the `date-engine` test script passing.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add date math and naive-ISO conversion helpers"
 ```
@@ -205,17 +225,21 @@ git commit -m "feat(date-engine): EOA-16692 add date math and naive-ISO conversi
 
 ### Task 5: `date-engine` locale-aware formatting
 
+**Status:** ✅ done — implementation (`format.ts`: `formatDisplayDate`/`getMonthYearLabel`) by `@frontend-subagent`; unit tests (`format.spec.ts`) by `@testing-subagent`, test depth matched to logic from the start per the Task 4 trimming precedent — `formatDisplayDate` (near-pure date-fns pass-through) got 3 tests, `getMonthYearLabel` (real logic: 0-indexed `month` → `Date` construction) got 4, including the December→January boundary case. 100% coverage on `format.ts`, 46/46 tests passing across `date-engine`, no new `tsc`/ESLint errors. Confirmed via date-fns's own type signature that `locale: undefined` is already handled safely by `format()` — no defensive guard added.
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/format.ts` (create)
 
 **Acceptance criteria:**
+
 - Exports `formatDisplayDate(date, formatString, locale?)` wrapping date-fns `format`, used by `bds-date-picker`'s `format` prop for the trigger's display text.
 - Exports `getMonthYearLabel(year, month, locale?)` for the calendar header, reused by `bds-calendar-grid`.
 - Both no-op to a sensible default when `locale` is `undefined` — never throw.
 - Utility discovery note: `bds-text-field`/`bds-select` have no display-formatting helper (they treat `value` as opaque). No conflict; new formatting utility scoped to `date-engine` only.
 
 **Unit tests to cover** _(spec file: `services/date-engine/__test__/format.spec.ts`)_:
+
 - `formatDisplayDate` respects custom format strings (`yyyy/MM/dd`, `dd/MM/yyyy`, `MMM d, yyyy`).
 - `formatDisplayDate` produces locale-correct month names for a non-English `Locale`.
 - `getMonthYearLabel` handles December→January boundary months correctly.
@@ -226,6 +250,7 @@ git commit -m "feat(date-engine): EOA-16692 add date math and naive-ISO conversi
 Non-visual task — validate via the `date-engine` test script passing.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add locale-aware formatting helpers"
 ```
@@ -234,11 +259,14 @@ git commit -m "feat(date-engine): EOA-16692 add locale-aware formatting helpers"
 
 ### Task 6: `date-engine` public barrel + boundary audit
 
+**Status:** ✅ done — `index.ts` created, mirroring `services/floating/`/`services/logger/`'s barrel pattern (codebase precedent followed over `development-standards.md` §3.3's stricter "no barrel files" text, per explicit 2026-08-13 decision). Boundary-check grep (`@stencil/core`/`document`/`window` across `services/date-engine/*.ts` excluding `__test__/`) returned zero matches; no date-fns leakage beyond `DateEngineLocale`. No new `tsc`/ESLint errors. **Phase 0's `date-engine` module (Tasks 1–6) is complete.**
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/index.ts` (create)
 
 **Acceptance criteria:**
+
 - Re-exports `grid.ts`/`date-math.ts`/`format.ts` public functions and `types.ts` types.
 - Does not re-export any date-fns function or its `Locale` type by import path — only `date-engine`'s own `DateEngineLocale` alias is exposed.
 - File-header JSDoc states the module is framework-agnostic, pure-function-only; grep for `@stencil/core` and `document`/`window` across `services/date-engine/*.ts` (excluding `__test__/`) must return nothing.
@@ -248,6 +276,7 @@ git commit -m "feat(date-engine): EOA-16692 add locale-aware formatting helpers"
 Non-visual task — validate via `tsc --noEmit` passing and the grep boundary-check returning no matches.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add public barrel and finalize module boundary"
 ```
@@ -258,22 +287,30 @@ git commit -m "feat(date-engine): EOA-16692 add public barrel and finalize modul
 
 ### Task 7: `bds-calendar-grid` types
 
+**Status:** ✅ done — `ICalendarGrid.ts`/`types.ts`/`index.ts` created, imports `MonthGrid`/`DateEngineLocale` through the `date-engine` barrel via the `@/` path alias. No `disabled`/`min`/`max` prop added (Phase 3 out of scope); `DayCell.isDisabled` left as the future hook. No new `tsc`/ESLint errors. Confirms the same barrel-file written-guideline-vs-practice gap already resolved for `date-engine` also applies to component `types/` dirs (`bds-toggle`/`bds-text-field`/`bds-tag-field`/`bds-popover`/`bds-dialog` all use `index.ts` barrels despite §3.3's text) — codebase precedent followed, consistent with the 2026-08-13 decision.
+
+**Naming correction (2026-08-13):** `DayClickDetail`/`MonthNavigateDetail` renamed to `CalendarGridDayClickDetail`/`CalendarGridMonthNavigateDetail`, per `development-standards.md` §1.5's documented `{Component}{Action}Detail` convention (its own example: `RadioChangeDetail`) — the original names weren't component-prefixed, an avoidable collision risk once re-exported through a shared barrel. Also confirmed per user instruction: no JSDoc on types/interfaces going forward; the three Task 7 files already had none.
+
+**Structural correction (2026-08-13):** `bds-calendar-grid` was initially placed flat at `components/forms/bds-calendar-grid/`, as a sibling to `bds-date-picker`. Caught before Task 8: every existing multi-component family in this codebase (`bds-table`/`bds-table-column`/`bds-table-column-group`, `bds-tab-group`/`bds-tab`/`bds-tab-content`, `bds-card`/`bds-card-header`/`bds-card-footer`, `bds-list-menu`/`bds-list-menu-item`) nests under a shared parent folder named after the primary/orchestrator component, with the primary itself self-nested one level deeper — confirmed by directly inspecting `data-visualization/bds-table/`'s exact shape. Since `bds-calendar-grid` exists solely to be composed by `bds-date-picker` (and, later, the Phase 4 range picker — still a `bds-date-picker`-family concern), the correct structure is `components/forms/bds-date-picker/{bds-date-picker/, bds-calendar-grid/}`, matching that precedent. Task 7's already-created files were moved (`components/forms/bds-calendar-grid/types/*` → `components/forms/bds-date-picker/bds-calendar-grid/types/*`) and every remaining path reference in this plan (Tasks 8–30's Files lists) was corrected to the nested structure before any further files were created. Verified via `tsc --noEmit` post-move: only the 5 known pre-existing unrelated errors, nothing new. Docs (`apps/boreal-docs/`) are unaffected — that tree doesn't mirror component nesting.
 **Executor:** @frontend-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/ICalendarGrid.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/types.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/types/index.ts` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/ICalendarGrid.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/types.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/index.ts` (create)
 
 **Acceptance criteria:**
+
 - `ICalendarGrid` declares: `grid: MonthGrid` (from `date-engine`), `selectedDate?: string` (naive ISO), `year: number`, `month: number` (0-indexed), `locale?: DateEngineLocale`.
-- `types.ts` declares `DayClickDetail { date: string }` and `MonthNavigateDetail { year: number; month: number; direction: 'prev' | 'next' }`.
+- `types.ts` declares `CalendarGridDayClickDetail { date: string }` and `CalendarGridMonthNavigateDetail { year: number; month: number; direction: 'prev' | 'next' }`.
 - No `disabled`/`min`/`max` props (Phase 3, out of scope) — but `DayCell.isDisabled` (already in `date-engine` types) is left as dead capacity so Phase 3 can wire it without an interface break.
-- Utility discovery note: checked `bds-table-column`/`bds-table-column-group` types for a reusable "dumb controlled child" interface — none generic enough (table-specific); new interface justified, the *pattern* (controlled, no internal state) follows `bds-tab`/`bds-tab-content`.
+- Utility discovery note: checked `bds-table-column`/`bds-table-column-group` types for a reusable "dumb controlled child" interface — none generic enough (table-specific); new interface justified, the _pattern_ (controlled, no internal state) follows `bds-tab`/`bds-tab-content`.
 
 **Manual test (required):**
 Non-visual task — validate via `tsc --noEmit`.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-calendar-grid): EOA-16692 add component type definitions"
 ```
@@ -282,19 +319,22 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 add component type definitions
 
 ### Task 8: `bds-calendar-grid` scaffold
 
+**Status:** ✅ done — `bds-calendar-grid.tsx` created (`@Component({ tag: 'bds-calendar-grid' })`, all 5 props, both events, stub `<Host></Host>` render, deliberately zero `@State()`). Manual QA confirmed the element mounts and hydrates cleanly with an empty host and zero console errors, even with required props absent (stub never reads them). No new `tsc`/ESLint errors.
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.tsx` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx` (create)
 
 **Acceptance criteria:**
+
 - `@Component({ tag: 'bds-calendar-grid' })`, no `styleUrl` yet (Task 10), light DOM.
 - `@Prop() readonly grid!: MonthGrid`
 - `@Prop() readonly selectedDate?: string`
 - `@Prop() readonly year!: number`
 - `@Prop() readonly month!: number`
 - `@Prop() readonly locale?: DateEngineLocale`
-- `@Event() bdsDayClick!: EventEmitter<DayClickDetail>`
-- `@Event() bdsMonthNavigate!: EventEmitter<MonthNavigateDetail>`
+- `@Event() bdsDayClick!: EventEmitter<CalendarGridDayClickDetail>`
+- `@Event() bdsMonthNavigate!: EventEmitter<CalendarGridMonthNavigateDetail>`
 - `render()` returns a stub `<Host></Host>` only.
 - Component owns **no** `@State()` for selection or displayed month — the scaffold itself is proof the "dumb, controlled" contract can't silently regress later without a visible diff.
 
@@ -302,6 +342,7 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 add component type definitions
 Non-visual task (stub render) — validate via `tsc --noEmit`; add a temporary scenario to `packages/boreal-web-components/src/index.html` rendering a bare `<bds-calendar-grid>` and confirm `pnpm dev:components` shows no console errors (empty host expected).
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props and events"
 ```
@@ -312,9 +353,11 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props 
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.tsx` (modify — full render, replacing stub)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx` (modify — full render, replacing stub)
 
 **Acceptance criteria:**
+
 - Renders as a **native `<table role="grid">`**, per the spike doc's resolved decision (matches the WAI-ARIA APG's own Date Picker Dialog reference markup and `bds-table`'s established "native elements for free a11y" precedent):
   - Month/year label + prev/next nav buttons render in a header region above the `<table>` (not inside `<thead>` as a `<th>`, since nav controls aren't column headers) — using `getMonthYearLabel` from `date-engine`.
   - `<thead><tr role="row">` contains 7 weekday `<th scope="col">` cells, in order from `getWeekdayLabels`. `role="row"`/`columnheader` are implied by `tr`/`th` per the APG reference — no manual role authoring needed there.
@@ -328,6 +371,7 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props 
 - Utility discovery note: `src/utils/a11y/keyboard/navigation/grid-navigation.ts` exists and is generic for arrow-key grid traversal, but keyboard nav is explicitly out of scope for Phase 0-2 (Phase 8) — do not wire it here; leave a code comment identifying it as the correct future integration point.
 
 **Unit tests to cover** _(spec files: `bds-calendar-grid.basics.spec.ts`, `bds-calendar-grid.events.spec.ts`, `bds-calendar-grid.variants.spec.ts`)_:
+
 - `basics`: renders as `<table role="grid">` with `<thead>`/`<tbody>`, 42 `<td>` day cells, correct weekday `<th scope="col">` order, correct month/year label for a given `grid`/`year`/`month` combination.
 - `basics`: renders using `newSpecPage`, asserting no internal `@State()` drives output — identical props produce identical output (proves the "dumb" contract).
 - `events`: clicking a day cell emits `bdsDayClick` with the correct ISO date; clicking prev/next emits `bdsMonthNavigate` with correctly rolled-over year/month at December→January and January→December boundaries.
@@ -337,16 +381,19 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props 
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
+
 - Scenario 1: render `<bds-calendar-grid>` in `index.html` with a `grid` for August 2026 (has leading July and trailing September days), `year=2026`, `month=7`.
 - Scenario 2: same grid but with `selectedDate` set to a mid-month date.
 - Scenario 3: wire prev/next buttons via a small inline script in `index.html` that re-computes and re-assigns `grid`/`year`/`month` props on `bdsMonthNavigate`, to visually confirm the controlled round-trip works before `bds-date-picker` exists.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given the August 2026 grid, when rendered, then the header shows "August 2026", the weekday row starts on the locale's configured day, and 42 day cells are visible with July/September days visually muted. Pass: header text and cell count match.
 - [ ] Given `selectedDate` set, when rendered, then exactly one cell shows the selected/active style. Pass: single highlighted cell.
 - [ ] Given the wired prev/next buttons, when clicking "next", then the header updates to "September 2026" and the grid re-renders for that month, including correctly across the December→January boundary if tested at that range. Pass: header and cell dates advance by exactly one month per click.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-calendar-grid): EOA-16692 implement table role=grid render and day/month navigation events"
 ```
@@ -357,10 +404,12 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 implement table role=grid rend
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.tsx` (modify — JSDoc only)
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/bds-calendar-grid.scss` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx` (modify — JSDoc only)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.scss` (create)
 
 **Acceptance criteria:**
+
 - Every `@Prop`, `@Event`, and the class-level component JSDoc block are complete and accurate.
 - SCSS uses `$boreal-*` tokens exclusively (matching `bds-text-field.scss`'s convention) — no hardcoded hex/px values for colors; spacing/sizing translated to the nearest token scale per the Figma sizing notes (32×32px cells, 53px header padding, 4px/2px grid gutters, 290×290px card, 24px/12px card padding) — if no exact token matches a given pixel value, pick the nearest token and document the delta in a code comment.
 - Includes a `border-collapse: collapse` / table-default-style reset (removing native `<table>` default border/spacing), since `<table role="grid">` was chosen deliberately and its default browser chrome needs resetting.
@@ -368,9 +417,11 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 implement table role=grid rend
 
 **Manual test (required):**
 Reuse Scenarios 1-3 from Task 9; validate:
+
 - [ ] Given the rendered grid, when compared against the Figma sizing spec, then cell sizes, header padding, and card padding visually match within the nearest token's tolerance, and no native `<table>` default border/spacing is visible. Pass: visual match confirmed by side-by-side comparison with the Figma screenshot.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-calendar-grid): EOA-16692 add SCSS styling and finalize JSDoc"
 ```
@@ -381,12 +432,15 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 add SCSS styling and finalize 
 
 **Executor:** @testing-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts` (create)
 
 **Acceptance criteria:**
+
 - Follows the split-spec-file convention (`bds-toggle`/`bds-tab-group` `__test__/` layout) — this file covers only accessibility assertions, not duplicating basics/events/variants coverage from Task 9.
 
 **Unit tests to cover:**
+
 - The rendered root is a `<table>` with `role="grid"`, and weekday header cells are `<th scope="col">` (both structural facts asserted directly, confirming the Task 9 markup decision landed correctly).
 - Day grid cells expose an accessible name containing the date (exact mechanism is a Task 9 implementation decision; this test asserts the outcome).
 - Nav buttons have accessible names (e.g. "Previous month"/"Next month"), not icon-only with no label.
@@ -397,6 +451,7 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 add SCSS styling and finalize 
 Non-visual (test-only) task — validate via `pnpm --filter boreal-web-components test -- bds-calendar-grid` passing, at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
 
 **Commit:**
+
 ```bash
 git commit -m "test(bds-calendar-grid): EOA-16692 add accessibility unit tests"
 ```
@@ -409,12 +464,14 @@ git commit -m "test(bds-calendar-grid): EOA-16692 add accessibility unit tests"
 
 **Executor:** @frontend-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/types/IDatePicker.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/types/enum.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/types/types.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/types/index.ts` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/IDatePicker.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/enum.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/types.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/index.ts` (create)
 
 **Acceptance criteria:**
+
 - `IDatePicker` declares: `value: string` (public, canonical ISO — naive `yyyy-MM-dd` in Phase 1), `format: string` (date-fns format string, default `yyyy/MM/dd`), `locale?: DateEngineLocale`, `timezone: string` (default resolved via `Intl.DateTimeFormat().resolvedOptions().timeZone`), `hideArrow: boolean` (default `true`), `name: string`, `disabled: boolean`, `required: boolean`.
 - `types.ts` declares `DatePickerDraftState { selectedDate: string | null }` for Phase 1 (extended in Phase 2 to add `hour`/`minute`), kept as its own type so later phases can extend it without touching the public interface.
 - `types.ts` documents (comment only, not implemented) the future range value shape `{ start: string; end: string }` per the spike doc's Finding 4 — `value`'s type must not be pinned in a way that forces a rename when range ships.
@@ -425,6 +482,7 @@ git commit -m "test(bds-calendar-grid): EOA-16692 add accessibility unit tests"
 Non-visual task — validate via `tsc --noEmit`.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add component type definitions"
 ```
@@ -435,9 +493,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 add component type definitions"
 
 **Executor:** @frontend-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (create)
 
 **Acceptance criteria:**
+
 - `@Component({ tag: 'bds-date-picker' })`, light DOM, no `styleUrl`/`formAssociated` yet.
 - `@Prop({ mutable: true, reflect: true }) value: string = ''`
 - `@Prop() readonly format: string = 'yyyy/MM/dd'`
@@ -454,11 +514,13 @@ git commit -m "feat(bds-date-picker): EOA-16692 add component type definitions"
 - `render()` returns a stub composing empty `<bds-text-field slot="field">` + `<bds-popover>` shells only.
 
 **Manual test (required):**
+
 - Scenario 1: render a bare `<bds-date-picker>` in `index.html`.
-Run: `pnpm dev:components` and validate:
+  Run: `pnpm dev:components` and validate:
 - [ ] Given the bare component, when rendered, then a text field and an (empty, hidden) popover shell appear with no console errors. Pass: no runtime errors.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 scaffold component with props, state, and events"
 ```
@@ -469,9 +531,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 scaffold component with props, s
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - In `componentDidLoad()`, calls `bdsPopover.setListenElement(...)` and `bdsPopover.setAnchorElement(...)` exactly as `bds-select.tsx` does against its `bdsInputContainer` getter — reuse the same getter pattern (`private get bdsField()`, `private get bdsInputContainer()`, `private get bdsPopover()`) querying `this.el` at runtime.
 - The composed `bds-text-field` renders with `selectable={true}` (reusing `bds-select`'s non-editable-input mechanism) so the field displays formatted text but isn't directly typable.
 - `floatingOptions` passed to `bds-popover` sets `hideArrow: this.hideArrow` (deliberate deviation from `bds-select`/`bds-dropdown`'s hardcoded `true`) plus the popover's own `footer` prop enabled so the Clean/Cancel/Apply buttons render in the popover's existing `footer-button` slot.
@@ -479,22 +543,26 @@ git commit -m "feat(bds-date-picker): EOA-16692 scaffold component with props, s
 - `disabled` prevents the popover from opening (mirrors `bds-popover`'s own `disabled` prop wired through `onBeforeShow`).
 
 **Unit tests to cover** _(spec file: `bds-date-picker.basics.spec.ts`)_:
+
 - Clicking the trigger field opens the popover; clicking outside (or Escape) closes it, reusing `bds-popover`'s own click-outside/escape behavior (assert the integration, not re-testing `bds-popover`'s internals).
 - `disabled={true}` prevents the popover from opening on trigger click.
 - `hideArrow={false}` results in the popover's arrow element being present; `hideArrow={true}` (default) results in no arrow — the one behavior that deliberately diverges from `bds-select`'s hardcoded value, needs explicit coverage.
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
+
 - Scenario 1: default props; click the trigger to open/close the popover.
 - Scenario 2: a second instance with `hide-arrow="false"` to visually confirm the arrow renders.
 - Scenario 3: a `disabled` instance confirming the trigger does not open the popover.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given the default instance, when clicking the trigger field, then the popover opens; clicking outside closes it. Pass: popover visibility toggles correctly.
 - [ ] Given the `hide-arrow="false"` instance, when opened, then a visible arrow points from the popover to the trigger. Pass: arrow element visible.
 - [ ] Given the `disabled` instance, when clicking the trigger, then nothing opens. Pass: popover stays hidden.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 wire text-field trigger and popover composition"
 ```
@@ -505,13 +573,15 @@ git commit -m "feat(bds-date-picker): EOA-16692 wire text-field trigger and popo
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/draft-state.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/value-mapping.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/utils/index.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderCalendarPanel.tsx` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/draft-state.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/value-mapping.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/index.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - `draft-state.ts` exports pure functions: `selectDay(draft, isoDate): draft`, `resetDraft(committedValue): draft`, `cloneDraftFromValue(value): draft` — kept out of the `.tsx` file per the `bds-table` file-organization decision.
 - `value-mapping.ts` bridges `date-engine`'s `MonthGrid`/`Date` types and the component's naive-ISO `value` string, using `toNaiveISODate`/`fromNaiveISODate` — the only place in `bds-date-picker` that touches `date-engine`'s date-math functions directly.
 - `renderCalendarPanel.tsx` composes `<bds-calendar-grid>` inside the popover body, computing its `grid`/`year`/`month`/`selectedDate` props from component `@State`.
@@ -521,22 +591,26 @@ git commit -m "feat(bds-date-picker): EOA-16692 wire text-field trigger and popo
 - Listens to `bdsMonthNavigate` and updates `displayYear`/`displayMonth` accordingly, re-rendering the grid for the new month.
 
 **Unit tests to cover** _(spec file: `bds-date-picker.events.spec.ts`)_:
+
 - Clicking a day in the calendar updates the visible "selected" state inside the popover but does **not** change the public `value` prop and does **not** emit `bdsChange`/`valueChange` — the single most important behavior in the component, needs an explicit, unambiguous test.
 - Clicking month-nav prev/next updates the displayed month/year without affecting the selected day or the draft.
 - Reopening the popover after a previous session (without Apply) resets the draft to the last **committed** value, not the abandoned draft.
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
-- Scenario 1: no initial `value`; open the popover, click a day, confirm the trigger field's text does *not* change yet.
+
+- Scenario 1: no initial `value`; open the popover, click a day, confirm the trigger field's text does _not_ change yet.
 - Scenario 2: initial `value` (e.g. `2026-08-12`); open the popover, confirm that day is pre-highlighted and the display month matches.
 - Scenario 3: click a different day, close the popover (click outside) without applying, reopen — confirm the draft reverted to the original committed day.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given no initial value, when a day is clicked inside the calendar, then the trigger field's text is unchanged and no `bdsChange` fires. Pass: trigger text static, no event.
 - [ ] Given an initial value, when the popover opens, then the matching day is pre-selected and the calendar shows the correct month. Pass: correct day highlighted.
 - [ ] Given an abandoned day click, when the popover is closed without Apply and reopened, then the original committed day is shown selected again. Pass: draft reverted.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add draft state and calendar grid wiring"
 ```
@@ -547,10 +621,12 @@ git commit -m "feat(bds-date-picker): EOA-16692 add draft state and calendar gri
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderFooter.tsx` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderFooter.tsx` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Footer renders three `bds-button`s slotted into `bds-popover`'s existing `footer-button` slot region.
 - Button text is not hardcoded — expose via a `labels` prop object (`{ clean?: string; cancel?: string; apply?: string }` with English defaults `'Clear' | 'Cancel' | 'Apply'`) unless checking `bds-select`/`bds-text-field` reveals an existing i18n convention to follow instead (open question — check first).
 - **Apply**: commits `this.draft.selectedDate` into `this.value` (naive ISO via `value-mapping.ts`), emits `bdsChange`/`valueChange`, updates the text field's displayed formatted text, closes the popover.
@@ -559,6 +635,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 add draft state and calendar gri
 - All three buttons are keyboard-operable (native `bds-button` semantics) and disabled together with the whole component when `this.disabled` is true.
 
 **Unit tests to cover** _(spec file: `bds-date-picker.events.spec.ts`, extending Task 15's file)_:
+
 - Apply with a selected draft day commits `value`, emits exactly one `bdsChange` and one `valueChange` with the correct naive-ISO string, and closes the popover.
 - Apply with no draft selection (opened and closed without picking a day) does not change `value` and does not emit.
 - Cancel after a day click leaves `value` unchanged, emits no event, and closes the popover.
@@ -567,16 +644,19 @@ git commit -m "feat(bds-date-picker): EOA-16692 add draft state and calendar gri
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
+
 - Scenario 1: no value; open, pick a day, click Apply; confirm trigger text updates to the formatted date and popover closes.
 - Scenario 2: a committed value; open, pick a different day, click Cancel; confirm trigger text unchanged and popover closes.
 - Scenario 3: a committed value; open, click Clean; confirm trigger text clears immediately.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given a fresh pick + Apply, when Apply is clicked, then the trigger shows the newly formatted date and the popover closes. Pass: visible text update + closed popover.
 - [ ] Given a pick + Cancel, when Cancel is clicked, then the trigger's previously committed text is unchanged. Pass: no visible change.
 - [ ] Given Clean on a populated field, when Clean is clicked, then the trigger clears immediately. Pass: empty trigger text.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add Clean/Cancel/Apply footer actions"
 ```
@@ -587,9 +667,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 add Clean/Cancel/Apply footer ac
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Adds `formAssociated: true` to `@Component()`.
 - Class extends `Mixin(formAssociatedMixin)` and implements `IFormControl<string>`, matching `bds-text-field.tsx` — **unless** checking `src/mixins/form-associated.mixin.ts` and `src/utils/form/` at implementation time reveals `useFormField` has become the canonical pattern in more recently built form components (check via `git log` on a newer form component like `bds-tag-field.tsx`), in which case use that instead (open question — determine before wiring, don't assume `bds-text-field.tsx`'s pattern is still current).
 - Adds `@AttachInternals() internals!: ElementInternals`.
@@ -597,19 +679,23 @@ git commit -m "feat(bds-date-picker): EOA-16692 add Clean/Cancel/Apply footer ac
 - `formResetCallback` resets `value` to `''` and also resets the internal draft.
 
 **Unit tests to cover** _(spec file: `bds-date-picker.form.spec.ts`)_:
+
 - Component participates in a native `<form>`'s `FormData` with the correct `name`/`value` pair after Apply.
 - `formResetCallback` (triggered by a form `reset`) clears both `value` and any open draft state.
 - `required` + empty `value` produces the expected validity state (`ElementInternals.validity`), consistent with `bds-text-field`'s own required-field validity pattern.
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
+
 - Scenario: wrap a `<bds-date-picker name="appointment-date">` inside a `<form>` with a submit button in `index.html`; log `FormData` on submit.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given a date picked and applied inside a form, when the form is submitted, then `FormData` contains the correct `appointment-date` entry. Pass: logged FormData shows the expected value.
 - [ ] Given a form reset, when reset is triggered, then the date picker's trigger text clears. Pass: visible reset.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add form-associated (FACE) support"
 ```
@@ -620,9 +706,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 add form-associated (FACE) suppo
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Final `render()` assembles: `bds-text-field` (slot="field", `selectable`, formatted display value via `formatDisplayDate`), `bds-popover` (with `renderCalendarPanel` body + `renderFooter` footer), and a hidden `<input type="hidden">` mirroring `value` for form-submission parity, matching `bds-select`'s own hidden-input pattern.
 - Every `@Prop`, `@Event`, and the class-level component JSDoc block (including `@slot` docs for any custom slots, e.g. a `labels` override) are complete.
 - Component-level JSDoc explicitly states the `value` contract (naive ISO date, decoupled from `format`).
@@ -631,9 +719,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 add form-associated (FACE) suppo
 Consolidate all prior scenarios into one end-to-end walkthrough in `index.html` covering: default render, custom `format`, custom `locale`, `hideArrow` toggle, disabled state, form participation.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given the consolidated scenario, when each sub-case is exercised in sequence, then all previously-validated behaviors (Tasks 14-17) still pass together without regression. Pass: full walkthrough succeeds.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 finalize render tree and JSDoc"
 ```
@@ -644,9 +734,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 finalize render tree and JSDoc"
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.scss` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (create)
 
 **Acceptance criteria:**
+
 - Uses `$boreal-*` tokens exclusively, matching `bds-calendar-grid.scss`'s convention.
 - Decide whether `bds-text-field`'s built-in label region or a `bds-date-picker`-owned label (via `renderFieldLabel` from `src/components/forms/common/`) renders — avoid duplicating (open question, resolve here).
 - Popover content sizing approximates 290×290px content with 24px/12px padding per the Figma spec, translated to nearest `$boreal-spatial-*` tokens.
@@ -655,9 +747,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 finalize render tree and JSDoc"
 Reuse the consolidated scenario from Task 18.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given the rendered component, when compared against the Figma spec, then label position, field styling, and popover sizing visually match within token tolerance. Pass: visual comparison confirmed.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add SCSS styling"
 ```
@@ -668,15 +762,18 @@ git commit -m "feat(bds-date-picker): EOA-16692 add SCSS styling"
 
 **Executor:** @testing-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` (extend from Task 14)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.variants.spec.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (create)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` (extend from Task 14)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.variants.spec.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (create)
 
 **Acceptance criteria:**
+
 - Coverage split matches the `bds-toggle`/`bds-tab-group` `__test__/` convention: each file owns a distinct concern, no duplicate assertions.
 
 **Unit tests to cover:**
+
 - `variants`: custom `format` changes trigger display text without changing `value`; custom `locale` produces locale-correct month names in both the trigger text and the calendar header.
 - `variants`: `disabled` disables the trigger, footer buttons, and prevents popover opening, all together.
 - `keyboard`: Tab reaches the trigger field; Enter/Space opens the popover (via `bds-popover`'s own `KeyboardController` mechanism wired in Task 14 — assert the integration outcome). No arrow-key day-grid navigation tested (Phase 8).
@@ -687,6 +784,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 add SCSS styling"
 Non-visual (test-only) task — validate via `pnpm --filter boreal-web-components test -- bds-date-picker` passing at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
 
 **Commit:**
+
 ```bash
 git commit -m "test(bds-date-picker): EOA-16692 add variants, keyboard, and a11y unit tests"
 ```
@@ -697,10 +795,12 @@ git commit -m "test(bds-date-picker): EOA-16692 add variants, keyboard, and a11y
 
 **Executor:** @documentation-subagent
 **Files:**
+
 - `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` (create)
 - `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx` (create)
 
 **Acceptance criteria:**
+
 - Story/MDX registered under the `forms` category, following the `bds-select` story/MDX pair as the structural template.
 - MDX documents `bds-date-picker`'s full public API plus a dedicated internal-implementation-note section documenting `bds-calendar-grid`'s existence, props, and events as an internal note only — no separate `bds-calendar-grid.mdx`/story file (per the spike doc's resolved decision).
 - Documents the `value` contract explicitly (naive `yyyy-MM-dd` ISO, decoupled from `format`) and the draft-until-Apply behavior including Clean's commit-immediately behavior.
@@ -709,10 +809,12 @@ git commit -m "test(bds-date-picker): EOA-16692 add variants, keyboard, and a11y
 
 **Manual test (required):**
 Run: `pnpm dev:docs` and validate:
+
 - [ ] Given the Storybook entry, when navigating to Forms → bds-date-picker, then the default story renders correctly and controls (`format`, `hideArrow`, `disabled`) work live. Pass: interactive controls update the rendered component.
 - [ ] Given the MDX page, when reading it, then the `bds-calendar-grid` internal note is present but no separate sidebar entry exists for `bds-calendar-grid`. Pass: single sidebar entry for `bds-date-picker` only.
 
 **Commit:**
+
 ```bash
 git commit -m "docs(bds-date-picker): EOA-16692 add Phase 1 Storybook story and MDX documentation"
 ```
@@ -725,14 +827,17 @@ git commit -m "docs(bds-date-picker): EOA-16692 add Phase 1 Storybook story and 
 **Files:** none (verification-only task; no new source files)
 
 **Acceptance criteria:**
+
 - Confirms `bds-date-picker`'s Phase 1 behavior (open/close popover, day-selection draft state, Clean/Cancel/Apply commit behavior, FACE form participation) behaves identically through the `boreal-react` and `boreal-vue` output-target wrappers, not just the raw web component.
 - Uses the `dev:pack:react`/`dev:pack:vue` pipeline (per project memory `vite-dep-cache-masks-wrapper-framework-bugs.md` — a live `pnpm dev` server can serve a stale wrapper bundle after a rebuild, producing false framework-specific bug reports; pack-based verification avoids that).
 - Any framework-specific regression found (event handling, prop/attribute forwarding, `v-model`/`ngModel`-equivalent binding) is logged as a new task before Phase 2 begins, not silently patched inline here.
 
 **Manual test (required):**
+
 - Scenario: repeat Task 18's consolidated end-to-end scenario (default render, custom `format`, custom `locale`, `hideArrow` toggle, disabled state, form participation) through both `examples/react-testapp` and `examples/vue-testapp`.
 
 Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
+
 - [ ] Given the same scenario exercised on the raw web component in Task 18, when repeated through the React wrapper, then behavior matches exactly (open/close, draft selection, Apply/Cancel/Clean, form value). Pass: no divergence.
 - [ ] Given the same scenario, when repeated through the Vue wrapper (including two-way `value` binding), then behavior matches exactly. Pass: no divergence.
 
@@ -746,17 +851,20 @@ Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
 
 **Executor:** @frontend-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/value.ts` (create)
 - `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts` (create)
 
 **Acceptance criteria:**
+
 - Confirm the date-fns major pinned in Task 1 is v4+ (required for `@date-fns/tz`) before starting.
-- Exports `combineDateTimeToUTC(datePart: Date, hour: number, minute: number, timezone: string): string` — interprets the given wall-clock date+time *as if in* `timezone`, returns the UTC ISO 8601 string (`...Z` suffix), via `@date-fns/tz`'s `TZDate`.
+- Exports `combineDateTimeToUTC(datePart: Date, hour: number, minute: number, timezone: string): string` — interprets the given wall-clock date+time _as if in_ `timezone`, returns the UTC ISO 8601 string (`...Z` suffix), via `@date-fns/tz`'s `TZDate`.
 - Exports `extractDateTimeFromUTC(isoUtc: string, timezone: string): { date: Date; hour: number; minute: number }` — the reverse, for populating draft state from an existing datetime `value`.
 - Handles DST transitions correctly (a wall-clock time ambiguous or nonexistent during a DST fold/gap must not silently produce a wrong-by-one-hour UTC value).
 - Utility discovery note: confirmed no existing timezone utility anywhere in `packages/boreal-web-components/src/`. New module justified; document the library choice (`@date-fns/tz`, version) in this file's header comment.
 
 **Unit tests to cover** _(spec file: `services/date-engine/__test__/value.spec.ts`)_:
+
 - Combining a date+time in a positive-UTC-offset zone (e.g. `Asia/Tokyo`) produces the correctly shifted UTC ISO string.
 - Combining a date+time in a negative-UTC-offset zone (e.g. `America/Los_Angeles`) produces the correctly shifted UTC ISO string, including across that zone's DST "spring forward"/"fall back" transition dates for the relevant year.
 - `extractDateTimeFromUTC` round-trips with `combineDateTimeToUTC` for a sample of zones/times including at least one DST-boundary case.
@@ -767,6 +875,7 @@ Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
 Non-visual task — validate via the `date-engine` test script passing, including the DST-boundary cases specifically.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC ISO conversion"
 ```
@@ -778,6 +887,7 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 **Executor:** main thread (no executor) — not an implementation task
 
 **Acceptance criteria:**
+
 - Before Task 25 begins, present the inferred single-date time-selector UI (hour:minute dropdown pair) to the user for confirmation or correction, since the provided docs only show the dual Inicio/Fin range variant.
 - Document the confirmed design as a short addendum to this plan before proceeding.
 
@@ -789,11 +899,13 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/helpers/renderTimeSelector.tsx` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/types/types.ts` (modify — extend `DatePickerDraftState` with `hour`/`minute`)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/types/types.ts` (modify — extend `DatePickerDraftState` with `hour`/`minute`)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Adds `@Prop() readonly showTime: boolean = false` (or the name confirmed at Task 24) gating whether the time selector renders inside the popover body alongside the calendar.
 - Time selector composes two `bds-select` instances (hour 00-23, minute 00-59, per the confirmed design) inside `renderTimeSelector.tsx` — not a new registered custom element.
 - Time changes update `this.draft.hour`/`this.draft.minute` only — same draft-until-Apply contract as day selection.
@@ -802,6 +914,7 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 - Loading an existing `showTime=true` datetime `value` on init correctly pre-populates the draft's date, hour, and minute via `extractDateTimeFromUTC`.
 
 **Unit tests to cover** _(spec file: `bds-date-picker.time.spec.ts`)_:
+
 - With `showTime=false`, `value` after Apply remains a naive `yyyy-MM-dd` string (regression check against Phase 1 contract).
 - With `showTime=true`, selecting a day + hour + minute then Apply produces a correctly UTC-normalized ISO string for a non-UTC `timezone` prop.
 - With `showTime=true` and an explicit `timezone` override, the same wall-clock selection produces a different UTC value than with the default browser timezone (proves the `timezone` prop is honored).
@@ -810,16 +923,19 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 - Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
+
 - Scenario 1: `show-time` enabled, no initial value; pick a day, set hour/minute, Apply; confirm the emitted `value` is a full UTC ISO string.
 - Scenario 2: two instances side by side with different `timezone` props but the same manual date/time selection; confirm their emitted UTC values differ by the expected offset.
 - Scenario 3: instance pre-loaded with an existing UTC datetime `value`; open the popover; confirm day/hour/minute are all correctly pre-selected.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given a day+time selection and Apply, when the emitted value is inspected, then it is a full UTC ISO string reflecting the correct offset for the configured timezone. Pass: logged value matches expected UTC computation.
 - [ ] Given two instances with different timezones and identical wall-clock selections, when both are applied, then their emitted UTC values differ by the correct offset delta. Pass: values differ as expected.
 - [ ] Given a pre-loaded datetime value, when the popover opens, then day/hour/minute are all correctly pre-populated. Pass: visible pre-selection matches the source value.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Phase 2"
 ```
@@ -830,10 +946,12 @@ git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Pha
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.scss` (modify)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker.tsx` (modify — JSDoc for new `showTime`/time-related props)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (modify)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — JSDoc for new `showTime`/time-related props)
 
 **Acceptance criteria:**
+
 - Time selector styling uses `$boreal-*` tokens, matching the popover body's existing spacing conventions from Task 19.
 - JSDoc for `showTime` and any new props/state added in Task 25 is complete and accurate.
 
@@ -841,9 +959,11 @@ git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Pha
 Reuse Task 25's scenarios.
 
 Run: `pnpm dev:components` and validate:
+
 - [ ] Given the time-enabled instance, when compared visually against the confirmed Task 24 design, then spacing and alignment match. Pass: visual match confirmed.
 
 **Commit:**
+
 ```bash
 git commit -m "feat(bds-date-picker): EOA-16692 style time selector and finalize Phase 2 JSDoc"
 ```
@@ -854,13 +974,16 @@ git commit -m "feat(bds-date-picker): EOA-16692 style time selector and finalize
 
 **Executor:** @testing-subagent
 **Files:**
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (extend)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (extend)
+
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (extend)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (extend)
 
 **Acceptance criteria:**
+
 - Extends existing Phase 1 spec files rather than creating parallel duplicate files, keeping the split-by-concern convention intact.
 
 **Unit tests to cover:**
+
 - Hour/minute `bds-select` instances are reachable via Tab and correctly labeled for screen readers (reusing `bds-select`'s own established a11y behavior — assert the integration).
 - `showTime` toggling doesn't break the Phase 1 keyboard flow already covered in Task 20.
 
@@ -868,6 +991,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 style time selector and finalize
 Non-visual (test-only) task — validate via the full `bds-date-picker` test suite passing at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
 
 **Commit:**
+
 ```bash
 git commit -m "test(bds-date-picker): EOA-16692 extend a11y and keyboard tests for time selector"
 ```
@@ -878,20 +1002,24 @@ git commit -m "test(bds-date-picker): EOA-16692 extend a11y and keyboard tests f
 
 **Executor:** @documentation-subagent
 **Files:**
+
 - `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` (modify — add a `showTime` variant story)
 - `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx` (modify)
 
 **Acceptance criteria:**
+
 - MDX documents the Phase 2 value contract explicitly: `value` becomes a full UTC ISO 8601 string when `showTime` is enabled, contrasted clearly against the Phase 1 naive-date contract.
 - MDX explicitly notes that the single time-selector UI was an inferred design (per Task 24's resolution — update this note to reflect whatever was actually confirmed).
 - Documents `timezone` prop behavior with a concrete before/after example (same wall-clock input, two different `timezone` values, two different emitted UTC strings).
 
 **Manual test (required):**
 Run: `pnpm dev:docs` and validate:
+
 - [ ] Given the new `showTime` story, when navigating to it, then hour/minute controls render and interact correctly in Storybook. Pass: interactive time selection works.
 - [ ] Given the MDX value-contract section, when read, then the naive-date vs. UTC-datetime distinction is unambiguous. Pass: reviewer confirms clarity.
 
 **Commit:**
+
 ```bash
 git commit -m "docs(bds-date-picker): EOA-16692 document Phase 2 time selector and UTC value contract"
 ```
@@ -904,14 +1032,17 @@ git commit -m "docs(bds-date-picker): EOA-16692 document Phase 2 time selector a
 **Files:** none (verification-only task; no new source files)
 
 **Acceptance criteria:**
+
 - Confirms `showTime`/time-selector behavior (hour/minute selection, UTC-normalized `value`, `timezone` prop honoring) behaves identically through `boreal-react` and `boreal-vue`, extending Task 22's Phase 1 check rather than duplicating it.
 - Uses the `dev:pack:react`/`dev:pack:vue` pipeline, same rationale as Task 22.
 - Any regression found is logged as a new task, not patched inline here.
 
 **Manual test (required):**
+
 - Scenario: repeat Task 25's three scenarios (time-enabled Apply, cross-timezone comparison, pre-loaded datetime value) through both `examples/react-testapp` and `examples/vue-testapp`.
 
 Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
+
 - [ ] Given Task 25's scenarios, when repeated through the React wrapper, then behavior matches exactly, including the emitted UTC value. Pass: no divergence.
 - [ ] Given the same scenarios, when repeated through the Vue wrapper, then behavior matches exactly. Pass: no divergence.
 
@@ -923,11 +1054,13 @@ Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
 
 **Executor:** @testing-subagent
 **Files:**
+
 - `packages/boreal-web-components/src/services/date-engine/stryker.date-engine.config.mjs` (create)
-- `packages/boreal-web-components/src/components/forms/bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` (create)
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/stryker.bds-date-picker.config.mjs` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/stryker.bds-date-picker.config.mjs` (create)
 
 **Acceptance criteria:**
+
 - Runs Stryker exactly once against each of this plan's three testable units — `date-engine`, `bds-calendar-grid`, `bds-date-picker` — each with its own config file, per this project's existing convention (one config file per component; mutation testing stays local-only, never pushed to CI, per project memory `mutation-testing-workflow-decisions.md`).
 - This is the **only** point in the plan where mutation testing runs — every prior testing task (3, 4, 5, 9, 11, 14, 15, 16, 17, 20, 23, 25, 27) validated coverage only; do not re-run Stryker per-task retroactively, this task is the single consolidated pass.
 - Target: ≥90% mutation score per component, matching the two-phase quality gate in `testing-knowledge`. Any surviving mutant below threshold gets either a new test closing the gap or a documented, justified exception (per existing project convention for killing `undefined-check`/`StringLiteral`-class mutants).
@@ -937,6 +1070,7 @@ Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
 Non-visual (test-only) task — validate by running each component's Stryker config locally and confirming all three report ≥90% mutation score (or documented exceptions).
 
 **Commit:**
+
 ```bash
 git commit -m "test: EOA-16692 add consolidated mutation testing for date-engine, bds-calendar-grid, bds-date-picker"
 ```

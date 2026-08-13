@@ -7,6 +7,7 @@
 | [AI-002-ai-scaffold-knowledge-consolidation.md](./AI-002-ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
 | [AI-003-release-process-remediation-migrate-changesets.md](./AI-003-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
 | [AI-003-release-process-remediation-patch-release-it.md](./AI-003-release-process-remediation-patch-release-it.md) | pending | Release Process Remediation — Option A: Patch `release-it` in place |
+| [AI-004-utils-file-naming-cleanup.md](./AI-004-utils-file-naming-cleanup.md) | pending | `src/utils/` File Naming Cleanup |
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |
 | [EOA-10533-bds-radio-button.md](./EOA-10533-bds-radio-button.md) | done | bds-radio-button Implementation Plan |
@@ -24,7 +25,7 @@
 | [EOA-14935-bds-table-v2.md](./EOA-14935-bds-table-v2.md) | done | bds-table v2 High-Priority Limitations Implementation Plan |
 | [EOA-15507-bds-table-v3.md](./EOA-15507-bds-table-v3.md) | done | bds-table v3 — Dataset Mode, Column Footer, Server-Side/Loading, Virtualization, Guardrail |
 | [EOA-16000-bds-table-v4.md](./EOA-16000-bds-table-v4.md) | done | bds-table v4 — Column Grouping, Drag/Drop Reorder, Resizing, Right-Edge Pinning, Row Expand/Collapse, Selection Refinements, Opt-in Toolbar |
-| [EOA-16692-bds-date-picker-v1.md](./EOA-16692-bds-date-picker-v1.md) | pending | bds-date-picker v1 (ADR-0003 Phases 0–2) Implementation Plan |
+| [EOA-16692-bds-date-picker-v1.md](./EOA-16692-bds-date-picker-v1.md) | in | bds-date-picker v1 (ADR-0003 Phases 0–2) Implementation Plan |
 | [EOA-8845-code-snippetformatter.md](./EOA-8845-code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
 | [EOA-8845-plop-implementation-plan.md](./EOA-8845-plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
 | [EOA-8845-shared-storybook-components.md](./EOA-8845-shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |
