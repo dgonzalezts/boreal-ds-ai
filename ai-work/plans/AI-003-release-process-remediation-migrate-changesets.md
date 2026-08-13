@@ -24,13 +24,14 @@ Two suspected issues were ruled out: `boreal-styleguidelines`'s "staleness" (zer
 
 This plan migrates from `release-it` to `changesets`, matching TurboRepo's own documented recommendation (https://turborepo.dev/en/docs/guides/publishing-libraries). Of the five defects, **four (#1, #2, #3, #5) become structurally not-applicable** rather than requiring a bespoke patch, because changesets works fundamentally differently: a human explicitly authors a small markdown file per change (`pnpm changeset add`) stating which package(s) changed and at what bump level — nothing is inferred from commit messages or git history. Confirmed directly in `changesets`' source: its `determineDependents` function automatically detects when `boreal-react`/`boreal-vue`'s `workspace:*` pin on `boreal-web-components` falls out of range and auto-includes them in the same release with a patch bump and a changelog entry — solving defect #5 natively. Only defect #4 (broken Bitbucket Server links) still needs a custom fix — changesets' default changelog generator and `@changesets/changelog-github` are both GitHub-specific.
 
-Trade-off: this requires a genuine workflow shift (a changeset file per PR, ideally bot-enforced via CI, which doesn't exist yet — a similar discipline risk to Option A's squash-merge-title enforcement), and a full rewrite of the release configuration (retiring `.release-it.json`, the custom `headerPattern`, `@release-it/conventional-changelog`).
+Trade-off: this requires a genuine workflow shift (a changeset file per PR). Enforcement is **PR-template checklist + reviewer responsibility, not CI or a git hook** — there is no pipeline/admin access or release-team support available to build an automated check (server-side or otherwise), so a missing `.changeset/*.md` file must be caught in review, same as a missing test would be. This mirrors the exact same unenforced-convention gap Option A has for its PR-title requirement (see that plan's A1, marked not viable) — and matches precedent: even BEEQ, an actively-maintained comparison project, has no automated check for its own equivalent PR-title/squash convention (confirmed directly in `ai-docs/lib/beeq.txt` — only two GitHub Actions workflows exist, neither validates PR titles). This plan also requires a full rewrite of the release configuration (retiring `.release-it.json`, the custom `headerPattern`, `@release-it/conventional-changelog`).
 
 Confirmed decisions for this plan:
-- Keep squash merges — enforcement shifts from "PR title regex" to "PR must include a changeset file."
+- Keep squash merges — enforcement of "PR must include a changeset file" is a PR-template checklist item + reviewer responsibility, not an automated check (no pipeline/admin access available to build one). `pnpm changeset status` remains available as an optional local self-check for developers before opening a PR, but nothing blocks on it.
 - Rename `packages/boreal-styleguidelines` → `packages/boreal-style-guidelines` (same as Option A, unaffected by tooling choice).
 - Alpha-graduation policy: stay in `-alpha.N` until real-world feedback addressed; graduate straight to `1.0.0` when ready, regardless of the internal alpha counter.
 - Keep full auto-generated `CHANGELOG.md` for all four packages, including wrappers.
+- CHANGELOG cleanup for already-published history is in scope (see B7) — tiers 1–2 required, tier 3 optional/flagged — not deferred as in the original ADR consequence note.
 
 ---
 
@@ -92,6 +93,7 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/en
 
 ## Pull Requests
 - **Always use Squash and Merge.**
+- **Every PR that changes a publishable package must include a changeset** (see Release & Versioning below). There is no automated check for this — it is a required item in the PR template and a reviewer responsibility, same as checking for missing tests.
 - PR description must state what changed, why, and link the Jira ticket (e.g. `Closes EOA-123`).
 - Minimum 2 approvals (excluding the author), at least 1 from a core maintainer. All review comments must be resolved before merge.
 - All CI checks (lint, tests, build) must pass; new/modified components need unit tests (≥ 90% coverage); bug fixes need a test that reproduces and validates the fix.
@@ -107,12 +109,19 @@ See [README.md](README.md).
 - **Every PR that changes a publishable package must include a changeset.** Run `pnpm changeset add`, select the affected package(s), pick a bump level (patch/minor/major), and write a one-line summary — this becomes the changelog entry, so write it for consumers, not just for reviewers. Commit the generated `.changeset/*.md` file as part of your PR.
 - If your PR only touches a package that another package depends on via `workspace:*` (e.g. you changed `boreal-web-components` and `boreal-react` wraps it), you do **not** need to add a separate changeset for the dependent — `changesets` detects the out-of-range pin automatically and includes it in the same release with a patch bump.
 - Alpha stays in effect until real-world usage feedback has been addressed — not tied to a specific version number. When ready, the package graduates directly to `1.0.0`, regardless of the internal alpha counter.
-- [Once CI exists:] a bot check (`changeset status --since=release/current`) will flag PRs that change a publishable package without an accompanying changeset.
+- There is no automated enforcement for the changeset requirement — it is a required item in the PR template and a reviewer responsibility. You can self-check locally before opening a PR with `pnpm changeset status --since=release/current`.
 ```
 
 (Code of Conduct and Recommended IDE Extensions sections deliberately omitted: no `CODE_OF_CONDUCT.md` or extensions list exists anywhere in the tracked repo — flag as an open decision rather than inventing content or linking to something that doesn't exist.)
 
 Update the PR template (development standards, PR Template section) to add a "Changeset included?" checklist item — flag this as a needed edit, not silently skip it.
+
+### B7 — CHANGELOG cleanup (retroactive, already-published history)
+Split into three tiers so effort is visible up front; tiers 1–2 are required for this plan, tier 3 is optional and must be explicitly decided, not silently skipped:
+
+1. **Link rewrite (required, low effort).** Mechanical regex rewrite of every existing commit/compare URL across all four `CHANGELOG.md` files, from the current broken scheme (confirmed: `bitbucket.c11.telesign.com/7999/dev/boreal-ds/commit/<hash>`) to the correct Bitbucket Server path (`/projects/DEV/repos/boreal-ds/commits/<hash>`). Scriptable — no editorial judgment needed.
+2. **Cross-package de-duplication (recommended, medium effort).** Review and reconcile the near-identical multi-hundred-line blocks currently duplicated verbatim across `boreal-web-components`/`boreal-react`/`boreal-vue` `CHANGELOG.md` files (confirmed present across the `0.1.0-alpha.0`–`alpha.3` sections). Requires a judgment call on canonical ownership per historical entry — cosmetic/historical, not functionally broken, so this can slip if deprioritized, but should be an explicit decision.
+3. **Editorial noise cleanup (optional, high effort — flag as open decision, do not silently skip).** Existing changelogs contain low-signal entries that leaked in under the current tooling (e.g. `remove test cases from index.html`, `Fix adjusments on PR`, `JSdocs lint fix`). Cleaning these up is a genuine manual-review effort across ~2,500+ lines total; present to the team as a "do we want to invest in this" decision rather than bundling it into this plan by default.
 
 ---
 
@@ -123,7 +132,8 @@ Update the PR template (development standards, PR Template section) to add a "Ch
 3. Implement B3 (prerelease mode) — manual test: confirm `changeset pre enter alpha` doesn't conflict with already-published `-alpha.N` tags/versions.
 4. Implement B4 (release script replacement) — manual test: inspect the generated diff from a scratch changeset without publishing; confirm correct version bumps and changelog output, including dependency auto-inclusion for `boreal-react`/`boreal-vue`.
 5. Implement B5 (retire release-it) — manual test: `check-cem-changes.ts` still runs correctly against the new version source.
-6. Implement B6 (backfill, rename, CONTRIBUTING.md, PR template update) — manual test: `pnpm install` and a full build succeed from the new path; `changeset status --since=release/current` correctly flags an intentionally-changeset-less test PR.
+6. Implement B7 (CHANGELOG cleanup, tiers 1–2 required) — manual test: spot-check rewritten links resolve in a browser; confirm de-duplicated sections still contain every original entry.
+7. Implement B6 (backfill, rename, CONTRIBUTING.md, PR template update) — manual test: `pnpm install` and a full build succeed from the new path; PR template renders the new checklist item; `pnpm changeset status --since=release/current` correctly flags an intentionally-changeset-less test PR when run manually.
 
 ## Verification
 
