@@ -24,7 +24,7 @@ created: 2026-08-12
 
 ## Testing and QA policy for this plan
 
-**Two-phase test gate, coverage embedded per task, mutation testing consolidated at the end** — mirrors `bds-table`'s `EOA-16000` precedent (its Task 15: one Stryker pass across the full surface area, not repeated per task), applied here at the scope of this single plan since there's no prior `bds-date-picker` version to combine with yet. Coverage-phase Jest tests (≥90% coverage) run per task, as normal. Mutation-phase (Stryker, ≥90% score) is deliberately **not** run per task — it's deferred to Task 30, run once after every other task in this plan is complete, across all three testable units this plan creates (`date-engine`, `bds-calendar-grid`, `bds-date-picker`), each with its own Stryker config file per this project's existing convention. Do not install Stryker or attempt the mutation-phase gate until Task 30.
+**Two-phase test gate, coverage consolidated per component/phase block, mutation testing consolidated at the end** — mirrors `bds-table`'s `EOA-16000` precedent (its Task 15: one Stryker pass across the full surface area, not repeated per task), applied here at the scope of this single plan since there's no prior `bds-date-picker` version to combine with yet. Coverage-phase Jest tests (≥90% coverage) are written in one consolidated unit-test task at the end of each component/phase block (Task 11 for `bds-calendar-grid` a11y, Task 20 for all of Phase 1, Task 27 for all of Phase 2), not embedded inline in each implementation task — implementation tasks (12–19, 23, 25) carry acceptance criteria and manual tests only; their behaviors are tested by the block's consolidated task. Mutation-phase (Stryker, ≥90% score) is deliberately **not** run per task or per block — it's deferred to Task 30, run once after every other task in this plan is complete, across all three testable units this plan creates (`date-engine`, `bds-calendar-grid`, `bds-date-picker`), each with its own Stryker config file per this project's existing convention. Do not install Stryker or attempt the mutation-phase gate until Task 30.
 
 **QA-subagent dispatch is scoped to tasks with real visual/behavioral output**, not every task. Tasks with a chained `**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)` line (8, 9, 10, 14–19, 24, 25) render or restyle something a human needs to look at. Pure-logic, type-only, or config tasks (1–7, 11–13, 20–23, 26–28) keep a single executor — their manual test is `tsc --noEmit` or a Jest run, which the assigned subagent already validates itself; dispatching `@qa-subagent` there would mean reviewing nothing visual.
 
@@ -558,12 +558,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 scaffold component with props, s
 - Clicking the trigger opens the popover (`openPopover()`); no calendar content yet (Task 15) — verify only open/close mechanics with an empty popover body.
 - `disabled` prevents the popover from opening (mirrors `bds-popover`'s own `disabled` prop wired through `onBeforeShow`).
 
-**Unit tests to cover** _(spec file: `bds-date-picker.basics.spec.ts`)_:
-
-- Clicking the trigger field opens the popover; clicking outside (or Escape) closes it, reusing `bds-popover`'s own click-outside/escape behavior (assert the integration, not re-testing `bds-popover`'s internals).
-- `disabled={true}` prevents the popover from opening on trigger click.
-- `hideArrow={false}` results in the popover's arrow element being present; `hideArrow={true}` (default) results in no arrow — the one behavior that deliberately diverges from `bds-select`'s hardcoded value, needs explicit coverage.
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (trigger open/close, `disabled` gating, `hideArrow` divergence) are covered in the consolidated Task 20 (Phase 1 unit tests), not written here.
 
 **Manual test (required):**
 
@@ -606,12 +601,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 wire text-field trigger and popo
 - Day click updates **only** `this.draft` (via `selectDay`) — does not touch `this.value`, does not emit `bdsChange`/`valueChange`, does not close the popover (ADR-0005: draft-until-Apply).
 - Listens to `bdsMonthNavigate` and updates `displayYear`/`displayMonth` accordingly, re-rendering the grid for the new month.
 
-**Unit tests to cover** _(spec file: `bds-date-picker.events.spec.ts`)_:
-
-- Clicking a day in the calendar updates the visible "selected" state inside the popover but does **not** change the public `value` prop and does **not** emit `bdsChange`/`valueChange` — the single most important behavior in the component, needs an explicit, unambiguous test.
-- Clicking month-nav prev/next updates the displayed month/year without affecting the selected day or the draft.
-- Reopening the popover after a previous session (without Apply) resets the draft to the last **committed** value, not the abandoned draft.
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (draft-only day selection, month-nav display updates, draft reset on reopen) are covered in the consolidated Task 20 (Phase 1 unit tests), not written here.
 
 **Manual test (required):**
 
@@ -650,14 +640,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 add draft state and calendar gri
 - **Clean**: resets the draft to empty **and commits immediately** — clears `this.value`, emits `bdsChange`/`valueChange` with `''` (confirmed behavior, no longer an open question).
 - All three buttons are keyboard-operable (native `bds-button` semantics) and disabled together with the whole component when `this.disabled` is true.
 
-**Unit tests to cover** _(spec file: `bds-date-picker.events.spec.ts`, extending Task 15's file)_:
-
-- Apply with a selected draft day commits `value`, emits exactly one `bdsChange` and one `valueChange` with the correct naive-ISO string, and closes the popover.
-- Apply with no draft selection (opened and closed without picking a day) does not change `value` and does not emit.
-- Cancel after a day click leaves `value` unchanged, emits no event, and closes the popover.
-- Clean clears `value` to `''` and emits `bdsChange`/`valueChange` with `''`.
-- Labels prop/i18n mechanism override changes the rendered button text.
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (Apply/Cancel/Clean commit and event semantics, labels override) are covered in the consolidated Task 20 (Phase 1 unit tests), not written here.
 
 **Manual test (required):**
 
@@ -694,12 +677,7 @@ git commit -m "feat(bds-date-picker): EOA-16692 add Clean/Cancel/Apply footer ac
 - Adds `@Watch('value') watchValue(next) { setFormValue(this.internals, next); }` (or the `useFormField`-equivalent, whichever pattern is chosen).
 - `formResetCallback` resets `value` to `''` and also resets the internal draft.
 
-**Unit tests to cover** _(spec file: `bds-date-picker.form.spec.ts`)_:
-
-- Component participates in a native `<form>`'s `FormData` with the correct `name`/`value` pair after Apply.
-- `formResetCallback` (triggered by a form `reset`) clears both `value` and any open draft state.
-- `required` + empty `value` produces the expected validity state (`ElementInternals.validity`), consistent with `bds-text-field`'s own required-field validity pattern.
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (`FormData` participation, `formResetCallback`, required-field validity) are covered in the consolidated Task 20 (Phase 1 unit tests), not written here.
 
 **Manual test (required):**
 
@@ -753,19 +731,25 @@ git commit -m "feat(bds-date-picker): EOA-16692 finalize render tree and JSDoc"
 
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (create)
 
-**Process note (2026-08-15, added after Task 10's post-mortem):** Task 10 (`bds-calendar-grid` SCSS) took ~8 rounds of user-caught fixes because Figma states/dimensions were pulled reactively, one gap at a time, instead of researched fully up front — missing width alignment, missing weekday styling, entirely missing hover/focus/active states, a dead-CSS root-selector bug, wrong text color on a combo state, a leaked native focus outline, and a border applied too broadly. See `feedback_figma_first_for_styling_tasks` (persistent memory) for the full pattern. This task carries more distinct visual regions than `bds-calendar-grid` ever did (trigger field, popover chrome, label, footer) plus an unresolved design question baked into its own acceptance criteria — do not repeat the reactive pattern here.
+**Process note (2026-08-15, added after Task 10's post-mortem):** Task 10 (`bds-calendar-grid` SCSS) was reopened twice after user-caught gaps because Figma states/dimensions were pulled reactively, one gap at a time, instead of researched fully up front — missing width alignment, missing weekday styling, entirely missing hover/focus/active states, a dead-CSS root-selector bug, wrong text color on a combo state, and a leaked native focus outline. This task carries more distinct visual regions than `bds-calendar-grid` ever did (trigger field, popover chrome, label, footer) plus an unresolved design question baked into its own acceptance criteria — do not repeat the reactive pattern here.
 
-**Before writing any SCSS**, complete a dedicated Figma research pass covering every visual region this task touches, pulling `get_design_context`/`get_metadata` directly rather than assuming a prior partial pull generalizes:
-- The trigger field's exact styling and how it composes with `bds-text-field` (confirmed earlier via Code Connect to `_DatePickerField`, but not yet re-verified against the *single-date* — non-range — trigger specifically).
-- The popover panel's real dimensions/padding for the single-date (non-range) `Basic` Calendar Type — do not reuse the plan's "290×290px, 24px/12px" note without re-confirming it against Figma directly; that number's provenance predates this session's Figma research and may be as stale as Task 10's "53px header padding" turned out to be.
-- The label region in both candidate designs (`bds-text-field`'s built-in label vs. a separate `bds-date-picker`-owned one) — resolve the open question below from what Figma actually shows, not from implementation convenience.
-- The footer's exact spacing/alignment (already partially decoded — `Clean`/`Cancel`/`Apply`, unlabeled when `Range` is off — cross-check against the `Basic` Calendar Type pull from this session before assuming full coverage).
+**Figma research pass (complete before writing any SCSS):**
+
+Pull `get_design_context` / `get_metadata` for each row below directly — a row is done only when it was actually pulled, never when it was inferred from a sibling variant or an earlier partial pull.
+
+- [ ] Region: trigger field — styling and composition with `bds-text-field` (confirmed earlier via Code Connect to `_DatePickerField`, but not yet re-verified against the *single-date*, non-range trigger specifically)
+- [ ] Region: popover panel — real dimensions/padding for the single-date (non-range) `Basic` Calendar Type _(unconfirmed — re-pull before use; the plan's "290×290px, 24px/12px" note predates this session's research and may be as stale as Task 10's "53px header padding" turned out to be)_
+- [ ] Region: label — both candidate designs (`bds-text-field`'s built-in label vs. a separate `bds-date-picker`-owned one), to resolve the open question below from what Figma actually shows, not implementation convenience
+- [ ] Region: footer — exact spacing/alignment (already partially decoded: `Clean`/`Cancel`/`Apply`, unlabeled when `Range` is off — cross-check against the `Basic` Calendar Type pull from this session before assuming full coverage)
+- [ ] Dimensions: label region and trigger field width alignment; popover panel and calendar/footer width alignment
 
 **Acceptance criteria:**
 
+- Every row of the Figma research pass above is checked off, with the pulled value recorded, before the first SCSS line is written.
 - Uses `$boreal-*` tokens exclusively, matching `bds-calendar-grid.scss`'s convention.
 - Decide whether `bds-text-field`'s built-in label region or a `bds-date-picker`-owned label (via `renderFieldLabel` from `src/components/forms/common/`) renders — avoid duplicating (open question, resolve via the Figma research pass above, not ad hoc).
 - Popover content sizing matches the Figma spec re-confirmed in the research pass above, translated to nearest `$boreal-spatial-*` tokens.
+- Verified against the **compiled** CSS output, not just the SCSS source, per the Figma Research Gate for Styling Tasks.
 
 **Manual test (required):**
 Reuse the consolidated scenario from Task 18.
@@ -782,27 +766,35 @@ git commit -m "feat(bds-date-picker): EOA-16692 add SCSS styling"
 
 ---
 
-### Task 20: `bds-date-picker` remaining Phase 1 unit tests
+### Task 20: `bds-date-picker` Phase 1 unit tests (consolidated)
 
 **Executor:** @testing-subagent
 **Files:**
 
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` (extend from Task 14)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.events.spec.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.form.spec.ts` (create)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.variants.spec.ts` (create)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (create)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (create)
 
 **Acceptance criteria:**
 
+- One consolidated task covering every behavior area introduced by Tasks 14–18 — per the Testing Phases policy, unit tests are never written inline in an implementation task.
 - Coverage split matches the `bds-toggle`/`bds-tab-group` `__test__/` convention: each file owns a distinct concern, no duplicate assertions.
 
-**Unit tests to cover:**
+**Unit tests to cover** _(grouped by spec file)_:
 
+- `basics` (Task 14's behavior): clicking the trigger field opens the popover; clicking outside (or Escape) closes it, reusing `bds-popover`'s own click-outside/escape behavior (assert the integration, not re-testing `bds-popover`'s internals); `disabled={true}` prevents the popover from opening on trigger click; `hideArrow={false}` results in the popover's arrow element being present, `hideArrow={true}` (default) results in no arrow.
+- `events` (Task 15's behavior): clicking a day in the calendar updates the visible "selected" state inside the popover but does **not** change the public `value` prop and does **not** emit `bdsChange`/`valueChange` — the single most important behavior in the component, needs an explicit, unambiguous test; clicking month-nav prev/next updates the displayed month/year without affecting the selected day or the draft; reopening the popover after a previous session (without Apply) resets the draft to the last **committed** value, not the abandoned draft.
+- `events` (Task 16's behavior): Apply with a selected draft day commits `value`, emits exactly one `bdsChange` and one `valueChange` with the correct naive-ISO string, and closes the popover; Apply with no draft selection (opened and closed without picking a day) does not change `value` and does not emit; Cancel after a day click leaves `value` unchanged, emits no event, and closes the popover; Clean clears `value` to `''` and emits `bdsChange`/`valueChange` with `''`; labels prop/i18n mechanism override changes the rendered button text.
+- `form` (Task 17's behavior): component participates in a native `<form>`'s `FormData` with the correct `name`/`value` pair after Apply; `formResetCallback` (triggered by a form `reset`) clears both `value` and any open draft state; `required` + empty `value` produces the expected validity state (`ElementInternals.validity`), consistent with `bds-text-field`'s own required-field validity pattern.
 - `variants`: custom `format` changes trigger display text without changing `value`; custom `locale` produces locale-correct month names in both the trigger text and the calendar header.
 - `variants`: `disabled` disables the trigger, footer buttons, and prevents popover opening, all together.
 - `keyboard`: Tab reaches the trigger field; Enter/Space opens the popover (via `bds-popover`'s own `KeyboardController` mechanism wired in Task 14 — assert the integration outcome). No arrow-key day-grid navigation tested (Phase 8).
 - `a11y`: trigger field has correct `aria-haspopup`/`aria-expanded` reflecting popover visibility.
 - `a11y`: footer buttons are reachable and labeled correctly for screen readers.
+- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
 Non-visual (test-only) task — validate via `pnpm --filter boreal-web-components test -- bds-date-picker` passing at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
@@ -810,7 +802,7 @@ Non-visual (test-only) task — validate via `pnpm --filter boreal-web-component
 **Commit:**
 
 ```bash
-git commit -m "test(bds-date-picker): EOA-16692 add variants, keyboard, and a11y unit tests"
+git commit -m "test(bds-date-picker): EOA-16692 add consolidated Phase 1 unit tests"
 ```
 
 ---
@@ -887,16 +879,10 @@ Run: `pnpm dev:pack:react` and `pnpm dev:pack:vue`, then validate:
 - Handles DST transitions correctly (a wall-clock time ambiguous or nonexistent during a DST fold/gap must not silently produce a wrong-by-one-hour UTC value).
 - Utility discovery note: confirmed no existing timezone utility anywhere in `packages/boreal-web-components/src/`. New module justified; document the library choice (`@date-fns/tz`, version) in this file's header comment.
 
-**Unit tests to cover** _(spec file: `services/date-engine/__test__/value.spec.ts`)_:
-
-- Combining a date+time in a positive-UTC-offset zone (e.g. `Asia/Tokyo`) produces the correctly shifted UTC ISO string.
-- Combining a date+time in a negative-UTC-offset zone (e.g. `America/Los_Angeles`) produces the correctly shifted UTC ISO string, including across that zone's DST "spring forward"/"fall back" transition dates for the relevant year.
-- `extractDateTimeFromUTC` round-trips with `combineDateTimeToUTC` for a sample of zones/times including at least one DST-boundary case.
-- An invalid IANA timezone string does not silently produce a wrong result — throws or falls back predictably (document and test whichever is chosen).
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (zone conversion correctness, DST handling, round-trip, invalid-timezone handling) are covered in the consolidated Task 27 (Phase 2 unit tests), not written here.
 
 **Manual test (required):**
-Non-visual task — validate via the `date-engine` test script passing, including the DST-boundary cases specifically.
+Non-visual task — no automated test suite exists yet for this module (deferred to Task 27). Validate via `pnpm --filter boreal-web-components exec tsc --noEmit` passing, plus a quick manual REPL/console check of `combineDateTimeToUTC`/`extractDateTimeFromUTC` against at least one positive-offset zone (e.g. `Asia/Tokyo`) and one negative-offset zone with a DST boundary (e.g. `America/Los_Angeles`), confirming the computed UTC strings by hand.
 
 **Commit:**
 
@@ -937,14 +923,7 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 - When `showTime` is `true`, Apply computes the final UTC ISO string via `combineDateTimeToUTC`, using `this.timezone` and the draft's date+hour+minute.
 - Loading an existing `showTime=true` datetime `value` on init correctly pre-populates the draft's date, hour, and minute via `extractDateTimeFromUTC`.
 
-**Unit tests to cover** _(spec file: `bds-date-picker.time.spec.ts`)_:
-
-- With `showTime=false`, `value` after Apply remains a naive `yyyy-MM-dd` string (regression check against Phase 1 contract).
-- With `showTime=true`, selecting a day + hour + minute then Apply produces a correctly UTC-normalized ISO string for a non-UTC `timezone` prop.
-- With `showTime=true` and an explicit `timezone` override, the same wall-clock selection produces a different UTC value than with the default browser timezone (proves the `timezone` prop is honored).
-- Loading a component with an existing datetime `value` and `showTime=true` correctly pre-populates hour/minute.
-- Cancel with `showTime=true` discards time draft changes exactly like date draft changes (Task 16's contract extended consistently).
-- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
+**Note:** Unit tests for this task's behavior (Phase 1 value-contract regression, UTC computation on Apply, `timezone` override, pre-population on load, Cancel discarding time draft) are covered in the consolidated Task 27 (Phase 2 unit tests), not written here.
 
 **Manual test (required):**
 
@@ -974,12 +953,22 @@ git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Pha
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (modify)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — JSDoc for new `showTime`/time-related props)
 
-**Process note (2026-08-15):** same Figma-first requirement as Task 19 — see that task's process note and `feedback_figma_first_for_styling_tasks` (persistent memory). The time selector's base field structure was decoded this session (`_Basic Time picker`: timer icon + two bordered 58px hour/minute fields), but its **interaction states** (hover/focus/active on the hour/minute selects, validation/error states if any) were never pulled. Pull those explicitly before implementing — do not assume they match `bds-calendar-grid`'s day-cell interaction states or any other component's pattern by default.
+**Process note (2026-08-15):** same Figma-first requirement as Task 19. The time selector's base field structure was decoded this session (`_Basic Time picker`: timer icon + two bordered 58px hour/minute fields), but its interaction states were never pulled — do not assume they match `bds-calendar-grid`'s day-cell interaction states or any other component's pattern by default.
+
+**Figma research pass (complete before writing any SCSS):**
+
+Pull `get_design_context` / `get_metadata` for each row below directly — a row is done only when it was actually pulled, never when it was inferred from a sibling variant or another component's pattern.
+
+- [ ] Region: hour/minute fields — default state _(already decoded this session: timer icon + two bordered 58px fields — confirm no further detail is missing)_
+- [ ] Interaction: hour/minute fields — hover / focus / active _(not yet pulled)_
+- [ ] Modifier: hour/minute fields — validation/error state, if the design has one _(not yet pulled — confirm whether it exists before assuming it doesn't)_
+- [ ] Dimensions: hour/minute field width/height and spacing against the popover body's existing spacing conventions from Task 19
 
 **Acceptance criteria:**
 
+- Every row of the Figma research pass above is checked off, with the pulled value recorded, before the first SCSS line is written.
 - Time selector styling uses `$boreal-*` tokens, matching the popover body's existing spacing conventions from Task 19.
-- Hover/focus/active states on the hour/minute selects are implemented from confirmed Figma states (per the process note above), not assumed.
+- Hover/focus/active states on the hour/minute selects are implemented from confirmed Figma states (per the research pass above), not assumed.
 - JSDoc for `showTime` and any new props/state added in Task 25 is complete and accurate.
 
 **Manual test (required):**
@@ -997,30 +986,36 @@ git commit -m "feat(bds-date-picker): EOA-16692 style time selector and finalize
 
 ---
 
-### Task 27: `bds-date-picker` Phase 2 unit tests (a11y/keyboard extension)
+### Task 27: `bds-date-picker` + `date-engine` Phase 2 unit tests (consolidated)
 
 **Executor:** @testing-subagent
 **Files:**
 
+- `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts` (create)
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts` (create)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` (extend)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` (extend)
 
 **Acceptance criteria:**
 
-- Extends existing Phase 1 spec files rather than creating parallel duplicate files, keeping the split-by-concern convention intact.
+- One consolidated task covering every behavior area introduced by Tasks 23 and 25–26 — per the Testing Phases policy, unit tests are never written inline in an implementation task.
+- Extends existing Phase 1 spec files for a11y/keyboard rather than creating parallel duplicate files, keeping the split-by-concern convention intact.
 
-**Unit tests to cover:**
+**Unit tests to cover** _(grouped by spec file)_:
 
-- Hour/minute `bds-select` instances are reachable via Tab and correctly labeled for screen readers (reusing `bds-select`'s own established a11y behavior — assert the integration).
-- `showTime` toggling doesn't break the Phase 1 keyboard flow already covered in Task 20.
+- `value` (Task 23's behavior, plain Jest, no `newSpecPage`): combining a date+time in a positive-UTC-offset zone (e.g. `Asia/Tokyo`) produces the correctly shifted UTC ISO string; combining a date+time in a negative-UTC-offset zone (e.g. `America/Los_Angeles`) produces the correctly shifted UTC ISO string, including across that zone's DST "spring forward"/"fall back" transition dates for the relevant year; `extractDateTimeFromUTC` round-trips with `combineDateTimeToUTC` for a sample of zones/times including at least one DST-boundary case; an invalid IANA timezone string does not silently produce a wrong result — throws or falls back predictably (document and test whichever is chosen).
+- `time` (Task 25's behavior): with `showTime=false`, `value` after Apply remains a naive `yyyy-MM-dd` string (regression check against Phase 1 contract); with `showTime=true`, selecting a day + hour + minute then Apply produces a correctly UTC-normalized ISO string for a non-UTC `timezone` prop; with `showTime=true` and an explicit `timezone` override, the same wall-clock selection produces a different UTC value than with the default browser timezone (proves the `timezone` prop is honored); loading a component with an existing datetime `value` and `showTime=true` correctly pre-populates hour/minute; Cancel with `showTime=true` discards time draft changes exactly like date draft changes (Task 16's contract extended consistently).
+- `a11y`: hour/minute `bds-select` instances are reachable via Tab and correctly labeled for screen readers (reusing `bds-select`'s own established a11y behavior — assert the integration).
+- `keyboard`: `showTime` toggling doesn't break the Phase 1 keyboard flow already covered in Task 20.
+- Coverage-phase only (≥90%); mutation testing deferred to Task 30.
 
 **Manual test (required):**
-Non-visual (test-only) task — validate via the full `bds-date-picker` test suite passing at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
+Non-visual (test-only) task — validate via the full `date-engine` and `bds-date-picker` test suites passing at ≥90% coverage (coverage-phase only; mutation testing deferred to Task 30).
 
 **Commit:**
 
 ```bash
-git commit -m "test(bds-date-picker): EOA-16692 extend a11y and keyboard tests for time selector"
+git commit -m "test: EOA-16692 add consolidated Phase 2 unit tests for date-engine value conversion and bds-date-picker time selector"
 ```
 
 ---
@@ -1119,7 +1114,7 @@ git commit -m "test: EOA-16692 add consolidated mutation testing for date-engine
 
 ## Verification
 
-- **Coverage (per task)**: each `date-engine` module and Stencil component spec file, as written per task above, gated at ≥90% Jest coverage — run `pnpm --filter boreal-web-components test` for the full suite.
+- **Coverage (consolidated per block)**: gated at ≥90% Jest coverage in each block's consolidated unit-test task (Task 20 for Phase 1, Task 27 for `date-engine` value conversion + Phase 2 time selector; Phase 0's Tasks 3–5, 9, 11 predate this convention) — run `pnpm --filter boreal-web-components test` for the full suite.
 - **Mutation score (consolidated)**: Task 30 only — ≥90% Stryker score per component, run once at the end, not per task. See "Testing and QA policy" above for rationale.
 - **Type safety**: `pnpm --filter boreal-web-components exec tsc --noEmit` must pass after every task (no `any`, per project rules).
 - **Manual/visual (QA-subagent scoped tasks)**: `pnpm dev:components` (web-components playground) for Tasks 8, 9, 10, 14–19, 24, 25; `pnpm dev:docs` (Storybook) for Tasks 21, 28 — component changes do not hot-reload, restart the dev server after each change per project memory.
