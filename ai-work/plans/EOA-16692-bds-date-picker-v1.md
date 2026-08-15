@@ -351,6 +351,7 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props 
 
 ### Task 9: `bds-calendar-grid` render as native `<table role="grid">` + interaction
 
+**Status:** ✅ done (verified against every acceptance-criteria/unit-test/manual-test item individually, 2026-08-14) — full render implemented (native `<table role="grid">`, static month/year label header, prev/next `bds-button` nav emitting `bdsMonthNavigate` via `date-engine`'s `addMonths`/`subMonths`, day cells emitting `bdsDayClick` guarded against out-of-month/disabled cells). Added forward-compatible a11y attributes (`aria-selected`, `aria-current`, `aria-label` via `formatDisplayDate`, labeled nav buttons) ahead of Task 11. `tsc`/ESLint clean. Manual QA: all 3 required scenarios passed (basic grid, selected-date, controlled nav incl. Dec→Jan boundary) in Chromium + WebKit. One defect found and fixed along the way: the stale Task 8 stub scenario in `index.html` threw an uncaught `RangeError` on page load once the real render replaced the stub (missing `year`/`month`/`grid`) — fixed by wiring that scenario's props via the same JS-property pattern as the other scenarios, not by adding a defensive guard in the component (both props are already required `@Prop()`s). Known gap, not a defect: outside-month cells aren't visually muted yet — `bds-calendar-grid.scss` doesn't exist until Task 10. **Unit tests**: 3 spec files (`bds-calendar-grid.basics.spec.ts`/`.events.spec.ts`/`.variants.spec.ts`), 16 tests, all 8 required test topics from the plan individually confirmed present, 16/16 passing (independently re-run, not just trusted from the report), 100% statements/branches/functions/lines on `bds-calendar-grid.tsx` (target was ≥90%). Mutation testing correctly deferred to Task 30. (Correction note: this task was briefly marked done on 2026-08-14 with unit tests skipped entirely — manual QA passing had been mistakenly treated as sufficient; caught by the user asking "are we done, are you sure?", corrected, and unit tests written and independently verified before re-closing.)
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
 
@@ -363,13 +364,13 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 scaffold component with props 
     - **Clarifying note (2026-08-14):** the month/year label is intentionally static/non-interactive text for Phase 1/2 — no click handler, no quick-picker. Figma's `_DatePickerCalendar` composite shows a designed month-grid/year-grid quick-picker triggered by clicking this label, but the user confirmed (2026-08-14) this is a deliberate scope deferral, not an oversight. See the spike doc's "Unscheduled — month/year quick-picker" backlog entry (`ai-work/research/2026-08-12-bds-date-picker-architecture-spike.md`) for detail.
   - `<thead><tr role="row">` contains 7 weekday `<th scope="col">` cells, in order from `getWeekdayLabels`. `role="row"`/`columnheader` are implied by `tr`/`th` per the APG reference — no manual role authoring needed there.
   - `<tbody>` contains 6 `<tr role="row">` week rows, each with 7 `<td role="gridcell">` day cells (role implied by `td`, matching the APG pattern).
-  - A code comment on the `<table>`'s `role="grid"` attribute explicitly states why it's not redundant on a native `<table>` (overrides the implicit `role="table"` to signal interactive 2D navigation semantics to assistive tech), so a future maintainer doesn't "clean it up."
+  - **Updated (2026-08-14, no-inline-comments tightening):** the reasoning for why `role="grid"` isn't redundant on a native `<table>` (overrides the implicit `role="table"` to signal interactive 2D navigation semantics to assistive tech) lives in the spike doc's Finding #2, not as an inline code comment — the project's comment convention was tightened mid-implementation to disallow even non-obvious-WHY comments, especially ones citing external specs. No code comment on the `role="grid"` attribute.
 - Prev/next buttons emit `bdsMonthNavigate` with the computed adjacent year/month (via `date-engine`'s `addMonths`/`subMonths`) and `direction`; component does **not** self-update `year`/`month` — parent re-renders with new props (controlled pattern, matching `bds-tab-group`).
 - Day cell click emits `bdsDayClick` with the cell's naive ISO date; cells with `isDisabled: true` (currently none set by any Phase 0-2 caller, dead capacity from Task 7) must not emit, guarding the future Phase 3 wiring point.
 - Day cell states via CSS class map: default, hover (`:hover`), focus (`:focus-visible`), selected/active (`selectedDate` match), disabled (dead capacity, styled but unused), today (`isToday`). No in-range/end-range states (Phase 4+, out of scope).
 - Nav buttons reuse `bds-button`'s icon-only variant (matching how `bds-popover`'s `closable` header button is implemented) rather than hand-rolled `<button>` markup, unless the 32×32px sizing constraint requires a hand-rolled `<button>` — if so, document why `bds-button` didn't fit.
 - Leading/trailing adjacent-month days render visually de-emphasized but remain clickable, **pending confirmation against the actual Figma screenshot at implementation time** (open question — see Remaining Open Questions).
-- Utility discovery note: `src/utils/a11y/keyboard/navigation/grid-navigation.ts` exists and is generic for arrow-key grid traversal, but keyboard nav is explicitly out of scope for Phase 0-2 (Phase 8) — do not wire it here; leave a code comment identifying it as the correct future integration point.
+- Utility discovery note: `src/utils/a11y/keyboard/navigation/grid-navigation.ts` exists and is generic for arrow-key grid traversal, but keyboard nav is explicitly out of scope for Phase 0-2 (Phase 8) — do not wire it here. **Updated (2026-08-14, no-inline-comments tightening):** this integration-point note is recorded here in the plan (and in the spike doc if relevant to a future phase's backlog entry), not as an inline code comment near the day cells — no code comment citing `grid-navigation.ts`.
 
 **Unit tests to cover** _(spec files: `bds-calendar-grid.basics.spec.ts`, `bds-calendar-grid.events.spec.ts`, `bds-calendar-grid.variants.spec.ts`)_:
 
@@ -403,6 +404,18 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 implement table role=grid rend
 
 ### Task 10: `bds-calendar-grid` JSDoc audit + SCSS
 
+**Status:** ✅ done (2026-08-15, after an extended reopen — verified against every acceptance-criteria item individually, plus a full computed-style QA pass in Chromium and WebKit) — JSDoc audit found all `@Prop`/`@Event`/class-level docs already accurate. `bds-calendar-grid.scss` created and wired via `styleUrl`, `$boreal-*` tokens exclusively, no `@use` of the token package.
+
+This task was reopened twice after an initial too-early "done" mark, catching real gaps across several rounds — recorded here as one consolidated history rather than per-round, since the sequence of user-caught issues is itself the useful record for future similar tasks:
+
+1. **Missing structure/typography** (first reopen): `__header`/`__table` had no explicit width (drifted independently instead of sharing Figma's fixed 248px `Container` width); `thead`/`th` had zero styling; `:hover`/`:focus-visible`/`:active` were entirely absent, contradicting Task 9's own acceptance criteria. Fixed with the full token mapping: `$boreal-spatial-layout-l` (32px cells), `$boreal-radius-xs` (4px radius), `$boreal-spatial-padding-m`/`-l` (16/24px header padding, superseding the plan's stale "53px" note), `$boreal-text-default`/`-disabled`/`-inverse`, `$boreal-ui-primary-base` (selected fill), `$boreal-stroke-primary-base` (today's ring), plus `font-family`/`font-size`/`font-weight`/`line-height` (Inter, 12px, 400, 16px — matches Figma's `body/xs` style used throughout, `<th>`'s default browser bold explicitly overridden). `border-collapse: separate; border-spacing: ...` used deliberately instead of literal `collapse` (mechanically incompatible with the 4/2px gutter requirement on a bare `<table>`).
+2. **Root-selector bug** (second reopen, user-caught): the root SCSS block used `.#{$prefix} { ... }` (a class selector) for host-level typography/`user-select`, but `<Host>` never carries that literal class — the whole block was dead CSS. Restructured to mirror `bds-table.scss`'s exact convention: bare `bds-calendar-grid { }` for the host tag, bare `table`/`thead th` for native table structure, BEM classes only for JS-state-driven parts (`__day` and its modifiers). Also added `display: inline-block` on the host (previously defaulted to `inline`, which block-ified and stretched to fill its container once block children were present — same fix pattern as `bds-table`'s own explicit `display: flex`).
+3. **Interaction-state correctness** (same round): the dashed "today" ring was incorrectly applied to every hover/focus/active state instead of only `--today` cells (removed from the base interactive block, relies on `--today`'s independent rule combining naturally); the `--selected` modifier had no hover/focus/active treatment at all and was being silently overridden by the base hover rule's higher specificity (fixed with `$boreal-ui-primary-dark` for Selected+Hover/Active, ring-on-same-blue for Selected+Focus, all decoded from Figma); Selected+Disabled combo added (`$boreal-ui-primary-light` fill, `$boreal-text-inverse` text — initially shipped with the wrong dark disabled-gray text due to CSS source-order, fixed).
+4. **Focus outline leak** (final QA round): disabled/outside-month cells (excluded from the custom `:focus-visible` ring by design) still showed a native browser focus outline when genuinely focused via `.focus()`, since `outline: none` only existed inside the interactive block those cells are excluded from. Fixed by moving `outline: none` to the base `__day` rule, covering every variant uniformly.
+
+**Final QA**: full computed-style verification (not eyeballed) in both Chromium and WebKit — cell size/radius/gutters/header padding, all day-cell state colors (default/today/selected/outside/disabled/selected+disabled), all interactive states (hover/focus/active) on ordinary/today/selected/disabled cells, host `display: inline-block` with fixed ~256px width matching the table exactly, weekday `<th>` alignment and non-bold weight, `user-select: none` (confirmed via real drag-select test in WebKit, not just computed-style, which reads unreliably for this property in Playwright's WebKit driver), typography, and the outline fix — all passing identically in both engines, 0 console errors. Task 9's untouched scenarios re-confirmed unaffected (Scenario 2's plain Selected+interactive states, Scenario 3's month nav incl. Dec→Jan boundary). All 16 unit tests still passing, 100% coverage, unaffected throughout (styling-only changes).
+
+**Playground**: a new dedicated Task 10 section (`#calendar-grid-states`) was added to `index.html`, showcasing every day-cell state in one grid via forced `isToday`/`isDisabled` overrides on `buildMonthGrid()` (independent of the real system date), documented with exact DevTools "Force state" steps for the states that require live interaction. Explicitly does not attempt to demo the Figma `_DatePickerNumber` component_set's `Inactive` state (a blank, numberless cell) — unreachable in this implementation, since `generateMonthGrid()` always produces 42 real day cells by design.
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:**
 
@@ -412,7 +425,7 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 implement table role=grid rend
 **Acceptance criteria:**
 
 - Every `@Prop`, `@Event`, and the class-level component JSDoc block are complete and accurate.
-- SCSS uses `$boreal-*` tokens exclusively (matching `bds-text-field.scss`'s convention) — no hardcoded hex/px values for colors; spacing/sizing translated to the nearest token scale per the Figma sizing notes (32×32px cells, 53px header padding, 4px/2px grid gutters, 290×290px card, 24px/12px card padding) — if no exact token matches a given pixel value, pick the nearest token and document the delta in a code comment.
+- SCSS uses `$boreal-*` tokens exclusively (matching `bds-text-field.scss`'s convention) — no hardcoded hex/px values for colors; spacing/sizing translated to the nearest token scale per the Figma sizing notes (32×32px cells, 53px header padding, 4px/2px grid gutters, 290×290px card, 24px/12px card padding) — if no exact token matches a given pixel value, pick the nearest token and record the delta in this task's plan status note (2026-08-14 tightening: not as an inline SCSS comment).
 - Includes a `border-collapse: collapse` / table-default-style reset (removing native `<table>` default border/spacing), since `<table role="grid">` was chosen deliberately and its default browser chrome needs resetting.
 - `@Component` gets `styleUrl: 'bds-calendar-grid.scss'` added.
 
@@ -430,6 +443,8 @@ git commit -m "feat(bds-calendar-grid): EOA-16692 add SCSS styling and finalize 
 ---
 
 ### Task 11: `bds-calendar-grid` accessibility unit tests
+
+**Status:** ✅ done (2026-08-14) — created `bds-calendar-grid.a11y.spec.ts` with 6 tests (5 assertions + 1 `it.todo` documenting the deliberate arrow-key-navigation exclusion), covering: `table[role="grid"]` + `th[scope="col"]` structural facts, a day cell's `aria-label` matching the full `formatDisplayDate(..., 'PPPP')` output (not just the visible day number), both nav `bds-button`s' `label` attribute ("Previous month"/"Next month"), today's cell via `aria-current="date"` (absent on other cells), and the selected cell via `aria-selected` presence (Stencil serializes JSX boolean `aria-selected={true}` as an empty-string attribute and omits it entirely when `false` — asserted with `hasAttribute`, not a `"true"/"false"` string comparison, matching the framework's actual runtime output for boolean ARIA props). All 4 sibling spec files (basics/events/variants/a11y) pass together: 21 passed + 1 todo, 100% statement/branch/function/line coverage on `bds-calendar-grid.tsx`. Mutation testing deferred to Task 30 per plan.
 
 **Executor:** @testing-subagent
 **Files:**
@@ -738,11 +753,19 @@ git commit -m "feat(bds-date-picker): EOA-16692 finalize render tree and JSDoc"
 
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (create)
 
+**Process note (2026-08-15, added after Task 10's post-mortem):** Task 10 (`bds-calendar-grid` SCSS) took ~8 rounds of user-caught fixes because Figma states/dimensions were pulled reactively, one gap at a time, instead of researched fully up front — missing width alignment, missing weekday styling, entirely missing hover/focus/active states, a dead-CSS root-selector bug, wrong text color on a combo state, a leaked native focus outline, and a border applied too broadly. See `feedback_figma_first_for_styling_tasks` (persistent memory) for the full pattern. This task carries more distinct visual regions than `bds-calendar-grid` ever did (trigger field, popover chrome, label, footer) plus an unresolved design question baked into its own acceptance criteria — do not repeat the reactive pattern here.
+
+**Before writing any SCSS**, complete a dedicated Figma research pass covering every visual region this task touches, pulling `get_design_context`/`get_metadata` directly rather than assuming a prior partial pull generalizes:
+- The trigger field's exact styling and how it composes with `bds-text-field` (confirmed earlier via Code Connect to `_DatePickerField`, but not yet re-verified against the *single-date* — non-range — trigger specifically).
+- The popover panel's real dimensions/padding for the single-date (non-range) `Basic` Calendar Type — do not reuse the plan's "290×290px, 24px/12px" note without re-confirming it against Figma directly; that number's provenance predates this session's Figma research and may be as stale as Task 10's "53px header padding" turned out to be.
+- The label region in both candidate designs (`bds-text-field`'s built-in label vs. a separate `bds-date-picker`-owned one) — resolve the open question below from what Figma actually shows, not from implementation convenience.
+- The footer's exact spacing/alignment (already partially decoded — `Clean`/`Cancel`/`Apply`, unlabeled when `Range` is off — cross-check against the `Basic` Calendar Type pull from this session before assuming full coverage).
+
 **Acceptance criteria:**
 
 - Uses `$boreal-*` tokens exclusively, matching `bds-calendar-grid.scss`'s convention.
-- Decide whether `bds-text-field`'s built-in label region or a `bds-date-picker`-owned label (via `renderFieldLabel` from `src/components/forms/common/`) renders — avoid duplicating (open question, resolve here).
-- Popover content sizing approximates 290×290px content with 24px/12px padding per the Figma spec, translated to nearest `$boreal-spatial-*` tokens.
+- Decide whether `bds-text-field`'s built-in label region or a `bds-date-picker`-owned label (via `renderFieldLabel` from `src/components/forms/common/`) renders — avoid duplicating (open question, resolve via the Figma research pass above, not ad hoc).
+- Popover content sizing matches the Figma spec re-confirmed in the research pass above, translated to nearest `$boreal-spatial-*` tokens.
 
 **Manual test (required):**
 Reuse the consolidated scenario from Task 18.
@@ -951,9 +974,12 @@ git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Pha
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.scss` (modify)
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — JSDoc for new `showTime`/time-related props)
 
+**Process note (2026-08-15):** same Figma-first requirement as Task 19 — see that task's process note and `feedback_figma_first_for_styling_tasks` (persistent memory). The time selector's base field structure was decoded this session (`_Basic Time picker`: timer icon + two bordered 58px hour/minute fields), but its **interaction states** (hover/focus/active on the hour/minute selects, validation/error states if any) were never pulled. Pull those explicitly before implementing — do not assume they match `bds-calendar-grid`'s day-cell interaction states or any other component's pattern by default.
+
 **Acceptance criteria:**
 
 - Time selector styling uses `$boreal-*` tokens, matching the popover body's existing spacing conventions from Task 19.
+- Hover/focus/active states on the hour/minute selects are implemented from confirmed Figma states (per the process note above), not assumed.
 - JSDoc for `showTime` and any new props/state added in Task 25 is complete and accurate.
 
 **Manual test (required):**

@@ -57,6 +57,44 @@ Cross-checking against `bds-table`'s spike (`2026-06-16-bds-table-column-api-spi
 - **`bds-calendar-grid`** passes the test for the *reuse* reason, not consumer composition: ADR-0001 explicitly frames it as "a small, reusable, dumb component shared by every orchestrator" (this picker now, a future range picker later). It becomes a real registered custom element with its own component folder and full test suite — but with **no standalone Storybook story/MDX**, documented only as an internal implementation note inside `bds-date-picker.mdx`. This matches the confirmed, existing precedent: `bds-table-column`/`bds-table-column-group` and `bds-tab`/`bds-tab-content` are real dumb sibling components with zero separate docs entries in this codebase.
 - **Footer, time selector, month header** fail both tests — single-use rendering concerns specific to `bds-date-picker` itself, with no reuse or consumer-authorship need. These stay as `helpers/*.tsx` render functions inside one `bds-date-picker.tsx`, matching `bds-table`'s own monolith-with-extracted-helpers shape (2130 lines, ~14 `@State` fields directly on the class, non-trivial logic pulled into `utils/`, no separate state-machine class) rather than becoming their own registered elements.
 
+#### Target light-DOM structure (2026-08-14, not yet built — `bds-date-picker` is Tasks 12-21, none landed as of this note)
+
+Derived directly from Tasks 13/14/15/16's acceptance criteria in `ai-work/plans/EOA-16692-bds-date-picker-v1.md`, cross-checked against `bds-popover.tsx`'s actual slot API (`header-icon`/`header-title`, default body slot, `footer-helper`/`footer-button` — confirmed by reading the component directly, not inferred):
+
+```html
+<bds-date-picker value="2026-08-14" format="yyyy/MM/dd" ...>
+
+  <!-- Trigger: rendered by bds-date-picker itself (Task 13), non-editable via
+       bds-text-field's `selectable` mechanism (Task 14) -->
+  <bds-text-field slot="field" selectable="true" ...>
+    <!-- displays the formatted `value`, per `format`; not directly typable -->
+  </bds-text-field>
+
+  <!-- Floating panel: opened/closed via setListenElement/setAnchorElement
+       against the trigger above (Task 14), footer prop enabled -->
+  <bds-popover floating-options="{ hideArrow: this.hideArrow }" footer>
+
+    <!-- default (unnamed) slot = popover body -->
+    <bds-calendar-grid                      <!-- composed via renderCalendarPanel.tsx, Task 15 -->
+      grid="{...}"                          <!-- computed from displayYear/displayMonth @State -->
+      year="{this.displayYear}"
+      month="{this.displayMonth}"
+      selected-date="{this.draft.selectedDate}"
+    ></bds-calendar-grid>
+
+    <!-- footer-button slot: three bds-buttons (Task 16) -->
+    <bds-button slot="footer-button" variant="text">Clear</bds-button>
+    <bds-button slot="footer-button" variant="outline">Cancel</bds-button>
+    <bds-button slot="footer-button" variant="solid">Apply</bds-button>
+
+  </bds-popover>
+</bds-date-picker>
+```
+
+`bds-calendar-grid` sits inside `bds-popover`'s **default slot** (its body/content region) — `header-icon`/`header-title` go unused (Task 14 specifies no header), and `footer-helper`/`footer-button` carry the three action buttons. This is directly relevant to Task 15's open question about whether `@Listen('bdsDayClick')` reliably catches events crossing that slot boundary, or whether the `addElementListener` runtime pattern (already used for the trigger in Task 14) is required instead.
+
+Two details this structure does **not** resolve, both explicitly left open in the plan (Tasks 14/16/19) rather than guessed at here: the exact `bds-button` `variant` values shown above for Clean/Cancel/Apply are illustrative, not specified anywhere yet; and whether the field label comes from `bds-text-field`'s own built-in label or a separately-rendered `bds-date-picker`-owned one (which would add another element to this tree, outside `bds-text-field`) is Task 19's open item.
+
 ### 4. Single vs. range component (ADR-0006)
 
 ADR-0006 ("Separate Components for Single Date and Date Range Pickers"), referenced by both ADR-0004 and ADR-0005 under "Links / Related Decisions," was never actually authored — confirmed via a direct Confluence search across the SENG space; no page with that title or number exists.

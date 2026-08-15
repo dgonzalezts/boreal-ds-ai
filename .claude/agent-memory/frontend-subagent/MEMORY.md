@@ -1,5 +1,6 @@
 # Frontend Subagent — Per-Scope Memory Index
 
+- [bds-calendar-grid render pattern (EOA-16692 Task 9)](stencil-calendar-grid-render-pattern.md) — BEM class names, tabIndex=-1 on all cells, aria-current="date"/aria-selected, aria-label via formatDisplayDate 'PPPP', click guard — needed unchanged by Task 10 SCSS and Task 11 a11y specs
 - [bds-table column resize pattern (EOA-16000 Task 6)](stencil-table-column-resize-pattern.md) — colgroup `<col>` is the actual resize target, not `<th>`; imperative DOM write before throttled state commit; ArrowLeft/Right dispatcher branching since KeyboardController holds one handler per key
 - [table-layout:fixed width:auto GRIDMIN floor bug (EOA-16000 resize fix)](stencil-table-layout-fixed-width-auto-gridmin-floor.md) — width:100% causes redistribution-inflation when all columns are explicit-width; width:auto "fixes" that but adds a real-browser-only min-content shrink floor invisible to jsdom; the real fix is an explicit calc()-summed table width
 - [react/vue example apps serve stale boreal-web-components code (EOA-16000)](example-apps-file-protocol-dep-staleness.md) — pnpm file: link + Vite caching didn't pick up a fresh stencil rebuild even after clearing node_modules/.vite; don't trust React/Vue example-app repros without an unambiguous freshness marker

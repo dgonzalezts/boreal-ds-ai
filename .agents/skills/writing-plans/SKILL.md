@@ -122,6 +122,53 @@ Use this checklist during planning and include a short "utility discovery" note 
 - Test impact: specify which unit tests verify behavior through the shared utility integration path.
 - Migration note (if temporary fallback is used): capture when and how temporary local logic will be removed.
 
+## Figma Research Gate for Styling Tasks (Mandatory)
+
+Any task whose acceptance criteria produce SCSS/CSS or otherwise change rendered appearance is a **styling task**, and must carry a Figma research gate *authored into the plan*, before implementation starts. This is a plan-authoring obligation, not implementer guidance: a styling task without a research gate section is an incomplete task.
+
+The gate exists because reactive Figma research fails predictably. Styling gaps do not announce themselves — the implementer sees a plausible-looking rendered component, ships it, and the user finds the gap by eye. Each round-trip costs a full review cycle, and the gaps arrive one at a time rather than all at once, so the cost compounds.
+
+### Authoring the gate
+
+While planning a styling task, enumerate — do not defer to the implementer — the full research surface:
+
+1. **Visual regions** the task renders (e.g. trigger field, popover chrome, header row, weekday header, day cell, footer). Each region is a separate Figma pull.
+2. **Interaction states** the component supports: default, hover, focus, active, pressed, disabled.
+3. **Modifier states** the component supports: selected, today, out-of-range, invalid, readonly, required.
+4. **The cross product** of 2 × 3 that the design realistically supports — Selected+Disabled, Today+Hover, Selected+Hover, and so on. Combination states are where source-order and specificity bugs hide, and they are the states least likely to be pulled unless named explicitly.
+5. **Structural dimensions**: fixed widths/heights, and how sibling regions align to each other. Two regions that must share a width will drift apart unless the shared dimension is stated.
+
+Write that enumeration into the task as a **Figma research pass** block placed *above* the acceptance criteria, phrased as work to complete before any SCSS is written.
+
+### Task shape for a styling task
+
+```markdown
+**Figma research pass (complete before writing any SCSS):**
+
+Pull `get_design_context` / `get_metadata` for each row below. A row is done only when it was actually pulled — never when it was inferred from a sibling variant.
+
+- [ ] Region: <region> — default state
+- [ ] Region: <region> — hover / focus / active
+- [ ] Modifier: <modifier> — default, and its hover / focus / active variants pulled *separately*
+- [ ] Combination: <modifierA> + <modifierB>
+- [ ] Dimensions: <region A> and <region B> width/height alignment, pulled from Figma's layout data
+
+**Acceptance criteria:**
+
+- Every row of the Figma research pass above is checked off, with the pulled value recorded, before the first SCSS line is written.
+- Uses `$boreal-*` tokens exclusively; no hardcoded colours, spacing, or radii.
+- Every interaction state × modifier state combination enumerated above has an explicit rule, or an explicit note that Figma shows no difference for it.
+- Non-interactive states (e.g. disabled) suppress the native focus outline — verify `outline` handling is not scoped only to the interactive-state block.
+- Verified against the **compiled** CSS output, not just the SCSS source: confirm each top-level selector matches DOM the component actually renders.
+```
+
+### Rules that make the gate actually bite
+
+- **No variant generalization.** A pulled state for one variant says nothing about the same state on a sibling variant. If the plan needs Hover on both `Actual: True` and `Actual: False`, both are separate checklist rows.
+- **No stale pixel values.** Any dimension, padding, or colour already written into the plan's prose from earlier research is *unconfirmed* until re-pulled at implementation time. Mark such values explicitly: `(unconfirmed — re-pull before use)`. Plans outlive the Figma state they were written against.
+- **Host-level styles are not class selectors.** On a Stencil component, styling the host through a class the `<Host>` never carries compiles to dead CSS with zero build errors. Any styling task touching host-level properties must state the host-selector mechanism by name in its acceptance criteria.
+- **Chain `@qa-subagent`.** Every styling task takes `**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)` — styling tasks are the canonical case for the chain described under Executor Mapping.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -194,6 +241,8 @@ Apply the chain only to tasks whose manual test is a real interaction or visual 
 - `exact/path/to/file.ts` (create)
 - `exact/path/to/existing.ts` (modify)
 
+_(If this task produces SCSS/CSS or otherwise changes rendered appearance, insert the Figma research pass block here — see Figma Research Gate for Styling Tasks.)_
+
 **Acceptance criteria:**
 
 - Bullet describing a prop, behavior, or constraint — not code
@@ -202,6 +251,7 @@ Apply the chain only to tasks whose manual test is a real interaction or visual 
 - Call out edge cases and guards explicitly ("when disabled, X must not happen")
 - Reference existing sibling components as the pattern to follow where applicable
 - Existing shared utilities for this behavior were checked; implementation reuses them when available, otherwise includes a documented gap and extension plan
+- If the task produces SCSS/CSS or changes rendered appearance, it carries a completed Figma research pass block per the Figma Research Gate for Styling Tasks section above
 
 **Unit tests to cover** _(spec file: `__test__/component.behavior.spec.ts`)_:
 
@@ -283,6 +333,8 @@ If a mutant survivor reveals a genuine gap in an earlier task's test coverage, c
 - Do not include implementation details in the plan
 - Unit test tasks describe behaviors to cover, not how to write the tests
 - Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
+- Every styling task carries a Figma research pass enumerating region × interaction state × modifier state, authored at plan time — never left for the implementer to discover reactively
+- Pixel values written into plan prose are unconfirmed by default; mark them so and require a re-pull
 - DRY, YAGNI, TDD, frequent commits per task
 
 ## Execution Handoff
