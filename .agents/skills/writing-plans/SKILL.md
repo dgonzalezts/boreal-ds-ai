@@ -232,6 +232,10 @@ Apply the chain only to tasks whose manual test is a real interaction or visual 
 
 ## Task Structure
 
+Implementation and its unit tests are always **separate tasks** — matching `Task Granularity`'s numbered steps (e.g. leaf step 6 SCSS / step 7 Unit tests) and the `Executor Mapping` table, which routes them to different subagents (`@frontend-subagent` vs `@testing-subagent`). Never fold a `**Unit tests to cover**` section into an implementation task's block.
+
+**Implementation task:**
+
 ```markdown
 ### Task N: [Deliverable Layer Name]
 
@@ -253,13 +257,6 @@ _(If this task produces SCSS/CSS or otherwise changes rendered appearance, inser
 - Existing shared utilities for this behavior were checked; implementation reuses them when available, otherwise includes a documented gap and extension plan
 - If the task produces SCSS/CSS or changes rendered appearance, it carries a completed Figma research pass block per the Figma Research Gate for Styling Tasks section above
 
-**Unit tests to cover** _(spec file: `__test__/component.behavior.spec.ts`)_:
-
-- Behavior 1 — what the test must assert, not how to write it
-- Behavior 2
-- Tests confirm behavior through the shared utility integration path (or validate the documented fallback path when no reusable utility exists)
-- ...
-
 **Manual test _(required — not waiveable)_:**
 
 For logic or styling tasks, first list the playground scenarios to implement in `packages/boreal-web-components/src/index.html`. Each entry is a short description — no code, no markup:
@@ -280,7 +277,38 @@ Use `pnpm dev:docs` only for Storybook/MDX tasks (typically the final documentat
 **Commit:**
 
 ```bash
-git commit -m "type(scope): TICKET-ID description"
+git commit -m "feat(scope): TICKET-ID description"
+```
+
+**Unit test task** — one consolidated task at the end of the current component (or version/phase, in multi-version plans) block, covering every behavior area that block's implementation tasks introduced, in separate spec files — the same pattern already used for Storybook/MDX documentation and for the mutation-testing consolidation described under Testing Phases below. Do not add a unit-test task after each individual implementation task.
+
+```markdown
+### Task N: [Component] unit tests
+
+**Executor:** @testing-subagent
+**Files:**
+
+- `__test__/component.basics.spec.ts` (create)
+- `__test__/component.events.spec.ts` (create)
+- `__test__/component.variants.spec.ts` (create)
+- _(one file per behavior area introduced by this block's implementation tasks — a11y and keyboard get their own spec files where applicable)_
+
+**Unit tests to cover** _(grouped by spec file)_:
+
+- `basics` — Behavior 1, Behavior 2 — what each test must assert, not how to write it
+- `events` — Behavior 3
+- `variants` — Behavior 4
+- Tests confirm behavior through the shared utility integration path (or validate the documented fallback path when no reusable utility exists)
+- Coverage-phase only (≥90%); mutation testing deferred to the consolidated mutation task (per Testing Phases below)
+- ...
+
+**Manual test:** N/A — non-visual task, validated via `pnpm test` and the coverage report only.
+```
+
+**Commit:**
+
+```bash
+git commit -m "test(scope): TICKET-ID description"
 ```
 
 ## Framework Wrapper Parity (React/Vue)
@@ -316,8 +344,8 @@ Repeat the referenced scenario(s) through both the React and Vue wrapper playgro
 
 Two distinct test-quality gates apply to every component, and they belong at different points in a plan:
 
-- **Coverage-phase** (standard Jest test execution, ≥90% coverage) is cheap and fast. Write and gate it per task, as already described in Task Structure above — every unit-test task validates its own coverage immediately.
-- **Mutation-phase** (Stryker, ≥90% mutation score) is comparatively expensive in both time and hardware. Never run it per task. Consolidate it into a single dedicated task, placed at (or near) the end of the plan, that runs mutation testing once across every testable unit the plan created or modified — each unit keeping its own config file, per the one-config-per-component convention. Every unit-test task earlier in the plan should explicitly note "coverage-phase only; mutation testing deferred to the consolidated task" so it's clear the gate isn't being skipped, just deferred.
+- **Coverage-phase** (standard Jest test execution, ≥90% coverage) is cheap and fast. Write and gate it within the consolidated unit-test task described in Task Structure above — one such task per component (or version/phase) block, not per implementation task. That task is the single point where coverage is verified for everything its block introduced.
+- **Mutation-phase** (Stryker, ≥90% mutation score) is comparatively expensive in both time and hardware. Never run it per block. Consolidate it into a single dedicated task, placed at (or near) the end of the whole plan, that runs mutation testing once across every testable unit the plan created or modified — each unit keeping its own config file, per the one-config-per-component convention. Every unit-test task earlier in the plan should explicitly note "coverage-phase only; mutation testing deferred to the consolidated task" so it's clear the gate isn't being skipped, just deferred.
 
 If a mutant survivor reveals a genuine gap in an earlier task's test coverage, close it by extending that task's existing spec file — the consolidated task's job is closing test gaps the coverage phase missed, not introducing new behavior.
 

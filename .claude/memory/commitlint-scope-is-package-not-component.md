@@ -1,0 +1,1 @@
+../../.agents/memory/commitlint-scope-is-package-not-component.md
