@@ -57,22 +57,27 @@ Cross-checking against `bds-table`'s spike (`2026-06-16-bds-table-column-api-spi
 - **`bds-calendar-grid`** passes the test for the *reuse* reason, not consumer composition: ADR-0001 explicitly frames it as "a small, reusable, dumb component shared by every orchestrator" (this picker now, a future range picker later). It becomes a real registered custom element with its own component folder and full test suite — but with **no standalone Storybook story/MDX**, documented only as an internal implementation note inside `bds-date-picker.mdx`. This matches the confirmed, existing precedent: `bds-table-column`/`bds-table-column-group` and `bds-tab`/`bds-tab-content` are real dumb sibling components with zero separate docs entries in this codebase.
 - **Footer, time selector, month header** fail both tests — single-use rendering concerns specific to `bds-date-picker` itself, with no reuse or consumer-authorship need. These stay as `helpers/*.tsx` render functions inside one `bds-date-picker.tsx`, matching `bds-table`'s own monolith-with-extracted-helpers shape (2130 lines, ~14 `@State` fields directly on the class, non-trivial logic pulled into `utils/`, no separate state-machine class) rather than becoming their own registered elements.
 
-#### Target light-DOM structure (2026-08-14, not yet built — `bds-date-picker` is Tasks 12-21, none landed as of this note)
+#### Target light-DOM structure (2026-08-14, not yet built at the time — since revised, see 2026-08-19 correction below)
 
 Derived directly from Tasks 13/14/15/16's acceptance criteria in `ai-work/plans/EOA-16692-bds-date-picker-v1.md`, cross-checked against `bds-popover.tsx`'s actual slot API (`header-icon`/`header-title`, default body slot, `footer-helper`/`footer-button` — confirmed by reading the component directly, not inferred):
+
+**Correction (2026-08-19) — consumer-supplied trigger field:** the `<bds-text-field slot="field">` below was originally rendered internally by `bds-date-picker` itself (Task 13/14). This was found to make `label`/`sublabel`/`icon`/`helperText`/etc. impossible to configure, and was corrected to match `bds-select`'s own established pattern instead: `bds-date-picker` renders `<slot name="field"></slot>`, and the **consumer** supplies their own fully-configured `<bds-text-field slot="field">`, exactly as every `bds-select.stories.ts` example does. `bds-date-picker` pushes only `value` (computed display text) and `selectable`/`disabled` onto the consumer's field imperatively via `updateElementProp`, mirroring `bds-select.tsx`'s exact mechanism (`updateElementProp(this.bdsField, 'value', displayTexts)` etc.). See the plan's "Architecture Correction (2026-08-19)" section (after Task 16) for full rationale, and the Resolved Decisions table below.
 
 ```html
 <bds-date-picker value="2026-08-14" format="yyyy/MM/dd" ...>
 
-  <!-- Trigger: rendered by bds-date-picker itself (Task 13), non-editable via
-       bds-text-field's `selectable` mechanism (Task 14) -->
-  <bds-text-field slot="field" selectable="true" ...>
-    <!-- displays the formatted `value`, per `format`; not directly typable -->
+  <!-- Trigger: supplied by the CONSUMER (corrected 2026-08-19 — was previously
+       rendered internally by bds-date-picker). bds-date-picker pushes `value`
+       (computed display text) and `selectable`/`disabled` onto this element
+       imperatively via updateElementProp, matching bds-select's exact pattern;
+       everything else (label, sublabel, icon, helperText, placeholder, etc.)
+       is the consumer's own configuration. -->
+  <bds-text-field slot="field" label="Appointment date" ...>
   </bds-text-field>
 
   <!-- Floating panel: opened/closed via setListenElement/setAnchorElement
        against the trigger above (Task 14), footer prop enabled -->
-  <bds-popover floating-options="{ hideArrow: this.hideArrow }" footer>
+  <bds-popover floating-options="{ hideArrow: this.hideArrow }" placement="bottom-start" footer>
 
     <!-- default (unnamed) slot = popover body -->
     <bds-calendar-grid                      <!-- composed via renderCalendarPanel.tsx, Task 15 -->
@@ -93,7 +98,77 @@ Derived directly from Tasks 13/14/15/16's acceptance criteria in `ai-work/plans/
 
 `bds-calendar-grid` sits inside `bds-popover`'s **default slot** (its body/content region) — `header-icon`/`header-title` go unused (Task 14 specifies no header), and `footer-helper`/`footer-button` carry the three action buttons. This is directly relevant to Task 15's open question about whether `@Listen('bdsDayClick')` reliably catches events crossing that slot boundary, or whether the `addElementListener` runtime pattern (already used for the trigger in Task 14) is required instead.
 
-Two details this structure does **not** resolve, both explicitly left open in the plan (Tasks 14/16/19) rather than guessed at here: the exact `bds-button` `variant` values shown above for Clean/Cancel/Apply are illustrative, not specified anywhere yet; and whether the field label comes from `bds-text-field`'s own built-in label or a separately-rendered `bds-date-picker`-owned one (which would add another element to this tree, outside `bds-text-field`) is Task 19's open item.
+One detail this structure does **not** resolve, left open in the plan (Task 16/19) rather than guessed at here: the exact `bds-button` `variant` values shown above for Clean/Cancel/Apply are illustrative, not specified anywhere yet. The field-label ownership question (previously open, Task 19) is now **resolved** by the 2026-08-19 correction above — the consumer's own slotted field always supplies its own label; there is no `bds-date-picker`-owned label.
+
+#### Target file structure (2026-08-18, for future reference)
+
+Derived directly from `ai-work/plans/EOA-16692-bds-date-picker-v1.md`'s "Files to create / modify" table — reproduced here so a future version-plan session doesn't need to re-read the v1 plan to know where things live. Reflects the nesting correction from Task 7 (`bds-calendar-grid` nests inside `bds-date-picker/`'s shared parent folder, matching `bds-table`/`bds-table-column`'s precedent, not a flat sibling) and the "internal-only, no public docs" decision for `bds-calendar-grid` from Finding #3 above.
+
+```
+packages/boreal-web-components/src/
+├── services/date-engine/                          # Phase 0 — pure logic, framework-agnostic
+│   ├── types.ts                                    # MonthGrid, DayCell, WeekdayLabel, DateEngineLocale
+│   ├── grid.ts                                      # generateMonthGrid, getWeekdayLabels
+│   ├── date-math.ts                                 # addMonths/subMonths/isSameDay/isSameMonth/isWithinRange/compareDates/toNaiveISODate/fromNaiveISODate
+│   ├── format.ts                                    # formatDisplayDate, getMonthYearLabel
+│   ├── value.ts                                     # (Phase 2) combineDateTimeToUTC/extractDateTimeFromUTC via @date-fns/tz
+│   ├── index.ts                                     # public barrel — only DateEngineLocale leaks date-fns types
+│   ├── stryker.date-engine.config.mjs               # Task 30 — per-unit mutation config
+│   └── __test__/
+│       ├── grid.spec.ts
+│       ├── date-math.spec.ts
+│       ├── format.spec.ts
+│       └── value.spec.ts                            # (Phase 2)
+│
+└── components/forms/bds-date-picker/                # shared parent folder (orchestrator-named, per bds-table precedent)
+    ├── bds-calendar-grid/                            # Phase 0 — dumb, controlled, reusable sibling
+    │   ├── bds-calendar-grid.tsx
+    │   ├── bds-calendar-grid.scss
+    │   ├── stryker.bds-calendar-grid.config.mjs
+    │   ├── types/
+    │   │   ├── ICalendarGrid.ts
+    │   │   ├── types.ts                              # CalendarGridDayClickDetail, CalendarGridMonthNavigateDetail
+    │   │   └── index.ts
+    │   └── __test__/
+    │       ├── bds-calendar-grid.basics.spec.ts
+    │       ├── bds-calendar-grid.events.spec.ts
+    │       ├── bds-calendar-grid.variants.spec.ts
+    │       └── bds-calendar-grid.a11y.spec.ts
+    │
+    └── bds-date-picker/                               # Phase 1–2 — orchestrator
+        ├── bds-date-picker.tsx
+        ├── bds-date-picker.scss
+        ├── stryker.bds-date-picker.config.mjs
+        ├── helpers/
+        │   ├── renderCalendarPanel.tsx
+        │   ├── renderFooter.tsx
+        │   └── renderTimeSelector.tsx                 # (Phase 2)
+        ├── utils/
+        │   ├── draft-state.ts
+        │   ├── value-mapping.ts
+        │   └── index.ts
+        ├── types/
+        │   ├── IDatePicker.ts
+        │   ├── enum.ts                                 # FOOTER_ACTION
+        │   ├── types.ts                                 # DatePickerDraftState
+        │   └── index.ts
+        └── __test__/
+            ├── bds-date-picker.basics.spec.ts
+            ├── bds-date-picker.events.spec.ts
+            ├── bds-date-picker.variants.spec.ts
+            ├── bds-date-picker.form.spec.ts
+            ├── bds-date-picker.keyboard.spec.ts
+            ├── bds-date-picker.a11y.spec.ts
+            └── bds-date-picker.time.spec.ts            # (Phase 2)
+
+apps/boreal-docs/src/stories/forms/bds-date-picker/
+├── bds-date-picker.stories.ts
+└── bds-date-picker.mdx                                 # includes internal bds-calendar-grid note (no separate docs)
+```
+
+Plus one modified (never committed) file: `packages/boreal-web-components/src/index.html`, for playground scenarios only.
+
+Authoritative source for this tree, task-by-task, is the v1 plan's Files table — this section is a snapshot, not a substitute for it. Future version plans (Phase 3+) should extend this tree here as new files land, per the versioning convention resolved elsewhere in this doc.
 
 ### 4. Single vs. range component (ADR-0006)
 
@@ -229,6 +304,9 @@ Confirmed via the Figma library's own one-component-multiple-variants structure 
 | Single vs. range component (ADR-0006)? | **One component, `range` prop** | Confirmed via the active Figma library's own component structure — one `calendarPicker` component_set, not two |
 | `date-engine` package location? | **`packages/boreal-web-components/src/services/date-engine/`** | Matches the existing `services/floating`, `services/logger` precedent for a cohesive, multi-file, cross-cutting subsystem — not a standalone pnpm package (ADR-0002 states it's never exposed publicly; no repo precedent for a standalone pure-logic package) |
 | Versioning convention for future plans | **`ai-work/plans/<ticket>-bds-date-picker-vN.md`**, each linked from this spike doc | Matches `bds-table`'s exact precedent (`EOA-10576-bds-table-v1.md` → `EOA-14935-bds-table-v2.md` → `EOA-15507-bds-table-v3.md`) |
+| `hideArrow` default value (2026-08-18, corrected) | **`false`** (was originally `true`) — popover arrow renders by default, hidden only via explicit `hide-arrow="true"` | No boolean `@Prop()` in the codebase defaults to `true`; `stencil/ban-default-true` (ESLint) flags any that do, with no self-resolving condition. Ticket brief and plan corrected to match. |
+| `bds-popover` `placement` for `bds-date-picker` (2026-08-18, new) | **Fixed `bottom-start`**, not user-configurable | Reference calendar-dialog design shows the arrow and panel consistently left-aligned under the trigger field (never centered/flipped); `bds-popover`'s own default (`bottom`, centered) doesn't match. Matches `bds-dropdown.tsx`'s existing `placement="bottom-start"` precedent (literal string, not the `POPOVER_POSITION` constant). |
+| Trigger field composition — self-rendered vs. consumer-supplied (2026-08-19, corrected) | **Consumer-supplied**, matching `bds-select`'s exact pattern — `bds-date-picker` renders `<slot name="field">`, not its own `<bds-text-field>` | `bds-select.tsx` never renders its own field; it slots the consumer's own fully-configured `<bds-text-field>` and pushes only `value`/`selectable`/(and, for `bds-date-picker`, `disabled`) imperatively via `updateElementProp`. The original self-rendered approach made `label`/`sublabel`/`icon`/`helperText`/etc. impossible to configure — caught when the user asked how to pass those through. Mechanically viable in this light-DOM (no Shadow DOM) codebase because `stencil.config.ts`'s `extras.experimentalSlotFixes`/`experimentalScopedSlotChanges` are already enabled project-wide. |
 
 ---
 

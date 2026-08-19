@@ -34,7 +34,8 @@
 - [ ] Cancel reverts draft to last committed value and closes the popover without emitting.
 - [ ] Clean clears the draft **and commits immediately** (empties `value`, emits with `''`, closes popover).
 - [ ] `bds-date-picker` is form-associated (FACE) following the `bds-text-field.tsx` pattern.
-- [ ] `hideArrow` prop (default `true`) is a genuine opt-in override piped into `floatingOptions.hideArrow`, unlike `bds-select`'s hardcoded `true`.
+- [ ] `hideArrow` prop (default `false`) is a genuine opt-in override piped into `floatingOptions.hideArrow`, unlike `bds-select`'s hardcoded `true`. Default flipped from the originally-specified `true` to `false` (2026-08-18 decision) to comply with the codebase's `stencil/ban-default-true` ESLint rule (no boolean `@Prop()` in the codebase defaults to `true`) — the popover's arrow now renders by default and must be explicitly hidden via `hide-arrow="true"`.
+- [ ] The popover's `placement` is a fixed `bottom-start` (not user-configurable, not left to `bds-popover`'s own `bottom` default) — matches the reference calendar-dialog design (arrow and panel consistently left-aligned under the trigger field, never centered or flipped). Added 2026-08-18, not in the original ticket scope — caught via design reference review during Task 14.
 - [ ] Component registered under the `forms` docs category.
 - [ ] Default `format` is `yyyy/MM/dd`.
 
