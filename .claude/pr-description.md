@@ -1,68 +1,75 @@
 # PR Title
 
-feat(web-components): EOA-16692 add bds-date-picker foundation and single-date picker
+test(web-components): EOA-16692 add Phase 1 unit tests for bds-date-picker
 
 ---
 
 # PR Body
 
-## Description
+## Description of Test Changes
 
-Implements the foundation and single-date behavior of `bds-date-picker` (ADR-0003 Phases 0–1): a framework-agnostic `date-engine` service, a presentational `bds-calendar-grid` custom element, and the `bds-date-picker` orchestrator itself — a form-associated, draft-until-Apply date picker composing a consumer-supplied `bds-text-field` trigger with a `bds-popover` panel.
+Adds the consolidated Phase 1 unit test suite for `bds-date-picker` (Task 20 of `ai-work/plans/EOA-16692-bds-date-picker-v1.md`), split across six spec files by concern plus a shared test-utils helper. Base branch for this PR is `feature/EOA-16692_bds-date-picker-v1_DG` — this branch was created off it specifically for the test-writing work, per the plan's task sequencing.
 
-This PR does **not** include the time selector (Phase 2) — that scope was split out to its own follow-up ticket/plan (see References) due to sprint time constraints, since nothing in it had been implemented yet.
+## Motivation
 
-## Implementation Details
+- **Coverage gap**: `bds-date-picker.tsx` had zero automated coverage — every behavior from Tasks 14–19 (trigger wiring, draft-until-Apply, footer actions, FACE, styling) was previously verified manually only.
+- **Quality gate**: the plan's own two-phase test gate requires ≥90% coverage before the consolidated mutation-testing pass (Task 23) can run.
+- **Regression risk closed early**: writing these tests surfaced two real, confirmed bugs before they could ship — see Additional Remarks.
 
-- **`date-engine`** (`src/services/date-engine/`): pure `date-fns`-based month-grid generation, date math, and locale-aware formatting. Zero Stencil/DOM imports; only its own `DateEngineLocale` alias is exposed through the public barrel — no `date-fns` types leak out.
-- **`bds-calendar-grid`**: dumb, controlled, presentational element rendering a native `<table role="grid">` (WAI-ARIA APG pattern) rather than a div/CSS-Grid construction, for accessibility semantics "for free." Owns no selection state — day-click and month-nav events are emitted upward; the parent passes the displayed month back down.
-- **`bds-date-picker`**: orchestrator composing a **consumer-supplied** `<bds-text-field slot="field">` trigger (not self-rendered — mirrors `bds-select`'s pattern, discovered mid-implementation to be necessary so consumers can configure `label`/`icon`/`helperText`/etc. themselves) with a `bds-popover` panel containing the calendar grid and a Clean/Cancel/Apply footer. Selection is held in internal draft state until Apply; `value`/`bdsChange`/`valueChange` only fire on Apply. Form-associated via `formAssociatedMixin` + `ElementInternals`, with a single `valueMissing` validator for `required`.
-- **`bds-popover` enhancement**: added four new CSS custom-property hooks (`--popover-header-padding`, `--popover-header-content-gap`, `--popover-content-padding`, `--popover-footer-padding`), each defaulting to the pre-existing hardcoded value — non-breaking for `bds-select`/`bds-dropdown`/`bds-search-bar`. This was the chosen alternative to `bds-date-picker` reaching into `bds-popover`'s internally-rendered markup with plain selectors, which doesn't work reliably in this project's non-shadow-DOM component model.
-- All spacing/sizing/typography in `bds-calendar-grid.scss`/`bds-date-picker.scss` sourced from live Figma pulls against the `Basic`+`Range:off` single-date `calendarPicker` variant, not inferred — see the plan doc for the full research trail.
+## Test Coverage Added
 
-## Impact Analysis
+**New spec files** (`packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/`):
 
-- New components — no impact on existing component behavior.
-- `bds-popover.scss`/`bds-popover.tsx` are modified but additive-only (new opt-in custom-property hooks + a header row already exposed via existing `header`/`closable` props); default rendering for every other `bds-popover` consumer is unchanged, confirmed via manual QA.
-- New runtime dependencies: `date-fns@^4.4.0`, `@date-fns/tz@^1.5.0` (the latter used starting in the Phase 2 follow-up, added now since both ship together).
-- Framework wrappers (`boreal-react`, `boreal-vue`) will auto-generate for the new components.
+- `bds-date-picker.basics.spec.ts` (18 tests) — trigger open/close, `disabled`/`hideArrow`, missing-slotted-field warning, `selectable`/`disabled` sync
+- `bds-date-picker.events.spec.ts` (20 tests) — draft-until-Apply lifecycle, Apply/Cancel/Clean semantics, the Apply-with-no-selection fix, slotted field's `valueChange`/`bdsClear` integration
+- `bds-date-picker.form.spec.ts` (14 tests) — `FormData` participation, `formResetCallback`, `required`/`reportValidity()`
+- `bds-date-picker.variants.spec.ts` (10 tests) — custom `format`/`locale`, `disabled` cascading
+- `bds-date-picker.keyboard.spec.ts` (7 tests) — Tab reachability, Enter/Space popover activation (see Additional Remarks)
+- `bds-date-picker.a11y.spec.ts` (7 tests) — `aria-haspopup`/`aria-expanded`, footer button labels
+- `date-picker.test-utils.ts` — shared `renderDatePicker`/`openDatePicker`/`findDayCell`/`findFooterButton` helpers
 
-## Testing Conducted
+**Coverage on `bds-date-picker.tsx`:**
 
-**Automated:**
+- **Statements**: 98.23% (111/113)
+- **Functions**: 100% (28/28)
+- **Lines**: 98.23% (111/113)
+- **Branches**: 87.75% (43/49) — the uncovered branches are `this.bdsPopover?.`/`this.bdsField?.` null-fallback paths that are structurally unreachable, since `<bds-popover>` is unconditionally part of this component's own `render()`.
 
-- [x] `date-engine` unit tests (plain Jest): month-grid generation, date math, locale-aware formatting — 100% coverage
-- [x] `bds-calendar-grid` unit tests (`newSpecPage`): basics, events, variants, a11y — 100% coverage
-- [ ] `bds-date-picker` consolidated unit tests — not yet written (next task in the plan)
-- [ ] Mutation testing (Stryker) — deferred to the plan's final task, not yet run
+## Type of Test Change
 
-**Manual:**
+- [x] New unit tests (Stencil spec tests)
+- [ ] New integration tests (E2E tests)
+- [ ] Fixed failing tests
+- [ ] Updated tests to match implementation changes
+- [ ] Improved test quality (better assertions, edge cases)
+- [ ] Refactored tests (no coverage change)
 
-- [x] Live-verified in Chromium and WebKit via Playwright across every task in this PR: popover open/close, draft-until-Apply day selection, Clean/Cancel/Apply commit semantics, form participation (`FormData`, reset, validity), `disabled`/`hideArrow`/custom `format`/`locale`, and the header row's live date binding
-- [x] Popover panel dimensions/padding/footer spacing verified against compiled CSS output, not just source, against the Figma-confirmed 296×434px spec
-- [x] Zero new console errors/warnings across every scenario in the `index.html` playground
-- [ ] Storybook/Chrome/Firefox/Safari/Edge cross-browser pass — deferred to the plan's documentation task
-- [ ] Screen reader verification — not yet performed
+## Testing Approach
 
-## Related Changes
+Uses `newSpecPage` throughout (Stencil component tests, not React Testing Library). Every fixture slots a `<bds-text-field slot="field">` trigger, matching the Architecture Correction that made the trigger consumer-supplied rather than self-rendered. Follows the split-spec-file convention already established by `bds-calendar-grid`'s own tests and `bds-toggle`/`bds-tab-group` — one file per concern, no duplicate assertions across files.
 
-- **No changes to** `boreal-styleguidelines` — reused existing `$boreal-*` tokens throughout, including for the new `bds-popover` custom-property defaults.
-- **`boreal-docs`**: no Storybook story/MDX yet — planned as a follow-up task in this same PR's remaining scope (see Additional Remarks).
+## Test Code Quality
+
+- Shared `date-picker.test-utils.ts` extracts fixture rendering, popover opening, and day/button lookup to remove boilerplate across all six spec files.
+- No ticket ID or task-number references inside any spec file — `describe`/`it` names describe behavior only, per project convention.
+- No inline comments in test files explaining what code does.
 
 ## Additional Remarks
 
-- **This PR is a work-in-progress checkpoint, not the full Phase 1 scope.** Remaining before Phase 1 is complete: consolidated unit tests, Storybook/MDX documentation, and a React/Vue wrapper parity check (Tasks 20–22 in the plan below). Recommend keeping this as a **draft PR** until those land.
-- Two real bugs were found and fixed during implementation, both filed for visibility even though fixed inline: a `bds-calendar-grid` day-highlight cross-fade artifact caused by an unscoped CSS transition (fixed), and an 8px calendar-grid overflow inside the popover caused by `border-spacing` adding edge gaps that Figma's flex-gap layout doesn't have (fixed, `bds-calendar-grid.scss`).
-- One defect was found, filed, but **not** fixed here (out of scope, lives entirely in `bds-popover.tsx`): the popover header's close button has no accessible name — tracked as [EOA-17133](https://telesign.atlassian.net/browse/EOA-17133).
-- Full task-by-task history, including every design decision, Figma research pull, and QA round, is recorded in `ai-work/plans/EOA-16692-bds-date-picker-v1.md`.
-- Phase 2 (time selector) was moved to its own plan/ticket this sprint due to time constraints — see References.
+**Two real bugs were found and fixed while writing this suite, both included in this PR's commits:**
+
+1. **Apply committed an empty value when nothing was ever selected.** `handleFooterAction`'s `APPLY` case unconditionally called `commitValue(this.draft.selectedDate ?? '')`, so clicking Apply on an untouched draft (e.g. after only clicking an inert outside-month cell) silently overwrote `value` with `''` and emitted `bdsChange`/`valueChange` — contradicting a requirement already written into this same Task 20 spec ("Apply with no draft selection... does not change value and does not emit"). Fixed on the base branch (`feature/EOA-16692_bds-date-picker-v1_DG`, not part of this PR's diff) before this branch was created from it.
+2. **Enter/Space never opened the popover.** `bds-popover`'s own `KeyboardController` unconditionally early-returns whenever `managed={true}` (which `bds-date-picker` always sets), so only mouse click worked — contradicting an explicit "baseline keyboard operability ships in Phase 1" commitment in the spike doc. Fixed in this PR: a `keydown` listener on the slotted trigger field mirrors the existing `click` listener. **This PR is therefore not strictly test-only** — it includes this small, test-discovered implementation fix plus a follow-up type correction (the listener needed `(event: Event)` + an internal cast to satisfy `addElementListener`'s signature under `strictFunctionTypes`, matching `bds-search-bar.tsx`'s existing convention — this repo's own `tsc` invocation has strict mode off project-wide, so the mismatch wasn't caught until checked explicitly).
+
+Not covered here (out of scope for Task 20, tracked elsewhere):
+- Mutation testing (Stryker) — deferred to the plan's Task 23, a separate consolidated pass across all three testable units.
+- Storybook/MDX documentation — Task 21, not yet started.
+- React/Vue wrapper parity — Task 22, not yet started.
+- Full arrow-key grid navigation inside the calendar — explicitly deferred to Phase 8.
 
 ## References
 
 Refs EOA-16692
-Refs EOA-17138 (Phase 2 — time selector, follow-up, not in this PR)
-
-Plan: `ai-work/plans/EOA-16692-bds-date-picker-v1.md`
 
 ---
 
@@ -70,45 +77,46 @@ Plan: `ai-work/plans/EOA-16692-bds-date-picker-v1.md`
 
 ### General
 
-- [x] Follows conventional commit format: `feat(scope): TICKET-ID description`
-- [x] Ticket reference included (`Refs` EOA-16692)
-- [x] Code adheres to TypeScript strict mode — no `any` or implicit types
-- [x] Self-reviewed code for quality, readability, and correctness
-- [x] All tests pass locally (`tsc --noEmit`, `eslint`, `stencil build` clean throughout)
+- [x] Follows conventional commit format: `test(scope): TICKET-ID description`
+- [x] Ticket reference included
+- [ ] No implementation changes (test-only PR) — **not applicable**, see Additional Remarks: one small, test-discovered keyboard-operability fix (plus its type correction) is bundled in
+- [x] All tests pass locally (97 tests, 1 todo, 10/10 suites)
 
-### Boreal DS — Component Standards
+### Test Quality
 
-- [x] Design tokens used exclusively — no hard-coded colors, spacing, or radii
-- [x] Component tags use `bds-` prefix
-- [x] All props have explicit TypeScript types
-- [x] Events use bare `@Event()` (no `bubbles`/`composed` unless required)
-- [x] SCSS follows project convention (no `@use` of the token package; tokens injected globally)
-- [x] Light DOM patterns documented (native `<table role="grid">`, consumer-supplied slotted trigger field)
+- [x] Tests follow AAA pattern (Arrange, Act, Assert)
+- [x] Test names clearly describe what is being tested
+- [x] Each test verifies one specific behavior
+- [x] Assertions are specific and meaningful
+- [ ] No flaky tests (runs 10 times without failure) — not explicitly re-run 10× as part of this PR; single-run pass confirmed multiple times across iterations
 
-### Boreal DS — Form Components
+### Test Coverage
 
-- [x] Uses `formAssociatedMixin` for FACE boilerplate
-- [x] Implements `IFormControl<string>` interface
-- [x] Includes `@Method()` wrappers for `checkValidity()` and `reportValidity()`
-- [x] Validation tested with the built-in `required`/`valueMissing` validator
+- [x] Coverage increased or maintained (no decrease) — 0% → 98.23% statements on `bds-date-picker.tsx`
+- [x] Critical paths are tested (happy path + error path)
+- [x] Edge cases covered (Apply with no selection, missing slotted field, disabled cascading)
+- [x] Async behavior tested correctly (`waitForChanges`)
+- [x] Error scenarios tested (invalid/empty required field, missing field warning)
 
-### Testing
+### Boreal DS Testing Standards
 
-- [ ] Unit test coverage ≥ 90% statements — done for `date-engine`/`bds-calendar-grid`, pending for `bds-date-picker`
-- [x] Tests cover happy path, error cases, and edge cases (for the units already tested)
-- [x] Accessibility verified for `bds-calendar-grid` (dedicated a11y spec file)
-- [x] Manual testing completed in Chromium and WebKit
+- [x] Uses `newSpecPage` for Stencil component tests
+- [x] ElementInternals mocked correctly for FACE tests
+- [x] No hard-coded timeouts (uses `waitForChanges`)
+- [x] Test isolation maintained (no shared state between tests)
 
-### Documentation
+### Test Coverage Metrics
 
-- [ ] JSDoc added to all public APIs — done for `bds-date-picker`/`bds-calendar-grid`; not yet audited against the finalized SCSS
-- [ ] Storybook story created — pending
-- [ ] Storybook MDX documentation added — pending
-- [ ] README updated — n/a, no README change needed
+- [x] Statement coverage ≥ 90% (98.23%)
+- [x] Branch coverage ≥ 80% (87.75%)
+- [x] Function coverage ≥ 90% (100%)
+- [x] Line coverage ≥ 90% (98.23%)
+- [x] Coverage report reviewed (no unexpected gaps — remaining branches are structurally unreachable null-fallback paths)
 
-### Performance & Compatibility
+### Test Maintainability
 
-- [x] No new console warnings or errors (one known, filed, out-of-scope warning: EOA-17133)
-- [ ] Bundle size impact assessed — not yet measured
-- [x] Compatible across Chromium and WebKit (manually verified); Firefox/Edge not yet checked
-- [x] No regression in existing functionality (verified for `bds-popover`'s other consumers)
+- [x] Test code is readable and well-structured
+- [x] Helpers extracted for repeated setup/teardown (`date-picker.test-utils.ts`)
+- [x] Test data is clear and representative
+- [x] Tests are independent (can run in any order)
+- [x] No commented-out test code
