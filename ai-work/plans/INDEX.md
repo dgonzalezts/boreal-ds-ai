@@ -25,7 +25,8 @@
 | [EOA-14935-bds-table-v2.md](./EOA-14935-bds-table-v2.md) | done | bds-table v2 High-Priority Limitations Implementation Plan |
 | [EOA-15507-bds-table-v3.md](./EOA-15507-bds-table-v3.md) | done | bds-table v3 — Dataset Mode, Column Footer, Server-Side/Loading, Virtualization, Guardrail |
 | [EOA-16000-bds-table-v4.md](./EOA-16000-bds-table-v4.md) | done | bds-table v4 — Column Grouping, Drag/Drop Reorder, Resizing, Right-Edge Pinning, Row Expand/Collapse, Selection Refinements, Opt-in Toolbar |
-| [EOA-16692-bds-date-picker-v1.md](./EOA-16692-bds-date-picker-v1.md) | in | bds-date-picker v1 (ADR-0003 Phases 0–2) Implementation Plan |
+| [EOA-16692-bds-date-picker-v1.md](./EOA-16692-bds-date-picker-v1.md) | in | bds-date-picker v1 (ADR-0003 Phases 0–1) Implementation Plan |
+| [EOA-16692-bds-date-picker-v2.md](./EOA-16692-bds-date-picker-v2.md) | pending | bds-date-picker v2 (ADR-0003 Phase 2 — Time Selector) Implementation Plan |
 | [EOA-8845-code-snippetformatter.md](./EOA-8845-code-snippetformatter.md) | done | Plan: Create `formatHtmlSource` Formatter |
 | [EOA-8845-plop-implementation-plan.md](./EOA-8845-plop-implementation-plan.md) | done | Plop.js Story Generator Implementation Plan |
 | [EOA-8845-shared-storybook-components.md](./EOA-8845-shared-storybook-components.md) | done | Implementation Plan: Shared Storybook Components for Boreal DS |

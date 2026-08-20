@@ -45,3 +45,28 @@ Live QA (on `WithFilterDrawer`/`WithServerSideMode`) confirmed fix #3 resolved t
 1. Read `bds-button.tsx`'s `checkTextWrapperContent()`/`hasSlotContent()` mechanism to understand why visible page-number text doesn't satisfy the check — this may reveal a fourth, more fundamental bug in `bds-button` itself (or its Light-DOM slot utility) rather than two more one-off consumer fixes.
 2. Grep the whole component library for the same `aria-label="..."` (as a literal JSX attribute, not a real prop) pattern on `<bds-button>` elements — the three fixes this session were each found reactively (one led to discovering the next); a proactive full-library grep would likely surface all remaining instances in one pass rather than one console-warning at a time.
 3. Scope test impact before fixing (each of the three prior fixes needed test updates in 1–3 spec files; expect the same here).
+
+---
+
+## Finding 3 (added 2026-08-19) — `bds-popover`'s header close button
+
+**Location:** `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx`, ~lines 650-657:
+
+```tsx
+{this.closable && (
+  <bds-button
+    class="popover-header__close"
+    size={BUTTON_SIZES.SMALL}
+    onBdsClick={() => this.closeFromInside()}
+  >
+    <i slot="icon" class={ICONS.Close}></i>
+  </bds-button>
+)}
+```
+
+**Symptom:** confirmed via live Playwright/DOM inspection during `EOA-16692` (`bds-date-picker` v1) header-wiring QA (2026-08-19) — this `<bds-button>` has no `label` prop, no `aria-label`, and an empty default-slot (icon-only), so `bds-button`'s own `checkAccessibleName` correctly flags it, firing `[BorealDS Button] No accessible name found` every time any `bds-popover`/`bds-date-picker` (or any other `header`+`closable` consumer) renders its header. `bds-date-picker` itself does not own this element — it's rendered entirely inside `bds-popover`'s own template whenever a consumer sets `header={true} closable={true}`.
+
+**Fix note:** same mechanical fix as the three already-confirmed cases — add `label="Close"` to the `<bds-button>` (this component already imports/uses `label` support elsewhere in the codebase; `bds-drawer-header.tsx`'s own close button uses the *anti-pattern* version of this same bug, `aria-label="close"` directly on the host, which is very likely **Finding 2** above, now positively located).
+
+**Related:** Reported as its own out-of-scope-for-`EOA-16692` bug; filed in Jira as [EOA-17133](https://telesign.atlassian.net/browse/EOA-17133) (Sub-task of EOA-16914, linked "relates to" EOA-16692). See `ai-work/qa/bug-reports/INDEX.md`.
+
