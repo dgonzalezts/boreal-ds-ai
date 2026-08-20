@@ -3,7 +3,7 @@
 **Severity:** High
 **Priority:** P1
 **Type:** Functional / Regression
-**Status:** Open
+**Status:** Fixed
 **Component:** `bds-dialog` (`packages/boreal-web-components/src/components/.../bds-dialog/bds-dialog.tsx`)
 **Discovered during:** `bds-table` v4 planning research (ticket `EOA-16000`), while scoping Task 13's filter-drawer/column-visibility-dropdown stories and auditing existing dialog usage
 **Affects:** Every consumer of `bds-dialog` with `backdropClose` enabled and any interactive/clickable content inside the dialog — in this codebase, at minimum the `bds-table` stories `BulkEdit`, `BulkDeleteWithUndo`, and `WithAddRow`
