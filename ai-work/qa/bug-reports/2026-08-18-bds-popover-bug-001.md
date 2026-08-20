@@ -3,7 +3,8 @@
 **Severity:** Low
 **Priority:** P3
 **Type:** UI (naming/readability defect, not a rendering bug)
-**Status:** Open
+**Status:** Fixed
+**Ticket:** [EOA-17085](https://telesign.atlassian.net/browse/EOA-17085)
 **Component(s):** `bds-popover`, `bds-tooltip`
 **Discovered during:** `EOA-16692` (`bds-date-picker` v1) — Task 14 manual QA, flagged as out-of-scope for that ticket since it lives entirely in shared/foundational components, not `bds-date-picker` itself.
 
@@ -181,7 +182,34 @@ Low. The attribute isn't read by any CSS, test, or consumer component today — 
 - [x] Reproduced via direct code inspection (`bds-popover.tsx`, `bds-tooltip.tsx`)
 - [x] Confirmed via a debug `newSpecPage` render showing `data-hidearrow` present while the arrow is visibly rendered
 - [x] Confirmed no SCSS/consumer/wrapper code depends on this attribute (safe to rename)
-- [ ] Fix not yet implemented (out of scope for `EOA-16692`; recommended as its own small ticket)
+- [x] Fix implemented and verified
 
 **Verified By:** Session agent (OpenCode), via direct code inspection + Jest `newSpecPage` debug render
 **Verification Date:** 2026-08-18
+
+---
+
+## Fix Implemented (2026-08-20)
+
+Implemented on branch `bugfix/EOA-17085-popover-tooltip-arrow-attr` and pushed to `origin`.
+
+**Code changes:**
+
+1. `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx`
+   - Renamed `data-hidearrow={this.canShowArrow}` to `data-arrow-visible={this.canShowArrow}`
+2. `packages/boreal-web-components/src/components/overlays/bds-tooltip/bds-tooltip.tsx`
+   - Renamed `data-hidearrow={this.canShowArrow}` to `data-arrow-visible={this.canShowArrow}`
+3. `packages/boreal-web-components/src/components/overlays/bds-tooltip/__test__/bds-tooltip-basics.spec.ts`
+   - Updated assertions to `data-arrow-visible`
+4. `packages/boreal-web-components/src/components/overlays/bds-popover/__test__/bds-popover-variants.spec.ts`
+   - Added explicit assertions for `data-arrow-visible` presence when arrow is shown and absence when hidden
+
+**Commit:** `e84e405c`
+
+## Post-fix Verification
+
+- Automated tests: pass (pre-push hook test suite in branch)
+- Manual QA via Playwright/Storybook: pass
+  - `data-arrow-visible` present when arrow renders
+  - `data-arrow-visible` absent when `floatingOptions.hideArrow = true`
+  - Arrow rendering and popover/tooltip interaction behavior unchanged

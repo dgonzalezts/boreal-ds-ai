@@ -3,8 +3,9 @@
 **Severity:** Low
 **Priority:** P3
 **Type:** Accessibility
-**Status:** Open
-**Component:** `bds-pagination` (numbered page buttons), `bds-dialog`/`bds-drawer` (close button) — exact close-button owner not yet isolated
+**Status:** Fixed
+**Ticket:** [EOA-17133](https://telesign.atlassian.net/browse/EOA-17133)
+**Component:** `bds-pagination`, `bds-dialog`, `bds-drawer`, `bds-popover`
 **Discovered during:** Live QA verification of `bds-table` Storybook docs maintainability refactor (2026-08-06), while chasing down `[BorealDS Button] No accessible name found` console noise
 **Affects:** Any consumer rendering more than one page of `bds-pagination` (numbered page buttons appear), and any consumer of `bds-dialog`/`bds-drawer` with `closable` (the built-in close button)
 
@@ -48,6 +49,49 @@ Live QA (on `WithFilterDrawer`/`WithServerSideMode`) confirmed fix #3 resolved t
 
 ---
 
+## Fix Implemented (2026-08-20)
+
+Implemented on branch `bugfix/EOA-17133-a11y-buttons` and pushed to `origin`.
+
+**Code changes:**
+
+1. `packages/boreal-web-components/src/components/data-visualization/bds-pagination/bds-pagination.tsx`
+   - Added `label` prop to numbered page buttons (`label={`Go to page ${page}`}`)
+   - Added `label` prop to small-mode current page button (`label={`Go to page ${this.internalCurrentPage}`}`)
+   - Added `label="Jump pages"` to ellipsis buttons to silence remaining warning in pagination default story
+2. `packages/boreal-web-components/src/components/overlays/bds-dialog/bds-dialog.tsx`
+   - Updated close/maximize icon-only buttons to pass `label` and set icon to `slot="icon" aria-hidden="true"`
+3. `packages/boreal-web-components/src/components/overlays/bds-drawer/bds-drawer-header/bds-drawer-header.tsx`
+   - Updated close icon-only button to pass `label` and set icon to `slot="icon" aria-hidden="true"`
+4. `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx`
+   - Updated header close icon-only button to pass `label="Close"` and set icon `aria-hidden="true"`
+5. `packages/boreal-web-components/src/components/data-visualization/bds-pagination/__test__/bds-pagination.a11y.spec.ts`
+   - Added regression assertion to ensure no `[BorealDS Button] No accessible name found` warning is emitted for pagination rendering
+
+**Commit:** `43652dcf`
+
+---
+
+## Post-fix Verification
+
+- Automated tests: pass (pre-push hook test suite in branch)
+- Manual QA via Playwright/Storybook: pass
+  - Pagination (`default` and `small`) no longer emits target no-accessible-name warnings
+  - Dialog, drawer header, and popover header close/maximize controls expose accessible names and preserve behavior
+- Remaining console noise observed in Storybook was unrelated (Storybook/Lit/CORS warnings)
+
+---
+
+## QA Verification
+
+- [x] Root causes identified in source
+- [x] Fix implemented
+- [x] Automated tests pass
+- [x] Manual QA completed
+- [x] Branch pushed to `origin`
+
+---
+
 ## Finding 3 (added 2026-08-19) — `bds-popover`'s header close button
 
 **Location:** `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx`, ~lines 650-657:
@@ -69,4 +113,3 @@ Live QA (on `WithFilterDrawer`/`WithServerSideMode`) confirmed fix #3 resolved t
 **Fix note:** same mechanical fix as the three already-confirmed cases — add `label="Close"` to the `<bds-button>` (this component already imports/uses `label` support elsewhere in the codebase; `bds-drawer-header.tsx`'s own close button uses the *anti-pattern* version of this same bug, `aria-label="close"` directly on the host, which is very likely **Finding 2** above, now positively located).
 
 **Related:** Reported as its own out-of-scope-for-`EOA-16692` bug; filed in Jira as [EOA-17133](https://telesign.atlassian.net/browse/EOA-17133) (Sub-task of EOA-16914, linked "relates to" EOA-16692). See `ai-work/qa/bug-reports/INDEX.md`.
-

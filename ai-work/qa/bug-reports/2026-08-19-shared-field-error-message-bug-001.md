@@ -3,7 +3,8 @@
 **Severity:** Medium
 **Priority:** P2
 **Type:** Functional
-**Status:** Open
+**Status:** Fixed
+**Ticket:** [EOA-17093](https://telesign.atlassian.net/browse/EOA-17093)
 **Component(s):** `bds-text-field`, `bds-tag-field`, `bds-number-field` (shared root cause: `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`)
 **Discovered during:** `EOA-16692` (`bds-date-picker` v1) — investigating why a `bds-date-picker` playground scenario's slotted `<bds-text-field required error-message="Please pick a date.">` never showed the custom message. Flagged as out-of-scope for that ticket since it's a pre-existing defect in shared, foundational form components, not `bds-date-picker` itself.
 
@@ -185,7 +186,41 @@ Low. The change widens an existing boolean condition (adds an `OR` clause) rathe
 - [x] Confirmed the "manually forced `error: true`" workaround exists but is disconnected from real validity (typing a valid value + blur does not clear the message)
 - [x] Confirmed no existing unit test covers the fixed scenario (new tests needed, not updates)
 - [x] Confirmed no MDX documentation needs correction (already describes intended/correct behavior)
-- [ ] Fix not yet implemented (out of scope for `EOA-16692`; recommended as its own ticket)
+- [x] Fix implemented and verified
 
 **Verified By:** Session agent (OpenCode), via direct code inspection + live Storybook testing (Playwright)
 **Verification Date:** 2026-08-19
+
+---
+
+## Fix Implemented (2026-08-20)
+
+Implemented on branch `bugfix/EOA-17093-shared-field-error-message` and pushed to `origin`.
+
+**Code changes:**
+
+1. `packages/boreal-web-components/src/components/forms/common/renderFieldParts.tsx`
+   - Updated helper-content selection condition from:
+     - `host.error && host.errorMessage !== ''`
+   - To:
+     - `(host.error || host.validationError) && host.errorMessage !== ''`
+2. `packages/boreal-web-components/src/components/forms/bds-text-field/bds-text-field.tsx`
+   - Updated `errorMessage` JSDoc to include internal validation-failure behavior
+3. `packages/boreal-web-components/src/components/forms/bds-tag-field/bds-tag-field.tsx`
+   - Updated `errorMessage` JSDoc to include internal validation-failure behavior
+4. `packages/boreal-web-components/src/components/forms/bds-number-field/bds-number-field.tsx`
+   - Updated `errorMessage` JSDoc to include internal validation-failure behavior
+5. Added regression tests:
+   - `packages/boreal-web-components/src/components/forms/bds-text-field/__test__/bds-text-field-validation.spec.ts`
+   - `packages/boreal-web-components/src/components/forms/bds-tag-field/__test__/bds-tag-field-validation.spec.ts`
+   - `packages/boreal-web-components/src/components/forms/bds-number-field/__test__/bds-number-field.validation.spec.ts`
+   - New assertions confirm custom `errorMessage` overrides internal `validationMessage` when `validationError` is true without requiring `error=true`
+
+**Commit:** `8b60077e`
+
+## Post-fix Verification
+
+- Automated tests: pass (pre-push hook test suite in branch)
+- Manual QA via Playwright/Storybook: pass
+  - Custom `errorMessage` now appears for real validation failures in text/tag/number fields without setting `error=true`
+  - Non-error helper-text behavior remains unchanged
