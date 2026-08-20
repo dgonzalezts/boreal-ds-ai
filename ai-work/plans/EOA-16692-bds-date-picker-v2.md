@@ -125,6 +125,8 @@ git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC 
 - When `showTime` is `false` (Phase 1 behavior), the value contract remains the naive `yyyy-MM-dd` string, untouched — proves Phase 2 is additive, not breaking.
 - When `showTime` is `true`, Apply computes the final UTC ISO string via `combineDateTimeToUTC`, using `this.timezone` and the draft's date+hour+minute.
 - Loading an existing `showTime=true` datetime `value` on init correctly pre-populates the draft's date, hour, and minute via `extractDateTimeFromUTC`.
+- **Carried forward from v1's "Remaining Open Questions" #4 (field label ownership, resolved via the 2026-08-19 Architecture Correction):** `renderTimeSelector.tsx` is internal popover-panel content, the same class as `renderCalendarPanel`/`renderFooter` — not a second trigger field. `bds-date-picker` still renders no field/label of its own anywhere; the hour/minute `bds-select`s are configured entirely by `bds-date-picker` itself (not consumer-slotted), same as the calendar grid.
+- **Carried forward from v1's "Remaining Open Questions" #5 (translatable footer text, resolved at v1 Task 16):** the hour/minute `bds-select`s' labels must not be hardcoded English strings — extend the existing `labels?: DatePickerFooterLabels` prop (new keys, or a sibling `DatePickerTimeLabels` shape) so time-selector text follows the same override mechanism already established for Clean/Cancel/Apply, rather than introducing a second, divergent labeling convention.
 
 **Note:** Unit tests for this task's behavior (Phase 1 value-contract regression, UTC computation on Apply, `timezone` override, pre-population on load, Cancel discarding time draft) are covered in the consolidated Task 5 (Phase 2 unit tests), not written here.
 

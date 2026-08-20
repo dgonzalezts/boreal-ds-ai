@@ -104,7 +104,10 @@ In `packages/boreal-web-components/eslint.config.ts`, add to the `ignores` array
 ```ts
 '*.config.mjs',
 '*.config.cjs',
+'.stryker-tmp/',
 ```
+
+`.stryker-tmp/` is critical, not optional — see "Constraint: exclude `.stryker-tmp/` from ESLint" below.
 
 ### Step 5 — Install Stryker (scoped to the component package)
 
@@ -178,3 +181,25 @@ Both templates in this skill already set:
 - `maxWorkers: 1` in `jest.stryker.config.cjs`
 
 Keep both caps unless the machine is known to have memory to spare. If you must raise them, raise one at a time and watch `ps aux | grep jest-worker` / `top -l 1 | grep PhysMem` (macOS) during the run rather than assuming headroom.
+
+## Constraint: exclude `.stryker-tmp/` from ESLint
+
+The pure throwaway-worktree flow (Steps 1–8) never hits this — `.stryker-tmp/` is discarded with
+the worktree before any commit happens. It bites when a task needs the worktree to *persist*
+across the Stryker run — e.g. closing real test gaps found by surviving mutants and committing
+those spec-file fixes from that same worktree (as opposed to a pure "run Stryker, read the
+report, discard" pass).
+
+Each Stryker run creates one `.stryker-tmp/sandbox-<hash>/` directory per concurrent worker —
+a full copy of `src/`. Confirmed on `bds-date-picker` (EOA-16692 Task 23, 2026-08-19): three
+Stryker runs against the same live worktree left multiple sandbox copies on disk; the next
+`git commit`'s lint-staged hook (`eslint --fix` under `projectService: true`, i.e. type-aware
+linting building a full TS program) swept them all in — one file changed, but the type program
+now spanned every file across every sandbox. A hook that normally finishes in ~13s took over
+6 minutes and was killed by a 2-minute tool timeout on the first attempt.
+
+Step 4's `ignores` array above already includes `.stryker-tmp/` — treat it as load-bearing, not
+optional, any time the worktree will see a `git commit` or `git push` (which also runs hooks)
+after Stryker has run in it. If a commit/push hook is taking dramatically longer than a normal
+run on that package, suspect this before suspecting the change itself — check for `sandbox-*`
+directories under `.stryker-tmp/` first.

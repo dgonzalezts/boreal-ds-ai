@@ -74,6 +74,25 @@ Apply this pattern to every optional `@Prop()` that conditionally writes a CSS c
 
 ---
 
+## Constraint: `.stryker-tmp/` must be ESLint-ignored once a worktree persists past the run
+
+Discovered during `bds-date-picker` mutation testing (EOA-16692 Task 23, 2026-08-19), where the
+worktree stayed alive to commit real spec-file fixes (not the pure throwaway pattern where
+`.stryker-tmp/` is discarded with the worktree before any commit).
+
+Each Stryker run leaves one `.stryker-tmp/sandbox-<hash>/` directory per concurrent worker — a
+full copy of `src/`. After three runs against the same worktree, several sandbox copies had
+piled up. The next `git commit`'s lint-staged hook (`eslint --fix` with `projectService: true`,
+type-aware linting) built its TypeScript program across every file in every sandbox, not just
+the one staged file — a hook that normally finishes in ~13s took over 6 minutes.
+
+Fix — add `.stryker-tmp/` to `eslint.config.ts`'s `ignores` array (alongside `*.config.mjs` /
+`*.config.cjs`) any time a commit or push will run from a worktree Stryker has touched. The
+mutations-testing skill's own template now includes this by default — this note exists for any
+manual/one-off Stryker setup that doesn't go through the skill.
+
+---
+
 ## Test pattern: killing `StringLiteral` mutants in `validateNumericProp` calls
 
 Stryker replaces string literal arguments (e.g. the prop name passed to `validateNumericProp`)

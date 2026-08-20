@@ -1,71 +1,63 @@
 # PR Title
 
-test(web-components): EOA-16692 add Phase 1 unit tests for bds-date-picker
+docs(docs): EOA-16692 add bds-date-picker Phase 1 Storybook documentation
 
 ---
 
 # PR Body
 
-## Description of Test Changes
+## Description of Changes
 
-Adds the consolidated Phase 1 unit test suite for `bds-date-picker` (Task 20 of `ai-work/plans/EOA-16692-bds-date-picker-v1.md`), split across six spec files by concern plus a shared test-utils helper. Base branch for this PR is `feature/EOA-16692_bds-date-picker-v1_DG` — this branch was created off it specifically for the test-writing work, per the plan's task sequencing.
+Adds the Task 21 (Phase 1) Storybook story and MDX documentation for `bds-date-picker`, following `bds-select.stories.ts`/`.mdx` as the structural template. Also includes three small fixes to shared `boreal-docs` infrastructure, each discovered and required while getting this specific documentation to render/behave correctly.
+
+**New files:**
+
+- `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` — 9 stories (`Default`, `PreselectedValue`, `CustomFormat`, `CustomLocale`, `HideArrow`, `Disabled`, `CustomFooterLabels`, `InteractiveFormExample`), full `argTypes` coverage for every `bds-date-picker` prop/event plus the internal `bds-calendar-grid` fields it composes.
+- `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx` — full narrative docs: composition, preview, states, footer labels, form integration (including the complementary field-level `required` pattern and the slotted-field constraints table), accessibility, and a `Properties` section split into `### bds-date-picker` / `### bds-calendar-grid` sub-tables (mirroring `bds-table.mdx`'s `bds-table`/`bds-table-column`/`bds-table-column-group` split).
+
+**Modified (shared `boreal-docs` infrastructure):**
+
+- `apps/boreal-docs/package.json` (+`pnpm-lock.yaml`) — added `date-fns@^4.4.0` as a devDependency, required so the `CustomLocale` story can import and render a real French locale (`import { fr } from 'date-fns/locale'`) instead of only showing static, unexecuted example code.
+- `apps/boreal-docs/src/components/story/FormDemo/FormDemo.ts` — added an `invalid` event listener (capture phase) so a blocked form submission (e.g. a required field left empty) surfaces "Form submission blocked by validation" in the demo's output panel. Previously, `FormDemo`'s `submit` handler assumed `event.defaultPrevented` would be reachable to show this message — but the browser never dispatches `submit` at all when a required field is invalid, so that branch was dead code and the output panel silently did nothing. Affects every story using `<form-demo>`, not just `bds-date-picker`'s.
+- `apps/boreal-docs/src/components/docs/KeyboardDocs/KeyboardDocs.module.css` — fixed the shared `KeyboardDocs` component's table shrinking to its content width (as low as ~230px) instead of filling the available space. A global `.sbdocs-content table { display: block; width: fit-content }` rule (intended to let genuinely wide tables scroll instead of squishing) was beating the component's own `.table { width: 100% }` on CSS specificity. Verified this also fixes `bds-table.mdx`'s own `Keyboard interaction` table, with no regression elsewhere.
+- `apps/boreal-docs/.storybook/styles/preview.css` — added a new `.bds-doc__wide-table` opt-in utility class (same pattern as the existing `bds-doc__canvas--with-background`), so a plain Markdown table can be wrapped in `<div className="bds-doc__wide-table">` to opt out of the fit-content shrink rule above, without needing raw JSX/inline styles per table. Used by the two small reference tables in `bds-calendar-grid`'s Properties sub-section.
 
 ## Motivation
 
-- **Coverage gap**: `bds-date-picker.tsx` had zero automated coverage — every behavior from Tasks 14–19 (trigger wiring, draft-until-Apply, footer actions, FACE, styling) was previously verified manually only.
-- **Quality gate**: the plan's own two-phase test gate requires ≥90% coverage before the consolidated mutation-testing pass (Task 23) can run.
-- **Regression risk closed early**: writing these tests surfaced two real, confirmed bugs before they could ship — see Additional Remarks.
+- Task 21 of the `bds-date-picker` v1 plan (`ai-work/plans/EOA-16692-bds-date-picker-v1.md`) requires Storybook documentation before the component can be considered feature-complete for this release.
+- The three infrastructure fixes were each blocking issues found live while verifying the new docs against a running Storybook instance (not theoretical) — none are cosmetic-only.
 
-## Test Coverage Added
+## Relevant Sections Updated
 
-**New spec files** (`packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/`):
+- **`apps/boreal-docs/src/stories/forms/bds-date-picker/`** — new story/MDX pair (see above).
+- **`apps/boreal-docs/src/components/story/FormDemo/FormDemo.ts`** — `invalid` event handling.
+- **`apps/boreal-docs/src/components/docs/KeyboardDocs/KeyboardDocs.module.css`** — table width fix.
+- **`apps/boreal-docs/.storybook/styles/preview.css`** — new `bds-doc__wide-table` utility class.
+- **`apps/boreal-docs/package.json`** — new `date-fns` devDependency.
 
-- `bds-date-picker.basics.spec.ts` (18 tests) — trigger open/close, `disabled`/`hideArrow`, missing-slotted-field warning, `selectable`/`disabled` sync
-- `bds-date-picker.events.spec.ts` (20 tests) — draft-until-Apply lifecycle, Apply/Cancel/Clean semantics, the Apply-with-no-selection fix, slotted field's `valueChange`/`bdsClear` integration
-- `bds-date-picker.form.spec.ts` (14 tests) — `FormData` participation, `formResetCallback`, `required`/`reportValidity()`
-- `bds-date-picker.variants.spec.ts` (10 tests) — custom `format`/`locale`, `disabled` cascading
-- `bds-date-picker.keyboard.spec.ts` (7 tests) — Tab reachability, Enter/Space popover activation (see Additional Remarks)
-- `bds-date-picker.a11y.spec.ts` (7 tests) — `aria-haspopup`/`aria-expanded`, footer button labels
-- `date-picker.test-utils.ts` — shared `renderDatePicker`/`openDatePicker`/`findDayCell`/`findFooterButton` helpers
+## Type of Documentation Change
 
-**Coverage on `bds-date-picker.tsx`:**
+- [x] New documentation (guide, tutorial, reference)
+- [ ] Updated existing documentation (corrections, clarifications, expansions)
+- [ ] Removed outdated documentation
+- [ ] Restructured documentation (improved organization, navigation)
+- [x] Added code examples or demos
+- [ ] Fixed typos, grammar, or formatting
 
-- **Statements**: 98.23% (111/113)
-- **Functions**: 100% (28/28)
-- **Lines**: 98.23% (111/113)
-- **Branches**: 87.75% (43/49) — the uncovered branches are `this.bdsPopover?.`/`this.bdsField?.` null-fallback paths that are structurally unreachable, since `<bds-popover>` is unconditionally part of this component's own `render()`.
+## Review Considerations
 
-## Type of Test Change
-
-- [x] New unit tests (Stencil spec tests)
-- [ ] New integration tests (E2E tests)
-- [ ] Fixed failing tests
-- [ ] Updated tests to match implementation changes
-- [ ] Improved test quality (better assertions, edge cases)
-- [ ] Refactored tests (no coverage change)
-
-## Testing Approach
-
-Uses `newSpecPage` throughout (Stencil component tests, not React Testing Library). Every fixture slots a `<bds-text-field slot="field">` trigger, matching the Architecture Correction that made the trigger consumer-supplied rather than self-rendered. Follows the split-spec-file convention already established by `bds-calendar-grid`'s own tests and `bds-toggle`/`bds-tab-group` — one file per concern, no duplicate assertions across files.
-
-## Test Code Quality
-
-- Shared `date-picker.test-utils.ts` extracts fixture rendering, popover opening, and day/button lookup to remove boilerplate across all six spec files.
-- No ticket ID or task-number references inside any spec file — `describe`/`it` names describe behavior only, per project convention.
-- No inline comments in test files explaining what code does.
+- **Form integration section**: verify the `required`/optional field distinction in `InteractiveFormExample` reads clearly — only "Appointment date" is required (both component-level via `ElementInternals` and field-level for the visible asterisk); "Follow-up date" is genuinely optional and submits as an empty string in `FormData` when left blank.
+- **Slotted-field constraints**: confirm the `pattern`/`name`/`clearable` guidance matches the actual verified behavior described in the plan's Task 21 status notes.
+- **`locale` vs `labels` prop demonstration**: `CustomLocale` uses a Lit property binding plus a `docs.source.code` override (the `date-fns` `Locale` object can't be inlined as `<script>`-tag JSON, and a `<script type="module">import(...)</script>` tag doesn't resolve bare specifiers in this unbundled preview context — confirmed via live reproduction). `CustomFooterLabels` uses a real `<script>` tag with `document.querySelector('#id').labels = {...}`, matching `bds-table.stories.ts`'s `data`/`rows` pattern, since `labels` is plain serializable data. Worth a second pair of eyes on whether this split is clear enough as-is or needs an inline comment.
+- **Properties section split**: `bds-calendar-grid`'s props/events are documented under their own `### bds-calendar-grid` sub-heading (internal-only, `control: false`, no live story) rather than a separate top-level narrative section — mirrors `bds-table.mdx`'s `bds-table-column`/`bds-table-column-group` convention.
+- **Shared-file fixes**: the `KeyboardDocs.module.css` and `FormDemo.ts` changes affect every other component's docs using those shared pieces (`bds-table.mdx`'s own Keyboard interaction table, any story using `<form-demo>`) — verified no regressions on `bds-table.mdx` specifically, but worth a broader smoke-check if reviewers know of other heavy `<form-demo>` consumers.
 
 ## Additional Remarks
 
-**Two real bugs were found and fixed while writing this suite, both included in this PR's commits:**
-
-1. **Apply committed an empty value when nothing was ever selected.** `handleFooterAction`'s `APPLY` case unconditionally called `commitValue(this.draft.selectedDate ?? '')`, so clicking Apply on an untouched draft (e.g. after only clicking an inert outside-month cell) silently overwrote `value` with `''` and emitted `bdsChange`/`valueChange` — contradicting a requirement already written into this same Task 20 spec ("Apply with no draft selection... does not change value and does not emit"). Fixed on the base branch (`feature/EOA-16692_bds-date-picker-v1_DG`, not part of this PR's diff) before this branch was created from it.
-2. **Enter/Space never opened the popover.** `bds-popover`'s own `KeyboardController` unconditionally early-returns whenever `managed={true}` (which `bds-date-picker` always sets), so only mouse click worked — contradicting an explicit "baseline keyboard operability ships in Phase 1" commitment in the spike doc. Fixed in this PR: a `keydown` listener on the slotted trigger field mirrors the existing `click` listener. **This PR is therefore not strictly test-only** — it includes this small, test-discovered implementation fix plus a follow-up type correction (the listener needed `(event: Event)` + an internal cast to satisfy `addElementListener`'s signature under `strictFunctionTypes`, matching `bds-search-bar.tsx`'s existing convention — this repo's own `tsc` invocation has strict mode off project-wide, so the mismatch wasn't caught until checked explicitly).
-
-Not covered here (out of scope for Task 20, tracked elsewhere):
-- Mutation testing (Stryker) — deferred to the plan's Task 23, a separate consolidated pass across all three testable units.
-- Storybook/MDX documentation — Task 21, not yet started.
-- React/Vue wrapper parity — Task 22, not yet started.
-- Full arrow-key grid navigation inside the calendar — explicitly deferred to Phase 8.
+- All 9 stories, both MDX Properties sub-tables, the `CustomLocale`/`CustomFooterLabels` code-snippet rendering, and the `InteractiveFormExample` required/optional/blocked-submission flow were verified live via a running `pnpm dev:docs` instance (Playwright-driven), not just reviewed as source — see the plan's Task 21 status note for the full verification log.
+- `bds-doc__wide-table` is a general-purpose utility, not specific to this component — any future narrow-content reference table elsewhere in the docs site can opt into it the same way.
+- Out of scope, flagged but not fixed here: several of `bds-table.mdx`'s own plain-Markdown tables (measured 419–563px) are subject to the same underlying fit-content shrink and could also benefit from `bds-doc__wide-table`, but weren't touched since they're outside this PR's purpose.
+- Also out of scope, flagged but not fixed here: a visible blinking caret on `bds-date-picker`'s (and likely `bds-select`'s, in non-multiselect mode) read-only trigger field — `bds-text-field.scss`'s `--selectable` modifier is missing the `caret-color: transparent` that its sibling `bds-tag-field.scss`'s identical modifier already has. Confirmed via live computed styles; not fixed in this PR since it touches component source, not docs.
 
 ## References
 
@@ -77,46 +69,55 @@ Refs EOA-16692
 
 ### General
 
-- [x] Follows conventional commit format: `test(scope): TICKET-ID description`
+- [x] Follows conventional commit format: `docs(scope): TICKET-ID description`
 - [x] Ticket reference included
-- [ ] No implementation changes (test-only PR) — **not applicable**, see Additional Remarks: one small, test-discovered keyboard-operability fix (plus its type correction) is bundled in
-- [x] All tests pass locally (97 tests, 1 todo, 10/10 suites)
+- [x] Self-reviewed for clarity and correctness
+- [x] No broken links or references
 
-### Test Quality
+### Documentation Quality
 
-- [x] Tests follow AAA pattern (Arrange, Act, Assert)
-- [x] Test names clearly describe what is being tested
-- [x] Each test verifies one specific behavior
-- [x] Assertions are specific and meaningful
-- [ ] No flaky tests (runs 10 times without failure) — not explicitly re-run 10× as part of this PR; single-run pass confirmed multiple times across iterations
+- [x] Content is clear, concise, and grammatically correct
+- [x] Technical terms are explained or linked to definitions
+- [x] Code examples are correct and tested
+- [x] Examples follow Boreal DS conventions
+- [x] Tone and style match existing documentation
 
-### Test Coverage
+### Accuracy
 
-- [x] Coverage increased or maintained (no decrease) — 0% → 98.23% statements on `bds-date-picker.tsx`
-- [x] Critical paths are tested (happy path + error path)
-- [x] Edge cases covered (Apply with no selection, missing slotted field, disabled cascading)
-- [x] Async behavior tested correctly (`waitForChanges`)
-- [x] Error scenarios tested (invalid/empty required field, missing field warning)
+- [x] Information is technically accurate
+- [x] Code examples run without errors
+- [x] API signatures match actual implementation
+- [ ] Version numbers are correct (if mentioned)
+- [x] Links point to current, valid URLs
 
-### Boreal DS Testing Standards
+### Completeness
 
-- [x] Uses `newSpecPage` for Stencil component tests
-- [x] ElementInternals mocked correctly for FACE tests
-- [x] No hard-coded timeouts (uses `waitForChanges`)
-- [x] Test isolation maintained (no shared state between tests)
+- [x] Covers the intended topic thoroughly
+- [x] Includes common use cases and examples
+- [x] Addresses known pain points or FAQs
+- [x] Cross-referenced from related documentation
+- [x] Table of contents updated (if applicable)
 
-### Test Coverage Metrics
+### Boreal DS Specifics
 
-- [x] Statement coverage ≥ 90% (98.23%)
-- [x] Branch coverage ≥ 80% (87.75%)
-- [x] Function coverage ≥ 90% (100%)
-- [x] Line coverage ≥ 90% (98.23%)
-- [x] Coverage report reviewed (no unexpected gaps — remaining branches are structurally unreachable null-fallback paths)
+- [x] Design token usage documented correctly
+- [x] Component props/events/methods match JSDoc
+- [x] Stencil patterns (FACE, mixins, etc.) explained accurately
+- [ ] Framework wrapper usage shown (React/Vue) if applicable — deferred to Task 22 (React/Vue wrapper parity check)
+- [x] Accessibility guidance included for component docs
 
-### Test Maintainability
+### Formatting & Structure
 
-- [x] Test code is readable and well-structured
-- [x] Helpers extracted for repeated setup/teardown (`date-picker.test-utils.ts`)
-- [x] Test data is clear and representative
-- [x] Tests are independent (can run in any order)
-- [x] No commented-out test code
+- [x] Markdown formatting is correct
+- [x] Headings follow proper hierarchy (h1 → h2 → h3)
+- [x] Code blocks use correct syntax highlighting
+- [x] Lists, tables, and images render properly
+- [x] File structure is logical and navigable
+
+### Testing
+
+- [x] Documentation renders correctly in target platform (Storybook/GitHub/README)
+- [x] All code examples tested and verified working
+- [x] Links tested and valid
+- [x] Images load correctly
+- [x] No broken formatting or rendering issues
