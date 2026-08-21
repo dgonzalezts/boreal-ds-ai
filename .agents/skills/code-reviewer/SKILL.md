@@ -126,6 +126,7 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 | `getter-get-prefix`               | warning  | Getter accessor has a redundant `get` prefix in its name                         |
 | `unused-state`                    | warning  | `@State()` field whose name appears nowhere else in the file                     |
 | `unused-prop`                     | warning  | `@Prop()` field (without `reflect: true`) whose name appears nowhere else in the file |
+| `unstable-state-reference`        | warning  | Self-referencing `{ ...x, ... }` spread reassigned/returned with no preceding guard checking whether the value actually changed — always creates a new reference, causing redundant re-renders |
 
 ## Reference Documentation
 

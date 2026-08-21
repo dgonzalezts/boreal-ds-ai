@@ -170,6 +170,35 @@ This is the established pattern for testing internals (see `bds-popover-methods.
 
 ---
 
+## Testing Reference-Stable State Updates
+
+Any reducer-style setter that rebuilds a `@State()`/mutable `@Prop()` via `{ ...x, ... }` needs a companion test asserting that a no-op update returns the *same* reference, not just an equal-valued one — use `.toBe()` (reference equality), not `.toEqual()` (deep equality), since `.toEqual()` passes even when the update wastefully allocated a new object:
+
+```typescript
+it('keeps the same draft reference when reselecting the already-selected day', async () => {
+  const page = await newSpecPage({ components: [BdsDatePicker], html: '...' });
+  const instance = page.rootInstance as unknown as { draft: DatePickerDraftState };
+  const draftBefore = instance.draft;
+
+  await page.rootInstance.bdsDayClick.emit({ date: draftBefore.selectedDate });
+  await page.waitForChanges();
+
+  expect(instance.draft).toBe(draftBefore); // same reference — no redundant re-render
+});
+
+it('replaces the draft reference when selecting a genuinely different day', async () => {
+  // ...
+  expect(instance.draft).not.toBe(draftBefore);
+  expect(instance.draft.selectedDate).toBe(newDate);
+});
+```
+
+Pair this with an idempotency test for any handler that triggers an imperative action (open/navigate/reset) on interaction: fire the same event twice and assert the second call is a no-op (e.g. a spy on the imperative method was called exactly once, not twice).
+
+See `bds-date-picker.events.spec.ts`'s "reselecting the same day keeps same draft reference" / "repeat click doesn't call `showPopover` again" tests for the full pattern, and `ai-docs/guidelines/stencil-best-practices.md` → "Reference-Stable State Updates" for the underlying bug class.
+
+---
+
 ## Accepted Mutation Survivors
 
 Document accepted survivors when a conditional has no observable DOM consequence (e.g. `tooltipText={this.info !== '' ? this.info : undefined}` where both `''` and `undefined` are falsy in the child guard). Record the survivor in the component's mutation report at `ai-work/qa/mutation-reports/mutation-<component>.md` — not as a comment in the spec file. `ai-work/` is excluded from git (`.git/info/exclude`), so this stays local QA bookkeeping without polluting shipped test code; spec files should read the same as any other test suite, with no mutation-testing context required to understand them. Include file:line, the mutant(s), and the equivalence reasoning, following the format already used in existing `mutation-*.md` reports. If a pattern generalizes across components (not specific to one run), promote it to `.agents/memory/mutation-testing-stryker-setup.md` instead.

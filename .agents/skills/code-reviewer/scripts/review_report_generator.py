@@ -27,6 +27,8 @@ CHECKLIST_SECTIONS = {
         ("async-correctness", "Tests use `waitForChanges()` before DOM assertions"),
         ("docs-updated", "Storybook/MDX/README updated when behavior or APIs change"),
         ("naming-consistent", "Public APIs, events, and props follow naming conventions"),
+        ("reference-stable-state", "Self-referencing `{ ...x, ... }` spreads guard against no-op reassignment (reference stability)"),
+        ("idempotent-trigger-handlers", "Event handlers guard against redundant re-invocation of the same imperative action"),
     ],
     "A — Stencil (boreal-web-components)": [
         ("prop-jsdoc", "Every @Prop() has `readonly` and an adjacent JSDoc block"),
@@ -107,6 +109,7 @@ RULE_TO_CHECKLIST: Dict[str, str] = {
     "getter-get-prefix": "getter-get-prefix",
     "unused-state": "unused-state-or-prop",
     "unused-prop": "unused-state-or-prop",
+    "unstable-state-reference": "reference-stable-state",
 }
 
 

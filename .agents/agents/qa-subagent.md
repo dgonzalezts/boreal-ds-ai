@@ -102,6 +102,17 @@ Currently that section commits to Chrome/Edge ≥ 79, Firefox ≥ 67, and Safari
 
 `playwright-cli --browser=webkit` drives WebKit and is the default path for Safari coverage — install it with `playwright-cli install-browser webkit` if it isn't already present. Only fall back to a live, manually-driven Safari.app session if WebKit installation genuinely fails in the current environment; don't skip Safari coverage entirely or assume Chrome/WebKit-automation parity is sufficient when the automated path is available.
 
+## Repeat-Interaction Testing (Idempotency)
+
+**Mandatory** for any component that toggles, opens/closes a popover/dialog, navigates (e.g. month/page), or advances internal state in response to a user interaction: repeat the *exact same* interaction twice in a row and verify the second invocation is a no-op.
+
+- Click the same trigger twice while already in the target state (e.g. click an open popover's trigger again) — verify displayed state (current month, scroll position, focus, selection) is unchanged and no imperative action (`show()`/`hide()`/reset) fires a second time.
+- Reselect an already-selected value (e.g. click the currently-selected calendar day again) — verify no observable reset or flicker.
+- To verify a render didn't happen (not just that the observable outcome looks right), add a temporary `console.count('render')` inside the component's `render()` method, exercise the repeat interaction, and confirm the count does not increment on the redundant repeat. Remove the instrumentation before reporting — it's a diagnostic tool, not a permanent change.
+- **Dead end, don't retry:** patching `customElements.get(tag).prototype.render` to count renders externally does **not** work for Stencil components — the compiled runtime doesn't dispatch through a dynamically-overridable prototype method. Use `console.count()` inside the source instead.
+
+This bug class (redundant re-render on a repeated no-op interaction) is easy to miss because the *visible outcome* looks correct — only a render-count check or an observable side-effect check (e.g. "did the displayed month reset") surfaces it. See `bds-date-picker`'s "repeat trigger click while open" / "reselect the same day" fixes and `ai-docs/guidelines/stencil-best-practices.md` → "Reference-Stable State Updates" for the canonical case study.
+
 ## Critical Cross-Framework Gotcha: `<template>` Elements
 
 Any Boreal DS feature relying on a raw `<template>` light-DOM child (e.g. `bds-table`'s `slot="row-detail"`, which reads `template.content.cloneNode(true)`) has a **real, unresolved risk** in React and Vue: `HTMLTemplateElement.content` (the special `DocumentFragment` a `<template>` tag's children get parsed into) is populated by the browser **only when the HTML parser itself encounters the tag in markup** — not when a framework's virtual-DOM reconciler (React, Vue) creates the element via `document.createElement('template')` and appends children via normal DOM insertion. Writing `<template>...</template>` directly in JSX or a Vue SFC template may render an element whose `.content` stays empty, silently breaking the feature.

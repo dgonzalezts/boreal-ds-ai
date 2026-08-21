@@ -21,6 +21,8 @@ This checklist is a shared baseline for reviewing changes across the Boreal desi
 - [ ] **Edge cases**: Error paths and invalid inputs are handled explicitly.
 - [ ] **Security**: User-provided content is sanitized or safely escaped where applicable.
 - [ ] **Performance**: No avoidable re-renders, heavy work on the main thread, or unnecessary bundle growth.
+- [ ] **Reference-stable state updates**: `@State()`/mutable `@Prop()` setters built via object/array spread (e.g. `this.draft = { ...this.draft, x }`) return the *same* reference when nothing logically changed, not just a shallow copy with identical values — a new reference re-renders the component even when the values are unchanged. See `bds-date-picker`'s `selectDay()` for the pattern (early-return the existing reference) and `ai-docs/guidelines/stencil-best-practices.md` § "Reference-Stable State Updates".
+- [ ] **Idempotent trigger handlers**: Event handlers that trigger an imperative action (open/close/navigate/toggle) guard against redundant invocation when already in the target state (e.g. `if (this.popoverVisible) return;` before resetting draft state and reopening) — repeating the same user interaction (double-click a trigger, reselect an already-selected item) must not reset state or re-render.
 
 ### Testing and Verification
 

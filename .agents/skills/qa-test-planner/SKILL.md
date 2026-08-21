@@ -277,6 +277,14 @@ When generating files, save them to the following locations unless the user spec
 | Regression  | Existing functionality | Previous features still work |
 | Performance | Speed, load handling   | Page loads under 3 seconds   |
 | Security    | Vulnerabilities        | SQL injection prevented      |
+| Idempotency / Redundant-render | Repeat interaction has no side effect | Clicking an already-open trigger a second time doesn't reset state or re-render |
+
+**Idempotency / Redundant-render template:** For any component that toggles, opens/closes, or advances state in response to a user interaction, repeat the *exact same* interaction twice in a row and verify:
+1. Observable state (e.g. displayed month, selected item, scroll position, focus) is unchanged after the second interaction.
+2. No component-internal side effect fires twice (e.g. an imperative `show()`/`hide()` call, a reset of in-progress draft data).
+3. Where feasible, verify via a temporary `console.count('render')` inside the component's `render()` — the count should not increment on the redundant repeat. Remove the instrumentation before finalizing. Note: patching `customElements.get(tag).prototype.render` does **not** work for Stencil components — the compiled runtime doesn't dispatch through a dynamically-overridable prototype method; use `console.count()` inside the source instead.
+
+See `bds-date-picker`'s "repeat trigger click while already open" / "reselect the same day" cases (`ai-docs/guidelines/stencil-best-practices.md` → "Reference-Stable State Updates") as the canonical example.
 
 </details>
 

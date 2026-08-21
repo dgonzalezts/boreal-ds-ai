@@ -94,6 +94,12 @@ RE_STATE_DECL = re.compile(r"@State\([^)]*\)\s*(?:private\s+)?(?:readonly\s+)?(\
 # Matches: @Prop(...) someField — capturing the decorator options separately, so
 # callers can inspect them (e.g. skip `reflect: true` fields in the unused-prop check)
 RE_PROP_DECL_OPTS = re.compile(r"@Prop\(([^)]*)\)\s*(?:readonly\s+)?(\w+)")
+# Matches `return { ...IDENT, ... }` / `return [...IDENT, ...]` — the idiomatic "return an
+# updated copy of IDENT" reducer shape, whether inside a class method or an extracted utility.
+RE_RETURN_SELF_SPREAD = re.compile(r"return\s+[{\[]\s*\.\.\.(this\.\w+|\w+)\s*,")
+# Matches `this.x = { ...this.x, ... }` / `this.x = [...this.x, ...]` — the same shape written
+# as a direct class-field reassignment instead of routed through a returning function.
+RE_ASSIGN_SELF_SPREAD = re.compile(r"this\.(\w+)\s*=\s*[{\[]\s*\.\.\.this\.\1\s*,")
 
 
 class Finding:
@@ -151,6 +157,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
         findings += _check_aria_camel_set_attr(rel, lines)
         findings += _check_declare_global_popover(rel, source)
         findings += _check_getter_get_prefix(rel, lines)
+        findings += _check_reference_stable_state_updates(rel, lines)
         return findings
 
     if is_spec:
@@ -169,6 +176,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_class_jsdoc_tags(rel, source)   # uses full source — anchored to @Component
     findings += _check_class_jsdoc_stale_slot(rel, source, code_only)
     findings += _check_unused_state_or_prop(rel, code_only)
+    findings += _check_reference_stable_state_updates(rel, lines)
     findings += _check_fileoverview(rel, lines)
     findings += _check_nodetype(rel, lines)
     findings += _check_typescript_safety(rel, lines)
@@ -376,6 +384,55 @@ def _check_unused_state_or_prop(rel: str, code_only: str) -> List[Finding]:
         if is_unused(name):
             emit("unused-prop", "@Prop()", name, m.start())
 
+    return findings
+
+
+def _check_reference_stable_state_updates(rel: str, lines: List[str]) -> List[Finding]:
+    """A state field rebuilt via `{ ...x, ... }` should return the *same* reference when nothing
+    logically changed — a new reference re-renders any @State() it's assigned to even when the
+    values are identical (this class of bug shipped in bds-date-picker's original selectDay()/
+    listenClickTrigger). Heuristic, regex-based: flags the spread if no `if` statement referencing
+    the same identifier appears in the preceding ~12 lines (an approximation of "no early-return
+    guard in the same function body") — expect some false positives/negatives; this is a nudge for
+    human review, not a definitive verdict.
+    """
+    findings: List[Finding] = []
+
+    def has_guard(name: str, end_index: int) -> bool:
+        window_start = max(0, end_index - 12)
+        preceding = lines[window_start:end_index]
+        return any(re.search(rf"\bif\s*\(.*\b{re.escape(name)}\b", pline) for pline in preceding)
+
+    for i, line in enumerate(lines):
+        m = RE_RETURN_SELF_SPREAD.search(line)
+        if m and not has_guard(m.group(1), i):
+            findings.append(Finding(
+                rule="unstable-state-reference",
+                severity="warning",
+                message=(
+                    f"`return {{ ...{m.group(1)}, ... }}` with no preceding guard checking whether "
+                    f"the new value actually differs from the existing '{m.group(1)}' — this always "
+                    "creates a new reference (and re-renders any @State() it's assigned to) even "
+                    "when nothing logically changed. Consider an early-return of the existing "
+                    "reference when unchanged (see bds-date-picker's selectDay() for the pattern)."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
+            continue
+        m2 = RE_ASSIGN_SELF_SPREAD.search(line)
+        if m2 and not has_guard(m2.group(1), i):
+            findings.append(Finding(
+                rule="unstable-state-reference",
+                severity="warning",
+                message=(
+                    f"'{m2.group(1)}' is reassigned via `{{ ...this.{m2.group(1)}, ... }}` with no "
+                    "preceding guard checking whether the new value actually differs — this creates "
+                    "a new reference (and a re-render) even when nothing logically changed."
+                ),
+                file=rel,
+                line=i + 1,
+            ))
     return findings
 
 

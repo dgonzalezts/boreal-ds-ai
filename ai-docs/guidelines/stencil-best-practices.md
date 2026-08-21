@@ -491,6 +491,59 @@ Apply this guard anywhere a method is called from a `@Watch` handler and writes 
 
 ---
 
+## Reference-Stable State Updates
+
+**Problem:** Stencil re-renders a component whenever a `@State()` field (or a mutable `@Prop()`) is reassigned to a *new reference* — regardless of whether the new value is deep-equal to the old one. The idiomatic immutable-update shape, `this.foo = { ...this.foo, x: y }`, always produces a new object, so if `y` happens to equal the existing value, the component still re-renders for nothing. Left unchecked, this shows up as flickering, lost scroll/focus, wasted work in expensive `render()` bodies, and animations restarting on a no-op interaction.
+
+This bug shipped in `bds-date-picker`'s original implementation in two forms:
+
+1. `selectDay()` (a plain reducer-style utility) unconditionally returned `{ ...draft, selectedDate: isoDate }`, even when `isoDate` already matched `draft.selectedDate` — reselecting the already-selected day produced a new `draft` reference and a redundant re-render.
+2. `listenClickTrigger()` reset the draft and reopened the popover on every trigger click, including a second click while the popover was already open — an idempotency bug in the handler itself, not the state shape (see the companion pattern below).
+
+**Pattern — guard the update with an early return of the existing reference:**
+
+```ts
+// ❌ Always creates a new reference, even when nothing changed
+export function selectDay(draft: DatePickerDraftState, isoDate: string): DatePickerDraftState {
+  return { ...draft, selectedDate: isoDate };
+}
+
+// ✅ Returns the exact same reference when the value is unchanged
+export function selectDay(draft: DatePickerDraftState, isoDate: string): DatePickerDraftState {
+  if (draft.selectedDate === isoDate) return draft;
+  return { ...draft, selectedDate: isoDate };
+}
+```
+
+Apply the same guard directly in a class method when the spread happens inline rather than through an extracted function:
+
+```ts
+// ✅ this.columnWidths keeps its reference when the resize didn't actually change anything
+private setColumnWidth(id: string, width: number): void {
+  if (this.columnWidths[id] === width) return;
+  this.columnWidths = { ...this.columnWidths, [id]: width };
+}
+```
+
+**Companion pattern — idempotent trigger handlers:** Guard event handlers that trigger an imperative action (open/close/navigate/toggle) against redundant invocation when already in the target state:
+
+```ts
+// ✅ Repeat clicks while already open don't reset draft state or reopen the popover
+private listenClickTrigger = () => {
+  if (this.popoverVisible) return;
+  this.draft = cloneDraftFromValue(this.value);
+  this.bdsPopover?.showPopover();
+};
+```
+
+**Verifying the fix:** Reference-stability bugs have no visible symptom in a static screenshot — verify with a render-count instrumentation, not a snapshot. Add a temporary `console.count('render')` inside `render()`, exercise the repeat-interaction scenario in the browser (Playwright or manual), and confirm the count does *not* increment on the no-op repeat. Remove the instrumentation before committing.
+
+A prototype-monkey-patch approach (patching `customElements.get('bds-x').prototype.render` to count renders) does **not** work — Stencil's compiled runtime does not dispatch through a dynamically-overridable prototype method. Use `console.count()` inside the source instead.
+
+**Testing:** Cover this with a `.toBe()` reference-equality assertion (not `.toEqual()`) alongside any test for a reducer-style `@State()` setter — see `ai-docs/guidelines/testing-knowledge` / the `testing-knowledge` skill.
+
+---
+
 ## Event Listener Placement: vDOM vs `@Listen` vs `addEventListener`
 
 ### Decision rule
