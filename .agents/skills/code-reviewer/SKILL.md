@@ -124,6 +124,8 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 | `declare-global-popover`          | warning  | Dead `declare global` Popover API augmentation block                             |
 | `interface-bds-prefix`            | error    | Interface file named `IBds*.ts` instead of `I*.ts`                               |
 | `getter-get-prefix`               | warning  | Getter accessor has a redundant `get` prefix in its name                         |
+| `unused-state`                    | warning  | `@State()` field whose name appears nowhere else in the file                     |
+| `unused-prop`                     | warning  | `@Prop()` field (without `reflect: true`) whose name appears nowhere else in the file |
 
 ## Reference Documentation
 

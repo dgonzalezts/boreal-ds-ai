@@ -69,6 +69,7 @@ Apply the sections below only when the change touches the corresponding package.
 - [ ] **No ignored JSDoc tags**: Avoid `@element` and `@method` at class level; use method-level JSDoc instead.
 - [ ] **Use `@file`**: Module JSDoc uses `@file` (not `@fileoverview`).
 - [ ] **Type narrowing**: Prefer `instanceof Element` for element-node narrowing instead of `nodeType` checks.
+- [ ] **No unused `@State()`/`@Prop()`**: Every `@State()` and non-`reflect` `@Prop()` field is referenced somewhere else in the file — `noUnusedLocals`/`no-unused-vars` do not catch unused class members, so this needs a manual check (or the `code-reviewer` skill's `unused-state`/`unused-prop` findings).
 
 #### DOM and Accessibility
 

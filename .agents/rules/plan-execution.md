@@ -50,3 +50,5 @@ State any assumption explicitly and confirm with the user before acting on it.
 ## 7. Keep scope tight
 
 Only implement what the current task describes. Do not refactor surrounding code or add features outside task scope. Log observations as new tasks instead.
+
+Logging an observation means adding it as its own numbered task with a real status (`pending`, `deferred`, etc.) in the plan's task list — never as a parenthetical or inline note buried inside another task's write-up prose. A note like "flagged, not removed, since this task's scope is X" is not a substitute for a tracked task: if it isn't scannable in the task list, it will be missed. If a plan has any accumulated `deferred`/`pending` follow-up tasks noted this way, do not mark the plan `done` until each one is either completed or explicitly re-scoped into its own ticket/plan with the user's confirmation.

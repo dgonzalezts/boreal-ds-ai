@@ -89,6 +89,11 @@ RE_DEFAULT_SLOT_ELEMENT = re.compile(r"<slot(?![^>/]*\bname=)")
 RE_MIXIN_NOOP_CTOR = re.compile(
     r"constructor\s*\(\s*\.\.\.args\s*:\s*any\[\]\s*\)\s*\{\s*super\s*\(\s*\.\.\.args\s*\)\s*;\s*\}"
 )
+# Matches: @State() someField  (with optional private/readonly)
+RE_STATE_DECL = re.compile(r"@State\([^)]*\)\s*(?:private\s+)?(?:readonly\s+)?(\w+)")
+# Matches: @Prop(...) someField — capturing the decorator options separately, so
+# callers can inspect them (e.g. skip `reflect: true` fields in the unused-prop check)
+RE_PROP_DECL_OPTS = re.compile(r"@Prop\(([^)]*)\)\s*(?:readonly\s+)?(\w+)")
 
 
 class Finding:
@@ -163,6 +168,7 @@ def check_tsx_component(path: Path, source: str) -> List[Finding]:
     findings += _check_event_options(rel, lines)
     findings += _check_class_jsdoc_tags(rel, source)   # uses full source — anchored to @Component
     findings += _check_class_jsdoc_stale_slot(rel, source, code_only)
+    findings += _check_unused_state_or_prop(rel, code_only)
     findings += _check_fileoverview(rel, lines)
     findings += _check_nodetype(rel, lines)
     findings += _check_typescript_safety(rel, lines)
@@ -318,6 +324,58 @@ def _check_class_jsdoc_stale_slot(rel: str, source: str, code_only: str) -> List
                 file=rel,
                 line=line_num,
             ))
+    return findings
+
+
+def _check_unused_state_or_prop(rel: str, code_only: str) -> List[Finding]:
+    """@State()/@Prop() declarations must be referenced somewhere else in the file.
+
+    A declaration whose name appears nowhere else (never read, written, watched, or
+    passed to a child) is dead. TypeScript's noUnusedLocals/noUnusedParameters and
+    ESLint's no-unused-vars only check local variables and function parameters —
+    neither one flags unused class members, so this class of bug is otherwise
+    invisible to existing tooling. Scoped to @State()/@Prop() only (not arbitrary
+    private fields/methods) to keep the false-positive rate low. `@Prop({ reflect:
+    true })` fields are skipped — those exist specifically to mirror a value onto
+    the host's HTML attribute for external (DOM/CSS/parent-component) consumption,
+    so the component's own code legitimately never needs to reference them.
+    """
+    findings: List[Finding] = []
+    checked: set = set()
+
+    def is_unused(name: str) -> bool:
+        if name in checked:
+            return False
+        checked.add(name)
+        return len(re.findall(rf"\b{re.escape(name)}\b", code_only)) <= 1
+
+    def emit(rule_name: str, decorator: str, name: str, start: int) -> None:
+        line_num = code_only[:start].count("\n") + 1
+        findings.append(Finding(
+            rule=rule_name,
+            severity="warning",
+            message=(
+                f"{decorator} '{name}' is declared but never referenced anywhere else "
+                "in this file — likely dead code. Remove it, or add a comment "
+                "explaining a genuine deferred/external use (e.g. an ADR-governed "
+                "future-phase prop)."
+            ),
+            file=rel,
+            line=line_num,
+        ))
+
+    for m in RE_STATE_DECL.finditer(code_only):
+        name = m.group(1)
+        if is_unused(name):
+            emit("unused-state", "@State()", name, m.start())
+
+    for m in RE_PROP_DECL_OPTS.finditer(code_only):
+        options, name = m.group(1), m.group(2)
+        if "reflect" in options and "true" in options:
+            continue
+        if is_unused(name):
+            emit("unused-prop", "@Prop()", name, m.start())
+
     return findings
 
 

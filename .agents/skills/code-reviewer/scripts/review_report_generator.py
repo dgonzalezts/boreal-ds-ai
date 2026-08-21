@@ -46,6 +46,7 @@ CHECKLIST_SECTIONS = {
         ("declare-global-popover", "No dead `declare global` Popover API blocks (redundant since TS 5.2)"),
         ("interface-bds-prefix", "Interface files named `IComponent.ts`, not `IBdsComponent.ts`"),
         ("getter-get-prefix", "Getter accessors carry no redundant `get` prefix"),
+        ("unused-state-or-prop", "No unused `@State()`/non-`reflect` `@Prop()` fields"),
     ],
     "B — React/Vue Wrappers": [
         ("wrapper-outputs", "Generated outputs/types rebuilt when web components change"),
@@ -104,6 +105,8 @@ RULE_TO_CHECKLIST: Dict[str, str] = {
     "declare-global-popover": "declare-global-popover",
     "interface-bds-prefix": "interface-bds-prefix",
     "getter-get-prefix": "getter-get-prefix",
+    "unused-state": "unused-state-or-prop",
+    "unused-prop": "unused-state-or-prop",
 }
 
 
