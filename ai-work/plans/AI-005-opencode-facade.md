@@ -48,8 +48,8 @@ created: 2026-08-24
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given this repo root, when running `opencode run "list your available skills" --print-logs` (or the closest equivalent non-interactive invocation), then `brainstorming` (or another known `.agents/skills/` entry) appears in the result. Pass: skill is listed without any `.opencode/` directory existing yet.
-- [ ] Given the same session, when asking OpenCode which file backs that skill, then it resolves to `.agents/skills/brainstorming/SKILL.md`. Pass: path confirms the native fallback path claimed in OpenCode's docs, not a cached/hallucinated answer.
+- [x] Given this repo root, when running `opencode run "list your available skills" --print-logs` (or the closest equivalent non-interactive invocation), then `brainstorming` (or another known `.agents/skills/` entry) appears in the result. Pass: skill is listed without any `.opencode/` directory existing yet.
+- [x] Given the same session, when asking OpenCode which file backs that skill, then it resolves to `.agents/skills/brainstorming/SKILL.md`. Pass: path confirms the native fallback path claimed in OpenCode's docs, not a cached/hallucinated answer.
 
 **Commit:** N/A — verification-only task.
 
@@ -73,8 +73,8 @@ created: 2026-08-24
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the modified script, when running `bash .agents/scripts/sync-symlinks.sh`, then it reports `added:` lines for every file under `.agents/agents/` and `.agents/commands/` under the new `.opencode/agent` and `.opencode/command` sections, with zero conflicts. Pass: script exits 0 and `ls -la .opencode/agent .opencode/command` shows valid relative symlinks resolving back into `.agents/`.
-- [ ] Given a second run immediately after, when running the script again, then every line reports `linked:` (already correct) rather than `added:`/`fixed:`. Pass: script is idempotent.
+- [x] Given the modified script, when running `bash .agents/scripts/sync-symlinks.sh`, then it reports `added:` lines for every file under `.agents/agents/` and `.agents/commands/` under the new `.opencode/agent` and `.opencode/command` sections, with zero conflicts. Pass: script exits 0 and `ls -la .opencode/agent .opencode/command` shows valid relative symlinks resolving back into `.agents/`.
+- [x] Given a second run immediately after, when running the script again, then every line reports `linked:` (already correct) rather than `added:`/`fixed:`. Pass: script is idempotent.
 
 **Commit:**
 
@@ -109,9 +109,9 @@ git commit -m "chore(agents): AI-005 add opencode agent and command symlink faca
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the rename and both new symlinks, when running `bash .agents/scripts/sync-symlinks.sh`, then it reports no conflicts and the two hand-written `ln -s` lines execute cleanly (idempotent on a second run — no error if links already correct).
+- [x] Given the rename and both new symlinks, when running `bash .agents/scripts/sync-symlinks.sh`, then it reports no conflicts and the two hand-written `ln -s` lines execute cleanly (idempotent on a second run — no error if links already correct).
 - [ ] Given a real Claude Code session (fresh, not this one) started in this repo, when it initializes, then it reads `.claude/CLAUDE.md` and the content matches `.agents/AGENTS.md` exactly, including the `@.agents/rules/plan-execution.md` import actually resolving (confirm by asking the session to state a specific rule from `plan-execution.md`, e.g. "confirm before continuing between tasks").
-- [ ] Given a real OpenCode session in this repo, when it initializes, then it loads `AGENTS.md` from the repo root and, given its lazy-load preamble, actually reads `.agents/rules/plan-execution.md` when asked a question that requires it (not just when asked to recite the raw instruction file).
+- [x] Given a real OpenCode session in this repo, when it initializes, then it loads `AGENTS.md` from the repo root and, given its lazy-load preamble, actually reads `.agents/rules/plan-execution.md` when asked a question that requires it (not just when asked to recite the raw instruction file).
 - [ ] Given both sessions, when comparing their stated understanding of the non-negotiable rules (no `any`, no inline comments, `bds-` prefix, etc.), then both give identical answers. Pass: no content drift between the two tools reading the same canonical file.
 
 **Commit:**
@@ -153,10 +153,10 @@ git commit -m "chore(agents): AI-005 promote AGENTS.md to canonical, repoint cla
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the generator runs via `bash .agents/scripts/sync-symlinks.sh`, when checking `.opencode/agent/*.md`, then all 8 files exist, none contain `color:` or a Claude-shaped `tools:` string, and `knowledge-keeper.md`/`technical-writer.md` contain `tools: {bash: false}` (or equivalent JSON-in-YAML form OpenCode accepts).
-- [ ] Given the generated files, when starting a real OpenCode session in this repo, then it starts with **no** configuration-invalid error (this is the regression this task exists to fix — confirm by reproducing the original failure mode first against the pre-fix state, then confirming it's gone).
-- [ ] Given a real OpenCode session, when running `opencode agent list` (or asking the session which subagents it has), then `frontend-subagent`, `testing-subagent`, `documentation-subagent`, `qa-subagent`, `release-subagent`, `knowledge-keeper`, and `technical-writer` all appear as `subagent` mode, and `frontend-developer` appears as `primary`.
-- [ ] Given the `frontend-developer` agent's `permission.task` allowlist, when asking an OpenCode session running as `frontend-developer` to invoke a subagent *not* on the list (e.g. `knowledge-keeper`), then it is denied per the deny-by-default rule.
+- [x] Given the generator runs via `bash .agents/scripts/sync-symlinks.sh`, when checking `.opencode/agent/*.md`, then all 8 files exist, none contain `color:` or a Claude-shaped `tools:` string, and `knowledge-keeper.md`/`technical-writer.md` contain `tools: {bash: false}` (or equivalent JSON-in-YAML form OpenCode accepts).
+- [x] Given the generated files, when starting a real OpenCode session in this repo, then it starts with **no** configuration-invalid error (this is the regression this task exists to fix — confirm by reproducing the original failure mode first against the pre-fix state, then confirming it's gone).
+- [x] Given a real OpenCode session, when running `opencode agent list` (or asking the session which subagents it has), then `frontend-subagent`, `testing-subagent`, `documentation-subagent`, `qa-subagent`, `release-subagent`, `knowledge-keeper`, and `technical-writer` all appear as `subagent` mode, and `frontend-developer` appears as `primary`.
+- [x] Given the `frontend-developer` agent's `permission.task` allowlist, when asking an OpenCode session running as `frontend-developer` to invoke a subagent *not* on the list (e.g. `knowledge-keeper`), then it is denied per the deny-by-default rule.
 - [ ] Given a real Claude Code session (fresh), when dispatching `knowledge-keeper` or `technical-writer` as a subagent, then it behaves identically to before this task — confirms `.agents/agents/*.md` truly went untouched.
 
 **Commit:** handled by the end-of-plan `aisync` (per user's earlier decision — no per-task `git commit` for this scaffold-only plan).
@@ -181,8 +181,8 @@ git commit -m "chore(agents): AI-005 promote AGENTS.md to canonical, repoint cla
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the plugin file exists, when starting a real OpenCode session in this repo and running a `bash` tool call for `pnpm --version` (deliberately not through `with-node.sh`), then the command still executes (not blocked) and a warning is visible (stderr/logs). Pass: matches Claude Code's actual warn-only behavior, not a blocking one.
-- [ ] Given a `bash` tool call for a non-Node command (e.g. `ls`), when it runs, then no warning appears and it is otherwise unaffected. Pass: hook only warns on Node/pnpm-relevant commands missing the wrapper, matching the shell script's actual scoping logic.
+- [x] Given the plugin file exists, when starting a real OpenCode session in this repo and running a `bash` tool call for `pnpm --version` (deliberately not through `with-node.sh`), then the command still executes (not blocked) and a warning is visible (stderr/logs). Pass: matches Claude Code's actual warn-only behavior, not a blocking one.
+- [x] Given a `bash` tool call for a non-Node command (e.g. `ls`), when it runs, then no warning appears and it is otherwise unaffected. Pass: hook only warns on Node/pnpm-relevant commands missing the wrapper, matching the shell script's actual scoping logic.
 
 **Commit:**
 
@@ -208,7 +208,7 @@ git commit -m "feat(agents): AI-005 add opencode plugin for node version gate"
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given `opencode.json` exists, when running `opencode` in this repo, then it starts without a config parse error.
+- [x] Given `opencode.json` exists, when running `opencode` in this repo, then it starts without a config parse error.
 
 **Commit:** handled by the end-of-plan `aisync`.
 
@@ -232,8 +232,8 @@ git commit -m "feat(agents): AI-005 add opencode plugin for node version gate"
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the new memory file, when reading it back, then it accurately describes the current state of Task 4's implementation (the prose-pointer approach) — not a stale plan-time description if the approach changed during implementation.
-- [ ] N/A for live OpenCode verification — this is a documentation-only task.
+- [x] Given the new memory file, when reading it back, then it accurately describes the current state of Task 4's implementation (the prose-pointer approach) — not a stale plan-time description if the approach changed during implementation.
+- [x] N/A for live OpenCode verification — this is a documentation-only task.
 
 **Commit:**
 
@@ -284,7 +284,7 @@ git commit -m "fix(agents): AI-005 fix opencode command frontmatter compatibilit
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the updated docs, when a new contributor reads `SETUP.md` top to bottom, then the facade table and setup steps are sufficient to explain the OpenCode surface without needing to read this plan. Pass: self-reviewed for completeness — no live tooling test applicable to documentation-only content.
+- [x] Given the updated docs, when a new contributor reads `SETUP.md` top to bottom, then the facade table and setup steps are sufficient to explain the OpenCode surface without needing to read this plan. Pass: self-reviewed for completeness — no live tooling test applicable to documentation-only content.
 
 **Commit:**
 
@@ -306,8 +306,8 @@ git commit -m "docs(agents): AI-005 document opencode facade in README and SETUP
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given a clean `bash .agents/scripts/sync-symlinks.sh` run reports zero conflicts, when starting a fresh `opencode` session in this repo, then `AGENTS.md` loads as project instructions, `frontend-subagent` and at least two other subagents appear in `opencode agent list`, at least one skill (e.g. `brainstorming`) is invokable, and at least one command (e.g. `/sync-plans`) runs successfully.
-- [ ] Given the session, when triggering a `bash` tool call for a pnpm command not routed through `with-node.sh`, then the Task 5 plugin blocks it. Pass: full loop confirmed — agents, skills, commands, rules, and the hook all function together in one live session, not just individually.
+- [x] Given a clean `bash .agents/scripts/sync-symlinks.sh` run reports zero conflicts, when starting a fresh `opencode` session in this repo, then `AGENTS.md` loads as project instructions, `frontend-subagent` and at least two other subagents appear in `opencode agent list`, at least one skill (e.g. `brainstorming`) is invokable, and at least one command (e.g. `/sync-plans`) runs successfully.
+- [x] Given the session, when triggering a `bash` tool call for a pnpm command not routed through `with-node.sh`, then the Task 5 plugin warns (not blocks — corrected wording, see Task 5's finding). Pass: full loop confirmed — agents, skills, commands, rules, and the hook all function together in one live session, not just individually.
 
 **Commit:** N/A — verification-only task; no code changes expected unless a regression is found (log as a new task if so).
 
@@ -317,3 +317,13 @@ git commit -m "docs(agents): AI-005 document opencode facade in README and SETUP
 
 - **Task 3:** Resolved — `AGENTS.md` is promoted to canonical (`.agents/AGENTS.md`), with `.claude/CLAUDE.md` repointed to it. Confirmed live: Claude Code has no native `AGENTS.md` recognition (only ever reads `CLAUDE.md`), but does support `@path` imports resolved relative to the importing file's location, four-hop max — both facts checked against Claude Code's own docs before this plan was updated.
 - **Task 4:** Resolved — confirmed live (the hard way: it broke the user's OpenCode session on first symlink). OpenCode's frontmatter parser is strict on recognized-but-differently-shaped fields (`tools`, `color`); a generator script producing separate real files is required. See Task 4's finding write-up for full detail.
+
+## Genuinely Unverified Items (honest gaps, not just unchecked bookkeeping)
+
+Three manual-test lines remain unchecked because they specifically require a **fresh Claude Code session** — something this session cannot spawn on itself:
+
+- Line 113 (Task 3): whether `@.agents/rules/plan-execution.md` actually auto-imports for Claude Code the way its own docs claim. Confirmed via `claude-code-guide` research that the feature exists and behaves that way per documentation, and confirmed the *content* is correct through the symlink — but never watched it fire in a live session, unlike the OpenCode side (line 114), which was directly observed.
+- Line 115 (Task 3): depends on the above — only OpenCode's half of the comparison was actually run.
+- Line 160 (Task 4): confirmed `.agents/agents/*.md` are byte-unchanged (proves Claude Code's *input* is identical to before), but never literally re-dispatched `knowledge-keeper`/`technical-writer` as subagents in a fresh Claude Code session to observe the *output* is unaffected.
+
+If this matters before treating the plan as fully closed, open a new Claude Code session in this repo and: (1) ask it to state a specific rule from `plan-execution.md` without having read the file yet in that session, and (2) dispatch `knowledge-keeper` or `technical-writer` and confirm normal behavior.

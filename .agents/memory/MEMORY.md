@@ -189,6 +189,8 @@ Two distinct, verified failure modes when signaling processes from the Bash tool
 | File                                    | What it covers                                                                                                                                                                                    |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `opencode-agent-memory-fallback.md`     | OpenCode has no equivalent to Claude Code's auto-injected per-subagent memory (`memory: project`). Generated OpenCode agent files point at `.agents/memory/` with an explicit read/write instruction instead — an ergonomic downgrade, not parity. |
+| `opencode-plugin-needs-own-tsconfig.md` | `.opencode/node_modules/@types/node` never resolves without a local `.opencode/tsconfig.json` — TS's automatic typeRoots discovery anchors to the nearest tsconfig's directory (repo root here), not to wherever `node_modules` actually lives. Reinstalling deps does not fix it; adding the tsconfig does. |
+| `aisync-git-add-force-bypasses-gitignore.md` | `aisync.sh`'s `git add -f` bypasses any `.gitignore` inside a synced target — a stray `node_modules` from a local `npm install` got force-committed and pushed (64MB, ~3800 files) before this was caught. Fix is at the `rsync` step: `--exclude` alone isn't enough, `--delete-excluded` is required too. |
 
 ---
 
