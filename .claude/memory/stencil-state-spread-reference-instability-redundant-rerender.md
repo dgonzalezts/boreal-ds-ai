@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-state-spread-reference-instability-redundant-rerender.md

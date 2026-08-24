@@ -114,13 +114,50 @@ sync_surface() {
   done
 }
 
+# sync_single_link <link_rel> <target_rel>
+#   For the one case a renamed canonical file needs a differently-named link
+#   (.agents/AGENTS.md → .claude/CLAUDE.md and → root AGENTS.md) — sync_surface
+#   only handles suffix changes on a shared basename, not a full rename.
+sync_single_link() {
+  local link_rel="$1"
+  local target_rel="$2"
+  local link="$root/$link_rel"
+
+  mkdir -p "$(dirname "$link")"
+
+  if [[ -L "$link" ]]; then
+    local actual
+    actual=$(readlink "$link")
+    if [[ "$actual" == "$target_rel" && -e "$link" ]]; then
+      printf "    linked:   %s\n" "$link_rel"
+    else
+      rm -f "$link"
+      ln -s "$target_rel" "$link"
+      printf "    fixed:    %s\n" "$link_rel"
+      added=$((added + 1))
+      fixed=$((fixed + 1))
+    fi
+  elif [[ -e "$link" ]]; then
+    printf "    \033[33mCONFLICT:\033[0m %s — real %s exists; skipping (manual review needed)\n" \
+      "$link_rel" "$([[ -d "$link" ]] && echo dir || echo file)"
+    conflicts=$((conflicts + 1))
+  else
+    ln -s "$target_rel" "$link"
+    printf "    added:    %s\n" "$link_rel"
+    added=$((added + 1))
+  fi
+}
+
 printf "sync-symlinks: reconciling mirror surfaces\n\n"
 
 printf "── .claude/agents → .agents/agents\n"
 sync_surface ".claude/agents" ".agents/agents" "../../.agents/agents"
 
-printf "── .claude/CLAUDE.md → .agents/CLAUDE.md\n"
-sync_surface ".claude" ".agents" "../.agents" "CLAUDE.md"
+printf "── .claude/CLAUDE.md → .agents/AGENTS.md\n"
+sync_single_link ".claude/CLAUDE.md" "../.agents/AGENTS.md"
+
+printf "── AGENTS.md → .agents/AGENTS.md\n"
+sync_single_link "AGENTS.md" ".agents/AGENTS.md"
 
 printf "── .claude/commands → .agents/commands\n"
 sync_surface ".claude/commands" ".agents/commands" "../../.agents/commands"
@@ -145,6 +182,16 @@ sync_surface ".cursor/rules" ".agents/rules" "../../.agents/rules" "*.md" ".mdc"
 
 printf "── .cursor/skills → .agents/skills\n"
 sync_surface ".cursor/skills" ".agents/skills" "../../.agents/skills"
+
+# .opencode/agent is generated, not symlinked: OpenCode's agent frontmatter
+# schema hard-errors on Claude's `tools:` (string) and `color:` (named color)
+# shapes, so a plain per-entry symlink would ship broken config. The
+# generator derives OpenCode-shaped frontmatter with the same prose body.
+printf "── .opencode/agent → .agents/agents (generated)\n"
+python3 "$root/.agents/scripts/generate-opencode-agents.py" "$root" | sed 's/^/    /'
+
+printf "── .opencode/command → .agents/commands\n"
+sync_surface ".opencode/command" ".agents/commands" "../../.agents/commands"
 
 printf "── .github/prompts → .agents/commands (*.prompt.md)\n"
 sync_surface ".github/prompts" ".agents/commands" "../../.agents/commands" "*.md" ".prompt.md"

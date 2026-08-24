@@ -14,11 +14,11 @@ Three canonical directories hold all AI artefacts:
 | `ai-docs/` | Reference documentation: guidelines, decisions, diagrams                |
 | `ai-work/` | Working artefacts: plans, reviews, sessions, tickets, QA, research      |
 
-Three mirror facades expose content to specific tools via per-entry symlinks:
+Four mirror facades expose content to specific tools via per-entry symlinks (one, `.opencode/agent/`, is generated rather than symlinked — see note below):
 
 | Facade                            | Points to                         | Used by                               |
-| --------------------------------- | --------------------------------- | ------------------------------------- |
-| `.claude/CLAUDE.md`               | `.agents/CLAUDE.md`               | Claude Code                           |
+| --------------------------------- | --------------------------------- | -------------------------------------- |
+| `.claude/CLAUDE.md`               | `.agents/AGENTS.md`               | Claude Code                           |
 | `.claude/agents/`                 | `.agents/agents/`                 | Claude Code                           |
 | `.claude/commands/`               | `.agents/commands/`               | Claude Code                           |
 | `.claude/memory/`                 | `.agents/memory/`                 | Claude Code                           |
@@ -30,12 +30,19 @@ Three mirror facades expose content to specific tools via per-entry symlinks:
 | `.cursor/skills/`                 | `.agents/skills/`                 | Cursor                                |
 | `.github/copilot-instructions.md` | `.agents/copilot-instructions.md` | GitHub Copilot (always-on)            |
 | `.github/prompts/`                | `.agents/commands/`               | GitHub Copilot (renamed \*.prompt.md) |
+| `AGENTS.md` (repo root)           | `.agents/AGENTS.md`               | OpenCode                              |
+| `.opencode/command/`              | `.agents/commands/`               | OpenCode                              |
+| `.opencode/agent/`                | *generated from* `.agents/agents/` | OpenCode                              |
+
+`.agents/skills/` needs no OpenCode facade — OpenCode natively searches that path as one of its documented skill-discovery locations (confirmed live).
+
+`.opencode/agent/` is the one exception to the "per-entry symlink" rule: OpenCode's agent frontmatter schema is a strict validator that rejects Claude's `tools:` (comma-string with `Agent(...)` syntax) and `color:` (named color) shapes outright — this was discovered when a plain symlink here broke every OpenCode session with a hard config-parse error. `.agents/scripts/generate-opencode-agents.py` derives OpenCode-shaped frontmatter (`mode`, `permission.task`, an optional `tools: {bash: false}` restriction) from each canonical agent file, keeping the prose body byte-identical. Run it via `sync-symlinks.sh` (wired in automatically) — never hand-edit `.opencode/agent/*.md` directly, it's regenerated on every sync.
 
 ---
 
 ## How it works
 
-All twelve entries are excluded from the main repository tracking via `.git/info/exclude`:
+All fifteen entries are excluded from the main repository tracking via `.git/info/exclude`:
 
 - They never appear as untracked files in `git status` on the main branches
 - They are never pushed to the `origin` remote (Bitbucket)
@@ -131,10 +138,10 @@ git checkout -
 root=$(git rev-parse --show-toplevel)
 wt="$root/../ai-sync-worktree"
 git worktree add "$wt" ai-config
-for d in .agents ai-docs ai-work .claude .cursor .github; do
+for d in .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md; do
   rsync -a --delete --links "$root/$d" "$wt/"
 done
-git -C "$wt" add -f .agents ai-docs ai-work .claude .cursor .github
+git -C "$wt" add -f .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md
 git -C "$wt" commit -m "sync: update AI configuration"
 git -C "$wt" push ai ai-config:main
 git worktree remove "$wt"

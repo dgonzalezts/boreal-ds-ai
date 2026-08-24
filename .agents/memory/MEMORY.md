@@ -184,6 +184,12 @@ Two distinct, verified failure modes when signaling processes from the Bash tool
 | `stencil-mock-doc-mouseevent-relatedtarget.md`  | `newSpecPage` runs on `@stencil/core/mock-doc`, whose `MockMouseEvent`/`MockFocusEvent` do `Object.assign(this, initDict)` — `relatedTarget` is a plain writable field, no `Object.defineProperty` workaround needed. Also: `Node.contains(self)` returns `true` in mock-doc, giving `a.contains(b) \|\| a === b` guards a dead right-hand branch when `a === b`. |
 | `stencil-mock-doc-no-dragevent-datatransfer.md` | `newSpecPage`'s mock-doc has no global `DragEvent`/`DataTransfer` constructor — both throw `ReferenceError`. Workaround: dispatch a plain `Event` with a hand-rolled `dataTransfer`-shaped object (`getData`/`setData`/`effectAllowed`), reusing the same instance across the `dragstart`/`dragover`/`drop` sequence. `event.target`/`currentTarget` still populate correctly. Cross-cutting gap — applies to any component with native HTML5 drag/drop (`bds-card-header`'s `reorder` prop, `bds-table`'s column reorder handle). No shared test helper existed yet as of this entry — check `src/utils/testing/mocks/` before re-implementing inline. |
 
+### AI Tooling — Multi-Tool Facade
+
+| File                                    | What it covers                                                                                                                                                                                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `opencode-agent-memory-fallback.md`     | OpenCode has no equivalent to Claude Code's auto-injected per-subagent memory (`memory: project`). Generated OpenCode agent files point at `.agents/memory/` with an explicit read/write instruction instead — an ergonomic downgrade, not parity. |
+
 ---
 
 ## Related ADRs

@@ -153,3 +153,12 @@ Reference documents consulted by the **Frontend Developer** agent and specialist
 - The **Frontend Developer** agent never writes implementation code — it coordinates only.
 - All commits during implementation must be made via `pnpm commit` (Commitizen) to drive automatic versioning via `release-it`.
 - `pnpm release:*` is the Engineering Lead's responsibility. Developers never run it.
+
+---
+
+## Cross-Tool Notes
+
+This workflow is designed to run under Claude Code, Cursor, GitHub Copilot, or OpenCode — see `SETUP.md` for the full facade table.
+
+- **MCP servers** (`context7`, `figma`, `playwright`, `atlassian`, etc.) are configured at each user's global tool-level config (e.g. `~/.claude.json` for Claude Code), not per-repo — there is no project-scoped `.mcp.json`/MCP config in this repository. A tool without the same servers registered will not have access to skills or instructions that assume one (e.g. the `AGENTS.md`/`CLAUDE.md` "Docs before config" rule).
+- **Per-agent memory** works differently across tools: Claude Code auto-injects scoped memory per subagent; OpenCode has no equivalent — see [`.agents/memory/opencode-agent-memory-fallback.md`](./memory/opencode-agent-memory-fallback.md) for the fallback convention OpenCode agents use instead.

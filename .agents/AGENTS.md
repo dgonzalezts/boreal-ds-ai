@@ -1,4 +1,4 @@
-# Claude Code — Project Memory
+# Boreal DS — Agent Instructions
 
 ## Memory
 
@@ -12,7 +12,7 @@ Read the index before starting any component or infrastructure task: `.agents/me
 - **Node.js**: run `fnm use` before any Node/pnpm command; reads `.node-version` at repo root.
 - **Package manager**: pnpm 10+ only; install from workspace root with `pnpm add -D -w <pkg>@latest`.
 - **npm versions**: always fetch `https://registry.npmjs.org/<pkg>/latest` before specifying any version in a plan, `package.json`, or install command. Fetch all packages in parallel. Never recall versions.
-- **Docs before config**: before writing any config file or integration code, fetch current docs with Context7 MCP (`resolve-library-id` → `query-docs`). Never rely on recalled API shapes.
+- **Docs before config**: before writing any config file or integration code, fetch current docs with Context7 MCP (`resolve-library-id` → `query-docs`) if the `context7` MCP server is registered in your session. Never rely on recalled API shapes.
 - **Commits**: `type(scope): TICKET-ID description` via `pnpm commit`.
 
 ---
@@ -30,4 +30,6 @@ Read the index before starting any component or infrastructure task: `.agents/me
 
 ## Plan Execution
 
-See `.claude/rules/plan-execution.md` for the full strategy (loaded every session).
+CRITICAL: When you encounter an `@`-referenced file below, load it with your Read tool if you have not already — for Claude Code this resolves as an automatic import; for other tools, treat this line as an explicit instruction to fetch it now, on first need. Once loaded, treat its content as mandatory.
+
+For the full plan-execution strategy: @.agents/rules/plan-execution.md

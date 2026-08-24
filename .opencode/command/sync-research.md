@@ -1,0 +1,1 @@
+../../.agents/commands/sync-research.md

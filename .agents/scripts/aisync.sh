@@ -27,10 +27,12 @@ targets=(
   .github
   .agents
   .cursor
+  .opencode
   .rtk
   ai-docs
   ai-work
   CLAUDE.md
+  AGENTS.md
 )
 
 for d in "${targets[@]}"; do

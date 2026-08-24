@@ -12,13 +12,13 @@ Run `sync-symlinks.sh` to reconcile per-entry symlinks across all mirror surface
 ## When to invoke
 
 - A file was added to or removed from any of:
-  - `.agents/CLAUDE.md` — project memory file (mirror: `.claude/CLAUDE.md`)
-  - `.agents/agents/` — agent definitions (mirrors: `.claude/agents/`, `.cursor/agents/`)
-  - `.agents/commands/` — slash commands (mirrors: `.claude/commands/`, `.cursor/commands/`, `.github/prompts/` as `*.prompt.md`)
+  - `.agents/AGENTS.md` — project instructions file (mirrors: `.claude/CLAUDE.md`, root `AGENTS.md`)
+  - `.agents/agents/` — agent definitions (mirrors: `.claude/agents/`, `.cursor/agents/`, and `.opencode/agent/` — generated, not symlinked; run `generate-opencode-agents.py`)
+  - `.agents/commands/` — slash commands (mirrors: `.claude/commands/`, `.cursor/commands/`, `.github/prompts/` as `*.prompt.md`, `.opencode/command/`)
   - `.agents/copilot-instructions.md` — GitHub Copilot always-on context (mirror: `.github/copilot-instructions.md`)
   - `.agents/memory/` — memory entries (mirror: `.claude/memory/`)
   - `.agents/rules/` — always-on rule files (mirrors: `.claude/rules/` as `*.md`, `.cursor/rules/` as `*.mdc`)
-  - `.agents/skills/` — skill definitions (mirrors: `.claude/skills/`, `.cursor/skills/`)
+  - `.agents/skills/` — skill definitions (mirrors: `.claude/skills/`, `.cursor/skills/`; OpenCode reads `.agents/skills/` natively, no mirror needed)
 - After restoring or restructuring scaffold directories
 
 ## The Process
