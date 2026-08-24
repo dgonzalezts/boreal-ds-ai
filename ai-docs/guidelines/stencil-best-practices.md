@@ -631,6 +631,25 @@ addElementListener(this.bdsField, "valueChange", (event: Event) => {
 
 **Detecting duplicate events:** open the Storybook Actions panel, trigger a single interaction, and check the `from` field on each entry. Any entry where `from` is a child element name (not the host) is a leaked event — a `stopPropagation()` guard is missing.
 
+**JSX-composed children:** the same boundary applies when a composite component composes a child directly in JSX (`<bds-select onBdsChange={...} onValueChange={...}>`) rather than wiring it imperatively via `addElementListener`. `event.stopPropagation()` must be called inside the inline handler itself, on every handler attached to the child — including ones that only guard and do not re-emit:
+
+```tsx
+function stopSelectEventPropagation(event: Event): void {
+  event.stopPropagation();
+}
+
+<bds-select
+  value={toTwoDigits(hour)}
+  onBdsChange={(event: CustomEvent<string | string[]>) => {
+    event.stopPropagation(); // stop bds-select's bdsChange before re-deriving the picker's own value
+    onHourChange(Number(event.detail));
+  }}
+  onValueChange={stopSelectEventPropagation}
+>
+```
+
+Confirmed second occurrence: `bds-date-picker`'s `renderTimeSelector.tsx` composes two `bds-select` instances for hour/minute entry (EOA-17138 Task 3). `bds-select` emits bare, bubbling `bdsChange`/`valueChange` events that share their name with `bds-date-picker`'s own public `@Event() bdsChange`/`@Event() valueChange` — without the inline `stopPropagation()` calls above, a consumer listening on the `bds-date-picker` host received a spurious extra `bdsChange` (the raw hour/minute string) ahead of the picker's own correctly-typed event.
+
 ---
 
 ## DOM API Gotchas

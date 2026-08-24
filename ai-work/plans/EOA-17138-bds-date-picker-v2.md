@@ -177,6 +177,8 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 ### Task 1 (was Task 23): `date-engine` timezone-aware value conversion
 
+**Status:** ✅ done (2026-08-24) — `value.ts` created (`combineDateTimeToUTC`/`extractDateTimeFromUTC` via `@date-fns/tz`'s `TZDate`), exported through the `date-engine` barrel (`index.ts`). `types.ts` gained a `DateTimeParts` interface (`{ date: Date; hour: number; minute: number }`), matching this module's convention of centralizing shared interfaces there rather than declaring them inline. 5 tests in `value.spec.ts` (round-trip for a DST-observing zone and a non-DST zone, differing UTC offset across the LA DST boundary, constant offset for Tokyo, and a spring-forward-gap edge case), independently re-run: 5/5 passing. No `any` types. `tsc --noEmit`: no new errors (pre-existing unrelated errors in other components confirmed unaffected via grep). `eslint`: clean.
+
 **Executor:** @frontend-subagent
 **Files:** `packages/boreal-web-components/src/services/date-engine/value.ts` (create), `.../date-engine/__test__/value.spec.ts` (create)
 
@@ -194,6 +196,8 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 ### Task 2 (was Task 24): `bds-date-picker` time selector — design check-in (blocking gate)
 
+**Status:** ✅ done (2026-08-24) — resolved via a user-provided reference screenshot; see the confirmed-design note below.
+
 **Executor:** main thread (no executor)
 
 **Acceptance criteria:**
@@ -208,6 +212,8 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 ---
 
 ### Task 3 (was Task 25): `bds-date-picker` time selector implementation
+
+**Status:** ✅ done (2026-08-24) — independently verified, not just trusted from the subagent report: read `bds-date-picker.tsx`/`utils/draft-state.ts`/`utils/value-mapping.ts`/`helpers/renderTimeSelector.tsx` line-by-line against every amended acceptance criterion (all matched); independently re-ran `node -e` against `@date-fns/tz`'s `TZDate#toISOString()` to confirm the subagent's offset-preservation claim (verified true — a corrected, load-bearing memory entry, `stencil-date-engine-tzdate-timezone-conversion.md`, now documents this); independently re-ran the full `bds-date-picker` test suite (137 passed, 1 pre-existing todo — matches report exactly) and `tsc --noEmit` (zero date-picker errors, 5 pre-existing unrelated). Real bug found and fixed during implementation: `bds-select`'s bubbling `bdsChange`/`valueChange` collided by name with `bds-date-picker`'s own public events — fixed via `stopPropagation()` in `renderTimeSelector.tsx`. One design gap caught during review (not a Task 3 code issue): the hour/minute fields need `label="Hour"`/`label="Minute"` set for `aria-labelledby` to wire correctly (`bds-text-field` has no accessible-name mechanism when `label=''`, and no attribute-forwarding for a raw `aria-label`), which conflicts with Task 2's "bare, unlabeled" Figma reference. Resolved via a visually-hidden/`sr-only` CSS treatment of the already-rendered `bds-typography` label element (light DOM, no `bds-text-field` changes needed) — folded into Task 4's acceptance criteria, not a Task 3 rework.
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:** `helpers/renderTimeSelector.tsx` (create), `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `utils/draft-state.ts` (modify — `resetDraft` must derive `hour`/`minute` from a committed `value` when `withTime=true`, and `commitValue`'s Apply-time computation must combine `draft.selectedDate` + `draft.hour`/`draft.minute` via `combineDateTimeToUTC` instead of using the naive date string directly)
@@ -239,7 +245,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 **Figma research pass (complete before writing any SCSS):**
 
-- [ ] Region: hour/minute fields — default state _(already decoded: timer icon + two bordered 58px fields)_
+- [x] Region: hour/minute fields — default state — **pulled 2026-08-24** via `get_design_context` on node `14:24957` (`_Basic Time picker`, fileKey `rtiE5zGA4aoOuxIQMgfD6h`): field background `var(--ui-(components)/inverse, white)`; border `var(--stroke/xs, 1px)` solid `var(--stroke/default-light, #e3e3e6)`; radius `var(--radius/xs, 4px)`; padding `var(--spatial/padding/xs, 8px)` left, `var(--spatial/padding/1xs, 6px)` right/vertical; value text Inter Regular 14px, `var(--typography/line-height/sm, 20px)`, `var(--text/default-darker, #131316)`; icon+fields gap `var(--spacing/2xs, 4px)`; gap between the two Select fields `var(--spatial/gap/2xs, 4px)`; field-internal gap (value↔disclosure) `var(--spatial/gap/xs, 8px)`; disclosure icon 20×20px; timer icon 16×16px. **Known gap in the current placeholder**: `bds-date-picker.scss`'s `.bds-date-picker__time-selector` rule (added incidentally during Task 3) uses `$boreal-spatial-gap-xs` (8px) — must be corrected to the 4px (`2xs`) gap confirmed above.
 - [ ] Interaction: hour/minute fields — hover/focus/active _(not yet pulled)_
 - [ ] Modifier: hour/minute fields — validation/error state, if it exists _(not yet pulled)_
 - [ ] Dimensions: hour/minute field width/height against the popover body's confirmed 296×434px panel, 24px/12px padding
@@ -249,8 +255,9 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 - Every research-pass row checked off, with the pulled value recorded, before the first SCSS line.
 - `$boreal-*` tokens exclusively.
 - JSDoc for `withTime` and related props/state complete and accurate.
+- **Label accessibility (confirmed 2026-08-24):** the hour/minute `bds-select`/`bds-text-field` pair keeps `label="Hour"`/`label="Minute"` (per Task 3) so `aria-labelledby` wires correctly on each inner `<input>` — `bds-text-field` has no accessible-name mechanism when `label=''`, and no attribute-forwarding mechanism for a raw host-level `aria-label` either, so an empty label would leave the field with no accessible name at all. Instead, the rendered `bds-typography` label element (light DOM, directly targetable — no `bds-text-field` changes needed) is visually hidden within `.bds-date-picker__time-selector` using the standard visually-hidden/`sr-only` technique (clipped, 1px, `overflow: hidden` — never `display: none`, which strips some browser/AT combinations from the accessibility tree). Net result: bare visually (matching Task 2's confirmed Figma reference), with a real accessible name for screen readers.
 
-**Manual test (required):** Reuse Task 3's scenarios; `pnpm dev:components` — visual match against the confirmed Task 2 design.
+**Manual test (required):** Reuse Task 3's scenarios; `pnpm dev:components` — visual match against the confirmed Task 2 design. Additional scenario: inspect the hour/minute fields' accessible name via the browser DevTools accessibility panel (or a screen reader), confirm "Hour"/"Minute" is announced despite no visible label text on screen.
 
 **Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style time selector and finalize Phase 2 JSDoc"`
 
