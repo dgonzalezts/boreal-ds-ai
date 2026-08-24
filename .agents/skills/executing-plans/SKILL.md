@@ -28,12 +28,13 @@ For each task:
 
 1. Mark as in_progress
 2. Read the `**Executor:**` field on the task
-3. If `@<subagent>` is declared: compose a dispatch message containing the task title, files, acceptance criteria, unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
+3. **Grounding check (safety net, not a substitute for the plan's own research):** if the task modifies existing behavior — a function/file with real callers, a public prop/event's accepted shape, a draft-state or controlled-value pattern other code paths depend on — read the actual current source of the files it touches before dispatching, even if the plan already carries an Integration & Edge-Case Gate pass from `writing-plans` for it. Plans go stale: earlier tasks in the same execution can shift the code a later task assumed. Fold any real gap found (a missed call site, an undefined default/empty state, a public-API boundary case) into the dispatch message's acceptance criteria and manual-test scenarios before sending it, and propagate the same finding to any later task in the plan sharing the same root cause. Skip this step for tasks with no executor, no code surface (parity checks, mutation-testing re-runs), or brand-new files with no existing callers.
+4. If `@<subagent>` is declared: compose a dispatch message containing the task title, files, acceptance criteria (amended per the grounding check above), unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
    - **When dispatching to `@qa-subagent` specifically**, also state this task's position among the plan's manual-QA tasks — e.g. "this is the only/last manual-QA task in this plan" or "N more manual-QA tasks remain after this one." The subagent has no visibility into the plan beyond what it's told and uses this to decide whether to tear down dev servers (web components/React/Vue) at the end of the task or leave them running for the next dispatch. Omitting this causes it to default to full teardown, which is safe but forces a redundant rebuild on the next QA task.
-4. If no executor declared: execute the task directly on the main thread
-5. Wait for subagent output; review it against acceptance criteria
-6. Run the task's manual test checklist yourself (or confirm with your human partner it was run) — manual tests are required, not waiveable; a failing or skipped manual test is a blocker, not a pass
-7. Mark as completed only when acceptance criteria are met AND the manual test checklist passes
+5. If no executor declared: execute the task directly on the main thread
+6. Wait for subagent output; review it against acceptance criteria
+7. Run the task's manual test checklist yourself (or confirm with your human partner it was run) — manual tests are required, not waiveable; a failing or skipped manual test is a blocker, not a pass
+8. Mark as completed only when acceptance criteria are met AND the manual test checklist passes
 
 ### Step 3: Complete Development
 
@@ -71,6 +72,7 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Ground integration-shaped tasks against current source before dispatch, even when the plan already did this research at write time — a live safety net for drift, not a replacement for `writing-plans`' Integration & Edge-Case Gate
 
 ## Integration
 

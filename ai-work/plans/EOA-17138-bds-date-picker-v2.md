@@ -1,12 +1,12 @@
 ---
 ticket: EOA-17138
 component: bds-date-picker
-status: pending
+status: in progress
 created: 2026-08-19
 updated: 2026-08-24
 ---
 
-# bds-date-picker v2 (ADR-0003 Phases 2–9) Implementation Plan
+# EOA-17138 — bds-date-picker v2 (ADR-0003 Phases 2–9) Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
@@ -17,13 +17,14 @@ updated: 2026-08-24
 **Goal:** Extend `bds-date-picker` (shipped in v1 as a single-date picker) with every remaining ADR-0003 roadmap phase in one sprint: an optional time selector, min/max constraints, date-range (dual calendar) support, dual time selection, a presets sidebar, an info banner with a footer range summary, full keyboard/a11y/RTL parity, and the month/year quick-picker — without breaking v1's naive-date `value` contract for consumers who use none of the above.
 
 **Jira ticket:** [EOA-17138 "Implement Date Picker v2"](https://telesign.atlassian.net/browse/EOA-17138) — sibling story to [EOA-16692](https://telesign.atlassian.net/browse/EOA-16692) (v1) under the same parent Feature (EOA-14927). Scope expanded 2026-08-24 to cover the full remaining roadmap (see ticket description).
-**Ticket brief:** [`ai-work/tickets/EOA-16692-bds-date-picker.md`](../tickets/EOA-16692-bds-date-picker.md)
+**Ticket brief:** [`ai-work/tickets/EOA-17138-bds-date-picker-v2.md`](../tickets/EOA-17138-bds-date-picker-v2.md)
 **Spike doc (architecture decisions — read before starting, do not duplicate here):** [`ai-work/research/2026-08-12-bds-date-picker-architecture-spike.md`](../research/2026-08-12-bds-date-picker-architecture-spike.md) — see in particular the "Version Backlog (ADR-0003 Phases 3–8)" section and the "Unscheduled — month/year quick-picker" section, both now in scope here.
 **v1 plan (Phase 0–1, prerequisite, done):** [`EOA-16692-bds-date-picker-v1.md`](./EOA-16692-bds-date-picker-v1.md)
 
 **Versioning:** This file now covers Phases 2–9 in full — the last version file needed to close ADR-0003's originally-scoped roadmap, plus the quick-picker. Anything discovered mid-sprint that isn't covered by Phases 2–9 or the quick-picker (e.g. keyboard-typed entry, if ever picked up) still gets its own future `ai-work/plans/EOA-16692-bds-date-picker-vN.md` file per the established convention.
 
 **Architecture:** Unchanged core shape from v1 — `bds-date-picker` (orchestrator: `bds-text-field` trigger + `bds-popover` panel + one or two `bds-calendar-grid` bodies, FACE-compliant, draft-state-until-Apply). Each phase below is additive:
+
 - Phase 2 composes a new `renderTimeSelector.tsx` helper.
 - Phase 3 wires already-existing-but-unwired `date-engine`/`bds-calendar-grid` capacity (`isWithinRange`, `compareDates`, `DayCell.isDisabled`) — no new primitives expected.
 - Phase 4 introduces the `range: boolean` prop (per ADR-0006/spike Finding 4) and a second `bds-calendar-grid` instance; the public `value` contract becomes `string | { start: string; end: string }` when `range` is on.
@@ -49,115 +50,117 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 
 **Wrapper parity is per-phase, not fully consolidated** — unlike v1/Phase 2 (a brand-new component with no behavior yet to diverge on), by Phase 3 `bds-date-picker` is an established, already-shipping component; per the writing-plans convention, each phase from here on gets its own React/Vue parity task immediately after that phase's documentation task, so a framework-specific regression is caught against the one feature that just landed, not buried in a single end-of-sprint pass.
 
+**Grounded failure-mode/edge-case pass before every implementation task (added 2026-08-24, applies for the rest of this plan's execution):** before dispatching any remaining implementation task (Task 4 onward) to its executor, the orchestrating session must first read the actual current source of every file that task will touch — not just this plan's prose — and check for integration gaps the task's acceptance criteria may have missed (e.g. a helper/util function called from multiple sites that the task's Files list omitted, a public-API boundary case like a malformed prop value, a default-value/empty-state ambiguity, a runtime prop-toggling assumption). Real findings get folded into that task's acceptance criteria and manual-test scenarios (and propagated to any later task sharing the same root cause) before dispatch, the same way Task 3 was amended for the `utils/draft-state.ts` gap, the malformed-`value` fallback, the `00:00` default-time decision, and the `format` auto-switch. This is a standing instruction for this plan, not a one-off — any session picking this plan back up must do the same before dispatching Task 4, 6 (docs — lighter pass, mostly N/A), 9/10/11 (Phase 3), etc. Skip this pass only for tasks with no executor (blocking design gates) or no code surface (React/Vue parity, mutation-testing re-runs already scoped by their own task text).
+
 ---
 
 ## Files to create / modify
 
 **Phase 2 (unchanged from original file):**
 
-| File | Notes |
-| --- | --- |
-| `packages/boreal-web-components/src/services/date-engine/value.ts` | New — `combineDateTimeToUTC`, `extractDateTimeFromUTC` via `@date-fns/tz` |
-| `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts` | New — plain Jest |
-| `.../bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx` | New |
-| `.../bds-date-picker/bds-date-picker/types/types.ts` | Modify — extend `DatePickerDraftState` with `hour`/`minute` |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — `showTime` prop, time-selector wiring |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — time-selector styling |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts` | New |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts` | Modify |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` | Modify — regression check only |
+| File                                                                             | Notes                                                                     |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/boreal-web-components/src/services/date-engine/value.ts`               | New — `combineDateTimeToUTC`, `extractDateTimeFromUTC` via `@date-fns/tz` |
+| `packages/boreal-web-components/src/services/date-engine/__test__/value.spec.ts` | New — plain Jest                                                          |
+| `.../bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx`             | New                                                                       |
+| `.../bds-date-picker/bds-date-picker/types/types.ts`                             | Modify — extend `DatePickerDraftState` with `hour`/`minute`               |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                        | Modify — `withTime` prop, time-selector wiring                            |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                       | Modify — time-selector styling                                            |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts`      | New                                                                       |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.a11y.spec.ts`      | Modify                                                                    |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts`  | Modify — regression check only                                            |
 
 **Phase 3 (min/max):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-date-picker/bds-date-picker/types/types.ts` | Modify — extend `DatePickerDraftState`/props with `min`/`max` |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — `min`/`max` props, helper-text wiring, whole-month-disabled guard on nav |
-| `.../bds-calendar-grid/bds-calendar-grid.tsx` | Modify — wire already-existing `DayCell.isDisabled` fully (nav guard signal) |
-| `packages/boreal-web-components/src/services/date-engine/date-math.ts` | Modify (if needed) — wire already-implemented `isWithinRange`/`compareDates` into grid generation |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — disabled-date/helper-text styling |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.minmax.spec.ts` | New |
-| `.../bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts` | Modify — disabled-date regression |
+| File                                                                          | Notes                                                                                             |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `.../bds-date-picker/bds-date-picker/types/types.ts`                          | Modify — extend `DatePickerDraftState`/props with `min`/`max`                                     |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                     | Modify — `min`/`max` props, helper-text wiring, whole-month-disabled guard on nav                 |
+| `.../bds-calendar-grid/bds-calendar-grid.tsx`                                 | Modify — wire already-existing `DayCell.isDisabled` fully (nav guard signal)                      |
+| `packages/boreal-web-components/src/services/date-engine/date-math.ts`        | Modify (if needed) — wire already-implemented `isWithinRange`/`compareDates` into grid generation |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                    | Modify — disabled-date/helper-text styling                                                        |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.minmax.spec.ts` | New                                                                                               |
+| `.../bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts`           | Modify — disabled-date regression                                                                 |
 
 **Phase 4 (range):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-date-picker/bds-date-picker/types/types.ts` | Modify — `DatePickerDraftState` gains `rangeStart`/`rangeEnd`; public `value` type becomes `string \| { start: string; end: string }` |
-| `.../bds-calendar-grid/types/ICalendarGrid.ts` | Modify — `DayCell` gains range-state fields (`isInRange`, `isRangeStart`, `isRangeEnd`) |
-| `.../bds-calendar-grid/bds-calendar-grid.tsx` | Modify — render range day-states as CSS classes on the same `<td role="gridcell">` |
-| `.../bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx` | Modify — render one or two `bds-calendar-grid` instances based on `range` |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — `range: boolean` prop, dual-grid orchestration, start/end draft selection logic, header Start/End labels |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — dual-calendar layout per spike's Phase 4 pixel specs |
-| `.../bds-calendar-grid/bds-calendar-grid.scss` | Modify — day-in-range/day-start/day-end token-driven styles |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.range.spec.ts` | New |
-| `.../bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts` | Modify — range day-state regression |
+| File                                                                         | Notes                                                                                                                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `.../bds-date-picker/bds-date-picker/types/types.ts`                         | Modify — `DatePickerDraftState` gains `rangeStart`/`rangeEnd`; public `value` type becomes `string \| { start: string; end: string }` |
+| `.../bds-calendar-grid/types/ICalendarGrid.ts`                               | Modify — `DayCell` gains range-state fields (`isInRange`, `isRangeStart`, `isRangeEnd`)                                               |
+| `.../bds-calendar-grid/bds-calendar-grid.tsx`                                | Modify — render range day-states as CSS classes on the same `<td role="gridcell">`                                                    |
+| `.../bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx`        | Modify — render one or two `bds-calendar-grid` instances based on `range`                                                             |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                    | Modify — `range: boolean` prop, dual-grid orchestration, start/end draft selection logic, header Start/End labels                     |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                   | Modify — dual-calendar layout per spike's Phase 4 pixel specs                                                                         |
+| `.../bds-calendar-grid/bds-calendar-grid.scss`                               | Modify — day-in-range/day-start/day-end token-driven styles                                                                           |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.range.spec.ts` | New                                                                                                                                   |
+| `.../bds-calendar-grid/__test__/bds-calendar-grid.variants.spec.ts`          | Modify — range day-state regression                                                                                                   |
 
 **Phase 5 (dual time):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx` | Modify — parameterize for a label/position (`start`/`end`) so it's directly reusable twice |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — dual time wiring when `range && showTime` |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — dual time-selector layout |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts` | Modify — dual time-selector coverage |
+| File                                                                        | Notes                                                                                      |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.../bds-date-picker/bds-date-picker/helpers/renderTimeSelector.tsx`        | Modify — parameterize for a label/position (`start`/`end`) so it's directly reusable twice |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                   | Modify — dual time wiring when `range && withTime`                                         |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                  | Modify — dual time-selector layout                                                         |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.time.spec.ts` | Modify — dual time-selector coverage                                                       |
 
 **Phase 6 (presets sidebar):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-date-picker/bds-date-picker/helpers/renderPresets.tsx` | New |
-| `.../bds-date-picker/bds-date-picker/utils/presets.ts` | New — preset date-range computation (today/yesterday/last7/last30/thisMonth/lastMonth) |
-| `.../bds-date-picker/bds-date-picker/utils/__test__/presets.spec.ts` | New |
-| `.../bds-date-picker/bds-date-picker/types/types.ts` | Modify — `DatePickerPreset` shape, `presets` prop type |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — `presets` prop (built-in default + consumer-configurable override), sidebar wiring, only rendered when `range` is on |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — sidebar layout, option button states |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.presets.spec.ts` | New |
+| File                                                                           | Notes                                                                                                                         |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `.../bds-date-picker/bds-date-picker/helpers/renderPresets.tsx`                | New                                                                                                                           |
+| `.../bds-date-picker/bds-date-picker/utils/presets.ts`                         | New — preset date-range computation (today/yesterday/last7/last30/thisMonth/lastMonth)                                        |
+| `.../bds-date-picker/bds-date-picker/utils/__test__/presets.spec.ts`           | New                                                                                                                           |
+| `.../bds-date-picker/bds-date-picker/types/types.ts`                           | Modify — `DatePickerPreset` shape, `presets` prop type                                                                        |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                      | Modify — `presets` prop (built-in default + consumer-configurable override), sidebar wiring, only rendered when `range` is on |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                     | Modify — sidebar layout, option button states                                                                                 |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.presets.spec.ts` | New                                                                                                                           |
 
 **Phase 7 (banner + range summary):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-date-picker/bds-date-picker/helpers/renderBanner.tsx` | New |
-| `.../bds-date-picker/bds-date-picker/helpers/renderFooter.tsx` | Modify — range-summary label (`"Range: {n} days"`) to the left of Clean/Cancel/Apply, range mode only |
-| `.../bds-date-picker/bds-date-picker/types/types.ts` | Modify — `DatePickerBanner` shape (`title`, `message`, `closable`, `state`, `visible`) |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx` | Modify — `banner` prop, closable wiring |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — banner + summary label styling |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.banner.spec.ts` | New |
+| File                                                                          | Notes                                                                                                 |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `.../bds-date-picker/bds-date-picker/helpers/renderBanner.tsx`                | New                                                                                                   |
+| `.../bds-date-picker/bds-date-picker/helpers/renderFooter.tsx`                | Modify — range-summary label (`"Range: {n} days"`) to the left of Clean/Cancel/Apply, range mode only |
+| `.../bds-date-picker/bds-date-picker/types/types.ts`                          | Modify — `DatePickerBanner` shape (`title`, `message`, `closable`, `state`, `visible`)                |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.tsx`                     | Modify — `banner` prop, closable wiring                                                               |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                    | Modify — banner + summary label styling                                                               |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.banner.spec.ts` | New                                                                                                   |
 
 **Phase 8 (keyboard/a11y/RTL):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-calendar-grid/bds-calendar-grid.tsx` | Modify — wire `src/utils/a11y/keyboard/navigation/grid-navigation.ts` for 2D arrow-key traversal |
-| `.../bds-calendar-grid/bds-calendar-grid.scss` | Modify — RTL audit (logical properties, mirrored nav icons) |
-| `.../bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx` | Modify — live region for month/year-change announcement |
-| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss` | Modify — RTL audit for popover/footer/sidebar |
-| `.../bds-calendar-grid/__test__/bds-calendar-grid.keyboard.spec.ts` | New |
-| `.../bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts` | Modify — live region assertions |
-| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` | Modify — full grid-traversal coverage |
+| File                                                                            | Notes                                                                                            |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `.../bds-calendar-grid/bds-calendar-grid.tsx`                                   | Modify — wire `src/utils/a11y/keyboard/navigation/grid-navigation.ts` for 2D arrow-key traversal |
+| `.../bds-calendar-grid/bds-calendar-grid.scss`                                  | Modify — RTL audit (logical properties, mirrored nav icons)                                      |
+| `.../bds-date-picker/bds-date-picker/helpers/renderCalendarPanel.tsx`           | Modify — live region for month/year-change announcement                                          |
+| `.../bds-date-picker/bds-date-picker/bds-date-picker.scss`                      | Modify — RTL audit for popover/footer/sidebar                                                    |
+| `.../bds-calendar-grid/__test__/bds-calendar-grid.keyboard.spec.ts`             | New                                                                                              |
+| `.../bds-calendar-grid/__test__/bds-calendar-grid.a11y.spec.ts`                 | Modify — live region assertions                                                                  |
+| `.../bds-date-picker/bds-date-picker/__test__/bds-date-picker.keyboard.spec.ts` | Modify — full grid-traversal coverage                                                            |
 
 **Phase 9 (month/year quick-picker):**
 
-| File | Notes |
-| --- | --- |
-| `.../bds-calendar-grid/types/ICalendarGrid.ts` | Modify — `view` state type, `MonthGridCell`/`YearGridCell` types |
-| `packages/boreal-web-components/src/services/date-engine/grid.ts` | Modify — `generateMonthPickerGrid`/`generateYearPickerGrid` (pure functions, 12-month and 12-year-range grids) |
-| `packages/boreal-web-components/src/services/date-engine/__test__/grid.spec.ts` | Modify — new grid generator coverage |
-| `.../bds-calendar-grid/bds-calendar-grid.tsx` | Modify — internal `view: 'days' \| 'months' \| 'years'` state, drill-down/drill-up handlers, month-year header label becomes clickable |
-| `.../bds-calendar-grid/bds-calendar-grid.scss` | Modify — month-grid/year-grid cell styling |
-| `.../bds-calendar-grid/__test__/bds-calendar-grid.quickpicker.spec.ts` | New |
+| File                                                                            | Notes                                                                                                                                  |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `.../bds-calendar-grid/types/ICalendarGrid.ts`                                  | Modify — `view` state type, `MonthGridCell`/`YearGridCell` types                                                                       |
+| `packages/boreal-web-components/src/services/date-engine/grid.ts`               | Modify — `generateMonthPickerGrid`/`generateYearPickerGrid` (pure functions, 12-month and 12-year-range grids)                         |
+| `packages/boreal-web-components/src/services/date-engine/__test__/grid.spec.ts` | Modify — new grid generator coverage                                                                                                   |
+| `.../bds-calendar-grid/bds-calendar-grid.tsx`                                   | Modify — internal `view: 'days' \| 'months' \| 'years'` state, drill-down/drill-up handlers, month-year header label becomes clickable |
+| `.../bds-calendar-grid/bds-calendar-grid.scss`                                  | Modify — month-grid/year-grid cell styling                                                                                             |
+| `.../bds-calendar-grid/__test__/bds-calendar-grid.quickpicker.spec.ts`          | New                                                                                                                                    |
 
 **Shared, across every phase:**
 
-| File | Notes |
-| --- | --- |
-| `packages/boreal-web-components/src/index.html` | Modify — playground scenarios per task (never committed) |
-| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` | Modify — one new story variant per phase |
-| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx` | Modify — one new section per phase |
-| `.../date-engine/stryker.date-engine.config.mjs` | Modify (final task) — re-run to cover every phase's `date-engine` additions |
-| `.../bds-date-picker/stryker.bds-date-picker.config.mjs` | Modify (final task) — re-run to cover every phase's additions |
-| `.../bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` | Modify (final task) — re-run; Phase 4/8/9 are the first phases since v1 to touch `bds-calendar-grid` |
+| File                                                                            | Notes                                                                                                |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `packages/boreal-web-components/src/index.html`                                 | Modify — playground scenarios per task (never committed)                                             |
+| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` | Modify — one new story variant per phase                                                             |
+| `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.mdx`        | Modify — one new section per phase                                                                   |
+| `.../date-engine/stryker.date-engine.config.mjs`                                | Modify (final task) — re-run to cover every phase's `date-engine` additions                          |
+| `.../bds-date-picker/stryker.bds-date-picker.config.mjs`                        | Modify (final task) — re-run to cover every phase's additions                                        |
+| `.../bds-calendar-grid/stryker.bds-calendar-grid.config.mjs`                    | Modify (final task) — re-run; Phase 4/8/9 are the first phases since v1 to touch `bds-calendar-grid` |
 
 **Critical reference files** (read before implementing):
 
@@ -170,7 +173,7 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 
 ## Phase 2 — Time selector
 
-*(Tasks 1–8 unchanged from the original file — see full acceptance criteria as originally written; summarized here for continuity.)*
+_(Tasks 1–8 unchanged from the original file — see full acceptance criteria as originally written; summarized here for continuity.)_
 
 ### Task 1 (was Task 23): `date-engine` timezone-aware value conversion
 
@@ -178,13 +181,14 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 **Files:** `packages/boreal-web-components/src/services/date-engine/value.ts` (create), `.../date-engine/__test__/value.spec.ts` (create)
 
 **Acceptance criteria:**
+
 - Exports `combineDateTimeToUTC(datePart: Date, hour: number, minute: number, timezone: string): string` and `extractDateTimeFromUTC(isoUtc: string, timezone: string): { date: Date; hour: number; minute: number }` via `@date-fns/tz`'s `TZDate`.
 - Handles DST transitions correctly (no silent wrong-by-one-hour result on a fold/gap).
 - No existing timezone utility found anywhere in `src/` — new module justified; document the library choice in the file's header comment.
 
 **Manual test (required):** Non-visual — validate via `tsc --noEmit` plus a manual console check against `Asia/Tokyo` and `America/Los_Angeles` (DST boundary).
 
-**Commit:** `git commit -m "feat(date-engine): EOA-16692 add timezone-aware date-time to UTC ISO conversion"`
+**Commit:** `git commit -m "feat(date-engine): EOA-17138 add timezone-aware date-time to UTC ISO conversion"`
 
 ---
 
@@ -193,8 +197,11 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 **Executor:** main thread (no executor)
 
 **Acceptance criteria:**
+
 - Before Task 3 begins, confirm the inferred single-date hour:minute UI with the user (Figma only shows the dual Inicio/Fin range variant).
 - Document the confirmed design as a short addendum before proceeding.
+
+**Confirmed design (2026-08-24):** the single-date time selector is a bare, unlabeled hour/minute field pair — clock icon followed by the two 58px bordered `Select` fields (as already described in the Task 4 Figma research pass), with no "Inicio"/"Fin"-style label, since a single date has nothing to disambiguate. Confirmed against a reference screenshot showing the header `2021/07/20 08:30` panel: clock icon + unlabeled `08`/`30` fields. The range variant (Phase 5) does carry `Start:`/`End:` labels next to each pair, per the same reference — consistent with the spike doc's existing Phase 5 documentation.
 
 **Manual test:** N/A — design checkpoint.
 
@@ -203,20 +210,25 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 ### Task 3 (was Task 25): `bds-date-picker` time selector implementation
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `helpers/renderTimeSelector.tsx` (create), `types/types.ts` (modify), `bds-date-picker.tsx` (modify)
+**Files:** `helpers/renderTimeSelector.tsx` (create), `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `utils/draft-state.ts` (modify — `resetDraft` must derive `hour`/`minute` from a committed `value` when `withTime=true`, and `commitValue`'s Apply-time computation must combine `draft.selectedDate` + `draft.hour`/`draft.minute` via `combineDateTimeToUTC` instead of using the naive date string directly)
 
 **Acceptance criteria:**
-- `@Prop() readonly showTime: boolean = false` gates the time selector rendering inside the popover body.
+
+- `@Prop() readonly withTime: boolean = false` gates the time selector rendering inside the popover body.
 - Composes two `bds-select` instances (hour 00–23, minute 00–59) — not a new registered custom element.
 - Time changes update `this.draft.hour`/`this.draft.minute` only.
-- `showTime=false` keeps the naive `yyyy-MM-dd` value contract (Phase 1 regression check).
-- `showTime=true` computes the UTC ISO string via `combineDateTimeToUTC` on Apply, using `this.timezone`.
-- Loading an existing `showTime=true` datetime `value` pre-populates draft date/hour/minute via `extractDateTimeFromUTC`.
+- `withTime=false` keeps the naive `yyyy-MM-dd` value contract (Phase 1 regression check).
+- `withTime=true` computes the UTC ISO string via `combineDateTimeToUTC` on Apply, using `this.timezone` — `resetDraft` and the Apply-path `commitValue` call (currently `this.commitValue(this.draft.selectedDate)`, a naive-string passthrough) are the two integration points that must change; both are reused as-is by Cancel/Clean/`formResetCallback`/`listenClickTrigger`, so fixing them here is sufficient — no separate per-caller changes needed.
+- Loading an existing `withTime=true` datetime `value` pre-populates draft date/hour/minute via `extractDateTimeFromUTC`.
+- **Default time (confirmed 2026-08-24):** a fresh draft with no time to pre-populate — no prior committed `value`, or the malformed-value fallback below — defaults `draft.hour`/`draft.minute` to `0`/`0` (`00:00`), the same as any other form default; Apply is never blocked on the user having touched the time selects.
+- **Malformed/mismatched `value` guard:** if `withTime=true` but the committed `value` doesn't parse as a valid UTC ISO datetime (e.g. a stale naive-date string left over from `withTime` being toggled on after a v1-style value was already set), `resetDraft` falls back to the same `00:00` default used for a fresh, value-less draft, rather than propagating a `NaN`/`Invalid Date` into the time selects or throwing. Add a unit test for this fallback in Task 5.
 - Hour/minute `bds-select` labels use the existing `labels?: DatePickerFooterLabels`-style override mechanism, not hardcoded strings.
+- **Runtime `withTime` toggling is unsupported and undocumented behavior**, matching `range`'s expected static-config usage (Phase 4) — `withTime` is set once at mount by the consumer, not flipped live in response to user interaction. No `@Watch('withTime')` reconciliation is implemented in this phase; note this explicitly in the JSDoc for `withTime` (Task 4) so it isn't silently assumed to be reactive.
+- **`format` auto-switch (confirmed 2026-08-24, per Figma's `_DatePickerField` `Format` variant property — `YYYY/MM/DD` vs. `YYYY/MM/DD HH:mm`):** when `withTime=true` and the consumer has not explicitly overridden `format` (i.e. `this.format` is still the class's static default `'yyyy/MM/dd'`), the trigger field and popover header display using `'yyyy/MM/dd HH:mm'` instead. An explicitly-set `format` prop (any value, including one identical to the default) always wins over the auto-switch — implemented by comparing against the literal default constant, not by adding `@Watch` tracking of "was this prop passed." `withTime=false` leaves `format`'s existing v1 default/behavior untouched (regression guard).
 
-**Manual test (required):** `pnpm dev:components` — Scenario 1: enable `show-time`, pick day+time, Apply, confirm UTC ISO output. Scenario 2: two instances, different `timezone`, same wall-clock selection, confirm differing UTC output. Scenario 3: pre-loaded datetime `value`, confirm day/hour/minute pre-selected on open.
+**Manual test (required):** `pnpm dev:components` — Scenario 1: enable `with-time`, pick day+time, Apply, confirm UTC ISO output. Scenario 2: two instances, different `timezone`, same wall-clock selection, confirm differing UTC output. Scenario 3: pre-loaded datetime `value`, confirm day/hour/minute pre-selected on open. Scenario 4: enable `with-time` without setting `format`, confirm trigger field and popover header both display `HH:mm` alongside the date. Scenario 5: enable `with-time` AND pass an explicit `format` (e.g. `'MM/dd/yyyy HH:mm'`), confirm the explicit value is used, not the auto-switched default.
 
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-16692 add single time selector for Phase 2"`
+**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add single time selector for Phase 2"`
 
 ---
 
@@ -226,19 +238,21 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 **Files:** `bds-date-picker.scss` (modify), `bds-date-picker.tsx` (modify — JSDoc)
 
 **Figma research pass (complete before writing any SCSS):**
-- [ ] Region: hour/minute fields — default state *(already decoded: timer icon + two bordered 58px fields)*
-- [ ] Interaction: hour/minute fields — hover/focus/active *(not yet pulled)*
-- [ ] Modifier: hour/minute fields — validation/error state, if it exists *(not yet pulled)*
+
+- [ ] Region: hour/minute fields — default state _(already decoded: timer icon + two bordered 58px fields)_
+- [ ] Interaction: hour/minute fields — hover/focus/active _(not yet pulled)_
+- [ ] Modifier: hour/minute fields — validation/error state, if it exists _(not yet pulled)_
 - [ ] Dimensions: hour/minute field width/height against the popover body's confirmed 296×434px panel, 24px/12px padding
 
 **Acceptance criteria:**
+
 - Every research-pass row checked off, with the pulled value recorded, before the first SCSS line.
 - `$boreal-*` tokens exclusively.
-- JSDoc for `showTime` and related props/state complete and accurate.
+- JSDoc for `withTime` and related props/state complete and accurate.
 
 **Manual test (required):** Reuse Task 3's scenarios; `pnpm dev:components` — visual match against the confirmed Task 2 design.
 
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-16692 style time selector and finalize Phase 2 JSDoc"`
+**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style time selector and finalize Phase 2 JSDoc"`
 
 ---
 
@@ -247,11 +261,11 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 **Executor:** @testing-subagent
 **Files:** `value.spec.ts`, `bds-date-picker.time.spec.ts`, `bds-date-picker.a11y.spec.ts` (extend), `bds-date-picker.keyboard.spec.ts` (extend)
 
-**Unit tests to cover:** zone conversion (positive/negative offset, DST boundary), round-trip, invalid-timezone handling; `showTime=false` naive-date regression; `showTime=true` UTC computation, `timezone` override, pre-population, Cancel discarding time draft; a11y (Tab reachability, labeling); keyboard regression. Coverage-phase only (≥90%); mutation deferred.
+**Unit tests to cover:** zone conversion (positive/negative offset, DST boundary), round-trip, invalid-timezone handling; `withTime=false` naive-date regression; `withTime=true` UTC computation, `timezone` override, pre-population, Cancel discarding time draft; `resetDraft`'s fallback to default hour/minute when `withTime=true` and the committed `value` doesn't parse as a valid UTC datetime (malformed/mismatched-shape guard); `format` auto-switch to `'yyyy/MM/dd HH:mm'` when `withTime=true` and `format` unset, explicit `format` always overriding the auto-switch, and `withTime=false` leaving `format`'s default behavior unchanged; a11y (Tab reachability, labeling); keyboard regression. Coverage-phase only (≥90%); mutation deferred.
 
 **Manual test (required):** Non-visual — full suites passing at ≥90% coverage.
 
-**Commit:** `git commit -m "test: EOA-16692 add consolidated Phase 2 unit tests for date-engine value conversion and bds-date-picker time selector"`
+**Commit:** `git commit -m "test: EOA-17138 add consolidated Phase 2 unit tests for date-engine value conversion and bds-date-picker time selector"`
 
 ---
 
@@ -262,9 +276,9 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 
 **Acceptance criteria:** MDX documents the Phase 2 UTC value contract vs. Phase 1 naive-date contract; notes the single time-selector UI was an inferred design; documents `timezone` behavior with a before/after example.
 
-**Manual test (required):** `pnpm dev:docs` — new `showTime` story renders and interacts correctly; MDX contrast is unambiguous.
+**Manual test (required):** `pnpm dev:docs` — new `withTime` story renders and interacts correctly; MDX contrast is unambiguous.
 
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-16692 document Phase 2 time selector and UTC value contract"`
+**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 2 time selector and UTC value contract"`
 
 ---
 
@@ -273,7 +287,7 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 **Executor:** @qa-subagent
 **Files:** none
 
-**Acceptance criteria:** Confirms `showTime` behavior identically through `boreal-react`/`boreal-vue` via `dev:pack:react`/`dev:pack:vue`. Regressions logged as new tasks, not patched inline.
+**Acceptance criteria:** Confirms `withTime` behavior identically through `boreal-react`/`boreal-vue` via `dev:pack:react`/`dev:pack:vue`. Regressions logged as new tasks, not patched inline.
 
 **Manual test (required):** Repeat Task 3's three scenarios through both wrapper playgrounds.
 
@@ -296,6 +310,7 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 **Executor:** main thread (no executor)
 
 **Acceptance criteria:**
+
 - Present a proposed interaction design to the user for confirmation before Task 11 begins, covering: whether a disabled cell shows a tooltip/message explaining why, what happens when an entire visible month falls outside `min`/`max` (per the React Aria pitfall the spike doc flags — a month can become unreachable via navigation), and whether `min`/`max` violations surface via the trigger field's helper text (Vaadin's recommended pattern, cited in the spike doc) or silently.
 - Reference points to bring to the check-in: React Aria's `isDateUnavailable` predicate model, Vaadin's helper-text-pairing recommendation, react-day-picker's `aria-disabled` + `aria-live` pattern, Ant Design's `disabledDate`, MUI X's `shouldDisableDate` (and its "runs against every possible date" performance pitfall — avoid this from the start).
 - Document the confirmed design as a short addendum before Task 11 starts.
@@ -312,6 +327,7 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 **Utility discovery note:** `isWithinRange`/`compareDates` already exist and are fully implemented (v1 Task 4) but unwired — confirm their existing signatures satisfy this phase's needs before adding anything new; do not duplicate.
 
 **Acceptance criteria:**
+
 - `generateMonthGrid` (or a thin wrapper called from `bds-calendar-grid`) accepts optional `min`/`max` `Date` bounds and marks each `DayCell.isDisabled = true` when the cell's date falls outside them, using the existing `isWithinRange`.
 - No change to the fixed 6-week/42-cell grid shape.
 - Whole-month-disabled detection: exposes a way for the caller to determine whether every cell in the currently displayed month is disabled (for the nav-guard in Task 11).
@@ -328,6 +344,7 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 **Files:** `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `bds-calendar-grid.tsx` (modify — pass disabled state through, no new markup)
 
 **Acceptance criteria:**
+
 - `@Prop() readonly min?: string` / `@Prop() readonly max?: string` (naive ISO date strings, matching the `value` contract), both optional and unbounded when absent.
 - Disabled day cells (per Task 10's wiring) are visually shown (`text/disabled` token, matches v1's out-of-month treatment) and functionally inert — no click, not tab-focusable — reusing the exact interactivity pattern v1 already established for out-of-month cells (avoids reopening `bds-calendar-grid`'s core click/tab logic).
 - Month navigation is guarded per Task 9's confirmed design when an entire target month would be fully disabled (e.g. disable the nav button, or skip past it — whichever was confirmed).
@@ -346,6 +363,7 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 **Files:** `bds-date-picker.scss` (modify), `bds-calendar-grid.scss` (modify), `bds-date-picker.tsx` / `bds-calendar-grid.tsx` (JSDoc)
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: disabled day cell — confirm `text/disabled` treatment matches the out-of-month styling exactly (already pulled in v1's spike, re-verify no drift)
 - [ ] Region: helper text (if Task 9 confirmed it) — default and error/warning variants on the trigger field
 - [ ] Modifier: disabled nav button (if Task 9 confirmed guarding nav rather than skipping)
@@ -407,6 +425,7 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 **Files:** `types/types.ts` (modify), `bds-calendar-grid/types/ICalendarGrid.ts` (modify)
 
 **Acceptance criteria:**
+
 - Public `value` type becomes `string | { start: string; end: string }`; `range=false` (default) keeps the existing `string` shape untouched — verified as a non-breaking union widening, not a rename.
 - `DatePickerDraftState` gains `rangeStart: string | null` / `rangeEnd: string | null`.
 - `DayCell` gains `isInRange: boolean`, `isRangeStart: boolean`, `isRangeEnd: boolean` — all default `false`, purely additive to the existing type.
@@ -423,6 +442,7 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 **Files:** `bds-calendar-grid.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Renders `isInRange`/`isRangeStart`/`isRangeEnd` as CSS class modifiers on the same `<td role="gridcell">` used today — no new DOM elements, no new ARIA roles.
 - `bds-calendar-grid` remains a dumb, controlled component: it does not compute range membership itself, only renders whatever `DayCell` flags the parent orchestrator sets.
 - Existing single-date/disabled/today rendering is unaffected when every range flag is `false` (regression guard).
@@ -439,6 +459,7 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 **Files:** `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `helpers/renderCalendarPanel.tsx` (modify)
 
 **Acceptance criteria:**
+
 - `@Prop() readonly range: boolean = false`.
 - When `range=true`, `renderCalendarPanel.tsx` renders two `bds-calendar-grid` instances side by side (per the spike's confirmed `Expanded` structural match), each independently controlled (own `displayMonth`/`displayYear`) but computing `isInRange`/`isRangeStart`/`isRangeEnd` from one shared `draft.rangeStart`/`draft.rangeEnd`.
 - Selection logic: first click sets `rangeStart` (clears any prior `rangeEnd`); a click after that sets `rangeEnd` if the clicked date is after `rangeStart`, otherwise swaps (clicked date becomes the new `rangeStart`) — reuses `date-engine`'s `compareDates`.
@@ -458,6 +479,7 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 **Files:** `bds-date-picker.scss` (modify), `bds-calendar-grid.scss` (modify), JSDoc in both `.tsx` files
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: dual-calendar layout spacing — per spike's Phase 4 pixel specs (unconfirmed — re-pull before use): Header 48px/16px icon/24px h-padding/16px v-padding; Calendar body 12px h-padding/24px v-padding; Footer 48px/24px h-padding/16px v-padding
 - [ ] Modifier: day-in-range — default and hover
 - [ ] Modifier: day-range-start / day-range-end — default, hover, and combined with `today`
@@ -521,13 +543,16 @@ Per the spike doc: "Inicio: 08:00" / "Fin: 10:30" dual selector pairs, visually 
 **Files:** `helpers/renderTimeSelector.tsx` (modify), `bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
-- `renderTimeSelector.tsx` accepts a `label`/`position: 'single' | 'start' | 'end'` parameter; single-date Phase 2 usage is a regression-free special case of the same helper (`position: 'single'`).
-- When `range && showTime`, renders two labeled time-selector pairs ("Inicio"/"Fin" per the confirmed Figma reference, or the translatable-labels equivalent via the existing `labels` override mechanism).
-- Combines with `combineDateTimeToUTC`/`extractDateTimeFromUTC` (Task 1) for both `rangeStart`+time and `rangeEnd`+time independently.
-- Value contract when `range && showTime`: `{ start, end }` where both are full UTC ISO strings.
-- Legacy prop reference `resetTime`/`showTimeInRange` noted in the spike doc are evaluated for relevance and either adopted (documented rationale) or explicitly deferred — not silently ignored.
 
-**Manual test (required):** `pnpm dev:components` — Scenario 1: range + time enabled, select start day+time and end day+time, Apply, confirm both UTC values. Scenario 2: confirm `renderTimeSelector.tsx`'s single-date Phase 2 usage still works unchanged.
+- `renderTimeSelector.tsx` accepts a `label`/`position: 'single' | 'start' | 'end'` parameter; single-date Phase 2 usage is a regression-free special case of the same helper (`position: 'single'`).
+- When `range && withTime`, renders two labeled time-selector pairs ("Inicio"/"Fin" per the confirmed Figma reference, or the translatable-labels equivalent via the existing `labels` override mechanism).
+- Combines with `combineDateTimeToUTC`/`extractDateTimeFromUTC` (Task 1) for both `rangeStart`+time and `rangeEnd`+time independently.
+- Value contract when `range && withTime`: `{ start, end }` where both are full UTC ISO strings.
+- Legacy prop reference `resetTime`/`showTimeInRange` noted in the spike doc are evaluated for relevance and either adopted (documented rationale) or explicitly deferred — not silently ignored.
+- `format` auto-switch (per Task 3's confirmed decision) extends to range mode: when `range && withTime` and `format` is unset, the header Start/End display uses the time-inclusive default for each date independently — same "explicit `format` always wins" rule as Task 3, no new decision needed here.
+- Default time (per Task 3's confirmed decision) extends to range mode: a fresh `rangeStart`/`rangeEnd` with no time to pre-populate defaults to `00:00` independently for each end, same malformed-value fallback rule as Task 3 — no new decision needed here.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1: range + time enabled, select start day+time and end day+time, Apply, confirm both UTC values. Scenario 2: confirm `renderTimeSelector.tsx`'s single-date Phase 2 usage still works unchanged. Scenario 3: range + time enabled without setting `format`, confirm both Start/End header values display `HH:mm`.
 
 **Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add dual time selector for range mode"`
 
@@ -539,6 +564,7 @@ Per the spike doc: "Inicio: 08:00" / "Fin: 10:30" dual selector pairs, visually 
 **Files:** `bds-date-picker.scss` (modify)
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: dual time-selector layout (side-by-side Inicio/Fin pairs) — spacing against the confirmed single-selector dimensions (v1 spike: 58px fields, timer icon)
 - [ ] Interaction: dual pair — confirm no new interaction states beyond the single selector's already-pulled default
 
@@ -568,7 +594,7 @@ Per the spike doc: "Inicio: 08:00" / "Fin: 10:30" dual selector pairs, visually 
 **Executor:** @documentation-subagent
 **Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
 
-**Acceptance criteria:** MDX documents the dual time selector and its combined `{ start, end }` UTC value contract; new story variant (`range` + `showTime`).
+**Acceptance criteria:** MDX documents the dual time selector and its combined `{ start, end }` UTC value contract; new story variant (`range` + `withTime`).
 
 **Manual test (required):** `pnpm dev:docs` — new story renders and behaves correctly.
 
@@ -598,6 +624,7 @@ Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This 
 **Executor:** main thread (no executor)
 
 **Acceptance criteria:**
+
 - Decide, and document, whether the preset list is a fixed built-in set or consumer-configurable — the legacy `ranges` prop (per the spike doc) suggests configurability was a solved problem elsewhere; this must be a deliberate decision, not a silent carry-over or a silent omission.
 - If configurable, confirm the shape of the `presets` prop (array of `{ label, compute: () => { start: Date; end: Date } }` or similar) before Task 30 begins.
 
@@ -613,6 +640,7 @@ Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This 
 **Utility discovery note:** confirmed no existing "preset date range" utility anywhere in `src/`; this is single-use to `bds-date-picker`, so it lives in the component's own `utils/`, not `date-engine` (per the spike doc's decomposition litmus test — this fails the reuse test, it's not shared across other orchestrators).
 
 **Acceptance criteria:**
+
 - Computes the six built-in preset ranges (today, yesterday, last 7 days, last 30 days, this month, last month) as `{ start: Date; end: Date }` pairs, using `date-engine`'s existing date-math primitives (no new `date-engine` primitives needed).
 - "Custom" is not a computed preset — it's the free-form manual-selection mode, selected by default whenever the user picks dates manually rather than clicking a preset button.
 
@@ -628,6 +656,7 @@ Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This 
 **Files:** `helpers/renderPresets.tsx` (create), `types/types.ts` (modify), `bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Sidebar renders only when `range=true`, per the spike's confirmed Figma gating.
 - Clicking a preset sets `draft.rangeStart`/`draft.rangeEnd` from Task 29's computation and visually marks that preset selected (solid-blue per the spike's Style-page reference); clicking a day manually afterward reverts to "Custom" (deselects the preset).
 - If Task 28 decided on consumer-configurable presets, a `presets` prop overrides or extends the built-in six; otherwise the six are fixed.
@@ -645,6 +674,7 @@ Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This 
 **Files:** `bds-date-picker.scss` (modify)
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: `_DatePickerRange` (fileKey `rtiE5zGA4aoOuxIQMgfD6h`, frame node `14:23420`) — pull `get_design_context` for exact tokens/spacing, deliberately deferred until now per the spike doc
 - [ ] Interaction: preset button — Default/Hover/Focus/Active/Disabled × Selected/Unselected (10 variants total)
 - [ ] Dimensions: sidebar width and alignment against the dual-calendar layout from Phase 4's Task 19
@@ -706,6 +736,7 @@ Per the spike doc: an info banner (blue background, info icon, title "Info", mes
 **Files:** `helpers/renderBanner.tsx` (create), `helpers/renderFooter.tsx` (modify), `types/types.ts` (modify), `bds-date-picker.tsx` (modify)
 
 **Acceptance criteria:**
+
 - `@Prop() readonly banner?: { title: string; message: string; closable?: boolean; state?: string; visible?: boolean }` — shape adapted from the spike's cited legacy `infoBanner` prop (prop name changed to match Boreal conventions, shape kept as reasonable prior art).
 - Banner renders above the calendar body inside the popover when `visible` (or when the prop is present, per whichever default Task 35's implementer confirms against the shape above); closable via an `X` button when `closable`.
 - Footer range-summary text renders only in `range` mode, to the left of the footer buttons, computed from `draft.rangeStart`/`draft.rangeEnd` (days/hours/minutes granularity per the spike's example, using `date-engine` date-math — no new primitives expected).
@@ -722,6 +753,7 @@ Per the spike doc: an info banner (blue background, info icon, title "Info", mes
 **Files:** `bds-date-picker.scss` (modify)
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: info banner — default, and its closable-hover state
 - [ ] Modifier: banner `state` variants (info/warning/error, if the design supports more than one — confirm before assuming info-only)
 - [ ] Region: footer range-summary label — spacing against the existing Clean/Cancel/Apply buttons (confirmed 48px footer height, 24px/16px padding from Phase 4's Task 19)
@@ -785,6 +817,7 @@ Per the spike doc: only calendar-specific arrow-key 2D grid traversal is deferre
 **Utility discovery note:** `src/utils/a11y/keyboard/navigation/grid-navigation.ts` is the confirmed integration point (flagged by a code comment left in v1's Task 9) — this task wires it, it does not reimplement grid-traversal logic.
 
 **Acceptance criteria:**
+
 - Arrow keys move focus cell-to-cell within the visible grid (including across week rows); Home/End jump to the first/last day of the visible week or month per the WAI-ARIA APG reference; PageUp/PageDown (or the APG's specified equivalent) navigate months.
 - Focus crossing a month boundary via arrow keys triggers the same `bdsMonthNavigate` event already used for the prev/next buttons — no duplicate navigation code path.
 - Out-of-month and disabled cells remain excluded from arrow-key focus stops per the interactivity contract already established in v1/Phase 3.
@@ -802,6 +835,7 @@ Per the spike doc: only calendar-specific arrow-key 2D grid traversal is deferre
 **Files:** `helpers/renderCalendarPanel.tsx` (modify), `bds-calendar-grid.scss` (modify), `bds-date-picker.scss` (modify)
 
 **Acceptance criteria:**
+
 - An `aria-live` region (visually hidden) announces the current month/year on navigation, per the WAI-ARIA APG reference and react-day-picker's cited pattern.
 - RTL audit across `bds-calendar-grid` and `bds-date-picker`: logical CSS properties (`margin-inline-start`/`inset-inline-*`, etc.) replace any remaining physical-direction properties; nav-icon mirroring confirmed for RTL locales; sidebar (Phase 6)/footer (all phases) layout confirmed to flip correctly.
 - No visual regression in LTR mode.
@@ -862,6 +896,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 **Executor:** main thread (no executor)
 
 **Acceptance criteria:**
+
 - Confirm or correct the spike doc's inferred three-level drill-down model with the user before Task 47 begins: click the month/year label → month grid (12 months, middle button = year, prev/next steps by year) → click a month → back to day grid for that month; click the middle year button while in the month grid → year grid (12-year range, prev/next steps by decade) → click a year → back to the month grid for that year.
 - In particular, confirm step 4 (clicking a year returns to the month grid, not directly to a day) — the spike doc flags this as inferred from the universal pattern, not directly observed in a Figma prototype.
 - Document the confirmed model as a short addendum before Task 47 starts.
@@ -876,6 +911,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 **Files:** `packages/boreal-web-components/src/services/date-engine/grid.ts` (modify), `.../date-engine/types.ts` (modify), `.../date-engine/__test__/grid.spec.ts` (modify)
 
 **Acceptance criteria:**
+
 - `generateMonthPickerGrid(year: number, currentMonth: number): MonthGridCell[]` — 12 cells (Jan–Dec), each flagging whether it's the currently-displayed month (dashed-outline indicator per Figma).
 - `generateYearPickerGrid(centerYear: number, currentYear: number): YearGridCell[]` — a 12-year range, each flagging whether it's the current year and whether it's disabled (future years greyed/disabled per the spike's Figma note — confirm against Task 45's confirmed model whether this applies to Boreal's use case or was an artifact of the source mockup).
 - Both are pure functions, framework-agnostic, following `generateMonthGrid`'s existing testing/typing conventions exactly.
@@ -892,6 +928,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 **Files:** `bds-calendar-grid/types/ICalendarGrid.ts` (modify), `bds-calendar-grid.tsx` (modify)
 
 **Acceptance criteria:**
+
 - Internal `@State() private view: 'days' | 'months' | 'years' = 'days'` — not exposed as a public `@Prop`, matching `bds-calendar-grid`'s existing "dumb but internally stateful for rendering" pattern (it already owns `hover`/`focus` interaction state internally; this is the same class of concern).
 - The month/year header label becomes a real interactive button (per the spike's confirmed `_Button/month-year` finding, already noted as a dropdown-styled button rather than plain text since v1) — clicking it switches `view` to `'months'`.
 - Month-grid cell click resolves back to `view: 'days'`, updating `displayMonth` and emitting `bdsMonthNavigate` upward (reusing the existing event, not a new one) so the orchestrator's `@State` stays in sync.
@@ -911,6 +948,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 **Files:** `bds-calendar-grid.scss` (modify), `bds-calendar-grid.tsx` (JSDoc)
 
 **Figma research pass (complete before writing any SCSS):**
+
 - [ ] Region: `datePickerMonths` grid (node `14:24131`) — cell layout, spacing
 - [ ] Region: `datePickerYears` grid (node `14:24151`) — cell layout, spacing
 - [ ] Region: `_DatePickerMonthYear` cell (node `14:23473`) — `State` (Default/Hover/Focus/Active/Disabled) × `State Actual` (True/False, presumed "is current") × `Selected` (True/False) — none of these three nodes pulled yet per the spike doc; pull all now
@@ -975,6 +1013,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 - `.../bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` (modify — re-run; first time since v1 this config needs re-running, now covering Phase 4 range rendering, Phase 8 keyboard traversal, and Phase 9 quick-picker)
 
 **Acceptance criteria:**
+
 - This is the single point in the entire v2 scope where mutation testing runs — not per phase, not per task.
 - Target: ≥90% mutation score per component. Any surviving mutant below threshold gets either a new test closing the gap (in the relevant phase's existing spec file) or a documented, justified exception.
 - Any mutant survivor pattern revealing a genuine test-coverage gap from any earlier phase is fixed by extending that phase's existing spec file — do not add new source files at this stage.

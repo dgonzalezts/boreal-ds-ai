@@ -169,6 +169,60 @@ Pull `get_design_context` / `get_metadata` for each row below. A row is done onl
 - **Host-level styles are not class selectors.** On a Stencil component, styling the host through a class the `<Host>` never carries compiles to dead CSS with zero build errors. Any styling task touching host-level properties must state the host-selector mechanism by name in its acceptance criteria.
 - **Chain `@qa-subagent`.** Every styling task takes `**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)` — styling tasks are the canonical case for the chain described under Executor Mapping.
 
+## Integration & Edge-Case Gate (Mandatory)
+
+Any task that **modifies existing behavior** — not a brand-new file with no prior callers — is an **integration task**, and must carry an integration research pass *authored into the plan*, before the task is dispatched. This is a plan-authoring obligation, not implementer guidance: an integration task without this pass is an incomplete task.
+
+The gate exists because integration gaps fail the same way styling gaps do: reactively. A task's acceptance criteria can look complete while silently missing a function with multiple callers, a public-API boundary case, or a default/empty state that was never made explicit — and the implementer, working from the plan's prose rather than the live source, has no way to know what wasn't written down. Each gap surfaces one at a time, after code exists, rather than all at once during planning.
+
+**This gate runs in addition to, not instead of, the live grounding check `executing-plans` performs before dispatching each task** (see that skill's Step 2) — this gate catches what planning-time research finds; the execution-time check is a safety net for anything that changed or was missed between planning and dispatch (plans go stale as earlier tasks land and shift the actual code).
+
+### When this gate applies
+
+A task triggers this gate when it does **any** of the following:
+
+- Modifies a function, method, or file that already has more than one call site
+- Changes what a public `@Prop`, `@Event`, or exported function accepts or returns
+- Introduces a new prop/state that interacts with an existing default, empty, or reset state
+- Extends a draft-state / controlled-value pattern that other code paths (Cancel, Clean, form reset, re-open) already depend on
+
+It does **not** apply to: brand-new files with no existing callers, pure type-only additions with no existing consumers yet, scaffold-only tasks (stub `render()`, prop declarations with no wired behavior), or docs/story-only tasks.
+
+### Authoring the gate
+
+While planning an integration task, read the **actual current source** of every file it will touch — not just describe the file path — and enumerate:
+
+1. **Call sites**: every existing caller of a function/method this task changes, and whether each one needs to change too or is correctly covered by changing the shared function once.
+2. **Public-API boundary cases**: what happens when a consumer passes a value that doesn't match the new expected shape (stale/mismatched prop combinations, malformed input) — crossing the boundary means "trust internal guarantees" no longer applies.
+3. **Default/empty-state decisions**: any state that's newly ambiguous (a fresh value, a cleared value, a toggled-off feature) gets an explicit, stated default — not left for the implementer to invent.
+4. **Reactive-prop assumptions**: whether a new prop is expected to be reactive after mount (`@Watch`-driven) or is a set-once config value — state this explicitly if it isn't obvious.
+
+Write that enumeration into the task as an **Integration research pass** block placed *above* the acceptance criteria.
+
+### Task shape
+
+```markdown
+**Integration research pass (complete before writing acceptance criteria):**
+
+Read the actual current source of each file below — not just its file path — before finalizing this task's scope.
+
+- [ ] Call sites: `<function/method>` is called from `<site A>`, `<site B>`, ... — confirm the shared fix covers all of them.
+- [ ] Boundary case: `<prop/value>` — what happens when a consumer passes `<malformed/mismatched input>`?
+- [ ] Default/empty state: `<new ambiguous state>` defaults to `<explicit value>`.
+- [ ] Reactivity: `<new prop>` is/is not expected to be reactive after mount.
+
+**Acceptance criteria:**
+
+- Every row of the Integration research pass above is reflected in a concrete acceptance-criteria bullet or an explicit "no gap found" note.
+- ...
+```
+
+### Rules that make the gate actually bite
+
+- **No deferring to the implementer.** "Handle edge cases appropriately" is not a substitute for naming the specific case and its resolution.
+- **Findings propagate.** If a later task in the plan shares the same root cause (e.g. the same default-state decision applies to a dual/range variant of the same feature), cross-reference it there too rather than re-deriving it.
+- **Chain `@qa-subagent`** only if the task also has real visual/behavioral output — this gate is about correctness coverage, not a trigger for manual QA on its own.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -362,6 +416,7 @@ If a mutant survivor reveals a genuine gap in an earlier task's test coverage, c
 - Unit test tasks describe behaviors to cover, not how to write the tests
 - Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
 - Every styling task carries a Figma research pass enumerating region × interaction state × modifier state, authored at plan time — never left for the implementer to discover reactively
+- Every integration task (one that modifies existing behavior with real callers) carries an integration research pass covering call sites, API-boundary cases, and default/empty-state decisions, authored at plan time — `executing-plans`' live grounding check is a safety net for drift, not a substitute for this
 - Pixel values written into plan prose are unconfirmed by default; mark them so and require a re-pull
 - DRY, YAGNI, TDD, frequent commits per task
 

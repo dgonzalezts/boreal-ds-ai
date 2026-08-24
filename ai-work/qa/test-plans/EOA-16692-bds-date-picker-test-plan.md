@@ -4,7 +4,7 @@
 
 `bds-date-picker` is a composite, form-associated (FACE) date-picker control composing a **consumer-supplied** `bds-text-field` trigger (slotted, not self-rendered) with a `bds-popover` panel containing a `bds-calendar-grid` body and a Clean/Cancel/Apply footer. Selection is held in internal draft state until Apply — day clicks and month navigation never touch the public `value` until the user explicitly commits. `bds-calendar-grid` is a dumb, controlled, presentational element rendering a native `<table role="grid">`, with no selection state of its own.
 
-This plan covers **Phase 0–1 only** — the single-date picker (`showTime` unset, naive `yyyy-MM-dd` value contract). The time selector (Phase 2: `showTime`, hour/minute selection, UTC-normalized `value`) is out of scope here — it has not been implemented yet and is tracked in a separate follow-up ticket/plan (EOA-17138 / `EOA-16692-bds-date-picker-v2.md`), which will need its own test plan once that work lands.
+This plan covers **Phase 0–1 only** — the single-date picker (`withTime` unset, naive `yyyy-MM-dd` value contract). The time selector (Phase 2: `withTime`, hour/minute selection, UTC-normalized `value`) is out of scope here — it has not been implemented yet and is tracked in a separate follow-up ticket/plan (EOA-17138 / `EOA-17138-bds-date-picker-v2.md`), which will need its own test plan once that work lands.
 
 Figma design reference: `calendarPicker` component_set, file `rtiE5zGA4aoOuxIQMgfD6h` ("[BOR] DSG COMPONENTS → FORMS"), `Basic` + `Range: off` + `End Date: off` + `Banner: off` variant combination — the literal single-date state.
 Popover panel spec node: `I1537:17221;14:23281;158:176502` (`Container`, confirmed 296×434px)
@@ -32,7 +32,7 @@ Created: 2026-08-20
 
 **Out of scope:**
 
-- Phase 2 (time selector, `showTime`, UTC value contract) — not yet implemented, separate ticket EOA-17138
+- Phase 2 (time selector, `withTime`, UTC value contract) — not yet implemented, separate ticket EOA-17138
 - Phase 3+ (min/max, range, presets, banner) — future versions, not yet implemented
 - Keyboard grid (arrow-key) navigation inside the calendar — explicitly deferred to Phase 8, not implemented
 - Non-Proximus brand themes (Masiv, Telesign, BICS)
