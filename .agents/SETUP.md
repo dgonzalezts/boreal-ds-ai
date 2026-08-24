@@ -138,10 +138,10 @@ git checkout -
 root=$(git rev-parse --show-toplevel)
 wt="$root/../ai-sync-worktree"
 git worktree add "$wt" ai-config
-for d in .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md; do
-  rsync -a --delete --links "$root/$d" "$wt/"
+for d in .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md opencode.json; do
+  rsync -a --delete --delete-excluded --links --exclude='node_modules' "$root/$d" "$wt/"
 done
-git -C "$wt" add -f .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md
+git -C "$wt" add -f .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md opencode.json
 git -C "$wt" commit -m "sync: update AI configuration"
 git -C "$wt" push ai ai-config:main
 git worktree remove "$wt"

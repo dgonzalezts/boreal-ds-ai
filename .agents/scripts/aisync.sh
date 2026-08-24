@@ -33,6 +33,7 @@ targets=(
   ai-work
   CLAUDE.md
   AGENTS.md
+  opencode.json
 )
 
 for d in "${targets[@]}"; do
