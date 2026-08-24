@@ -66,7 +66,7 @@ fi
 
 exclude_file="$git_common_dir/info/exclude"
 mkdir -p "$(dirname "$exclude_file")"
-scaffold_dirs=(".agents/" "ai-docs/" "ai-work/" ".claude/" ".cursor/" ".github/")
+scaffold_dirs=(".agents/" "ai-docs/" "ai-work/" ".claude/" ".cursor/" ".github/" ".opencode/" "AGENTS.md" "/opencode.json")
 for dir in "${scaffold_dirs[@]}"; do
   if grep -qF "$dir" "$exclude_file" 2>/dev/null; then
     printf "[repo]    %s already in .git/info/exclude — skipping\n" "$dir"
@@ -79,17 +79,23 @@ done
 # ─── Scope 3: Worktree ──────────────────────────────────────────────────────
 printf "[worktree] Checking AI scaffold in current directory...\n"
 
-if [[ -d "$root/.agents" ]]; then
+if [[ -d "$root/.agents" && -d "$root/.opencode" && -f "$root/AGENTS.md" ]]; then
   printf "[worktree] AI scaffold already present — skipping restore\n"
 else
-  printf "[worktree] .agents/ not found — restoring from ai/main...\n"
+  printf "[worktree] AI scaffold incomplete or missing — restoring from ai/main...\n"
   git -C "$root" fetch ai
-  git -C "$root" checkout ai/main -- .agents ai-docs ai-work .claude .cursor .github
-  git -C "$root" rm --cached -r .agents ai-docs ai-work .claude .cursor .github
+  git -C "$root" checkout ai/main -- .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md opencode.json
+  git -C "$root" rm --cached -r .agents ai-docs ai-work .claude .cursor .github .opencode AGENTS.md opencode.json
   printf "[worktree] Restore complete\n"
 fi
 
 printf "[worktree] Running sync-symlinks.sh...\n"
 bash "$root/.agents/scripts/sync-symlinks.sh" "$root"
+
+if [[ -f "$root/.opencode/package.json" ]] && command -v npm &>/dev/null; then
+  printf "[worktree] Installing .opencode/ plugin dependencies (npm)...\n"
+  (cd "$root/.opencode" && npm install --silent)
+  printf "[worktree] .opencode/ dependencies installed\n"
+fi
 
 printf "\nBootstrap complete.\n"
