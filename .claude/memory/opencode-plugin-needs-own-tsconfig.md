@@ -1,0 +1,1 @@
+../../.agents/memory/opencode-plugin-needs-own-tsconfig.md

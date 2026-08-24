@@ -44,11 +44,6 @@ for d in "${targets[@]}"; do
   fi
 done
 
-# Optional: Regenerate all AI index files before commit
-if [[ -x "$root/.agents/scripts/sync-indexes.sh" ]]; then
-  bash "$root/.agents/scripts/sync-indexes.sh" "$wt"
-fi
-
 existing_targets=()
 for d in "${targets[@]}"; do
   [[ -e "$wt/$d" ]] && existing_targets+=("$d")

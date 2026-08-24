@@ -1,0 +1,1 @@
+../../.agents/memory/aisync-git-add-force-bypasses-gitignore.md
