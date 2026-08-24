@@ -37,7 +37,7 @@ targets=(
 
 for d in "${targets[@]}"; do
   if [[ -e "$root/$d" ]]; then
-    rsync -a --delete --links "$root/$d" "$wt/"
+    rsync -a --delete --links --exclude='node_modules' "$root/$d" "$wt/"
   else
     rm -rf "$wt/$d"
   fi
