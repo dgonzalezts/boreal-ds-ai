@@ -16,3 +16,10 @@ not "Bds Table". Individual story ids follow the same pattern, e.g.
 clicking through the sidebar, use the `data-visualization-table--*` id family. If unsure of a
 component's exact slug, click through the sidebar once first (or check `meta.title` in the
 `.stories.ts` file) rather than guessing from the tag name.
+
+**General project convention (confirmed 2026-08-26 against `bds-date-picker` and
+`foundations-colors`):** every MDX docs page's id ends in `--overview`, never Storybook's own
+default `--docs` suffix. Navigating to `?path=/docs/<slug>--docs` 404s with the same
+"Couldn't find story matching" error even when `<slug>` itself is correct. Confirm the exact id
+fastest via `curl -s http://localhost:6006/index.json | jq` and filter for `"type": "docs"`
+entries, rather than guessing either the slug or the suffix.

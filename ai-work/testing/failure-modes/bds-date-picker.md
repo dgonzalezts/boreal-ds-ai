@@ -205,13 +205,8 @@ selector's own fields specifically, as opposed to the footer buttons the existin
 
 ## Pending-decision rows requiring a ruling before any test is written for them
 
-**FM-10 only.** Options:
-1. Accept the current behavior as a documented limitation — update `withTime`/`format`'s JSDoc to state that an
-   explicit `format` identical to the literal default is treated the same as leaving `format` unset in `withTime`
-   mode. Test would then assert *today's* actual behavior (auto-switch wins) as the confirmed contract.
-2. Have `frontend-subagent` add real "was format explicitly passed" tracking (a private flag set in
-   `componentWillLoad`/an `@Watch`) so the plan's literal "any value, including one identical to the default" promise
-   is honored. Test would then assert the explicit value is preserved.
-
-All other rows are `confirmed`. Awaiting your ruling on FM-10 before generating any test tied to it; every other row
-is ready for test generation.
+None — all 16 rows are `confirmed` and carry a `Covered by` entry. FM-10 was the only row that reached this catalog
+in `pending-decision` state; resolved 2026-08-26 (human ruling: option 2, real fix over documented limitation — see
+FM-10's own row for the full decision and reasoning). This section is kept as a record that the catalog went through
+a real pending-decision cycle, not evidence that one is still open — check each row's own `Contract status` as the
+source of truth, not this summary.

@@ -298,18 +298,26 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 ### Task 6 (was Task 28): `bds-date-picker` Phase 2 documentation
 
+**Status:** ✅ done (2026-08-26) — `@documentation-subagent` added three stories (`WithTime`, `TimezoneConversion`, `PreselectedDateTime`, adapted from `index.html`'s manual-QA scenarios 1-3, not copied verbatim), a new `argTypes.withTime` entry, and a new "Time selection" MDX section (contract-switch prose, an honest inferred-design callout for the single hour/minute UI, the Tokyo/LA timezone-conversion example, preselection, and the format auto-switch/override guarantee). Scenarios 4/5 (auto-format, explicit-override) folded into `WithTime`'s own JSDoc rather than separate stories; scenarios 6/7 (fresh-default, stale-value) deliberately left to unit-test coverage, not turned into stories — flagged rather than silently included or dropped, per instruction.
+
+**Post-review refinements (2026-08-26, applied directly, live-verified via `playwright-cli`):** (1) the "Time selection" MDX callout was rewritten to drop the Figma-gap framing — now states the 24-hour/no-AM-PM/no-seconds UI is a deliberate design decision, no caveat about missing spec coverage. (2) `TimezoneConversion` now presets both pickers to the same UTC instant (`2026-08-24T09:00:00.000Z`) and adds a live "Selected value (UTC)" output line per picker (mirroring `bds-list-menu.stories.ts`'s `ListboxEvents`/`ListboxMethods` output-paragraph pattern) wired to both `bdsChange`/`valueChange` — confirmed live: on load, Tokyo shows `18:00`/LA shows `02:00` for the identical preset value; after interacting and clicking Apply, Tokyo's output and the Storybook Actions panel both updated to the newly committed value (`2026-08-24T18:00:00.000+09:00`, confirmed correctly non-`Z`-normalized per `TZDate`'s documented offset-preserving behavior) while LA's stayed untouched, and both `bdsChange`/`valueChange` entries appeared in the Actions tab.
+
+**Real bug caught and fixed during the subagent's own live verification, independently re-confirmed by me (not just trusted from the report):** the shared `renderDatePicker` template forwards `meta.args.format: 'yyyy/MM/dd'` unconditionally, which was silencing the `WithTime`/`PreselectedDateTime` stories' whole reason for existing — an *explicit* format on every story meant `effectiveFormat` never auto-switched to show `HH:mm`, so the stories meant to demonstrate the auto-switch instead demonstrated its absence. Fixed by setting `format: ''` in those two stories' own `args` (falsy, so `renderDatePicker`'s `args.format || nothing` omits the attribute). I independently re-verified via `playwright-cli` against the live `pnpm dev:docs` server: `PreselectedDateTime`'s trigger reads `2026/08/24 08:30` (not the plain-date default), and opening its popover shows the calendar's day 24 highlighted with Hour="08"/Minute="30" pre-populated — screenshot-confirmed, not just DOM-queried. `TimezoneConversion` confirmed rendering two labeled pickers ("Tokyo"/"Los Angeles") side by side. Console-error counts checked against an untouched sibling story (`Default`) to confirm the 2-3 errors present everywhere (external icon-CSS CORS failure, missing favicon) are pre-existing sandbox noise, not new regressions from this task.
+
 **Executor:** @documentation-subagent
 **Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
 
 **Acceptance criteria:** MDX documents the Phase 2 UTC value contract vs. Phase 1 naive-date contract; notes the single time-selector UI was an inferred design; documents `timezone` behavior with a before/after example.
 
-**Manual test (required):** `pnpm dev:docs` — new `withTime` story renders and interacts correctly; MDX contrast is unambiguous.
+**Manual test (required):** `pnpm dev:docs` — new `withTime` story renders and interacts correctly; MDX contrast is unambiguous. ✅ done — see Status note above.
 
 **Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 2 time selector and UTC value contract"`
 
 ---
 
 ### Task 7 (was Task 29): React/Vue wrapper parity check — Phase 2
+
+**Status:** 🔄 in progress (2026-08-26) — dispatched to `@qa-subagent`. Task text says "Task 3's three scenarios"; Task 3 (line 235) actually documents five — dispatched with all five, not the undercounted three.
 
 **Executor:** @qa-subagent
 **Files:** none
