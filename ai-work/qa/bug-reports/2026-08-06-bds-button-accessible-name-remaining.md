@@ -113,3 +113,21 @@ Implemented on branch `bugfix/EOA-17133-a11y-buttons` and pushed to `origin`.
 **Fix note:** same mechanical fix as the three already-confirmed cases — add `label="Close"` to the `<bds-button>` (this component already imports/uses `label` support elsewhere in the codebase; `bds-drawer-header.tsx`'s own close button uses the *anti-pattern* version of this same bug, `aria-label="close"` directly on the host, which is very likely **Finding 2** above, now positively located).
 
 **Related:** Reported as its own out-of-scope-for-`EOA-16692` bug; filed in Jira as [EOA-17133](https://telesign.atlassian.net/browse/EOA-17133) (Sub-task of EOA-16914, linked "relates to" EOA-16692). See `ai-work/qa/bug-reports/INDEX.md`.
+
+---
+
+## Finding 4 (added 2026-08-24) — lifecycle-timing false positive, distinct root cause from Findings 1–3
+
+**Discovered during:** `EOA-17138` (`bds-date-picker` v2, Phase 2 time selector) Task 4 live QA — dispatched a `qa-subagent` to inspect `http://localhost:3333` after the user observed "a lot of" these warnings with only one scenario active on the page.
+
+**This is NOT a reopening of Findings 1–3.** Those were all "missing/wrong prop" bugs (`aria-label` set instead of `label`, or `label` omitted entirely) — all confirmed still fixed: live DOM/source inspection during this session found `bds-calendar-grid.tsx`'s prev/next nav buttons and `bds-popover.tsx`'s header close button all correctly have static, hardcoded `label` props in JSX (`"Previous month"`/`"Next month"`/`"Close"`), and the rendered `<button>` elements correctly carry `aria-label` once settled.
+
+**Symptom:** Despite the correct `label` prop being present in source, `[BorealDS Button] No accessible name found` still fires for all three buttons — 24 total warnings across 8 `bds-date-picker` instances on a single page (3 per instance: header close + prev + next), 100% of load-time occurrences, 0% interaction-triggered (fires on initial page load, before any click).
+
+**Root cause — a lifecycle-timing race, not a missing prop:** `bds-button.tsx`'s `checkAccessibleName()` runs synchronously inside `componentWillLoad()` (`bds-button.tsx:98-101`), reading `this.label` at that exact instant. For a `bds-button` nested 2–3 custom-element levels deep inside another dynamically-constructed component's render tree (`bds-date-picker` → `bds-popover`/`bds-calendar-grid` → `bds-button`), this fires before the nested element's `label` prop has been fully hydrated onto the instance — a Stencil lazy-load custom-element-upgrade race specific to `--dev --watch --serve`'s per-component async chunk loading. Text-slotted buttons (Clean/Cancel/Apply) never hit this, because their accessible name comes from light-DOM text nodes present at parse/patch time, not a prop requiring the child's own async upgrade to complete first.
+
+**Fix note (not yet implemented):** two candidate approaches, neither applied yet:
+1. Defer `checkAccessibleName()` by a microtask/`requestAnimationFrame` in `bds-button.tsx` so it evaluates after the prop has settled.
+2. Re-run the check reactively via `@Watch('label')`, mirroring the existing `handleTextSlotChange`/`checkTextWrapperContent` reactive pattern already used for late-arriving slot content — a late-settling `label` would then suppress/correct an earlier false warning.
+
+**Scope note:** confirmed via `qa-subagent` inspection this is entirely internal to `bds-button`'s own hydration timing — not a `bds-date-picker`, `bds-popover`, or `bds-calendar-grid` defect, and out of scope for `EOA-17138`. Logged here rather than fixed inline, per user decision (2026-08-24) to keep `EOA-17138` execution moving.

@@ -67,3 +67,15 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 - Test descriptions read as specifications: "renders a disabled button when `disabled` is true".
 - Never write tests that trivially pass without exercising actual logic.
 - Only test the component specified in the current task.
+
+## Failure-Mode Catalog — Required Before Writing Any Spec
+
+**Golden rule: do not assume the current implementation is correct.** Before writing a single test, independently audit the component's actual source for failure modes — do not derive your test list solely from the plan's stated unit-test behaviors. The plan's list is a hypothesis to check, not a spec to transcribe.
+
+Full procedure, catalog row structure, the five failure-mode families, and the generation/handoff rules live in `testing-knowledge` under "Failure-Mode Catalog — Explore Before You Write Tests." Summary of what this changes about your workflow:
+
+1. Read the component source cold and produce/extend `ai-work/testing/failure-modes/<bds-component>.md`, marking each row `confirmed` or `pending-decision`. Never promote today's observed behavior to `confirmed` just because that's what the code does — if you can't infer the intended contract, mark it `pending-decision`.
+2. Reconcile the catalog against the plan's stated unit-test behaviors; flag any plan item that assumes a `pending-decision` row is already settled.
+3. Surface every `pending-decision` row to the user and wait for a ruling before writing any test tied to it — do not resolve it yourself, and do not touch production code or other rows while doing so.
+4. Write tests only for `confirmed` rows. List still-open `pending-decision` rows as open questions in your response, never as tests in the spec file.
+5. If a test built on a `confirmed` row fails against current code, that's a real bug, not a bad test — do not fix the component yourself. Hand off to `frontend-subagent` (or flag to the user/orchestrator), and don't let the fix touch the test or the catalog.
