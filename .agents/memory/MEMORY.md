@@ -17,7 +17,7 @@ This directory contains non-obvious, durable facts about the codebase, environme
 > Canonical references:
 >
 > - `ai-docs/guidelines/stencil-best-practices.md` §"IComponent.ts Interface Contract" — interface file naming (`IComponent.ts` not `IBdsComponent.ts`)
-> - `ai-docs/guidelines/stencil-best-practices.md` §"IComponent.ts Interface Contract" — `@State()` mirror for `disabled`, `mutable: true` warning, Component Interface Contract (props-only rule)
+> - `ai-docs/guidelines/stencil-best-practices.md` §"IComponent.ts Interface Contract" — `@State()` mirror for `disabled`, `mutable: true` warning, Component Interface Contract (props-only rule), required-members-before-optional-members field ordering
 > - `ai-docs/guidelines/stencil-best-practices.md` §"IFormControl<T> Interface Layering" — form control interface layering, `componentModels` registration requirement
 > - `ai-docs/guidelines/stencil-best-practices.md` §"Accessor and Boolean Expression Conventions" — no `get` prefix, `!x || false` redundancy
 > - `ai-docs/guidelines/stencil-best-practices.md` §"Composite Light DOM Event Boundary" — `stopPropagation()` in re-emitting listeners; `bds-select` BUG-001 canonical example
@@ -27,6 +27,7 @@ This directory contains non-obvious, durable facts about the codebase, environme
 | `component-bds-typography-group-labels.md`           | Group components render `label` with `<bds-typography variant="label" required tooltipText>` and `helperText` with `<bds-typography variant="helper" state={...}>`. Individual leaf labels stay as plain `<span>`. Drop group label/helper SCSS rules; add `BdsTypography` to spec `components` arrays. |
 | `mouseleave-relatedtarget-vs-target.md`              | `mouseleave` "stay on hover" logic must use `e.relatedTarget` (where the pointer is going), not `e.target` (element being left). Fixed in `bds-tooltip.tsx` on 2026-07-01 — pattern still applies to future floating components.                                                                       |
 | `typescript-popover-api-declare-global-redundant.md` | `declare global { interface HTMLElement { showPopover()... } }` is dead code since TypeScript 5.2 — delete any such blocks; the project uses `^5.9.3`.                                                                                                                                                  |
+| `component-interface-required-optional-field-ordering.md` | Every `types/` interface groups required members (no `?`) before optional members (`?`), never interleaved — applies to every interface in the directory, not only `IComponent.ts`. Fixed `ICalendarGrid.ts` as the worked example.                                                                    |
 
 **Boolean prop naming** — `@Prop()` booleans must not carry an `is`, `has`, or `show` prefix. Use single descriptive adjectives that match native HTML attribute style (`disabled`, `closable`, `required`, `counter`). Examples: `hasClear` → `clearable`; `showClose` → `closable`; `hasHeader` → `header`.
 

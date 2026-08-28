@@ -798,6 +798,34 @@ export interface IRadioGroup {
 }
 ```
 
+**Required members first, optional members last.** Once required-vs-optional is decided per the rule above, order the interface body so every required member (no `?`) appears before every optional member (`?`) — never interleaved. This applies to every interface in a component's `types/` directory, not only the `IComponent.ts` consumer-facing contract (event-detail interfaces, internal option objects, etc. follow the same rule whenever they mix required and optional fields).
+
+```typescript
+// ✅ Correct — required members grouped first, optional last
+export interface ICalendarGrid {
+  grid: MonthGrid;
+  year: number;
+  month: number;
+  prevDisabled: boolean;
+  nextDisabled: boolean;
+  selectedDate?: string;
+  locale?: DateEngineLocale;
+}
+
+// ❌ Wrong — selectedDate?/locale? interleaved between required members
+export interface ICalendarGrid {
+  grid: MonthGrid;
+  selectedDate?: string;
+  year: number;
+  month: number;
+  locale?: DateEngineLocale;
+  prevDisabled: boolean;
+  nextDisabled: boolean;
+}
+```
+
+Within each group (required, then optional), preserve whatever order already existed — this rule only moves optional members past the required ones, it doesn't otherwise reorder.
+
 ---
 
 ## `IFormControl<T>` Interface Layering
