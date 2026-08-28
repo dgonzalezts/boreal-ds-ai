@@ -813,6 +813,78 @@ def _check_getter_get_prefix(rel: str, lines: List[str]) -> List[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# SCSS checks
+# ---------------------------------------------------------------------------
+
+RE_SCSS_SKIP_PREFIX = ("$", "@use", "@import", "@mixin", "@function", "@keyframes",
+                        "@media", "@if", "@else", "@each", "@for", "@while", "%", "&")
+
+
+def check_scss_component(path: Path, source: str) -> List[Finding]:
+    """Scan a Stencil component SCSS file for selectors sitting outside the
+    root tag block. Stencil compiles component SCSS straight into a global
+    stylesheet — a selector left at the top level (not nested under the
+    `bds-*` host tag) is unscoped and matches that element ANYWHERE on the
+    page, including inside other components. Real incident: bds-table.scss
+    and bds-calendar-grid.scss both shipped top-level `table`/`thead th`
+    rules this way; see .agents/memory/stencil-light-dom-unscoped-selector-leak.md.
+    """
+    findings: List[Finding] = []
+    rel = str(path)
+
+    # Only applies to files that actually define a Stencil host tag block —
+    # skip shared partials (_commons.scss, _interactions.scss, etc.), which
+    # are intentionally global and injected via injectGlobalPaths.
+    if not re.search(r"(?m)^\s*bds-[a-z0-9-]+(?:\s*[,{])", source):
+        return findings
+
+    depth = 0
+    for i, raw_line in enumerate(source.splitlines()):
+        line = raw_line.split("//", 1)[0]
+        stripped = line.strip()
+        if not stripped:
+            continue
+        opens_rule = "{" in stripped
+        if depth == 0 and opens_rule and not stripped.startswith(RE_SCSS_SKIP_PREFIX):
+            selector = stripped.split("{", 1)[0].strip()
+            if selector and _is_unscoped_native_selector(selector):
+                findings.append(Finding(
+                    rule="scss-unscoped-selector",
+                    severity="error",
+                    message=(
+                        f"Top-level selector '{selector}' sits outside the component's root "
+                        "tag block. Stencil compiles this straight into the component's global "
+                        "stylesheet with no scoping — it will match this element ANYWHERE on "
+                        "the page, including inside other components. Nest it under the root "
+                        "tag block instead. See ai-docs/guidelines/stencil-best-practices.md "
+                        "§'Every selector must nest inside the root tag block'."
+                    ),
+                    file=rel,
+                    line=i + 1,
+                ))
+        depth += stripped.count("{") - stripped.count("}")
+    return findings
+
+
+def _is_unscoped_native_selector(selector: str) -> bool:
+    """True if every comma-separated part of `selector` starts with a bare
+    (non-hyphenated) tag name — i.e. a native HTML element like `table` or
+    `thead th`, never a Boreal custom element (always `bds-*`, hyphenated)
+    or a class/id/attribute selector."""
+    parts = [p.strip() for p in selector.split(",") if p.strip()]
+    if not parts:
+        return False
+    for part in parts:
+        first_compound = re.split(r"[\s>+~]+", part, maxsplit=1)[0]
+        m = re.match(r"^[a-zA-Z][a-zA-Z0-9-]*", first_compound)
+        if not m:
+            return False  # starts with ., #, &, [, :, * — not a bare-element leak
+        if "-" in m.group(0):
+            return False  # custom element (bds-*, its own host tag) — not this bug pattern
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Directory walker
 # ---------------------------------------------------------------------------
 
@@ -847,7 +919,7 @@ class CodeQualityChecker:
     def _collect_files(self) -> List[Path]:
         if self.target_path.is_file():
             return [self.target_path]
-        exts = {".tsx", ".ts"}
+        exts = {".tsx", ".ts", ".scss"}
         skip_dirs = {"node_modules", "dist", ".stencil", "storybook-static"}
         result = []
         for p in self.target_path.rglob("*"):
@@ -865,7 +937,10 @@ class CodeQualityChecker:
                 print(f"  Could not read {path}: {e}", file=sys.stderr)
             return
 
-        new_findings = check_tsx_component(path, source)
+        if path.suffix == ".scss":
+            new_findings = check_scss_component(path, source)
+        else:
+            new_findings = check_tsx_component(path, source)
         if self.verbose and new_findings:
             print(f"  {path.name}: {len(new_findings)} finding(s)")
         self.findings.extend(new_findings)

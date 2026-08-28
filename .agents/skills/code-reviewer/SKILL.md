@@ -5,7 +5,7 @@ description: Boreal DS code review toolkit. Runs automated static analysis again
 
 # Code Reviewer
 
-Automated review toolkit for the Boreal DS monorepo. Works by inspecting the git diff of the current worktree against `main`, scanning changed TypeScript/TSX files for Boreal DS rule violations, and writing a structured review report.
+Automated review toolkit for the Boreal DS monorepo. Works by inspecting the git diff of the current worktree against `main`, scanning changed TypeScript/TSX/SCSS files for Boreal DS rule violations, and writing a structured review report.
 
 ## Typical Workflow
 
@@ -127,6 +127,7 @@ python3 .claude/skills/code-reviewer/scripts/code_quality_checker.py packages/bo
 | `unused-state`                    | warning  | `@State()` field whose name appears nowhere else in the file                     |
 | `unused-prop`                     | warning  | `@Prop()` field (without `reflect: true`) whose name appears nowhere else in the file |
 | `unstable-state-reference`        | warning  | Self-referencing `{ ...x, ... }` spread reassigned/returned with no preceding guard checking whether the value actually changed — always creates a new reference, causing redundant re-renders |
+| `scss-unscoped-selector`          | error    | A component `.scss` file's own top-level selector (`table`, `thead th`, `td[data-pinned]`, etc.) sits outside the `bds-*` root tag block — Stencil compiles it as unscoped, global CSS that leaks onto any matching element on the page, including other components. See `.agents/memory/stencil-light-dom-unscoped-selector-leak.md`. |
 
 ## Reference Documentation
 

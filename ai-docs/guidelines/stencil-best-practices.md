@@ -134,6 +134,48 @@ bds-grid-item[col-span="full"] {
 
 While Stencil technically compiles `:host` to the tag selector in light DOM components, the browser does not recognise `:host` as functional without a shadow boundary. Use direct tag selectors to make intent explicit and avoid relying on a compilation side-effect.
 
+### Every selector must nest inside the root tag block — no top-level siblings
+
+Stencil compiles a component's SCSS straight into that component's global stylesheet. There is no shadow boundary to contain a selector that sits *outside* the root tag block — it becomes a page-wide rule, matching that element anywhere in the document, in any other component's markup, the instant the stylesheet loads:
+
+```scss
+// ❌ Wrong — table/thead/th sit outside bds-table { }, so they match ANY
+// <table>/<thead>/<th> on the page, including another component's
+bds-table {
+  display: flex;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+thead th {
+  padding-inline: $boreal-spatial-padding-m;
+}
+```
+
+```scss
+// ✅ Correct — nested under the root tag block, compiles to
+// `bds-table table`, `bds-table thead th`, etc. — scoped descendant selectors
+bds-table {
+  display: flex;
+
+  table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  thead th {
+    padding-inline: $boreal-spatial-padding-m;
+  }
+}
+```
+
+This is not a hypothetical: `bds-table.scss` and `bds-calendar-grid.scss` both shipped with exactly this mistake — top-level `table`/`thead`/`th` rules outside their host block — and once both components' stylesheets loaded on the same page (e.g. navigating between their Storybook docs pages in one session), each leaked its header-cell padding/width/alignment onto the other's table, corrupting `bds-calendar-grid`'s weekday header row. See `.agents/memory/stencil-light-dom-unscoped-selector-leak.md` for the full incident.
+
+**Before finishing any component SCSS edit, verify every selector in the file is nested inside the root tag block** — a bare selector at the top level of the file (not indented under the component tag) is a scoping bug regardless of how correct its declarations are.
+
 ---
 
 ## Global SCSS Utilities (`_commons.scss` and `_interactions.scss`)

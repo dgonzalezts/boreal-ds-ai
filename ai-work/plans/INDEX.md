@@ -9,6 +9,7 @@
 | [AI-003-release-process-remediation-migrate-changesets.md](./AI-003-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
 | [AI-004-utils-file-naming-cleanup.md](./AI-004-utils-file-naming-cleanup.md) | pending | `src/utils/` file naming cleanup — dead duplicate mock removal + kebab-case standardization |
 | [AI-005-opencode-facade.md](./AI-005-opencode-facade.md) | done | OpenCode Facade — add OpenCode as a fourth supported AI tool surface via the existing symlink facade pattern |
+| [bds-popover-coverage-backfill.md](./bds-popover-coverage-backfill.md) | pending | bds-popover Coverage Backfill — Watch reactivity, focus/click-outside, activation-mode listeners, arrow positioning |
 | [bds-table-stories-maintainability-refactor.md](./bds-table-stories-maintainability-refactor.md) | done | bds-table Storybook stories — maintainability refactor |
 | [EOA-10057-bds-text-field.md](./EOA-10057-bds-text-field.md) | done | bds-text-field — Full Implementation Plan |
 | [EOA-10099-form-foundation.md](./EOA-10099-form-foundation.md) | done | EOA-10099 — Form Foundation Architecture |

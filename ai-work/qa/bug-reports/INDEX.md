@@ -20,3 +20,4 @@
 | [2026-07-29-bds-dialog-bug-001.md](2026-07-29-bds-dialog-bug-001.md) | EOA-16315 | `bds-dialog` | High | P1 | `bds-dialog` closes when clicking anywhere inside its own content, not just the backdrop |
 | [2026-08-18-bds-popover-bug-001.md](2026-08-18-bds-popover-bug-001.md) | EOA-17085 | `bds-popover`, `bds-tooltip` | Low | P3 | `data-hidearrow` attribute name is inverted from its actual meaning (present when the arrow IS shown) |
 | [2026-08-19-shared-field-error-message-bug-001.md](2026-08-19-shared-field-error-message-bug-001.md) | EOA-17093 | `bds-text-field`, `bds-tag-field`, `bds-number-field` | Medium | P2 | `errorMessage` never overrides the built-in validation message unless `error` is also manually forced `true` |
+| [2026-08-27-bds-table-bug-001.md](2026-08-27-bds-table-bug-001.md) | EOA-17277 | `bds-table`, `bds-calendar-grid` | Medium | P2 | `bds-table` and `bds-calendar-grid` leak unscoped `table`/`th`/`td` CSS onto each other in Storybook docs |

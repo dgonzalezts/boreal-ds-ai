@@ -3,7 +3,7 @@ ticket: EOA-17138
 component: bds-date-picker
 status: in progress
 created: 2026-08-19
-updated: 2026-08-24
+updated: 2026-08-27
 ---
 
 # EOA-17138 — bds-date-picker v2 (ADR-0003 Phases 2–9) Implementation Plan
@@ -252,7 +252,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 - The user manually applied a fifth fix outside the SCSS the subagent produced: `bds-select`'s own nested dropdown list was overflowing horizontally (list items wider than the 58/62px hour/minute field), matched against a Figma before/after screenshot. Their first version zeroed padding via a raw `.popover-content { padding: 0; }` class selector nested inside `.bds-date-picker__time-selector` — I validated it against the actual DOM (`bds-select.tsx:791` renders its own light-DOM `<bds-popover>`, so the selector does correctly reach it, and its `(0,2,0)` specificity reliably wins) but flagged the coupling risk: it reaches into `bds-popover`'s internal implementation class name instead of its own documented `--popover-content-padding` custom property, the same public-API mechanism the file already uses two rules above it for the outer popover reset. Replaced with `bds-select bds-popover { --popover-content-padding: 0; }`, scoped to only the selects' own nested popovers — independently re-verified live via `playwright-cli` (hour dropdown renders at full field width, no scrollbar, no clipping).
 - Considered and rejected styling the list's native OS scrollbar to match Figma's polish more closely: no `scrollbar` CSS exists anywhere in `boreal-web-components` today, Figma's "Basic Time Picker" component defines no scrollbar state to match against, and a one-off override here would make this list inconsistent with every other scrollable surface in the design system (`bds-list-menu`, `bds-table`, etc.). Left out of scope; if ever wanted, it belongs as a token-driven treatment on `bds-list-menu.scss` itself, not a `bds-date-picker`-local hack — not logged as a plan task per user direction (explicitly out of scope for now, not deferred).
 - The `content-band` slot itself was reconsidered against three less-intrusive, `bds-popover`-code-untouched alternatives (reusing the existing `footer-helper` slot with `order: -1`; a `calc()`-based negative-margin workaround; zeroing `--popover-content-padding` and pushing padding into each child) — user confirmed keeping `content-band` as implemented; alternatives documented in conversation only (not written into the plan, since the decision didn't change).
-- **The subagent's recommended CSS-custom-property-inheritance regression test is *not* the same gap as the `content-band` slot's missing unit coverage** — the former needs real browser layout/computed-style (out of `newSpecPage`'s reach, still an open follow-up, not yet scoped to a task) and the latter (`hasContentBand` slot-detection logic, and the `componentWillLoad` mixin-shadowing guard) *is* directly unit-testable and was a genuine, previously untracked gap — folded into Task 5's scope below.
+- **The subagent's recommended CSS-custom-property-inheritance regression test is *not* the same gap as the `content-band` slot's missing unit coverage** — the former needs real browser layout/computed-style (out of `newSpecPage`'s reach) and the latter (`hasContentBand` slot-detection logic, and the `componentWillLoad` mixin-shadowing guard) *is* directly unit-testable and was a genuine, previously untracked gap — folded into Task 5's scope below. The former is now tracked as its own task — see Task 8c.
 
 **Prior verification (icon/label/gap/JSDoc), independently confirmed, not just trusted from subagent reports:** `$boreal-spatial-gap-2xs` (4px) is a real token matching Figma exactly; `--bds-text-field-width` is a genuine documented `bds-text-field` custom property; `%visually-hidden` in `_commons.scss` uses the correct standard clip-to-1px technique (never `display:none`); `effectiveFormat`'s JSDoc removed, matching every sibling private getter's undocumented convention; `ICONS.Timer` added and rendered via `bds-icon()` mixin at `$boreal-icons-m` (confirmed 16px), verified live via `playwright-cli` at exactly 16×16px with `aria-hidden="true"`, no regression to accessible names or console warning count. Hover/focus/active states correctly deferred (shared `_form-field-shell.scss` component, out of scope — recommend a separate follow-up task). Error state confirmed already correct via existing generic `&--error` rule.
 
@@ -264,7 +264,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 - [x] Region: hour/minute fields — default state — **pulled 2026-08-24** via `get_design_context` on node `14:24957` (`_Basic Time picker`, fileKey `rtiE5zGA4aoOuxIQMgfD6h`): field background `var(--ui-(components)/inverse, white)`; border `var(--stroke/xs, 1px)` solid `var(--stroke/default-light, #e3e3e6)`; radius `var(--radius/xs, 4px)`; padding `var(--spatial/padding/xs, 8px)` left, `var(--spatial/padding/1xs, 6px)` right/vertical; value text Inter Regular 14px, `var(--typography/line-height/sm, 20px)`, `var(--text/default-darker, #131316)`; icon+fields gap `var(--spacing/2xs, 4px)`; gap between the two Select fields `var(--spatial/gap/2xs, 4px)`; field-internal gap (value↔disclosure) `var(--spatial/gap/xs, 8px)`; disclosure icon 20×20px; timer icon 16×16px. **Known gap in the current placeholder**: `bds-date-picker.scss`'s `.bds-date-picker__time-selector` rule (added incidentally during Task 3) uses `$boreal-spatial-gap-xs` (8px) — must be corrected to the 4px (`2xs`) gap confirmed above.
 - [ ] Interaction: hour/minute fields — hover/focus/active _(not yet pulled)_
 - [ ] Modifier: hour/minute fields — validation/error state, if it exists _(not yet pulled)_
-- [ ] Dimensions: hour/minute field width/height against the popover body's confirmed 296×434px panel, 24px/12px padding
+- [x] Dimensions: hour/minute field width/height — **confirmed 2026-08-27**, user-applied manual edit: `bds-text-field` width is `62px` (not the earlier `58px` figure) and `.bds-date-picker__time-selector` uses `justify-content: center` (not `space-between`). Both are intentional, confirmed final styling — not a pending reconciliation.
 
 **Acceptance criteria:**
 
@@ -317,7 +317,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 ### Task 7 (was Task 29): React/Vue wrapper parity check — Phase 2
 
-**Status:** 🔄 in progress (2026-08-26) — dispatched to `@qa-subagent`. Task text says "Task 3's three scenarios"; Task 3 (line 235) actually documents five — dispatched with all five, not the undercounted three.
+**Status:** ✅ done (2026-08-27) — `@qa-subagent` ran `dev:pack:react` then `dev:pack:vue` sequentially (never concurrently), re-verifying against current source (post Task 4's nested-popover padding-leak fix and the 2026-08-26 `bds-select bds-popover` selector follow-up). All 5 of Task 3's scenarios (not the task text's undercounted three) plus both Task 4 follow-up visual checks (content-band full-width background band, hour/minute `bds-select` dropdown full width with no clipping) passed identically in both frameworks — clean pass/fail matrix, no regressions, nothing logged as a new task. One non-bug environment note: the sandbox's local timezone is `America/Bogota` (UTC-5), so Scenario 3's absolute Hour/Minute digits differ from the plan text's UTC-0 assumption but are internally consistent with the timezone-aware contract Scenario 2 itself demonstrates — confirmed identical in both frameworks, logged to `.claude/agent-memory/qa-subagent/` for future sessions in this environment, not a wrapper divergence. Two pre-existing, unrelated console items noted in the React playground only (an HTML-nesting `<p><ol>` warning from the scenario markup itself, and a favicon 404) — flagged, not fixed, since they predate this task and aren't date-picker component bugs. No source files modified (verification-only); playground scenario markup left untouched, not reverted or cleaned up, per standing convention.
 
 **Executor:** @qa-subagent
 **Files:** none
@@ -344,7 +344,25 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 **Why this isn't folded into Task 5 or any other task in this file:** `bds-popover` is shared infrastructure (`bds-select`/`bds-dropdown` are its other two consumers, confirmed during Task 4's `content-band` slot work) — a coverage pass on it is a `bds-popover`-scoped effort, not a `bds-date-picker`-scoped one, and expanding Task 5 to cover it would have been exactly the kind of silent scope creep `plan-execution.md` warns against.
 
-**Next step:** re-scope into its own ticket/plan (likely `ai-work/plans/` filed against `bds-popover` directly, not this date-picker plan) before picking it up — not implicitly reintroduced by any later phase in this file.
+**Next step:** ✅ re-scoped (2026-08-27) into [`ai-work/plans/bds-popover-coverage-backfill.md`](./bds-popover-coverage-backfill.md), status `pending` — not yet dispatched. Not implicitly reintroduced by any later phase in this file.
+
+---
+
+### Task 8c (new — discovered during Task 4's follow-up, 2026-08-26): CSS custom-property-inheritance browser regression test — pending
+
+**Status:** 🔲 pending, not yet scoped to an executor or sprint.
+
+**Discovered by:** independent live-browser verification during Task 4, which found the nested-`bds-select`-popover padding-leak bug (custom-property inheritance carrying a value down through the light-DOM tree regardless of which selector set it) — a bug class that `newSpecPage`'s JSDOM environment cannot catch, since it never computes real cascaded/inherited CSS custom-property values. The same bug class is why the user's 2026-08-26 manual fix (`bds-select`'s internal dropdown list overflowing horizontally, root-caused to `bds-popover`'s `.popover-content` padding) had to be verified live via `playwright-cli` rather than by the unit-test suite, and why the eventual fix (`bds-select bds-popover { --popover-content-padding: 0; }`) has no automated regression coverage today.
+
+**Why this isn't folded into Task 5 or any other task in this file:** it requires real browser layout/computed-style assertions (e.g. Playwright), not `newSpecPage` — a different test tier than every other Phase 2 unit-test task in this plan, and one this plan hasn't established tooling for yet.
+
+**Acceptance criteria (once scoped):**
+
+- A browser-driven test (Playwright or equivalent) opens `bds-date-picker` with `withTime=true`, opens the hour/minute `bds-select` dropdown, and asserts the nested popover's computed `--popover-content-padding` resolves to the unset/component-default value, not a leaked ancestor value.
+- Covers both fixes discovered in this plan: the direct-child-combinator + `initial` reset on `bds-date-picker > bds-popover`'s nested popovers (Task 4), and the `bds-select bds-popover { --popover-content-padding: 0; }` override (2026-08-26 follow-up).
+- Documents which test runner/harness is used, since none of Phase 2's other tasks establish one.
+
+**Next step:** re-scope into its own ticket/plan or fold into a future test-infrastructure task once a browser-level test harness convention exists for this repo — not implicitly reintroduced by any later phase in this file.
 
 ---
 
