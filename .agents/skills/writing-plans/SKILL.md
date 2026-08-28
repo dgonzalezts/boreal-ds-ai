@@ -223,6 +223,28 @@ Read the actual current source of each file below — not just its file path —
 - **Findings propagate.** If a later task in the plan shares the same root cause (e.g. the same default-state decision applies to a dual/range variant of the same feature), cross-reference it there too rather than re-deriving it.
 - **Chain `@qa-subagent`** only if the task also has real visual/behavioral output — this gate is about correctness coverage, not a trigger for manual QA on its own.
 
+## JSDoc Content Gate (Mandatory)
+
+`stencil/required-jsdoc: 'error'` forces JSDoc onto every `@Prop()`/`@Event()`/`@Method()` the moment it's declared — usually during the scaffold task (Task Granularity step 2/8), not the later "JSDoc audit" step. Because the lint rule only checks *presence*, not *content* or *length*, an implementer under no other constraint tends to document the member's internal wiring (which private getter computes it, which other prop or `@Watch` it feeds, how validation state propagates) rather than its consumer-facing behavior — this is a plan-authoring gap, not an implementer mistake, since nothing in this skill previously said otherwise.
+
+`ai-docs/guidelines/jsdoc-template.md` already sets the actual standard, and it's much terser than that: every one of its worked examples is a single sentence describing what the member *does* or what a consumer *sees/receives* — `/** Whether the checkbox is selected. */`, `/** Value submitted with the form when checked. */`. Nothing in that template's examples ever describes an internal mechanism.
+
+### Applying the gate
+
+Every task that declares a new `@Prop()`, `@Event()`, or `@Method()` — not only the dedicated "JSDoc audit" task — carries this acceptance-criteria bullet:
+
+```markdown
+- JSDoc on every `@Prop`/`@Event`/`@Method` this task adds is 1–2 sentences, consumer-facing only (what it does / what the consumer sees or receives) — never internal implementation details (which private getter or `@Watch` computes/consumes it, how it's wired to another member internally). Matches `ai-docs/guidelines/jsdoc-template.md`'s own worked examples.
+```
+
+The dedicated "JSDoc audit" task (Task Granularity step 5/13) additionally re-reads every member the whole block touched — not just the ones it adds itself — and trims any that drifted long during implementation, the same way it already re-verifies completeness.
+
+### Rules that make the gate actually bite
+
+- **Length is a signal, not the rule.** A member can violate this gate at one sentence (if that sentence describes internal wiring) or comply at two (if both sentences are still consumer-facing). Don't accept a JSDoc purely because it's short.
+- **"Why" belongs in the plan, not the doc.** Rationale, edge-case handling, and cross-references to other props' behavior are exactly the kind of detail `feedback_no_why_comments_tightened.md` (team memory) already excludes from source — JSDoc is not an exception to that just because it's a doc comment instead of a `//` comment.
+- **Applies at scaffold time, not just audit time.** Since `required-jsdoc` fires at declaration, don't defer this rule to the audit task's acceptance criteria alone — the scaffold/implementation task that first declares the member is where the violation is actually introduced.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -310,6 +332,7 @@ _(If this task produces SCSS/CSS or otherwise changes rendered appearance, inser
 - Reference existing sibling components as the pattern to follow where applicable
 - Existing shared utilities for this behavior were checked; implementation reuses them when available, otherwise includes a documented gap and extension plan
 - If the task produces SCSS/CSS or changes rendered appearance, it carries a completed Figma research pass block per the Figma Research Gate for Styling Tasks section above
+- If the task declares any new `@Prop`/`@Event`/`@Method`, it carries the JSDoc brevity/content bullet per the JSDoc Content Gate section above
 
 **Manual test _(required — not waiveable)_:**
 
@@ -417,6 +440,7 @@ If a mutant survivor reveals a genuine gap in an earlier task's test coverage, c
 - Never duplicate behavior already covered by shared utilities; utility discovery and reuse is required for every feature area
 - Every styling task carries a Figma research pass enumerating region × interaction state × modifier state, authored at plan time — never left for the implementer to discover reactively
 - Every integration task (one that modifies existing behavior with real callers) carries an integration research pass covering call sites, API-boundary cases, and default/empty-state decisions, authored at plan time — `executing-plans`' live grounding check is a safety net for drift, not a substitute for this
+- Every task declaring a new `@Prop`/`@Event`/`@Method` carries the JSDoc brevity/content acceptance-criteria bullet — 1–2 sentences, consumer-facing only, never internal wiring — applied at the scaffold/implementation task itself, not deferred to the later JSDoc-audit task
 - Pixel values written into plan prose are unconfirmed by default; mark them so and require a re-pull
 - DRY, YAGNI, TDD, frequent commits per task
 

@@ -364,6 +364,8 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 **Next step:** re-scope into its own ticket/plan or fold into a future test-infrastructure task once a browser-level test harness convention exists for this repo — not implicitly reintroduced by any later phase in this file.
 
+**Interim manual re-verification (2026-08-27, via `mcp__playwright__*` in-session, not a durable test — does not close this task):** re-ran the exact scenario live on `feature/EOA-17138_bds-date-picker-v2_DG` (`packages/boreal-web-components/src/index.html`'s `#dp1` `with-time` scenario). Opened the outer `bds-date-picker` popover, then the hour `bds-select`'s nested popover, and read `getComputedStyle` directly: outer `.popover-content` resolves `--popover-content-padding` to `12px 24px` (the date-picker's own override) while the nested `bds-select` popover's `.popover-content` resolves it to `0`/`0px` — no leak. Also confirmed no horizontal overflow (`scrollWidth === clientWidth === 62px`) on the nested list. Both fixes (Task 4's combinator/`initial` reset and the 2026-08-26 `bds-select bds-popover { --popover-content-padding: 0; }` override) hold. This is a one-off confidence check, not a checked-in test — repo still has no `@playwright/test` harness, so the bug class remains uncovered by CI. Status stays `pending`.
+
 ---
 
 ## Phase 3 — Min/max date constraints (single)
@@ -371,6 +373,8 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generic "Day disabled" style token, no interaction spec for boundary dates). `isWithinRange`/`compareDates` (date-engine) and `DayCell.isDisabled` (`bds-calendar-grid` types) are already implemented and unwired since v1's Task 7 — this phase wires them, it does not build new date-math primitives.
 
 ### Task 9: min/max UX design check-in (blocking gate)
+
+**Status:** ✅ done (2026-08-28) — design confirmed with user, addendum below.
 
 **Executor:** main thread (no executor)
 
@@ -382,9 +386,17 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 
 **Manual test:** N/A — design checkpoint.
 
+**Confirmed design addendum (2026-08-28):**
+
+1. **Disabled-cell explanation:** no tooltip. `aria-disabled="true"` (not the native `disabled` attribute — avoids react-day-picker's documented focus-loss bug) plus the existing dimmed `text/disabled` styling, reusing v1's out-of-month treatment exactly as Task 11 already specifies. No new `DayCell` field, no new Figma spec needed. Ref: [DayPicker accessibility guide](https://daypicker.dev/guides/accessibility), [gpbl/react-day-picker#33](https://github.com/gpbl/react-day-picker/issues/33).
+2. **Whole-month-disabled navigation:** guard it — disable the prev/next `bds-button` at the boundary so a user can never land on a month with zero selectable days. This is what Task 10's "whole-month-disabled detection" exposes; Task 11 consumes it directly. Ref: [Vaadin Date Picker docs](https://vaadin.com/docs/latest/components/date-picker) (min/max implicitly limit overlay navigation). Explicitly rejected the alternative — MUI X's `shouldDisableDate` does *not* guard navigation, landing users on fully-disabled months, which MUI's own issue tracker records as a UX complaint ([mui/mui-x#4917](https://github.com/mui/mui-x/issues/4917)).
+3. **Violation feedback:** reuse the existing `@Prop() errorMessage` on `bds-date-picker` — a bound `value` outside `min`/`max` sets the field's invalid state and surfaces via `errorMessage`, pushed through the same `updateElementProp` mechanism already used for `value`/`selectable`/`disabled`. No new prop. Ref: [Vaadin Date Picker docs](https://vaadin.com/docs/latest/components/date-picker) ("Date is not allowed" pattern for programmatic/data-bound out-of-range values).
+
 ---
 
 ### Task 10: `date-engine` min/max wiring
+
+**Status:** ✅ done (2026-08-28) — `generateMonthGrid` accepts optional `min`/`max`, `isMonthFullyDisabled` added for Task 11's nav guard, 71/71 tests passing.
 
 **Executor:** @frontend-subagent
 **Files:** `packages/boreal-web-components/src/services/date-engine/date-math.ts` (modify if needed), `.../date-engine/__test__/date-math.spec.ts` (modify)
@@ -404,6 +416,12 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 ---
 
 ### Task 11: `bds-date-picker` min/max props + nav guard + helper text
+
+**Status:** ✅ done (2026-08-28) — `min`/`max` props, nav guard, and constraint-validation wiring implemented per Task 9's addendum; verified independently (eslint clean, 16 suites / 241 passed / 1 pre-existing todo / 0 failed on `bds-date-picker` + `bds-calendar-grid` + `date-engine`). `tsc --noEmit`'s only remaining errors are pre-existing and unrelated (`bds-dialog`/`bds-tooltip` spec files, untouched by this task).
+
+**Scope deviation (2026-08-28):** the executing agent was instructed (by the dispatcher, not on its own initiative) to also write unit tests for this task's changes, which is outside both this task's own file list and `@frontend-subagent`'s charter — Task 13 below is the plan's actual dedicated unit-test task, executor `@testing-subagent`, with its own file targets and ≥90% coverage-phase requirement. Tests were **not deleted** (241 passing, kept as a head start) but landed in different files than Task 13 specifies: `bds-date-picker.variants.spec.ts`, `bds-date-picker.form.spec.ts`, `date-picker.test-utils.ts`, `bds-calendar-grid.a11y.spec.ts` — none of these match Task 13's named targets (`bds-date-picker.minmax.spec.ts` create, `bds-calendar-grid.variants.spec.ts` modify, `date-math.spec.ts` modify). **Task 13 must reconcile against its own target files and independently confirm the ≥90% coverage-phase gate is actually met — do not assume today's ad hoc tests already satisfy it.**
+
+**Manual test — completed (2026-08-28), deviated from this task's own Executor line:** this task's `Executor:` field (above) names `@qa-subagent` for the manual test, which per convention uses `playwright-cli` — that was not followed here; the manual test below was run directly on the main thread with `mcp__playwright__*` instead. Flagged by the user; process correction applied going forward — future manual-test steps route to `@qa-subagent`. Results, since they were actually exercised against the real browser, stand as valid verification of this task's acceptance criteria; all three scenarios verified live against `pnpm dev:components` (three new QA sections added to `src/index.html`: `#dp-minmax`, `#dp-navguard`, `#dp-stale-range`, kept per the persist-QA-scenarios convention). Scenario 1: Aug 10–20 enabled, everything outside (including adjacent-month filler days) rendered `aria-disabled="true"` + `--disabled` class + `tabIndex=-1`, and a click on a disabled cell (Aug 5) selected nothing. Scenario 2: with min/max both inside August, both prev and next nav buttons were disabled (`.disabled === true`), and a real click on the disabled "Next month" button left the displayed month unchanged. Scenario 3: submitting the form with a stale `value="2026-08-05"` under `min="2026-08-10"` correctly blocked native submission (no `"form submitted"` console log) and set `field.error === true` / `errorMessage === "Date is not allowed."` — confirmed only via a real trusted click through the Playwright tool, since a synthetic `element.click()` doesn't reach `bds-button`'s click handling (untrusted-event gap, not a component bug) and a plain native-`click()`-driven submit doesn't reach `bds-button`'s `bdsClick` either — the QA scenario's submit wiring was corrected to `bdsClick` → `form.requestSubmit()` to match the existing "consumers must listen for `bdsClick`, not `click`" convention.
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:** `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `bds-calendar-grid.tsx` (modify — pass disabled state through, no new markup)
@@ -433,7 +451,9 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 - [ ] Region: helper text (if Task 9 confirmed it) — default and error/warning variants on the trigger field
 - [ ] Modifier: disabled nav button (if Task 9 confirmed guarding nav rather than skipping)
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for `min`/`max` complete.
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for `min`/`max` complete and conforms to the JSDoc brevity/content rule below (this includes revisiting Task 11's own `min`/`max` JSDoc, which was written before this rule was made explicit and currently over-describes internal wiring — trim it to match).
+
+**JSDoc brevity/content rule (applies to every `@Prop`/`@Event`/`@Method` touched in this task):** 1–2 sentences, consumer-facing only — describe what the member does or what a consumer sees/receives, never the internal mechanism (which private getter computes it, which other prop it's derived from, how an internal validator or watcher reacts to it). Matches `ai-docs/guidelines/jsdoc-template.md`'s own worked examples (e.g. `/** Whether the checkbox is selected. */`), not a longer standard invented per-prop.
 
 **Manual test (required):** Reuse Task 11's scenarios visually.
 
@@ -551,7 +571,7 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 - [ ] Combination: range-start/end + disabled (Phase 3 min/max interplay)
 - [ ] Dimensions: two calendars' shared width/alignment
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × modifier combination enumerated has an explicit rule or a documented "no visual difference" note.
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × modifier combination enumerated has an explicit rule or a documented "no visual difference" note; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 4 conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 18's scenarios visually against the pulled Figma values.
 
@@ -633,7 +653,7 @@ Per the spike doc: "Inicio: 08:00" / "Fin: 10:30" dual selector pairs, visually 
 - [ ] Region: dual time-selector layout (side-by-side Inicio/Fin pairs) — spacing against the confirmed single-selector dimensions (v1 spike: 58px fields, timer icon)
 - [ ] Interaction: dual pair — confirm no new interaction states beyond the single selector's already-pulled default
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc complete.
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc complete and conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 23's scenarios visually.
 
@@ -744,7 +764,7 @@ Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This 
 - [ ] Interaction: preset button — Default/Hover/Focus/Active/Disabled × Selected/Unselected (10 variants total)
 - [ ] Dimensions: sidebar width and alignment against the dual-calendar layout from Phase 4's Task 19
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × selected combination has an explicit rule.
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × selected combination has an explicit rule; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 6 conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 30's scenarios visually against the pulled Figma values.
 
@@ -823,7 +843,7 @@ Per the spike doc: an info banner (blue background, info icon, title "Info", mes
 - [ ] Modifier: banner `state` variants (info/warning/error, if the design supports more than one — confirm before assuming info-only)
 - [ ] Region: footer range-summary label — spacing against the existing Clean/Cancel/Apply buttons (confirmed 48px footer height, 24px/16px padding from Phase 4's Task 19)
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively.
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 7 (including the new `banner` prop from Task 35) conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 35's scenarios visually.
 
@@ -1019,7 +1039,7 @@ This lives inside `bds-calendar-grid` itself (not a new registered element), per
 - [ ] Region: `_DatePickerMonthYear` cell (node `14:23473`) — `State` (Default/Hover/Focus/Active/Disabled) × `State Actual` (True/False, presumed "is current") × `Selected` (True/False) — none of these three nodes pulled yet per the spike doc; pull all now
 - [ ] Region: month/year header label button — the confirmed `_Button/month-year` state matrix (~10 rows: Default/Hover/Focus/Active/Disabled × unselected/selected)
 
-**Acceptance criteria:** Every row checked off before SCSS, with pulled values recorded; `$boreal-*` tokens exclusively; JSDoc for the new internal `view` state complete.
+**Acceptance criteria:** Every row checked off before SCSS, with pulled values recorded; `$boreal-*` tokens exclusively; JSDoc for the new internal `view` state complete and conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 47's scenarios visually against the pulled Figma values.
 

@@ -106,6 +106,14 @@ Currently that section commits to Chrome/Edge ≥ 79, Firefox ≥ 67, and Safari
 
 This bug class (redundant re-render on a repeated no-op interaction) is easy to miss because the *visible outcome* looks correct — only a render-count check or an observable side-effect check (e.g. "did the displayed month reset") surfaces it. See `bds-date-picker`'s "repeat trigger click while open" / "reselect the same day" fixes and `ai-docs/guidelines/stencil-best-practices.md` → "Reference-Stable State Updates" for the canonical case study.
 
+## Cross-Component CSS Collision Check
+
+**Mandatory** whenever the component under test renders a native HTML element also rendered by another shipped Boreal DS component (`table`, `input`, `button`, `dialog`, etc.) — testing it in isolation is not sufficient, because Stencil compiles component SCSS into a global stylesheet with no shadow boundary: a selector left unscoped in one component's SCSS silently applies to the same element inside a *different* component the moment both stylesheets have loaded in the page.
+
+- Load both components in the same Storybook/browser session (e.g. navigate from the other component's docs page to this one, or render both on one page) and verify neither one's styling changes.
+- Do not rely on a hard page reload to "prove" this is safe — a fresh load of only the component under test never exercises the cross-contamination path. The check only means something if the *other* component's stylesheet has also loaded in the same session first.
+- Real incident this check exists because of: `bds-table` and `bds-calendar-grid` (both render `<table>`) leaked header-cell padding/width onto each other once both stylesheets loaded in one session — invisible when either was tested alone. See `.agents/memory/stencil-light-dom-unscoped-selector-leak.md`.
+
 ## Critical Cross-Framework Gotcha: `<template>` Elements
 
 Any Boreal DS feature relying on a raw `<template>` light-DOM child (e.g. `bds-table`'s `slot="row-detail"`, which reads `template.content.cloneNode(true)`) has a **real, unresolved risk** in React and Vue: `HTMLTemplateElement.content` (the special `DocumentFragment` a `<template>` tag's children get parsed into) is populated by the browser **only when the HTML parser itself encounters the tag in markup** — not when a framework's virtual-DOM reconciler (React, Vue) creates the element via `document.createElement('template')` and appends children via normal DOM insertion. Writing `<template>...</template>` directly in JSX or a Vue SFC template may render an element whose `.content` stays empty, silently breaking the feature.

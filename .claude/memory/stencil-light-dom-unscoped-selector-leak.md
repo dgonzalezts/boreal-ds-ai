@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-light-dom-unscoped-selector-leak.md
