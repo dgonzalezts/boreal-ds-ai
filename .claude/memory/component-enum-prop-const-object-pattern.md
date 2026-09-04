@@ -1,0 +1,1 @@
+../../.agents/memory/component-enum-prop-const-object-pattern.md
