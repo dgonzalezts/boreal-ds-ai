@@ -1,38 +1,37 @@
 ---
 ticket: EOA-17138
 component: bds-date-picker
-status: in progress
+status: done
 created: 2026-08-19
-updated: 2026-08-27
+updated: 2026-09-03
+revision: 2 — scope narrowed to phases 2-4 after v3 split
 ---
 
-# EOA-17138 — bds-date-picker v2 (ADR-0003 Phases 2–9) Implementation Plan
+# EOA-17138 — bds-date-picker v2 (ADR-0003 Phases 2-4) Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
-> **Scope expansion (2026-08-24):** originally this file covered Phase 2 (time selector) only, per the 2026-08-19 split from v1. Per the decision to close out the entire remaining roadmap next sprint, this file now also covers Phase 3 (min/max), Phase 4 (range), Phase 5 (dual time), Phase 6 (presets sidebar), Phase 7 (banner + range summary), Phase 8 (keyboard/a11y/RTL), and the previously-unscheduled month/year quick-picker (folded in here as Phase 9, since it has no cross-cutting reuse dependency on any other phase and no other version file exists for it). Tasks 1–8 (Phase 2) are unchanged from the original file. Tasks 9+ are new.
+> **Scope split (2026-09-02):** this plan now tracks only Phase 2 through Phase 4 work for version 2. Phase 5 through Phase 9 scope was moved into version 3 under EOA-17662.
 >
-> **Explicitly excluded from this expansion:** keyboard-typed date entry in the trigger field (spike doc's "Unscheduled — keyboard-typed date entry" section, added 2026-08-19). This remains deferred, out of scope for `EOA-17138`, for the reasons already documented there (new architecture-decision spike, dependency on Phase 3's min/max UX, no Figma research done) — it is not implicitly reintroduced by this expansion and should not be picked up as a side effect of any task below.
+> **Still out of scope:** keyboard-typed date entry in the trigger field remains deferred and is not implicitly reintroduced by any task in this file.
 
-**Goal:** Extend `bds-date-picker` (shipped in v1 as a single-date picker) with every remaining ADR-0003 roadmap phase in one sprint: an optional time selector, min/max constraints, date-range (dual calendar) support, dual time selection, a presets sidebar, an info banner with a footer range summary, full keyboard/a11y/RTL parity, and the month/year quick-picker — without breaking v1's naive-date `value` contract for consumers who use none of the above.
+> **Requirements note:** `calendarType` foundation decisions remain part of this v2 scope because they are prerequisites for range behavior under Phase 4.
 
-**Jira ticket:** [EOA-17138 "Implement Date Picker v2"](https://telesign.atlassian.net/browse/EOA-17138) — sibling story to [EOA-16692](https://telesign.atlassian.net/browse/EOA-16692) (v1) under the same parent Feature (EOA-14927). Scope expanded 2026-08-24 to cover the full remaining roadmap (see ticket description).
+**Goal:** Complete `bds-date-picker` version 2 foundations: time selector, min/max constraints, `calendarType` baseline, and range-mode foundation — without breaking v1's naive-date `value` contract for single-date consumers.
+
+**Jira ticket:** [EOA-17138 "Implement Date Picker v2"](https://telesign.atlassian.net/browse/EOA-17138) — sibling story to [EOA-16692](https://telesign.atlassian.net/browse/EOA-16692) (v1) under the same parent Feature (EOA-14927).
 **Ticket brief:** [`ai-work/tickets/EOA-17138-bds-date-picker-v2.md`](../tickets/EOA-17138-bds-date-picker-v2.md)
-**Spike doc (architecture decisions — read before starting, do not duplicate here):** [`ai-work/research/2026-08-12-bds-date-picker-architecture-spike.md`](../research/2026-08-12-bds-date-picker-architecture-spike.md) — see in particular the "Version Backlog (ADR-0003 Phases 3–8)" section and the "Unscheduled — month/year quick-picker" section, both now in scope here.
+**Spike doc (architecture decisions — read before starting, do not duplicate here):** [`ai-work/research/2026-08-12-bds-date-picker-architecture-spike.md`](../research/2026-08-12-bds-date-picker-architecture-spike.md)
 **v1 plan (Phase 0–1, prerequisite, done):** [`EOA-16692-bds-date-picker-v1.md`](./EOA-16692-bds-date-picker-v1.md)
 
-**Versioning:** This file now covers Phases 2–9 in full — the last version file needed to close ADR-0003's originally-scoped roadmap, plus the quick-picker. Anything discovered mid-sprint that isn't covered by Phases 2–9 or the quick-picker (e.g. keyboard-typed entry, if ever picked up) still gets its own future `ai-work/plans/EOA-16692-bds-date-picker-vN.md` file per the established convention.
+**Versioning:** This file now covers Phases 2-4 only. Remaining roadmap phases (5-9) continue in version 3 under EOA-17662.
 
 **Architecture:** Unchanged core shape from v1 — `bds-date-picker` (orchestrator: `bds-text-field` trigger + `bds-popover` panel + one or two `bds-calendar-grid` bodies, FACE-compliant, draft-state-until-Apply). Each phase below is additive:
 
 - Phase 2 composes a new `renderTimeSelector.tsx` helper.
 - Phase 3 wires already-existing-but-unwired `date-engine`/`bds-calendar-grid` capacity (`isWithinRange`, `compareDates`, `DayCell.isDisabled`) — no new primitives expected.
-- Phase 4 introduces the `range: boolean` prop (per ADR-0006/spike Finding 4) and a second `bds-calendar-grid` instance; the public `value` contract becomes `string | { start: string; end: string }` when `range` is on.
-- Phase 5 reuses Phase 2's `renderTimeSelector.tsx`, parameterized for a start/end pair.
-- Phase 6 adds a new `renderPresets.tsx` helper (presets sidebar) and a `utils/presets.ts` computation module.
-- Phase 7 adds a new `renderBanner.tsx` helper and extends `renderFooter.tsx` with a range-summary label.
-- Phase 8 wires the existing `src/utils/a11y/keyboard/navigation/grid-navigation.ts` utility into `bds-calendar-grid`, adds a live region, and audits RTL.
-- Phase 9 (quick-picker) adds an internal `view: 'days' | 'months' | 'years'` state to `bds-calendar-grid` itself — it passes the reuse litmus test from the spike doc (a mode of the same dumb, controlled, reusable grid component), not a new registered element.
+- Phase 3.5 introduces the `calendarType: 'default' | 'basic' | 'expanded'` prop (default `'basic'`, non-breaking) and `default` mode's immediate-commit/no-chrome interaction model — a prerequisite for Phase 4 range behavior.
+- Phase 4 introduces the `range: boolean` prop (per ADR-0006/spike Finding 4), independent of calendar count — a second `bds-calendar-grid` instance is gated on `calendarType === 'expanded'`, not on `range` itself; the public `value` contract becomes `string | { start: string; end: string }` when `range` is on, regardless of `calendarType`.
 
 No external calendar UI library at any phase; light DOM throughout, matching the rest of Boreal (ADR-0001).
 
@@ -42,11 +41,11 @@ No external calendar UI library at any phase; light DOM throughout, matching the
 
 ## Testing and QA policy for this plan
 
-**Two-phase test gate, coverage consolidated at the end of each phase block, mutation testing consolidated once at the very end of the whole file** — same convention as v1 and the original Phase 2 scope. Coverage-phase Jest tests (≥90% coverage) are written in one consolidated unit-test task per phase block, not embedded inline in implementation tasks. Mutation-phase (Stryker, ≥90% score) is deferred to the final task in this file (now renumbered to the last task overall) — it re-runs/extends the same three Stryker configs v1's Task 23 created, now covering every file every phase in this plan touches. Do not attempt the mutation-phase gate until that final task.
+**Two-phase test gate remains in effect** — coverage-phase tests are consolidated at the end of each covered phase block. Later-phase mutation consolidation now lives in version 3 scope.
 
 **QA-subagent dispatch is scoped to tasks with real visual/behavioral output** — implementation and SCSS tasks chain `@qa-subagent`; pure-logic, types-only, and test-only tasks keep a single executor.
 
-**Blocking design-check-in gates** exist at the start of Phase 3 (min/max UX has no Figma mockup beyond a generic disabled-day token) and Phase 6 (presets configurability isn't resolved by any existing design or legacy-prop reference), and the quick-picker's drill-down interaction model (Phase 9) needs a UX confirmation before implementation, per the spike doc's own note that its interaction model is "inferred... not yet UX/UI-validated." Do not begin the corresponding implementation task until its gate is resolved.
+**Blocking design-check-in gate** remains at the start of Phase 3 (min/max UX).
 
 **Wrapper parity is per-phase, not fully consolidated** — unlike v1/Phase 2 (a brand-new component with no behavior yet to diverge on), by Phase 3 `bds-date-picker` is an established, already-shipping component; per the writing-plans convention, each phase from here on gets its own React/Vue parity task immediately after that phase's documentation task, so a framework-specific regression is caught against the one feature that just landed, not buried in a single end-of-sprint pass.
 
@@ -249,10 +248,11 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 **Status:** ✅ done (2026-08-24) — the direct-child-combinator fix alone was insufficient; the subagent found and corrected a more precise root cause I under-specified: the nested `bds-select` popover isn't merely "somewhere in the DOM subtree" — it's a literal descendant of the date-picker's _own_ `bds-popover` element (confirmed via `pop.contains(selectPop) === true`), so CSS custom-property _inheritance_ keeps carrying the value down regardless of which selector originally set it, independent of the `>` combinator fix. Final fix: kept `bds-date-picker > bds-popover { ... }` (still correct, prevents the rule from setting wrong values elsewhere) plus an explicit `initial` reset on all four `--popover-*-padding`/`-gap` custom properties for any `bds-popover` nested inside it, so a nested popover falls through to `bds-popover`'s own component defaults via `var(--x, <default>)`. `[slot='header-title']` investigated and confirmed safe (only the date-picker's own header assigns to that slot name anywhere in the codebase). Independently re-verified, not just trusted from the report: re-ran the affected test suite myself (28 suites, 336 tests, 0 failures — matches exactly); live `playwright-cli` check confirmed the hour select's dropdown now shows all 24 items ("00"-"23") at a readable 34px width (was ~10px, clipped), `--popover-content-padding` computed as empty/unset on the nested popover (correctly falling through to component default) instead of the leaked `12px 24px`; visually confirmed via screenshot. Separately, re-pulled Figma's raw `get_metadata` on node `14:24957` after the user raised doubt about the Figma reading's accuracy — confirmed the `"Start:"`/"Label" text child the user's structure screenshot showed is `hidden="true"` for this single-date instance (consistent with Task 2's already-confirmed no-visible-label decision), and every other structural measurement (icon/gap/field-size/padding) is internally consistent with what's already implemented. **Task 4 is now fully complete**, closing out the timer icon, visually-hidden label, full-width background band, and this nested-popover-padding-leak fix — four real bugs found and fixed via independent live-browser verification beyond what the automated test suite alone would have caught.
 
 **Status (2026-08-26) — follow-up items resolved:**
+
 - The user manually applied a fifth fix outside the SCSS the subagent produced: `bds-select`'s own nested dropdown list was overflowing horizontally (list items wider than the 58/62px hour/minute field), matched against a Figma before/after screenshot. Their first version zeroed padding via a raw `.popover-content { padding: 0; }` class selector nested inside `.bds-date-picker__time-selector` — I validated it against the actual DOM (`bds-select.tsx:791` renders its own light-DOM `<bds-popover>`, so the selector does correctly reach it, and its `(0,2,0)` specificity reliably wins) but flagged the coupling risk: it reaches into `bds-popover`'s internal implementation class name instead of its own documented `--popover-content-padding` custom property, the same public-API mechanism the file already uses two rules above it for the outer popover reset. Replaced with `bds-select bds-popover { --popover-content-padding: 0; }`, scoped to only the selects' own nested popovers — independently re-verified live via `playwright-cli` (hour dropdown renders at full field width, no scrollbar, no clipping).
 - Considered and rejected styling the list's native OS scrollbar to match Figma's polish more closely: no `scrollbar` CSS exists anywhere in `boreal-web-components` today, Figma's "Basic Time Picker" component defines no scrollbar state to match against, and a one-off override here would make this list inconsistent with every other scrollable surface in the design system (`bds-list-menu`, `bds-table`, etc.). Left out of scope; if ever wanted, it belongs as a token-driven treatment on `bds-list-menu.scss` itself, not a `bds-date-picker`-local hack — not logged as a plan task per user direction (explicitly out of scope for now, not deferred).
 - The `content-band` slot itself was reconsidered against three less-intrusive, `bds-popover`-code-untouched alternatives (reusing the existing `footer-helper` slot with `order: -1`; a `calc()`-based negative-margin workaround; zeroing `--popover-content-padding` and pushing padding into each child) — user confirmed keeping `content-band` as implemented; alternatives documented in conversation only (not written into the plan, since the decision didn't change).
-- **The subagent's recommended CSS-custom-property-inheritance regression test is *not* the same gap as the `content-band` slot's missing unit coverage** — the former needs real browser layout/computed-style (out of `newSpecPage`'s reach) and the latter (`hasContentBand` slot-detection logic, and the `componentWillLoad` mixin-shadowing guard) *is* directly unit-testable and was a genuine, previously untracked gap — folded into Task 5's scope below. The former is now tracked as its own task — see Task 8c.
+- **The subagent's recommended CSS-custom-property-inheritance regression test is _not_ the same gap as the `content-band` slot's missing unit coverage** — the former needs real browser layout/computed-style (out of `newSpecPage`'s reach) and the latter (`hasContentBand` slot-detection logic, and the `componentWillLoad` mixin-shadowing guard) _is_ directly unit-testable and was a genuine, previously untracked gap — folded into Task 5's scope below. The former is now tracked as its own task — see Task 8c.
 
 **Prior verification (icon/label/gap/JSDoc), independently confirmed, not just trusted from subagent reports:** `$boreal-spatial-gap-2xs` (4px) is a real token matching Figma exactly; `--bds-text-field-width` is a genuine documented `bds-text-field` custom property; `%visually-hidden` in `_commons.scss` uses the correct standard clip-to-1px technique (never `display:none`); `effectiveFormat`'s JSDoc removed, matching every sibling private getter's undocumented convention; `ICONS.Timer` added and rendered via `bds-icon()` mixin at `$boreal-icons-m` (confirmed 16px), verified live via `playwright-cli` at exactly 16×16px with `aria-hidden="true"`, no regression to accessible names or console warning count. Hover/focus/active states correctly deferred (shared `_form-field-shell.scss` component, out of scope — recommend a separate follow-up task). Error state confirmed already correct via existing generic `&--error` rule.
 
@@ -302,7 +302,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 **Post-review refinements (2026-08-26, applied directly, live-verified via `playwright-cli`):** (1) the "Time selection" MDX callout was rewritten to drop the Figma-gap framing — now states the 24-hour/no-AM-PM/no-seconds UI is a deliberate design decision, no caveat about missing spec coverage. (2) `TimezoneConversion` now presets both pickers to the same UTC instant (`2026-08-24T09:00:00.000Z`) and adds a live "Selected value (UTC)" output line per picker (mirroring `bds-list-menu.stories.ts`'s `ListboxEvents`/`ListboxMethods` output-paragraph pattern) wired to both `bdsChange`/`valueChange` — confirmed live: on load, Tokyo shows `18:00`/LA shows `02:00` for the identical preset value; after interacting and clicking Apply, Tokyo's output and the Storybook Actions panel both updated to the newly committed value (`2026-08-24T18:00:00.000+09:00`, confirmed correctly non-`Z`-normalized per `TZDate`'s documented offset-preserving behavior) while LA's stayed untouched, and both `bdsChange`/`valueChange` entries appeared in the Actions tab.
 
-**Real bug caught and fixed during the subagent's own live verification, independently re-confirmed by me (not just trusted from the report):** the shared `renderDatePicker` template forwards `meta.args.format: 'yyyy/MM/dd'` unconditionally, which was silencing the `WithTime`/`PreselectedDateTime` stories' whole reason for existing — an *explicit* format on every story meant `effectiveFormat` never auto-switched to show `HH:mm`, so the stories meant to demonstrate the auto-switch instead demonstrated its absence. Fixed by setting `format: ''` in those two stories' own `args` (falsy, so `renderDatePicker`'s `args.format || nothing` omits the attribute). I independently re-verified via `playwright-cli` against the live `pnpm dev:docs` server: `PreselectedDateTime`'s trigger reads `2026/08/24 08:30` (not the plain-date default), and opening its popover shows the calendar's day 24 highlighted with Hour="08"/Minute="30" pre-populated — screenshot-confirmed, not just DOM-queried. `TimezoneConversion` confirmed rendering two labeled pickers ("Tokyo"/"Los Angeles") side by side. Console-error counts checked against an untouched sibling story (`Default`) to confirm the 2-3 errors present everywhere (external icon-CSS CORS failure, missing favicon) are pre-existing sandbox noise, not new regressions from this task.
+**Real bug caught and fixed during the subagent's own live verification, independently re-confirmed by me (not just trusted from the report):** the shared `renderDatePicker` template forwards `meta.args.format: 'yyyy/MM/dd'` unconditionally, which was silencing the `WithTime`/`PreselectedDateTime` stories' whole reason for existing — an _explicit_ format on every story meant `effectiveFormat` never auto-switched to show `HH:mm`, so the stories meant to demonstrate the auto-switch instead demonstrated its absence. Fixed by setting `format: ''` in those two stories' own `args` (falsy, so `renderDatePicker`'s `args.format || nothing` omits the attribute). I independently re-verified via `playwright-cli` against the live `pnpm dev:docs` server: `PreselectedDateTime`'s trigger reads `2026/08/24 08:30` (not the plain-date default), and opening its popover shows the calendar's day 24 highlighted with Hour="08"/Minute="30" pre-populated — screenshot-confirmed, not just DOM-queried. `TimezoneConversion` confirmed rendering two labeled pickers ("Tokyo"/"Los Angeles") side by side. Console-error counts checked against an untouched sibling story (`Default`) to confirm the 2-3 errors present everywhere (external icon-CSS CORS failure, missing favicon) are pre-existing sandbox noise, not new regressions from this task.
 
 **Executor:** @documentation-subagent
 **Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
@@ -332,7 +332,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 
 ### Task 8 (was original Task 8): consolidated mutation testing for Phase 2
 
-> **Superseded — renumbered.** This task is now folded into the final consolidated mutation-testing task at the end of this file (covering every phase, not just Phase 2), to avoid running Stryker twice against overlapping configs in one sprint. Do not run mutation testing here; proceed directly to Phase 3.
+> **Superseded — renumbered, then re-scoped out of this file (2026-09-02).** This task was originally folded into a final consolidated mutation-testing task at the end of this file (covering every phase, not just Phase 2). That consolidation task no longer lives here: per this file's own scope-split note at the top, mutation-testing consolidation for phases beyond this point now lives in version 3 under EOA-17662. Do not run mutation testing here; proceed directly to Phase 3. No mutation-testing task exists anywhere else in this file — this is by design, not an oversight.
 
 ---
 
@@ -362,7 +362,7 @@ _(Tasks 1–8 unchanged from the original file — see full acceptance criteria 
 - Covers both fixes discovered in this plan: the direct-child-combinator + `initial` reset on `bds-date-picker > bds-popover`'s nested popovers (Task 4), and the `bds-select bds-popover { --popover-content-padding: 0; }` override (2026-08-26 follow-up).
 - Documents which test runner/harness is used, since none of Phase 2's other tasks establish one.
 
-**Next step:** re-scope into its own ticket/plan or fold into a future test-infrastructure task once a browser-level test harness convention exists for this repo — not implicitly reintroduced by any later phase in this file.
+**Next step:** ✅ re-scoped (2026-09-03, user-confirmed) into [`ai-work/plans/bds-popover-css-custom-property-inheritance-browser-test.md`](./bds-popover-css-custom-property-inheritance-browser-test.md), status `pending` — not yet dispatched. Not implicitly reintroduced by any later phase in this file.
 
 **Interim manual re-verification (2026-08-27, via `mcp__playwright__*` in-session, not a durable test — does not close this task):** re-ran the exact scenario live on `feature/EOA-17138_bds-date-picker-v2_DG` (`packages/boreal-web-components/src/index.html`'s `#dp1` `with-time` scenario). Opened the outer `bds-date-picker` popover, then the hour `bds-select`'s nested popover, and read `getComputedStyle` directly: outer `.popover-content` resolves `--popover-content-padding` to `12px 24px` (the date-picker's own override) while the nested `bds-select` popover's `.popover-content` resolves it to `0`/`0px` — no leak. Also confirmed no horizontal overflow (`scrollWidth === clientWidth === 62px`) on the nested list. Both fixes (Task 4's combinator/`initial` reset and the 2026-08-26 `bds-select bds-popover { --popover-content-padding: 0; }` override) hold. This is a one-off confidence check, not a checked-in test — repo still has no `@playwright/test` harness, so the bug class remains uncovered by CI. Status stays `pending`.
 
@@ -389,7 +389,7 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 **Confirmed design addendum (2026-08-28):**
 
 1. **Disabled-cell explanation:** no tooltip. `aria-disabled="true"` (not the native `disabled` attribute — avoids react-day-picker's documented focus-loss bug) plus the existing dimmed `text/disabled` styling, reusing v1's out-of-month treatment exactly as Task 11 already specifies. No new `DayCell` field, no new Figma spec needed. Ref: [DayPicker accessibility guide](https://daypicker.dev/guides/accessibility), [gpbl/react-day-picker#33](https://github.com/gpbl/react-day-picker/issues/33).
-2. **Whole-month-disabled navigation:** guard it — disable the prev/next `bds-button` at the boundary so a user can never land on a month with zero selectable days. This is what Task 10's "whole-month-disabled detection" exposes; Task 11 consumes it directly. Ref: [Vaadin Date Picker docs](https://vaadin.com/docs/latest/components/date-picker) (min/max implicitly limit overlay navigation). Explicitly rejected the alternative — MUI X's `shouldDisableDate` does *not* guard navigation, landing users on fully-disabled months, which MUI's own issue tracker records as a UX complaint ([mui/mui-x#4917](https://github.com/mui/mui-x/issues/4917)).
+2. **Whole-month-disabled navigation:** guard it — disable the prev/next `bds-button` at the boundary so a user can never land on a month with zero selectable days. This is what Task 10's "whole-month-disabled detection" exposes; Task 11 consumes it directly. Ref: [Vaadin Date Picker docs](https://vaadin.com/docs/latest/components/date-picker) (min/max implicitly limit overlay navigation). Explicitly rejected the alternative — MUI X's `shouldDisableDate` does _not_ guard navigation, landing users on fully-disabled months, which MUI's own issue tracker records as a UX complaint ([mui/mui-x#4917](https://github.com/mui/mui-x/issues/4917)).
 3. **Violation feedback:** reuse the existing `@Prop() errorMessage` on `bds-date-picker` — a bound `value` outside `min`/`max` sets the field's invalid state and surfaces via `errorMessage`, pushed through the same `updateElementProp` mechanism already used for `value`/`selectable`/`disabled`. No new prop. Ref: [Vaadin Date Picker docs](https://vaadin.com/docs/latest/components/date-picker) ("Date is not allowed" pattern for programmatic/data-bound out-of-range values).
 
 ---
@@ -442,14 +442,16 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 
 ### Task 12: Phase 3 SCSS + JSDoc audit
 
+**Status:** ✅ done (2026-08-28) — Figma-verified pure reuse for the disabled day cell and disabled nav button (no SCSS drift found, zero SCSS changes needed); helper-text row correctly skipped per Task 9's decision; `min`/`max` JSDoc trimmed to the brevity/content rule (mechanism details — nav-guard, validator name, `error`/`errorMessage` surfacing — removed, consumer-facing "inclusive"/"unbounded"/"independent of the other bound" facts kept), calibrated against sibling `timezone`'s JSDoc. Verified independently: eslint clean, 16 suites / 241 passed / 1 pre-existing todo / 0 failed, `git diff --stat` confirms zero SCSS file changes.
+
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:** `bds-date-picker.scss` (modify), `bds-calendar-grid.scss` (modify), `bds-date-picker.tsx` / `bds-calendar-grid.tsx` (JSDoc)
 
 **Figma research pass (complete before writing any SCSS):**
 
-- [ ] Region: disabled day cell — confirm `text/disabled` treatment matches the out-of-month styling exactly (already pulled in v1's spike, re-verify no drift)
-- [ ] Region: helper text (if Task 9 confirmed it) — default and error/warning variants on the trigger field
-- [ ] Modifier: disabled nav button (if Task 9 confirmed guarding nav rather than skipping)
+- [x] Region: disabled day cell — confirm `text/disabled` treatment matches the out-of-month styling exactly (already pulled in v1's spike, re-verify no drift). **Result:** confirmed via v1's spike doc (direct node-ID match); `--disabled`/`--outside` both resolve to `$boreal-text-disabled`, no drift, no SCSS change.
+- [x] Region: helper text (if Task 9 confirmed it) — default and error/warning variants on the trigger field. **Result:** N/A — Task 9 chose reusing `errorMessage`/invalid-state, not helper text; correctly skipped.
+- [x] Modifier: disabled nav button (if Task 9 confirmed guarding nav rather than skipping). **Result:** confirmed via live Figma pull (fileKey `rtiE5zGA4aoOuxIQMgfD6h`, node `_Button/previous`) plus `search_design_system`'s `Button/Plain/Icon/Disabled` token family; `bds-button.scss`'s existing `.bds-button--is-disabled` treatment (already triggered by Task 11's `disabled={this.prevDisabled}`/`nextDisabled` wiring) matches, no bespoke treatment found, no SCSS change.
 
 **Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for `min`/`max` complete and conforms to the JSDoc brevity/content rule below (this includes revisiting Task 11's own `min`/`max` JSDoc, which was written before this rule was made explicit and currently over-describes internal wiring — trim it to match).
 
@@ -461,12 +463,35 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 
 ---
 
+### Task 12a: `bds-calendar-grid.scss` unscoped selector fix (flagged during Task 12, deferred)
+
+**Status:** ✅ done (2026-09-03) — the PR this task was blocked on landed on `release/current` (squashed as `70f7d7de`) and was merged into this feature branch (merge commit `a7a6a3e1`). The merge conflicted directly in `bds-calendar-grid.scss`, because this branch's own Phase 4 range work (mixins, day-background/day-cap absolute-positioning system, `::after`-based today indicator from Task 19p, hover/focus states) had grown substantially on top of the pre-fix file structure. Resolved by hand: kept 100% of this branch's Phase 4 day-state content, and applied `release/current`'s structural fix on top of it — `table`, `thead th`, and the `.#{$prefix} { ... }` block are now nested inside the root `bds-calendar-grid { ... }` block, with no top-level sibling selectors remaining (verified via direct read of the resolved file, not just the diff). `bds-table.scss`'s equivalent fix merged in cleanly with no conflict, from the same upstream commit. Verified: `stencil build` clean (SCSS compiles with no errors); full `boreal-web-components` suite re-run post-merge — 299/299 suites, 3327 passed + 1 pre-existing todo, 0 failed, including `bds-table`'s own spec suite (no leaked-selector regression). Manual test's Scenario 2 (live dual-render browser check of `bds-calendar-grid` + `bds-table` on the same page) was not separately re-run in the browser — structural nesting plus the passing automated suite (including `bds-table`'s specs) was treated as sufficient confirmation for a merge-driven closure; flagged here rather than silently assumed.
+
+**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
+**Files:** `bds-calendar-grid.scss` (modify)
+
+**Context:** flagged as an out-of-scope finding during Task 12's Figma research pass, not fixed there per plan-execution scope discipline. `bds-calendar-grid.scss` has several selectors (`table`, `thead th`, and the `.bds-calendar-grid__*` class block) declared at the top level of the file instead of nested inside a `bds-calendar-grid { ... }` root block — this is unscoped, global CSS in a light-DOM component per `.agents/memory/stencil-light-dom-unscoped-selector-leak.md`'s documented `bds-table`/`bds-calendar-grid` precedent, and can leak onto any other component's `<table>`/`<th>` elements (e.g. `bds-table` itself).
+
+**Acceptance criteria:**
+
+- Every selector in `bds-calendar-grid.scss` is nested inside the root `bds-calendar-grid` tag block — no top-level siblings.
+- No visual regression to `bds-calendar-grid`'s own rendering.
+- No leaked styling onto `bds-table` or any other component rendering a native `<table>`/`<th>` — verify by rendering both components on the same manual-test page.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1: render `bds-calendar-grid` (via `bds-date-picker`), confirm no visual change from before the fix. Scenario 2: render `bds-table` on the same page, confirm its `<table>`/`<th>` styling is unaffected by `bds-calendar-grid`'s SCSS.
+
+**Commit:** `git commit -m "fix(bds-calendar-grid): EOA-17138 scope selectors inside root tag block"`
+
+---
+
 ### Task 13: Phase 3 unit tests (consolidated)
+
+**Status:** ✅ done (2026-08-28) — reconciled Task 11's ad hoc tests into the plan's named files (`bds-date-picker.minmax.spec.ts` created, `bds-calendar-grid.variants.spec.ts`/`date-math.spec.ts` reviewed), no duplication. 6 real gaps found via independent audit (grid-level disabled-click inertness, committed out-of-range value, malformed min/max treated as unbounded, no visual flag before a validation attempt, `watchRange`'s re-sync branch both directions) beyond the plan's own list. Verified independently: 17 suites / 248 passed / 1 pre-existing todo / 0 failed; coverage 98.18% stmts / 90.44% branch / 100% funcs / 98.13% lines (≥90% gate met, remaining gaps confirmed pre-existing/out-of-scope); eslint clean; no ticket-ID references in test names. Mutation testing correctly deferred to the plan's later consolidated task.
 
 **Executor:** @testing-subagent
 **Files:** `bds-date-picker.minmax.spec.ts` (create), `bds-calendar-grid.variants.spec.ts` (modify), `date-math.spec.ts` (modify)
 
-**Unit tests to cover:** date-math bound-checking correctness at boundary edges (inclusive `min`/`max`); disabled-cell rendering and inertness (no click, `tabindex="-1"`); whole-month-disabled nav-guard behavior; helper-text rendering per Task 9's confirmed design; out-of-range initial `value` handling. Coverage-phase only (≥90%).
+**Unit tests to cover:** date-math bound-checking correctness at boundary edges (inclusive `min`/`max`); disabled-cell rendering and inertness (no click, `tabindex="-1"`); whole-month-disabled nav-guard behavior; `rangeUnderflow`/`rangeOverflow` validators surfacing `errorMessage`/invalid state per Task 9's confirmed design; out-of-range initial `value` handling. Coverage-phase only (≥90%).
 
 **Manual test (required):** Non-visual — suites passing at ≥90% coverage.
 
@@ -475,6 +500,8 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 ---
 
 ### Task 14: Phase 3 documentation
+
+**Status:** ✅ done (2026-08-28) — `min`/`max` `argTypes` added, `BoundedRange` story (matching `#dp-minmax`'s values from `src/index.html`), new "Min/max constraints" MDX section between Time selection and States, `ArgTypes include` array updated (would otherwise have silently dropped the new props from the Properties table). Verified independently: `git status` confirms only the two expected files touched, eslint clean, `tsc --noEmit` clean for `bds-date-picker`. Manual `pnpm dev:docs` check run by the executor itself, within its own scope per the task's Manual Test line.
 
 **Executor:** @documentation-subagent
 **Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
@@ -489,31 +516,231 @@ Per the spike doc's Roadmap risks item 4: design coverage is thin (only a generi
 
 ### Task 15: React/Vue wrapper parity check — Phase 3
 
+**Status:** ⚠️ done-with-regression (2026-08-28) — Scenarios 1 (bounded-range cell inertness) and 2 (whole-month nav guard) confirmed identical across web components/React/Vue. Scenario 3 (stale out-of-range `value` on load blocks submit + surfaces `errorMessage`) confirmed identical between web components and Vue, but **fails in React**: `checkValidity()` returns `true` on load (should be `false`), the slotted field's `error`/`errorMessage` never populate, and native submission is not blocked. Root cause traced to `formAssociatedCallback()` being the only path computing the _initial_ validity snapshot — Stencil's `@Watch('min')`/`@Watch('max')`/`@Watch('value')` do correctly recompute validity on later changes (confirmed live by reassigning `dp.min` post-mount) but never fire for a prop's first/initial assignment, so if React's custom-element property-setting order lets `formAssociatedCallback` run before `min`/`value` settle, nothing re-corrects it. Not React-generic — a same-tick timing race that happened not to reproduce under Vue's prop-ordering this time. Logged as new Task 15a below per "regressions logged as new tasks, not patched inline." Dev servers (web components :3333, React :5173, Vue :5174) left running per more-QA-tasks-follow instruction.
+
 **Executor:** @qa-subagent
 **Files:** none
 
-**Acceptance criteria:** Confirms `min`/`max` behavior identically through both wrappers via the pack-based pipeline.
+**Acceptance criteria:** Confirms `min`/`max` behavior identically through both wrappers via the pack-based pipeline. **Not fully met** — see Status.
 
-**Manual test (required):** Repeat Task 11's scenarios through both wrapper playgrounds.
+**Manual test (required):** Repeat Task 11's scenarios through both wrapper playgrounds. ✅ run — see Status for per-scenario results.
 
 **Commit:** N/A
 
 ---
 
-## Phase 4 — Dual calendar (date range)
+### Task 15a (new — discovered during Task 15, 2026-08-28): fix `bds-date-picker` initial min/max FACE-validity race in React
 
-Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `range: boolean` prop — not a second custom element. Day states unique to range mode (day-in-range, day-range-start, day-range-end) render as additional CSS classes on the existing `<td role="gridcell">`, not a markup change.
+**Status:** ✅ done (2026-08-28) — fix: `componentDidLoad()` now calls `this.updateValidity()` as its final step, giving a second, Stencil-guaranteed-later validity recomputation point that runs after all initial prop assignment has settled, regardless of the host framework's property-assignment order — `formAssociatedCallback` is no longer the sole path computing the initial snapshot. Deliberately did not touch the existing `watchRange`/`watchRequired`/`watchValue` UI-sync gating (`isInvalid`/`errorMessage` still only surface after a real validation attempt, e.g. submit/`reportValidity`/a direct `checkValidity()` call — all of which are spec-conformant validation attempts that fire the native `invalid` event, caught by the existing `@Listen('invalid')` handler); an existing test already asserted this "no premature error UI on mount" behavior is intentional (Task 11/13 design), so it was preserved as-is. Regression test added to `bds-date-picker.minmax.spec.ts`, honestly scoped as a best-effort proxy — `newSpecPage` settles all props synchronously before the instance is accessible, so it cannot literally reproduce the framework-ordering race; the test instead forces `min = undefined` to stand in for "not yet assigned," confirms `formAssociatedCallback` alone computes (incorrectly) valid, then confirms `componentDidLoad`'s recompute corrects it. A true reproduction of the real browser-timing race remains a Task-8c-style browser-level test gap, not fabricated as covered. Verified: 13 suites / 178 passed + 1 pre-existing todo, `tsc --noEmit` clean for `bds-date-picker` (4 pre-existing unrelated errors elsewhere, confirmed present pre-fix via `git stash`), eslint clean. `.agents/memory/keyboard-triggered-focus-move-double-activation.md` read but found not directly applicable (that fix defers via `requestAnimationFrame` to avoid re-entrant handling; this fix instead uses an already-existing later lifecycle hook that Stencil guarantees runs post-settle — same class of fix, different mechanism). Commit `fffd6e62` — scope adjusted from `bds-date-picker` to `web-components` to satisfy the repo's `commitlint` `scope-enum`, matching every other EOA-17138 commit's convention on this branch.
 
-### Task 16: types — range value contract and day-state fields
+**Re-verified (2026-08-28) via `@qa-subagent`:** Scenario 3 (stale out-of-range `value` under `min`, load + submit-blocking + `errorMessage` surfacing) now passes identically across web components, React, and Vue — confirmed via the actual compiled dev-server chunk containing the new `updateValidity()` call. `checkValidity()` confirmed `false` immediately on mount (before any submit attempt) in all three surfaces — the exact prior-failing case, now fixed; React specifically previously returned `true` here. Scenarios 1/2 spot-checked in React only: no regression. One incidental non-bug finding logged only to qa-subagent's own memory (calling `checkValidity()` directly is itself a spec-conformant validation attempt that triggers the native `invalid` event and thus the error UI — not project-specific enough to promote to `.agents/memory/`). Dev servers left running (web components :3333, React :5173, Vue :5174) for the next Phase 4 QA task.
 
-**Executor:** @frontend-subagent
-**Files:** `types/types.ts` (modify), `bds-calendar-grid/types/ICalendarGrid.ts` (modify)
+**Phase 3 is now fully closed.**
+
+**Discovered by:** `qa-subagent`'s Task 15 parity check — see Task 15's Status note for full root-cause trace. Detailed memory written to `.claude/agent-memory/qa-subagent/bds-date-picker-react-formassociatedcallback-initial-validity-race.md`; flagged as a candidate for promotion to `.agents/memory/` via `knowledge-keeper` since the underlying pattern (Stencil `@Watch` not firing on a prop's initial value + FACE `formAssociatedCallback` timing racing a framework wrapper's own prop-assignment order) is cross-cutting to any Boreal FACE component's React parity, not `bds-date-picker`-specific.
+
+**Executor:** @frontend-subagent (implementation + regression test), @qa-subagent (re-verification across web components/React/Vue)
+**Files:** `bds-date-picker.tsx` (modify — initial validity computation), a regression test in the Phase 3 test suite (`bds-date-picker.minmax.spec.ts` or equivalent)
 
 **Acceptance criteria:**
 
-- Public `value` type becomes `string | { start: string; end: string }`; `range=false` (default) keeps the existing `string` shape untouched — verified as a non-breaking union widening, not a rename.
-- `DatePickerDraftState` gains `rangeStart: string | null` / `rangeEnd: string | null`.
-- `DayCell` gains `isInRange: boolean`, `isRangeStart: boolean`, `isRangeEnd: boolean` — all default `false`, purely additive to the existing type.
+- On initial mount with `min`/`max`/`value` already set to an out-of-range combination, `checkValidity()` returns `false` and `errorMessage` is populated identically regardless of consumption surface (raw web component, React wrapper, Vue wrapper) and regardless of the order in which the framework's custom-element bridge assigns properties.
+- Fix does not rely solely on `formAssociatedCallback` for the initial snapshot — per the suggested direction, recompute validity in `componentDidLoad` (deferred past the synchronous mount race) so a late-settling prop still triggers the correction, consistent with the `keyboard-triggered-focus-move-double-activation.md` team-memory pattern for this class of same-tick race.
+- No regression to Task 11/13's existing min/max validity behavior in the raw web-components surface (`@Watch`-driven re-validation on later prop changes must still work).
+- New regression test reproduces the exact React-order race (or as close as `newSpecPage`/the existing test harness can get) so this doesn't silently reappear.
+
+**Manual test (required):** Re-run Task 15's Scenario 3 through `dev:pack:react` and `dev:pack:vue`, confirming both now block submission and surface `errorMessage` identically on initial load with a stale out-of-range `value`.
+
+**Commit:** ✅ `fffd6e62` — `fix(web-components): EOA-17138 correct initial min/max FACE-validity race in framework wrappers` (scope adjusted from `bds-date-picker` to `web-components` to satisfy `commitlint`'s `scope-enum`, matching every other EOA-17138 commit's convention on this branch — not the literal message text originally drafted above).
+
+---
+
+## Phase 3.5 — `calendarType` foundation
+
+Added 2026-08-28 per the "Requirements revision" note above. `calendarType: 'default' | 'basic' | 'expanded'` is a prerequisite for Phase 4/5's corrected scoping — those phases gate second-calendar rendering and independent dual time selectors on `calendarType === 'expanded'`, not on `range` alone, so this prop must exist before Task 16 starts.
+
+### Task 15b: `calendarType` prop — types and contract
+
+**Status:** ✅ done (2026-08-28) — `calendarType: 'default' | 'basic' | 'expanded' = 'basic'` added to `IDatePicker.ts` (optional, correctly grouped after every required member) and `bds-date-picker.tsx` (declaration only, no render logic). JSDoc initially landed too long (4 lines / ~3 dense clauses) versus the Task 12 brevity rule — caught on review and trimmed to 3 short sentences, cutting the dismissal-mechanics detail (deferred to Task 15f's MDX docs instead). `banner` forward-compat confirmed (flat string-literal union, doesn't box in a future `banner` prop). No `endDate` added, per the confirmed Figma-artifact finding.
+
+**Follow-up correction (2026-08-28):** the inline `'default' | 'basic' | 'expanded'` union didn't match this codebase's established convention for string-literal-union props — confirmed across 14+ components (`bds-dialog`, `bds-popover`, `bds-text-field`, etc.) that every such prop lives in a `types/enum.ts` as a `const`-object + derived type, not inline on the `@Prop()` line. Moved to `CALENDAR_TYPE`/`CalendarType` in `bds-date-picker`'s existing `types/enum.ts` (already held `FOOTER_ACTION`/`FooterAction`), with per-value JSDoc matching `bds-popover`'s `POPOVER_ROLE` precedent. `IDatePicker.ts` now references `CalendarType` instead of the inline union. Also added the runtime-validation call this pattern is paired with everywhere else (`validatePropValue(Object.values(CALENDAR_TYPE), <default>, this.el, 'calendarType')` in `componentWillLoad`, matching `bds-dialog`'s `size`/`variant`/`layout` precedent exactly) — a real gap the original inline-union version had no natural way to close. Verified independently: `pnpm build` clean, eslint clean, 13 suites / 178 passed / 1 pre-existing todo / 0 failed, zero regressions.
+
+**Second follow-up correction (2026-08-28) — default flipped from `'basic'` to `'default'`:** reconsidered given the project is pre-GA with no real consumers yet — the "non-breaking, matches what's already shipped" rationale below no longer applies externally, and Figma's own "Default" naming should drive the code default while it's still cheap to change. `@Prop() readonly calendarType: CalendarType = 'default';` and the `validatePropValue` fallback now both use `CALENDAR_TYPE.DEFAULT`. This has a real _internal_ cost, unrelated to external consumers: every story and most existing tests were written assuming implicit `basic`-mode chrome and don't pass `calendarType` explicitly — Task 15e and Task 15f below now carry an explicit retrofit scope (`calendar-type="basic"` injected via the shared `renderDatePicker()` test helper and `meta.args` respectively) to keep them passing/rendering unchanged once Task 15c wires the conditional chrome logic.
+
+**Executor:** @frontend-subagent
+**Files:** `types/IDatePicker.ts` (modify), `bds-date-picker.tsx` (modify — prop declaration only, no render logic yet)
+
+**Acceptance criteria:**
+
+- `@Prop() readonly calendarType: 'default' | 'basic' | 'expanded' = 'basic'` — `'basic'` as the default is mandatory, not a style choice: it matches what's already shipped, so existing consumers see zero behavior change.
+- JSDoc (per the Task 12 brevity/content rule) documents that `'default'` disables `withTime`, `range`, and the footer/header (including the close button) entirely — combining them is a documented no-op, not silently accepted. Dismissal in `'default'` is click-outside or day-selection only.
+- Confirm in the same pass that `banner` (Task 35's prop, not yet implemented but already scoped) is not gated by `calendarType` in its type signature — it must remain settable regardless of which `calendarType` is active, per the Figma confirmation that `banner` is an independent boolean on all three variants.
+- No `endDate` prop is added — explicitly out of scope, confirmed a Figma-authoring artifact, not a consumer-facing control (see the "Requirements revision" note above for the full trace).
+
+**Manual test (required):** Non-visual — `tsc --noEmit` passes; confirm the new prop has zero effect on rendering yet (implementation lands in Task 15c).
+
+**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add calendarType prop"`
+
+---
+
+### Task 15c: `bds-date-picker` `default`-mode interaction (immediate-commit, no chrome)
+
+**Status:** ✅ done (2026-08-28) — implementation, retrofit, bug fix, and full manual QA all confirmed, across two independent `@qa-subagent` runs. Timeline: implementation landed (conditional chrome, immediate-commit-and-close, `withTime`/`range` no-ops, test/story retrofit); marked done prematurely without dispatching `@qa-subagent` (caught on user challenge, reopened); `@qa-subagent`'s real `pnpm dev:components` run found a genuine bug in Scenario 3 (`calendarType="default"` + `with-time` left the trigger field blank and fired a spurious "not a valid UTC ISO datetime" warning, since `effectiveFormat`/`syncFieldValue`/`warnIfInvalidValue`/`valueDate` all still branched on raw `withTime` instead of an effective value forced `false` under `default`); fixed via a new `effectiveWithTime` getter across all affected call sites (also fixed a related silent `min`/`max` validation gap the same root cause caused); a `logger.warn` was added (matching this component's existing pattern for other harmless-but-nonsensical prop combinations) for `with-time` set alongside `calendarType="default"` — the equivalent `range` warning is deferred to Task 18, tracked there explicitly since `range` doesn't exist yet; **two separate `@qa-subagent` re-verification passes** both confirm all scenarios pass, including the fixed one, with concrete evidence (real `<input>` element values, exact console warning text, `checkValidity()`/`error`/`errorMessage` parity against the equivalent `basic`-mode min/max scenario). One more gap found and fixed directly (not by a subagent): the retrofit's own scope (spec-file helpers, `stories.ts` `meta.args`) missed `index.html`'s 11 pre-existing playground scenarios (8 from Task 3, 3 from Task 11) that never set `calendar-type` explicitly — they'd silently become `default`-mode too, contradicting their own on-page QA instructions (e.g. `dp-preload`'s field going blank despite holding a valid preloaded value). Fixed by adding `calendar-type="basic"` to all 11. Dev server left running on `:3333` for Task 15d/15g's own manual tests, which reuse these same scenarios. **Implementation summary (confirmed solid, not in question):** conditional `showChrome` gating on `bds-popover`'s `header`/`closable`/`footer`, immediate-commit-and-close branch in `handleDayClick`, `withTime`/`range` no-ops, retrofit applied to `renderDatePicker()`/`time.spec.ts`'s local helper/`stories.ts` `meta.args` (plus the 5 custom-render stories that bypass the shared render function). Real bug found and fixed beyond the plan's stated scope: `bds-date-picker`'s header-icon/title and `renderFooter()` were still unconditionally declared as light-DOM JSX children even after gating `bds-popover`'s own props, so they kept painting (unstyled, mispositioned) in `default` mode — Stencil's non-shadow slot-relocation polyfill doesn't retroactively orphan-hide parent JSX for a slot the child stopped rendering. Fixed via a `Fragment` gated on the same `showChrome` condition. Promoted to `.agents/memory/stencil-conditional-slot-target-orphans-parent-content.md`. Verified independently: diff reviewed line-by-line, 17 suites / 249 passed / 1 pre-existing todo / 0 failed, eslint clean on both packages, `pnpm build` clean.
+
+**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
+**Files:** `bds-date-picker.tsx` (modify), `date-picker.test-utils.ts` (modify — minimal retrofit, see below), `bds-date-picker.time.spec.ts` (modify — minimal retrofit), `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts` (modify — one-line `meta.args` retrofit)
+
+**Sequencing note (2026-08-28):** `calendarType` defaults to `'default'` (Task 15b), but is currently inert — nothing in `render()` reads it yet. The moment this task wires the conditional chrome logic below, every existing test/story that doesn't pass `calendarType` explicitly starts rendering `default` mode instead of the `basic` chrome it was written for, and breaks in the same commit. This task's own scope therefore includes the _minimal_ retrofit needed to keep the pre-existing suite and Storybook green — not new test/story writing (that stays properly separated into Task 15e/15f per this plan's implementation-vs-tests convention), just keeping what already passes passing. Do not mark this task done with a red existing suite.
+
+**Integration research pass (complete before writing acceptance criteria):**
+
+- [ ] Call sites: `render()`'s `<bds-popover footer={true} header={true} closable={true} ...>` call is unconditional today — confirm every other prop passed to `bds-popover` (`closable`, `width`, `floatingOptions`) still makes sense with `header`/`footer` both conditionally `false`. Note `closable` (the header's own ✕ button) lives _inside_ the header region Figma hides entirely for `default` — confirm `bds-popover`'s `closable` prop has no effect with `header=false`, or explicitly set it `false` too so there's no dead prop.
+- [ ] Boundary case: a consumer sets `calendarType="default"` together with `withTime`/`range`/`required` — each must degrade predictably (documented no-op for `withTime`/`range`; `required`/`min`/`max` validation is unaffected, see resolved note below).
+- [ ] Default/empty state: the existing `handleDayClick`-equivalent path (currently sets `draft.selectedDate`, waits for footer Apply) needs a second, `default`-mode-only branch that calls `commitValue()` and closes the popover in the same handler — define exactly where this branches from the existing single-date click handler, not as a parallel duplicate implementation.
+- [ ] Reactivity: `calendarType` is a set-once config value (like `withTime`), not expected to be toggled live post-mount — state this explicitly in JSDoc, matching `withTime`'s own existing "unsupported and undocumented" precedent.
+
+**Acceptance criteria:**
+
+- `bds-popover`'s `footer`/`header` props become conditional on `calendarType !== 'default'` (both hardcoded `true` today).
+- **`default` mode has no explicit close affordance at all** — confirmed via Figma metadata: the close (✕) instance lives inside the header frame, and both header frames (`Header Basic Time picker`, `Header Expanded Time picker`) are hidden for `Calendar Type=Default` (node `14:23291`). Dismissal is only via clicking outside the popover (existing backdrop-dismiss behavior) or selecting a day (which commits and closes per the next bullet) — there is no Clean button (no chrome exists to hold one) and no Cancel/✕ button either.
+- A day click when `calendarType === 'default'` bypasses `draft` entirely: commits `value` directly and closes the popover in the same handler — matches the confirmed UX behavior ("se cierra al seleccionar la fecha").
+- `withTime`/`range` are force-ignored (not thrown) when `calendarType === 'default'` — the time selector, dual-calendar, and presets-sidebar paths never render regardless of those props' values. **Not a silent no-op**: matching this component's own established pattern for other nonsensical-but-harmless prop combinations (see the existing `componentWillLoad`/`componentDidLoad` warnings for a duplicate slotted-field `name` and redundant `required`), `componentWillLoad` logs `this.logger.warn('bds-date-picker', ...)` once when `calendarType === 'default'` and `withTime` is set, naming the ignored prop. The equivalent `range` warning is deferred until `range` actually exists as a prop (Task 18, Phase 4, not yet implemented) — tracked as a follow-up line in Task 18's own acceptance criteria, not forgotten.
+- **All internal value-parsing/formatting that branches on `withTime` must use an `effectiveWithTime` getter (`false` under `calendarType==='default'`, else `this.withTime`), not raw `this.withTime` directly** — found via `@qa-subagent`'s live QA (not caught by unit tests or self-review): `effectiveFormat`, `syncFieldValue`, `warnIfInvalidValue`, the `valueDate` getter (which also feeds the `min`/`max` `rangeUnderflow`/`rangeOverflow` validators — confirmed this same bug silently made `min`/`max` validation inert under `default`+`with-time`), `initialDisplayMonth`, `draft` initialization, `formResetCallback`, and `listenClickTrigger` all needed this fix. This is exactly the "silently half-applied" failure mode this task's acceptance criteria already warned against — the render-path no-op alone was insufficient.
+- **Resolved (previously flagged as an open assumption, now traced through and confirmed not to need special handling):** `min`/`max` (Phase 3) and `required` form validation are completely unaffected by `calendarType`. The error/`required` UI is already field-anchored, not footer-anchored — `syncFieldError()` pushes `error`/`errorMessage` onto the slotted `<bds-text-field>` directly — and it is triggered by an actual native validation attempt (a blocked form submission, or an explicit `checkValidity()`/`reportValidity()` call via `@Listen('invalid')`), never by the Apply button itself. `default` mode's lack of a footer changes nothing about when or how this fires.
+- `banner` rendering itself is Task 35's scope (Phase 7, not yet implemented at this point in the plan) — this task's only obligation is to not structurally block it later: the popover body markup must leave room for a banner region above the calendar in every `calendarType`, not hardcode `default` mode's body to contain only the bare calendar with no slot for Task 35 to render into.
+- **Minimal retrofit (load-bearing, not optional):** `renderDatePicker()` in `date-picker.test-utils.ts` — the shared helper nearly every `bds-date-picker` spec file mounts through — injects `calendar-type="basic"` into whatever HTML string it's given, unless the string already specifies `calendar-type`. `bds-date-picker.time.spec.ts`'s own local `newSpecPage`-calling helper (it doesn't go through the shared `renderDatePicker()`) gets the same treatment independently. `bds-date-picker.stories.ts`'s `meta.args` gets `calendarType: 'basic'` added once (every story's `args` merges with `meta.args` by Storybook's own convention, restoring every existing story's chrome without touching each one). Spot-check any direct `newSpecPage(...)` call this task's implementer finds that bypasses both helpers (known present in `bds-date-picker.basics.spec.ts`, `bds-date-picker.events.spec.ts`, `bds-date-picker.variants.spec.ts`) and patch it individually only if that specific test's assertions depend on footer/header/time-selector chrome existing.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1: `calendarType="default"`, click a day, confirm the popover closes immediately and `value` updates with no Apply click. Scenario 2: confirm no footer/header/close-button renders in this mode, and confirm clicking outside the popover dismisses it without altering `value`. Scenario 3: set `calendarType="default"` together with `with-time`/`range`, confirm both are silently ignored (single bare calendar, no time selector, no dual calendar) rather than erroring. Scenario 4: with `required` set and `value` empty, trigger a real validation attempt (e.g. a wrapping form's submit), confirm the slotted field shows the invalid state exactly as it does in `basic` mode. **Scenario 5 (retrofit verification, required before marking done):** run the full pre-existing `bds-date-picker`/`bds-calendar-grid` unit test suite and confirm the same pass count as before this task started; run `pnpm dev:docs` and confirm every pre-existing story still renders with its original chrome unchanged.
+
+**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add default calendarType immediate-commit interaction"`
+
+---
+
+### Task 15d: Phase 3.5 SCSS + JSDoc audit
+
+**Status:** ✅ done (2026-08-28) — both Figma research rows confirmed pure reuse (zero SCSS drift: `default` mode renders through the exact same `renderCalendarPanel`/`bds-calendar-grid` code path as `basic`/`expanded`, no `calendarType` branching in the calendar itself; popover corner-radius/shadow is whole-container, not per-region, so nothing breaks with header/footer absent); `calendarType` JSDoc already compliant with the Task 12 brevity rule, no trim needed. Zero files changed. `@qa-subagent` visually confirmed via computed-style comparison against a `basic`-mode reference (`#dp-minmax`): identical `filter`/`border-radius`/`background-color`/padding, identical day-cell styling (guaranteed by shared component, confirmed anyway), and confirmed `.popover-header`/`.popover-footer`/`.popover-header__close` are `null` in the DOM (not just hidden) with no corner-radius/padding artifacts. Verified independently: eslint clean, `git status` confirms zero diff (Tasks 15b/15c already committed by the user as `6d71df6d`/`ec66220d`).
+
+**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
+**Files:** `bds-date-picker.scss` (modify)
+
+**Figma research pass (complete before writing any SCSS):**
+
+- [ ] Region: `default`-mode bare calendar container — confirm it reuses the exact same `_DatePickerCalendar` sub-component/tokens already implemented for `basic`/`expanded` (Figma's `get_design_context` on node `14:23291` shows the identical `_DatePickerCalendarMonth` structure, day-cell tokens, and container drop-shadow spec already implemented — this is very likely a pure-reuse task like Task 12, not new styling).
+- [ ] Confirm the popover's outer container corner-radius/shadow still applies correctly with `header`/`footer` both absent (single-region container, no header/footer to round independently).
+
+**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for `calendarType` conforms to the JSDoc brevity/content rule from Task 12.
+
+**Manual test (required):** Reuse Task 15c's scenarios visually.
+
+**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style default calendarType and finalize Phase 3.5 JSDoc"`
+
+---
+
+### Task 15e: Phase 3.5 unit tests (consolidated)
+
+**Status:** ✅ done (2026-08-28) — `bds-date-picker.calendartype.spec.ts` created (`@testing-subagent`, 8-row failure-mode catalog extension `FM-23`–`FM-30`, all confirmed). Independent review found one genuine bug in the new spec file itself before marking done: the "defaults calendarType to 'default' when the attribute is unset" test explicitly set `calendar-type="default"` in its own markup, so it never actually exercised the unset/default path — it was tautological, passing regardless of what the component's real default was. Root cause: `renderDatePicker()`'s `withDefaultCalendarType` retrofit (Task 15c) auto-injects `calendar-type="basic"` into any markup that omits the attribute, so a correct version of this test has to bypass that helper entirely. Fixed directly (the subagent that owned the file hit its session usage limit before it could apply the fix) by calling `newSpecPage` directly with markup that omits `calendar-type`, bypassing the retrofit. Re-verified: full `boreal-web-components` suite (297 suites / 3269 passed / 1 pre-existing todo / 0 failed) including the fixed file; eslint clean; `tsc --noEmit` shows only pre-existing, unrelated errors (`bds-dialog`/`bds-tooltip` spec files). **Follow-up (2026-08-31):** the fix's own explanatory comment block violated this project's no-inline-comments rule — removed; re-ran the `bds-date-picker` suite with coverage to reconfirm (97.64% statements / 91.5% branches / 100% functions / 97.6% lines, 297 suites passed).
+
+**Executor:** @testing-subagent
+**Files:** `bds-date-picker.calendartype.spec.ts` (create)
+
+**Context:** the existing-suite `calendarType` retrofit (defaulting mounts to `calendar-type="basic"` via the shared `renderDatePicker()`/`time.spec.ts` helpers) is Task 15c's own load-bearing scope, not this task's — Task 15c cannot be marked done with a red pre-existing suite, so by the time this task starts, that retrofit is already in place and verified. This task only adds genuinely new coverage.
+
+**Unit tests to cover:** `calendarType` defaults to `'default'`; `default` mode's immediate-commit-and-close on day click; `default` mode renders no header/footer/close-button regardless of other props, and clicking outside dismisses without altering `value`; `withTime` is a no-op (not thrown, not silently half-applied) when `calendarType === 'default'` — cover not just render suppression but the value-parsing/formatting fix too: a `default`-mode commit under `with-time` displays the correct naive-date text on the trigger field (regression test for the blank-field bug), produces no spurious "not a valid UTC ISO datetime" warning, and `min`/`max` validation (`rangeUnderflow`/`rangeOverflow`) still fires correctly against it (regression test for the found-inert-validation bug — both bugs were found live by `@qa-subagent`, not caught by the original unit test suite, so this is closing a real gap in test coverage, not adding redundant tests); `componentWillLoad` logs the `logger.warn` for `with-time` set alongside `calendarType="default"`, and does NOT log it when `calendarType` is `basic`/`expanded` or `with-time` is unset; `required`/`min`/`max` validation fires identically in `default` mode as in `basic` mode when a real validation attempt occurs (form submit or explicit `checkValidity()`/`reportValidity()`), confirming Task 15c's resolved field-anchored/attempt-triggered behavior; explicitly setting `calendarType="basic"` reproduces every pre-`calendarType` behavior unchanged (a regression guard on Task 15c's retrofit, written as a real test rather than left implicit). Also confirm, while writing this file, whether any of the direct `newSpecPage(...)` calls Task 15c's implementer chose _not_ to patch (per its own "patch individually only if that test's assertions depend on chrome" judgment call) turn out to actually need it — close any gap found here rather than filing it as a new task, per this plan's own "close gaps in the task that owns the file" convention. Coverage-phase only (≥90%).
+
+**Manual test (required):** Non-visual — suite passing at ≥90% coverage.
+
+**Commit:** `git commit -m "test: EOA-17138 add Phase 3.5 calendarType unit tests"`
+
+---
+
+### Task 15f: Phase 3.5 documentation
+
+**Status:** ✅ done (2026-08-28) — `@documentation-subagent` added the `## Calendar types` MDX section and a `CalendarTypeDefault` story per this task's original acceptance criteria, then the orchestrating session applied several rounds of direct refinement based on live user review before closing this task out:
+
+1. **Writing-style constraint applied at dispatch, not caught after the fact:** the subagent was explicitly instructed to omit any mention of Figma/design tools/"real consumers"/rationale/process language — user-facing docs describe only current behavior. Confirmed in the delivered prose (no such mentions found on review).
+2. **Section reordered (user-directed, "Option A"):** `## Calendar types` moved to sit _before_ `## Component preview` (originally landed after it, per the task's literal acceptance-criteria wording above, which is now superseded) — matching `bds-tab-group.mdx`'s existing precedent of a variant-overview section preceding the preview, found by auditing every `.mdx` file in `apps/boreal-docs` for how they order a "which variant does the preview show" concern relative to "Component preview." Chosen over three other options (inline sentence per `bds-search-bar.mdx`'s precedent; a new forward-referencing `<Callout>`; combining both) presented to and picked by the user.
+3. **Accuracy audit found and fixed three real overclaims the subagent's draft made, caught by re-reading current source (`bds-date-picker.tsx`'s `@Prop()` list, `isDefaultCalendarType`/`showChrome`) rather than trusting the prose:** (a) the `'default'` and `'basic'` bullets both referenced a `range` prop that does not exist anywhere in the shipped component yet (Phase 4, not implemented) — dropped from both; (b) the `'basic'` argType description in `bds-date-picker.stories.ts` had the same premature `range` mention — fixed identically; (c) the `'expanded'` bullet claimed "shows two calendars side by side," which is not true today — `calendarType==='expanded'` currently renders byte-for-byte identical chrome to `'basic'` (only `isDefaultCalendarType` branches anything) — corrected to state the real current behavior instead of the not-yet-real one.
+4. **Pre-existing roadmap-language callout fixed (user-directed, same writing-style principle applied retroactively):** the `## When to use it` section's callout — _"...check back for a later phase of this component"_ — predated this task but violated the same "no process/roadmap language" principle; reworded to a plain fact ("Date-range (start/end) selection is not currently supported").
+5. **`CalendarTypeBasic` story added (user-directed) so the section is structurally ready for `'expanded'` later:** each bullet (`Default`, `Basic`) now has its own `###` subsection with a live `Description`/`Canvas` embed, so adding `'expanded'`'s own subsection once it's implemented is a drop-in addition, not a restructure.
+6. **Heading collision resolved (user-directed):** initially disambiguated the two new subsections as "Default calendar type"/"Basic calendar type" to avoid colliding with "Component preview"'s own `### Default` story heading; user preferred the plain `### Default`/`### Basic` instead and asked for "Component preview"'s own default-example heading to be renamed instead — renamed to `### Basic Usage`, matching the existing precedent in `bds-tag-field.mdx`/`bds-flag-selector.mdx`/`bds-text-field.mdx` for "the plain first example under Component preview," out of four options presented. One caught-and-fixed mistake during this specific edit: an `oldString`/`newString` edit accidentally deleted the `<Description>`/opening `<Canvas` lines instead of only the heading text — caught immediately by re-reading the file after the edit, not assumed correct, and fixed in a follow-up edit.
+7. **Also added `apps/boreal-docs/src/stories/forms/bds-date-picker/bds-date-picker.stories.ts`'s `CalendarTypeBasic` story** (item 5's story), mirroring `CalendarTypeDefault`'s exact pattern.
+
+Live-verified after every round via `playwright-cli` against the already-running Storybook dev server (`:6006`) — TOC order, heading text/anchors (no `-1` duplicate-slug suffixes), the corrected prose, and the new `CalendarTypeBasic` story registering and rendering — 0 console errors throughout. `eslint` clean on `bds-date-picker.stories.ts` after every edit.
+
+**Files actually touched (superseding the task's original list):** `bds-date-picker.mdx` (section content + reorder + accuracy fixes + roadmap-callout fix + heading renames), `bds-date-picker.stories.ts` (`CalendarTypeDefault` + `CalendarTypeBasic` stories, `argTypes.calendarType.description` fix).
+
+**Executor:** @documentation-subagent
+**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
+
+**Context:** the existing-story `calendarType` retrofit (`meta.args.calendarType = 'basic'`) is Task 15c's own load-bearing scope, not this task's — by the time this task starts, every pre-existing story already renders with its original chrome unchanged. This task only adds new documentation and the new story variant.
+
+**Acceptance criteria:** New top-level `## Calendar types` MDX section, placed after `## Component preview` and before `## Time selection` — architecturally foundational, so it must land before the feature-specific sections (Time selection, Min/max constraints, States) that implicitly assume `basic`/`expanded` chrome exists. Documents `calendarType`'s three values, `default`'s immediate-commit/no-chrome behavior, which other props it silently disables **and that a console warning is logged when `with-time` is set alongside `calendarType="default"`** (not a fully-silent no-op — mention this explicitly, since it's the kind of detail a consumer debugging their own console output needs), and the rationale for `'default'` being the code default (Figma naming alignment, safe pre-GA with no real consumers); new `CalendarTypeDefault` story variant that explicitly sets `calendarType="default"`, embedded via `<Description>`/`<Canvas>` at the end of the new section, matching every other section's format.
+
+**Manual test (required):** `pnpm dev:docs` — the new `CalendarTypeDefault` story renders correctly as a bare calendar, and every pre-existing story still renders unchanged (spot-check, since Task 15c's own manual test already verified this in full).
+
+**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document calendarType"`
+
+---
+
+### Task 15g: React/Vue wrapper parity check — Phase 3.5
+
+**Status:** ✅ done (2026-08-28) — all four of Task 15c's scenarios confirmed passing identically across web components (spot-checked as baseline), React, and Vue, via the `dev:pack:react`/`dev:pack:vue` pipeline run sequentially. Scenario 1+2 (immediate-commit-and-close, no chrome, click-outside dismiss without altering value): confirmed in both — `bds-popover`'s `footer`/`header`/`closable` all `false`, day click commits `value` and closes the popover (`aria-hidden` flips to `"true"`) in the same handler, click-outside dismissal leaves the committed value unchanged. Scenario 3 (`with-time` silently ignored under `calendarType="default"`): confirmed in both — no time-selector UI renders, the exact `` `with-time` has no effect when `calendar-type` is 'default' `` warning fires in console, clicking a day produces the correct naive `YYYY-MM-DD` value with the real `<input>` showing the formatted date (`2026/08/15`), and no spurious "not a valid UTC ISO datetime"-style warning follows the click. Scenario 4 (`required` + real validation attempt via form submit): confirmed in both — slotted field flips to `[invalid]` with `errorMessage` "This field is required. Please select a date.", no "calendarType form submitted" console log, matching `basic`-mode's required-field error presentation. No regression found in this specific behavior — Task 15's Phase-3 initial-mount FACE-validity race did not reproduce here (this scenario's own validation is a _real_ validation attempt via `requestSubmit()`, not an initial-mount snapshot, and Task 15a's `componentDidLoad` fix already covers it generically). Dev servers (web components :3333, React :5173, Vue :5174) left running — more Phase 4+ manual-QA tasks follow in this plan.
+
+**Regression found (different scope, logged as Task 15h below):** while adding the calendarType="default" scenarios to `examples/react-testapp/src/App.tsx` and `examples/vue-testapp/src/App.vue` for this parity check, discovered that every _pre-existing_ `bds-date-picker` scenario in both playground files (Task 7's five `withTime` scenarios, Task 15's three min/max scenarios) never set `calendar-type` explicitly, and is therefore now silently rendering in `calendarType="default"` mode instead of the `basic` chrome its own documented test steps assume — the same regression class Task 15c already found and fixed for `packages/boreal-web-components/src/index.html`'s 11 scenarios, but that fix's scope never covered the React/Vue testapp playgrounds. Confirmed live in both apps: `dp.calendarType === 'default'` for every pre-existing picker, `bds-popover`'s `footer`/`header` both `false` (no Apply/Hour/Minute UI at all) on e.g. React's "Scenario 1" (`withTime`, Task 7) and Vue's equivalent. Not fixed inline (out of this task's own scope, and not what Task 15g was dispatched to verify) — see Task 15h.
+
+**Executor:** @qa-subagent
+**Files:** `examples/react-testapp/src/App.tsx` (modified — added 3 new `calendarType="default"` scenario sections), `examples/vue-testapp/src/App.vue` (modified — same)
+
+**Acceptance criteria:** Confirms `calendarType="default"`'s immediate-commit-and-close behavior identically through both wrappers — this is the kind of framework-boundary timing behavior Task 15's own parity check (Phase 3) already found a real regression in once, so treat this as genuinely load-bearing, not a formality. **Met** — see Status.
+
+**Manual test (required):** Repeat Task 15c's scenarios through both wrapper playgrounds. ✅ run — see Status for per-scenario results.
+
+**Commit:** N/A
+
+---
+
+### Task 15h (new — discovered during Task 15g, 2026-08-28): retrofit React/Vue testapp playgrounds with `calendar-type="basic"` for pre-existing scenarios
+
+**Status:** ✅ done (2026-08-28) — `@qa-subagent` added `calendarType="basic"`/`calendar-type="basic"` to all 8 pre-existing `<BdsDatePicker>` elements in `examples/react-testapp/src/App.tsx` and all 9 in `examples/vue-testapp/src/App.vue` (Task 7 Scenarios 1–5, Task 15 Scenarios 1–3), leaving the three Task 15g `calendarType="default"` scenarios in each file untouched. Independently re-verified against the actual diff (not just trusted from the report): `git diff` confirmed exactly the expected single-attribute insertions, plus the three Task 15g sections unchanged. Manual test re-run live via `playwright-cli` against the already-running dev servers (web components `:3333`, React `:5173`, Vue `:5174`, no rebuild needed): Task 7 Scenario 1 shows Hour/Minute selects + Apply button again in both frameworks; Task 15 Scenario 3 still blocks submission with the correct invalid state; `document.querySelectorAll('bds-date-picker')` on each app confirms 9 `basic` + 3 `default` pickers with no ambiguity; the three Task 15g scenarios re-confirmed still working unchanged (bare calendar, immediate-commit-and-close). **Correction (2026-08-28):** this was initially committed as `0c95cfca`, which was wrong — these are playground/example files, and this plan's own standing convention (line 169's "playground scenarios per task (**never committed**)," reinforced at Tasks 7/15c/15) applies equally to the React/Vue testapp playgrounds, not just `packages/boreal-web-components/src/index.html`. Caught by the user; `0c95cfca` was not yet pushed, so `git reset --soft HEAD~1` followed by unstaging both files cleanly undid the commit while leaving the file changes intact as local, uncommitted reference material — matching every other playground file's state. **No commit for this task** — its own `Commit:` line below is now superseded; treat both files as local-only, same as `index.html`.
+
+**Phase 3.5 is now fully closed.**
+
+**Discovered by:** `qa-subagent`'s Task 15g parity check — see Task 15g's Status note for the full finding. Same regression class already fixed once for `packages/boreal-web-components/src/index.html` (Task 15c's own Status note: "Fixed by adding `calendar-type=\"basic\"` to all 11" pre-existing scenarios) but that retrofit's scope never extended to `examples/react-testapp/src/App.tsx` or `examples/vue-testapp/src/App.vue`, which hold their own independent set of pre-existing `bds-date-picker` scenarios (Task 7's `withTime` scenarios, Task 15's min/max scenarios) that also never pin `calendar-type` explicitly.
+
+**Executor:** @qa-subagent (retrofit is a one-line-per-picker attribute addition, matching the mechanical nature of the `index.html` fix it mirrors; no `@frontend-subagent` component-code change is needed)
+**Files:** `examples/react-testapp/src/App.tsx` (modify — add `calendarType="basic"` to every pre-existing `BdsDatePicker` that doesn't already set `calendarType`), `examples/vue-testapp/src/App.vue` (modify — add `calendar-type="basic"` to every pre-existing `BdsDatePicker` that doesn't already set `calendar-type`)
+
+**Acceptance criteria:**
+
+- Every pre-existing `bds-date-picker` scenario in both playground files (Task 7 scenarios 1–5, Task 15 scenarios 1–3) renders with its original `basic`-mode chrome (footer, Apply button, header time selector where applicable) unchanged from before the `calendarType` default flip.
+- The Task 15g scenarios added by this same task (calendarType="default" sections) are explicitly excluded from the retrofit — they must keep `calendarType="default"` since that's their entire point.
+- No other visual or behavioral change to either playground file.
+
+**Manual test (required):** Reopen both `dev:pack:react`/`dev:pack:vue` playgrounds (or reuse the already-running dev servers, no rebuild needed for a `.tsx`/`.vue` source-only change under Vite) and spot-check that Task 7 Scenario 1 (`withTime`) now shows an Hour/Minute selector and Apply button again, and Task 15 Scenario 3 (stale value blocks submit) still blocks submission — both via `dp.calendarType === 'basic'` confirmed live, not just visually.
+
+**Commit:** N/A — playground/example files, never committed (see Status note's correction above; superseded the plan's originally-stated commit).
+
+---
+
+## Phase 4 — Dual calendar (date range)
+
+Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `range: boolean` prop — not a second custom element. Day states unique to range mode (day-in-range, day-range-start, day-range-end) render as additional CSS classes on the existing `<td role="gridcell">`, not a markup change. **Corrected 2026-08-28:** `range` is independent of calendar count — it works standalone against the single calendar already present in `calendarType='basic'`. A second `bds-calendar-grid` renders only when `calendarType === 'expanded'`; `range` may be `true` under either `basic` or `expanded`.
+
+### Task 16: types — range value contract and day-state fields
+
+**Status:** ✅ done (2026-08-31) — `@frontend-subagent` widened `value` to `string | { start: string; end: string }` on `bds-date-picker.tsx` (dropped `reflect: true`, added a private `stringValue` narrowing getter routed through every existing string call site), added `rangeStart`/`rangeEnd` to `DatePickerDraftState` (`bds-date-picker/types/types.ts`, all 3 `resetDraft` construction sites in `utils/draft-state.ts` updated), and added `isInRange`/`isRangeStart`/`isRangeEnd` to `DayCell` (`date-engine/types.ts`, the sole producer `buildDayCell` in `grid.ts` updated, all `false`). `IDatePicker.ts`'s `value` type widened to match (tsc-forced, `BdsDatePicker implements IDatePicker`). Independently re-verified against the actual diff, not just the report: all 7 touched files confirmed exactly as described; `tsc --noEmit` for the whole package reproduced independently — clean except the same 5 pre-existing errors in `bds-dialog`/`bds-tooltip` spec files, confirmed pre-existing via `git log` (last touched by unrelated tickets EOA-16315/EOA-14935); full `boreal-web-components` suite re-run independently — 297/297 suites, 3269 passed, 1 pre-existing todo, 0 failed. `reflect: true` removal confirmed safe — grepped for any `getAttribute('value')` dependency on the host element itself; all hits target the slotted `bds-text-field`, driven separately by `syncFieldValue`, not by prop reflection. No range-mode behavior added (correctly deferred to Task 17+); `bds-calendar-grid.tsx`/`ICalendarGrid.ts` untouched as scoped.
+
+**Status note (2026-08-31, pre-execution scope correction):** the original `Files:` list below was wrong on two counts, found by reading the actual source before dispatch (per this plan's own "read before writing" rule): (1) `DayCell` is defined in `src/services/date-engine/types.ts`, not `bds-calendar-grid/types/ICalendarGrid.ts` — `ICalendarGrid.ts` is the grid-container props interface and never referenced `DayCell` at all; (2) the public `value` prop is not sourced from `types/types.ts` — it's an inline `@Prop({ mutable: true, reflect: true }) value: string = '';` directly on `bds-date-picker.tsx`, so satisfying this task's own "Public `value` type becomes..." acceptance criterion requires editing that file, which the original list omitted. Flagged to the user, who chose to expand this task's scope to cover the fix directly rather than split it into a new task — `Files:`/acceptance criteria below reflect that expansion. Additionally, `reflect: true` combined with an object-valued type is not safely supported by Stencil's built-in attribute reflection (it only serializes primitives) — this task must resolve that (most likely dropping `reflect: true`, since a `{ start, end }` object has no sane single-attribute string form) as part of the type change, not defer it.
+
+**Executor:** @frontend-subagent
+**Files:** `date-engine/types.ts` (modify — `DayCell`), `bds-date-picker/types/types.ts` (modify — `DatePickerDraftState`), `bds-date-picker.tsx` (modify — widen the `value` `@Prop()` type and resolve `reflect: true`)
+
+**Acceptance criteria:**
+
+- Public `value` type on `bds-date-picker.tsx`'s `@Prop()` becomes `string | { start: string; end: string }`; `range=false` (default) keeps the existing `string` shape untouched — verified as a non-breaking union widening, not a rename. This shape is identical regardless of `calendarType` — a `basic`+`range` picker and an `expanded`+`range` picker both emit `{ start, end }`.
+- `reflect: true` resolved for the widened type — document the chosen approach (most likely: drop `reflect: true` for an object-valued prop, since Stencil can't serialize an object to a single attribute string) and confirm no existing behavior (CSS `[value]` selectors, FACE `setFormValue`, other reflection consumers) silently breaks for single-date (`string`) mode.
+- `DatePickerDraftState` (in `bds-date-picker/types/types.ts`) gains `rangeStart: string | null` / `rangeEnd: string | null`.
+- `DayCell` (in `date-engine/types.ts`) gains `isInRange: boolean`, `isRangeStart: boolean`, `isRangeEnd: boolean` — all default `false`, purely additive to the existing type.
 
 **Manual test (required):** Non-visual — `tsc --noEmit` passes with both `bds-date-picker.tsx` and existing consumers of `DayCell` unaffected in single-date mode.
 
@@ -522,6 +749,8 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 ---
 
 ### Task 17: `bds-calendar-grid` range day-state rendering
+
+**Status:** ✅ done (2026-08-31) — `@frontend-subagent` added `bds-calendar-grid__day--in-range`/`--range-start`/`--range-end` to `dayCellClassMap()` in `bds-calendar-grid.tsx`, reflecting `DayCell.isInRange`/`isRangeStart`/`isRangeEnd` (Task 16). No SCSS/ARIA/structural changes — deferred styling to the later Phase 4 SCSS + JSDoc audit task. Independently re-verified: diff is exactly the 3-line class-map addition; full `boreal-web-components` suite re-run — 297/297 suites, 3269 passed, 1 pre-existing todo; `tsc --noEmit` re-run — same 5 pre-existing unrelated errors (`bds-dialog`/`bds-tooltip` specs), nothing new. `@qa-subagent` ran the manual test live (since these flags are unreachable through real UI today — no orchestrator wired until Task 18 — and have no styling yet): appended a standalone playground scenario to `src/index.html` (dev-only, not committed) driving `bds-calendar-grid` directly with hand-set `DayCell` flags via Playwright; confirmed exact class presence on the correct cells with no bleed to neighbors, `<td role="gridcell">` count/aria-\* unchanged (42 cells before/after), day-click and month-nav events still fire correctly with range flags active, zero console errors, clean class removal on reset. Regression-safe confirmed both statically (all-false in production today) and live.
 
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:** `bds-calendar-grid.tsx` (modify)
@@ -540,21 +769,70 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 
 ### Task 18: `bds-date-picker` dual-calendar orchestration
 
+**Status note (2026-08-31, open questions resolved + scope correction):** This task's own two flagged "Remaining Open Questions" (§1361-1362) are now resolved with the user, before dispatch: (1) **both** `basic`+`range` (single calendar) and `expanded`+`range` (dual calendar) are supported for v2 — Task 18's acceptance criteria below already assumed this, no narrowing needed; (2) the popover header renders the range as **one line, single field** reusing the existing `header-title` slot — e.g. `Aug 10 — Aug 15` (en dash separator), not a two-line Start/End labeled pair. Figma research was attempted first (per this project's Figma-first convention): the plan's own linked node (`_DatePickerRange`, fileKey `rtiE5zGA4aoOuxIQMgfD6h`, node `14:23420`) turned out to be the Phase 6 presets-sidebar button-state symbols, not the DatePicker range/header design — the actual `calendarPicker`/`DatePicker` component sets live in the `[BOR] DSG COMPONENTS → FORMS` library, for which no direct file URL was available this session. Resolved by asking the user directly rather than guessing or blocking further.
+
+Also found, by reading the actual source before dispatch, that the original `Files:` list below was materially incomplete — it omits every file the acceptance criteria actually requires touching:
+
+- `date-engine/grid.ts` — `buildDayCell`/`generateMonthGrid`/`GenerateMonthGridOptions` currently only compute `isSelected`(always `false`)/`isDisabled` from `min`/`max`; computing `isInRange`/`isRangeStart`/`isRangeEnd` requires extending this same file with optional `rangeStart`/`rangeEnd` params, mirroring the existing `min`/`max` pattern exactly.
+- `bds-date-picker/utils/value-mapping.ts` — `buildDisplayGrid` is the sole caller of `generateMonthGrid` from this component; it must forward the new range params through. A new header-text formatter for the one-line range display (e.g. extending or sitting alongside `formatDraftForDisplay`) also belongs here.
+- `bds-date-picker/utils/draft-state.ts` — `selectDay` only handles single-date selection; the range click/swap logic (first click sets `rangeStart`, second sets `rangeEnd` or swaps) is a new function in this file, parallel to `selectDay`, not a modification of it (single-date mode must stay byte-for-byte unchanged).
+- `bds-date-picker/types/IDatePicker.ts` — needs `range: boolean` added, mirroring how `IDatePicker` already mirrors every other `@Prop()`.
+
+`types/types.ts` in the original list is ambiguous (per Task 16's identical finding) — resolves to `bds-date-picker/types/types.ts`, and per the analysis above needs no further changes beyond what Task 16 already added (`DatePickerDraftState.rangeStart`/`rangeEnd` already exist).
+
+**Stated assumption (not Figma-sourced, flagged rather than silently decided):** the second `expanded`-mode calendar's initial displayed month defaults to one month after the first calendar's — the universal convention for every dual-calendar range picker (matches this plan's own Task 45 note citing MUI X/Ant Design/react-day-picker/Vaadin as reference precedent for un-mocked interaction conventions). Each calendar still independently renavigates from there per the existing `bdsMonthNavigate` handler pattern.
+
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `types/types.ts` (modify), `bds-date-picker.tsx` (modify), `helpers/renderCalendarPanel.tsx` (modify)
+**Files:** `bds-date-picker/types/types.ts` (modify — none currently outstanding, verify only), `bds-date-picker/types/IDatePicker.ts` (modify), `bds-date-picker.tsx` (modify), `helpers/renderCalendarPanel.tsx` (modify), `utils/draft-state.ts` (modify), `utils/value-mapping.ts` (modify), `date-engine/grid.ts` (modify)
 
 **Acceptance criteria:**
 
-- `@Prop() readonly range: boolean = false`.
-- When `range=true`, `renderCalendarPanel.tsx` renders two `bds-calendar-grid` instances side by side (per the spike's confirmed `Expanded` structural match), each independently controlled (own `displayMonth`/`displayYear`) but computing `isInRange`/`isRangeStart`/`isRangeEnd` from one shared `draft.rangeStart`/`draft.rangeEnd`.
-- Selection logic: first click sets `rangeStart` (clears any prior `rangeEnd`); a click after that sets `rangeEnd` if the clicked date is after `rangeStart`, otherwise swaps (clicked date becomes the new `rangeStart`) — reuses `date-engine`'s `compareDates`.
-- Popover header shows the Start/End labeled pair (per the spike's new backlog item, "popover header Start/End prefix") instead of the single date/time string used in single-date mode — exact presentation (one line vs. two) decided here, not deferred further.
-- `value`/`bdsChange`/`valueChange` on Apply emit `{ start, end }` when `range=true`, the plain string when `range=false` — verified non-breaking for existing single-date consumers.
+- `@Prop() readonly range: boolean = false` — independent of `calendarType`; valid under both `'basic'` and `'expanded'` (force-ignored under `'default'`, per Task 15c).
+- **Deferred follow-up from Task 15c, tracked here since `range` didn't exist yet when that task ran:** add the matching `componentWillLoad` warning for `range` set alongside `calendarType="default"`, mirroring the existing `with-time` warning added in Task 15c exactly (same log format, same reasoning) — do not let this be forgotten now that `range` finally exists as a real prop.
+- `renderCalendarPanel.tsx` renders **one** `bds-calendar-grid` when `calendarType !== 'expanded'` and **two** side by side when `calendarType === 'expanded'` — this split is driven by `calendarType` alone, not by `range`. Under `calendarType='basic'` with `range=true`, the single calendar computes `isInRange`/`isRangeStart`/`isRangeEnd` against `draft.rangeStart`/`draft.rangeEnd` the same way each of the two `expanded` calendars does.
+- Each rendered calendar is independently controlled (own `displayMonth`/`displayYear`) but computes range day-states from the one shared `draft.rangeStart`/`draft.rangeEnd`.
+- Selection logic (identical regardless of `calendarType`): first click sets `rangeStart` (clears any prior `rangeEnd`); a click after that sets `rangeEnd` if the clicked date is after `rangeStart`, otherwise swaps (clicked date becomes the new `rangeStart`) — reuses `date-engine`'s `compareDates`.
+- Popover header shows the Start/End labeled pair when `range=true`, regardless of `calendarType` — exact presentation (one line vs. two) decided here, not deferred further. Per the confirmed Figma finding, there is no independent `endDate` toggle — the header's second date is fully derived from `range`.
+- `value`/`bdsChange`/`valueChange` on Apply emit `{ start, end }` when `range=true`, the plain string when `range=false` — verified non-breaking for existing single-date consumers, and identical in shape regardless of `calendarType`.
 - Clean/Cancel behave identically to single-date mode but operate on both `rangeStart`/`rangeEnd`.
 
-**Manual test (required):** `pnpm dev:components` — Scenario 1: click two dates, confirm range highlighting across both calendars and correct header labels. Scenario 2: click a date before the current `rangeStart`, confirm the swap behavior. Scenario 3: Apply, confirm emitted `{ start, end }` value shape.
+**Manual test (required):** `pnpm dev:components` — Scenario 1: `calendarType="expanded"`, click two dates, confirm range highlighting across both calendars and correct header labels. Scenario 2: `calendarType="basic"` with `range`, click two dates on the single calendar, confirm the same range highlighting and header labels render correctly against one calendar. Scenario 3: click a date before the current `rangeStart` (either mode), confirm the swap behavior. Scenario 4: Apply, confirm emitted `{ start, end }` value shape is identical in both modes.
+
+**Status:** ✅ done (2026-08-31) — implementation independently verified (diff/tsc/suite), and manual test now run and independently spot-checked (playground scenario file + QA agent-memory note both confirmed present on disk). `@qa-subagent` ran all 4 scenarios plus a single-date regression check against `dp-range-expanded`/`dp-range-basic`/`dp-range-off` playground pickers, live via `pnpm dev:components` + `playwright-cli`: Scenario 1 (expanded, two dates) — 2 calendars render, second defaults to the following month, day classes land correctly (`--range-start`/`--in-range`/`--range-end`), header renders `"2026/08/10 – 2026/08/15"`. Scenario 2 (basic+range) — exactly 1 calendar renders, identical class/header behavior. Scenario 3 (swap, both modes) — clicking before the current `rangeStart` correctly resets to a fresh single-bound selection. Scenario 4 (Apply) — `bdsChange` emits `{ start, end }` with correct ISO dates in both modes. Regression (`range` unset) — day click/Apply/Cancel/Clear all behave exactly as before, `value` stays a plain string. Zero console errors. Range CSS confirmed still unstyled (expected, deferred to Task 19). `@frontend-subagent` (across two dispatches, the first interrupted mid-task by a session crash after completing `date-engine/grid.ts`/`utils/draft-state.ts`/`utils/value-mapping.ts`; the second picked up from there and finished `IDatePicker.ts`/`renderCalendarPanel.tsx`/`bds-date-picker.tsx`) delivered: `range: boolean` prop with the matching `calendarType="default"` warning; dual-calendar rendering via a generalized `renderCalendarPanel` (`calendars: CalendarInstanceParams[]`, 1 or 2 entries) with each calendar independently controlled (`displayYear`/`displayMonth` and new `secondDisplayYear`/`secondDisplayMonth`, the second defaulting to one month after the first, distinguished on `bdsMonthNavigate` via a captured element ref); `selectRangeDay`/`resetRangeDraft` in `draft-state.ts` implementing the click/swap logic and reopen/cancel round-trip; one-line header via `formatRangeForDisplay`; Apply/Clean/Cancel wired for both `rangeStart`/`rangeEnd`. Independently re-verified: all 7 touched files' diffs match the reports exactly; `tsc --noEmit` clean except the same 5 pre-existing unrelated errors; full suite re-run — 297/297 suites, 3269 passed, 1 pre-existing todo, 0 regressions.
+
+**Known gap, deliberately not fixed in this task (see Task 18a below):** `watchValue`'s `typeof next !== 'string'` guard (added in Task 16) means a range commit never calls `setFormValue`/`updateValidity`; separately, the `validators` getter's `valueMissing` check reads `stringValue` (always `''` in range mode), so a `required` range picker always reports invalid regardless of selection. Neither was in Task 18's own acceptance criteria — found via independent post-verification, not by the subagent — and both require a real design decision (how to serialize `{ start, end }` for native form submission) rather than a mechanical fix, so it's tracked as its own task instead of silently expanding this one.
+
+**Second bug found post-Task-19 (2026-08-31, user-caught via screenshot, fixed immediately):** `calendarType="expanded"` rendered its second calendar visibly outside the popover's own styled box — page content bled through it, and the header didn't visually span both calendars. Root cause: this task's own `render()` change never made the popover's `width` prop conditional on `calendarType` — it stayed hardcoded at `width={296}` (a pre-existing single-calendar value) even after `.bds-date-picker__calendars` (Task 19) started laying out two full calendars inside it, so the popover's actual background/border/shadow/clip box stopped at 296px while the flex content inside overflowed past it. Fixed by `@frontend-subagent`: `width={this.isExpandedCalendarType ? 'auto' : 296}` — `bds-popover` already supports `width="auto"` as a first-class value (clears any inline width, lets the Host's CSS size to actual content), avoiding a second hardcoded pixel number that could drift the same way `296` did. `basic`/`default` unaffected (confirmed: only one calendar is ever pushed into the `calendars` array for non-expanded types, so the overflow mechanism never applied there). Independently re-verified: 1-line diff exact match; `tsc --noEmit` clean except the same 5 pre-existing unrelated errors; full suite 297/297, 0 regressions; live check confirmed `expanded` mode auto-sizes to fit both calendars (568px observed) with no page bleed-through, `basic` mode stays pixel-identical at 296px.
+
+**Third correction, header format wrong (2026-08-31, user-caught via screenshot + real Figma node, not yet fixed — dispatched below):** this task's own header decision ("one line, single field," resolved 2026-08-31 via web research into MUI/Ant Design/Web Awesome precedent, since no real Boreal Figma node could be located at the time) is now confirmed wrong by direct evidence. The user located and shared the actual node: `Header Basic Time picker` (`I164:33228;14:23281;158:175484`, fileKey `rtiE5zGA4aoOuxIQMgfD6h`, reachable via parent `datePickerInput` instance `164:33228` → `calendarPicker` → `Container`). Confirmed via `get_design_context` (not a screenshot guess): the header is a `Label: Date Time` structured pair per side — `Starts` group (`Label` "Start:" in `#8a8e96` muted grey / `Date` "2021/07/20" + `Time` "08:30" in `#272a2f` dark, all `body/xs` 12px, `gap: 2px` between them) and an identical `Ends` group, inside a container with `padding: 24px 16px`, `gap: 12px` (icon-to-text), top corners rounded `4px`, `box-shadow: inset 0 -1px 0 #e3e3e6` (bottom hairline), white background. This requires restructuring `bds-date-picker.tsx`'s header markup (currently a single plain-text `<span slot="header-title">`) into separate labeled/valued elements — a single string can't carry two different text colors. User confirmed (2026-08-31): apply `Start:`/`End:` labels now for range-without-time too (`Time` segment simply omitted until Phase 5/Task 23 wires in `withTime` support for range mode); `default` mode (no header at all) and `basic`-without-range (`formatDraftForDisplay` branch, entirely separate code path) are both confirmed unaffected — verified directly against the current `render()` code before dispatch, not assumed.
 
 **Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add range prop and dual-calendar orchestration"`
+
+---
+
+### Task 18a (new — discovered during Task 18 verification, 2026-08-31): range-mode FACE validity and form-submission support
+
+**Executor:** @frontend-subagent
+**Files:** `bds-date-picker.tsx` (modify — `validators` getter, `watchValue`, `formAssociatedCallback`), `utils/form/internals.ts` (modify, if the chosen serialization needs a new/widened `setFormValue` overload)
+
+**Context:** `range` mode's `value` can hold `{ start: string; end: string }`, but `ElementInternals.setFormValue` (native browser API) only accepts `string | File | FormData`, not an arbitrary object — and this project's own `setFormValue` helper narrows further to `FormDataEntryValue | null` (`string | File | null`). Two related bugs currently exist as a result: (1) `@Watch('value') watchValue`'s `if (typeof next !== 'string') return;` guard (added in Task 16, correct at the time since `range` didn't exist yet) skips `setFormValue`/`updateValidity` entirely whenever a range value is committed; (2) the `validators` getter's `valueMissing` check tests `this.stringValue !== ''`, which is always `''` in range mode, so a `required` range picker always reports invalid even with a valid range applied.
+
+**Resolved (2026-08-31, before dispatch):** delimited string, e.g. `2026-08-10,2026-08-15` (comma-separated naive ISO dates — comma is safe since ISO dates use only digits/hyphens). Decided after web research (dispatched to a fresh general-purpose agent) plus two direct follow-up searches at the user's request: (1) Web Awesome's `wa-date-input` — the only genuine `ElementInternals`-based FACE range picker found in the wild — uses exactly this pattern (`"2026-05-11/2026-05-18"`) for form submission, with a separate JS property for structured access; (2) MUI X's `DateRangePicker` auto-generates a single hidden native `<input>` for form interop (not two separately-named fields) — and explicitly does NOT support automatic native form integration at all for its two-separate-fields UI variant; (3) Ant Design's `RangePicker` sets no native form value whatsoever, fully delegating serialization to the consumer's own submit handler. All three data points converge on "one field, not two, when native form integration exists at all" — ruling out the `FormData`-two-named-fields option. No `setFormValue` signature change needed — the delimited string is already a plain `string`, compatible with the existing `FormDataEntryValue | null` type.
+
+**Acceptance criteria:**
+
+- `watchValue` calls `setFormValue`/`updateValidity` for a range-shaped `value` too, serializing `{ start, end }` as `` `${start},${end}` `` (only when both are non-empty; the FACE form value stays unset/empty otherwise, matching single-date mode's own empty-string convention).
+- `validators`' `valueMissing` check is range-aware: `!this.required || (this.effectiveRange ? this.rangeValue !== null : this.stringValue !== '')`, or equivalent.
+- `formAssociatedCallback` also uses the range-aware serialization when `effectiveRange` is true, matching `watchValue`.
+- Regression guard: every existing single-date-mode FACE/validity test continues passing unchanged.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1: a `required` `range` picker inside a real `<form>`, apply a valid range, confirm the field no longer reports invalid and `checkValidity()`/`reportValidity()` reflect it. Scenario 2: submit that form, confirm the range value round-trips through `FormData`/submission per the chosen serialization. Scenario 3: single-date mode (`range=false`) form submission/validity unaffected.
+
+**Status:** ✅ done (2026-08-31) — `@frontend-subagent` implemented `serializeRangeValue` (`utils/value-mapping.ts`), wired it into `watchValue`'s range branch, `validators`' range-aware `valueMissing`, and `formAssociatedCallback`; confirmed `rangeUnderflow`/`rangeOverflow` already no-op safely for range mode (no change needed there). Independently re-verified: diffs match exactly; `tsc --noEmit` clean except the same 5 pre-existing unrelated errors; full suite 297/297, 3269 passed, 0 regressions.
+
+**Bug found and fixed during manual QA (not caught by the implementation review or unit tests):** the first `@qa-subagent` pass found Scenarios 1/2 genuinely failing — `watchValue`'s range branch never called `syncFieldValue()`, so the slotted `bds-text-field` (itself independently form-associated) kept its own displayed value at `''` while `required` stayed forwarded `true`, causing the text-field to report itself invalid independently of — and undermining — `bds-date-picker`'s own correctly-valid state, which silently blocked native form submission entirely. Root cause confirmed by direct repro (manually setting the text-field's `.value` flipped `form.checkValidity()` to `true` immediately). Fixed directly: `syncFieldValue()` is now range-aware (uses `formatRangeForDisplay` when `rangeValue !== null`, matching how the popover header already formats it), and `watchValue`'s range branch now calls it, mirroring the string branch. Re-verified: `tsc --noEmit`/`eslint`/full suite all clean; re-ran via `@qa-subagent` — both scenarios now pass with concrete evidence (text-field shows `"2026/08/10 – 2026/08/15"`, no `bds-text-field--error` class after `reportValidity()`, submitted `FormData` contains `["range-required","2026-08-10,2026-08-15"]`). This bug is cross-cutting beyond this task — any composite FACE component slotting a required child control that skips syncing its display value on a non-string value branch will hit the same form-level invalidation; worth a `.agents/memory/` entry.
+
+**Commit:** `git commit -m "fix(bds-date-picker): EOA-17138 range-mode FACE validity and form submission"`
 
 ---
 
@@ -563,557 +841,646 @@ Per the spike doc's Findings §4/Resolved Decisions: one `bds-date-picker`, a `r
 **Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
 **Files:** `bds-date-picker.scss` (modify), `bds-calendar-grid.scss` (modify), JSDoc in both `.tsx` files
 
-**Figma research pass (complete before writing any SCSS):**
+**Figma research pass (complete before writing any SCSS):** the `rtiE5zGA4aoOuxIQMgfD6h` fileKey previously believed to only contain the Phase 6 presets frame (per this task's earlier scope-correction note on Task 18) does contain the real DatePicker/CalendarGrid range design after all — the earlier dead end was a wrong node ID, not a wrong file. User supplied 4 correct node-specific URLs (2026-08-31), confirmed live via `get_design_context` (`DatePickerNumber` component: `selection: 'Default'|'Partial'|'Selected'` × `state: 'Default'|'Hover'|'Focus'|'Active'|'Disabled'|'Inactive'` × `type: 'Default'|'Start'|'End'|'Full'` × `actual: boolean`, with real `var(--ui-/*)`/`var(--bg-/*)`/`var(--alpha/white-10)`-style token references — i.e. genuine design tokens, not placeholder hex). Pull each directly (`get_design_context`, `skillNames: "figma-design-to-code"`) before writing SCSS — full dumps are large, worth reading in full rather than skimming:
 
-- [ ] Region: dual-calendar layout spacing — per spike's Phase 4 pixel specs (unconfirmed — re-pull before use): Header 48px/16px icon/24px h-padding/16px v-padding; Calendar body 12px h-padding/24px v-padding; Footer 48px/24px h-padding/16px v-padding
-- [ ] Modifier: day-in-range — default and hover
-- [ ] Modifier: day-range-start / day-range-end — default, hover, and combined with `today`
-- [ ] Combination: range-start/end + disabled (Phase 3 min/max interplay)
-- [ ] Dimensions: two calendars' shared width/alignment
+- [x] Region: `DatePickerNumber` day-cell states — <https://www.figma.com/design/rtiE5zGA4aoOuxIQMgfD6h/-BOR--DSG-COMPONENTS-%E2%86%92-FORMS?node-id=14-23554&m=dev> (node `14:23554`) — covers `isInRange`/`isRangeStart`/`isRangeEnd`/`isSelected` (single-date) across every interaction state. **Result:** pulled via `get_design_context` (97 of ~144 state/selection/type/actual combos returned before the response's own size cap truncated the rest — every `Default`/`Partial` combo across all 4 `type` columns and all 6 `state` values was captured in full; the truncated tail was further `Selected` combos already covered by the ones captured). `selection: 'Partial'` (→ `isInRange`) resolves to steady-state `background-color: $boreal-ui-base-light` (`#e3e3e6`), `color: $boreal-text-default`; its `Hover`/`Focus`/`Active` sub-states paint an opaque `$boreal-ui-default-lighter` layer on top — pixel-identical to this component's existing plain-cell hover/focus/active treatment, so `--in-range` was implemented by simply _not_ excluding it from the existing default-cell `:hover`/`:focus-visible`/`:active` selector, rather than duplicating those rules. `selection: 'Selected'` (→ `isRangeStart`/`isRangeEnd`) resolves to the exact same `$boreal-ui-primary-base`/`-dark`/`-light` + `$boreal-text-inverse` treatment already coded for single-date `isSelected` — confirmed via the `Type=Default` combos (`Default`/`Hover`/`Focus`/`Active` all matched byte-for-byte); the later `Type=Start`/`End`/`Full` `Selected` combos fell past the truncation point, but the plan's own superseded screenshot note (kept below) already confirms these are "visually identical across Start/End/Full position columns... no distinct start-vs-end cap/pill shape," which the captured `Partial`+`Start` combo corroborates directly (its two overlaid rects were both the same `base-light` color, i.e. no visible directional cue even where the raw node data encodes one) — so `--range-start`/`--range-end` were implemented sharing the exact `--selected` block rather than a bespoke shape.
+- [x] Region: single-calendar-with-range (`basic`+`range`) full layout — <https://www.figma.com/design/rtiE5zGA4aoOuxIQMgfD6h/-BOR--DSG-COMPONENTS-%E2%86%92-FORMS?node-id=158-175482&m=dev> (node `158:175482`) — **Result:** the single-calendar chrome (header, calendar grid, time-picker row, footer) is pixel-identical to `basic`'s existing non-range layout already implemented in prior tasks; the only `range`-specific additions this node shows are the presets sidebar (`Today`/`Yesterday`/`Last 7 days`/etc., out of scope — Phase 6) and a footer "Range: 18 days" summary label (out of scope — Phase 7 banner/range-summary task). No SCSS change required for this node; documented explicitly per the acceptance criteria rather than left ambiguous.
+- [x] Region: dual-calendar (`expanded`) full layout — <https://www.figma.com/design/rtiE5zGA4aoOuxIQMgfD6h/-BOR--DSG-COMPONENTS-%E2%86%92-FORMS?node-id=158-176501&m=dev> (node `158:176501`) — **Result:** the "Calendars" row wrapping both `_DatePickerCalendar` instances uses `gap: var(--spatial/gap/l, 24px)` (→ `$boreal-spatial-gap-l`), `align-items: center`, `justify-content: center`; no divider or extra chrome between the two calendars. Its own `padding: var(--spatial/padding/s,12px) var(--spatial/padding/l,24px)` is already supplied by the popover's existing `--popover-content-padding` custom property (`bds-date-picker.scss:8`), so only `gap`+centering needed adding to the new `.bds-date-picker__calendars` wrapper.
+- [x] Region: `expanded` popover header — <https://www.figma.com/design/rtiE5zGA4aoOuxIQMgfD6h/-BOR--DSG-COMPONENTS-%E2%86%92-FORMS?node-id=158-176511&m=dev> (node `158:176511`) — **Result:** confirms the plan's Task 18 decision (one-line `Start: ... End: ...` pair, not two lines) was correct — the node renders both as a single flex row, `gap: var(--spacing/xs,8px)` between the Start and End groups, `Start:`/`End:` labels in `$boreal-text-default-light`, values in `$boreal-text-default`. This is already handled by `formatRangeForDisplay`/`[slot='header-title']`'s existing typography rules (`bds-date-picker.scss:19-23`) — no SCSS change needed, cross-checked visually only.
+- [x] Modifier: day-range-start / day-range-end — default, hover, and combined with `today` — covered by the `DatePickerNumber` node above (`type: 'Start'|'End'`); confirm the `today` combination specifically, since the node's own variant axes don't include `isToday`. **Result:** the node's `actual: boolean` axis _is_ the `isToday` flag (every `actual=true` combo adds a `1px dashed $boreal-stroke-primary-base` border, matching this component's own pre-existing `--today` implementation exactly) — the plan's own open question is resolved by this discovery. Reused the existing `&.#{$prefix}__day--today { border-color: $boreal-text-inverse; }` override (previously scoped to `--selected` only) by extending it to also cover `--range-start`/`--range-end`, so a `today` range endpoint keeps its dashed border visible against the solid primary fill exactly as the `actual=true` + `Selected` combos show.
+- [x] Combination: range-start/end + disabled (Phase 3 min/max interplay) — covered by the `DatePickerNumber` node's `state: 'Disabled'` axis; confirm it crosses correctly with `type: 'Start'|'End'`. **Result:** `Disabled`+`Partial` resolves to `background-color: $boreal-ui-base-light` (unchanged from steady-state) + `color: $boreal-text-disabled` — already the natural result of this component's existing `--disabled` rule (sets only `color`/`cursor`) layered under the new `--in-range` rule (sets only `background-color`), no extra CSS needed. `Disabled`+`Selected` (Type=Default, captured) resolves to `$boreal-ui-primary-light` + `$boreal-text-inverse` — identical to this component's pre-existing `&--disabled.--selected` override, which was extended to also match `--range-start`/`--range-end`.
+- [x] Dimensions: `expanded`'s two calendars' shared width/alignment — covered by the node `158:176501` full-layout pull above. **Result:** see the dual-calendar row above — `gap-l` (24px) between two independently-sized calendars (each calendar's own width is already driven by this component's token-based `$grid-width` calc, not a fixed Figma pixel value), centered as a row.
+
+**Superseded — kept for cross-reference only:** ~~Modifier: day-in-range — default and hover~~ **(2026-08-31, user-supplied reference, confirm exact tokens before use):** user shared a `_DatePickerNumber` Figma matrix screenshot mid-Task-18-dispatch (not yet pulled via `get_design_context` — this is a visual capture only, re-pull the live node for exact color/spacing tokens before writing SCSS). Matrix shape: rows = day-cell **state** (`Default` / `Partial` / `Selected`) × **interaction** (`Default`/`Hover`/`Focus`/`Active`/`Disabled`/`Inactive`); columns = **position** (`Default`/`Start`/`End`/`Full`), each shown twice ("Default" spec column + "Actual" implementation column, latter shows dashed-border annotation guides). Observed pattern: `Default` state = plain outlined/unfilled cell; `Partial` (i.e. `isInRange`) = light-grey filled rounded-square background, same across all four position columns; `Selected` (i.e. `isRangeStart`/`isRangeEnd`/single-date `isSelected`) = solid blue fill (`Default`/`Focus` = brighter blue, `Hover`/`Active` = darker navy, `Disabled` = pale desaturated blue) — again visually identical across `Start`/`End`/`Full` position columns in this matrix, i.e. no distinct start-vs-end cap/pill shape is shown here. Now directly confirmable via node `14:23554` above instead of relying on this screenshot description.
+
+**Correction (2026-08-31, user-caught, dispatched below):** this task's own Figma finding — "`Start`/`End`/`Full` show no distinct cap/pill shape... visually identical" — was wrong. Confirmed via direct inspection of the raw `get_design_context` dump already on disk from this task's own pull (node `14:23554`, fileKey `rtiE5zGA4aoOuxIQMgfD6h`): `type: 'Default'` → uniform `rounded-[var(--radius/xs,4px)]` on all four corners (isolated single day); `type: 'Start'` → **only** `rounded-tl-`/`rounded-bl-` (left corners), square on the right; `type: 'End'` → **only** `rounded-tr-`/`rounded-br-` (right corners), square on the left — i.e. directional shapes meant to flush adjacent range days into one continuous band with rounded caps only at the true start/end, not a row of individually-rounded chips. `type: 'Full'` (the in-range middle-day shape) fell past this task's own truncated response and was never actually confirmed — needs a fresh, complete pull. The wrong "no distinct shape" conclusion happened because `DatePickerNumber` previews each day cell in isolation on a white background, where a left-only vs. right-only rounded corner isn't visually obvious without checking the actual CSS. Current SCSS implementation only varies `background-color`/`color` per range modifier class, keeping the uniform default `border-radius` — needs directional `border-radius` added per `--range-start`/`--range-end`/`--in-range` (the latter presumably square-both-sides, to confirm against the still-missing `Full` data).
 
 **Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × modifier combination enumerated has an explicit rule or a documented "no visual difference" note; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 4 conforms to the JSDoc brevity/content rule from Task 12.
 
 **Manual test (required):** Reuse Task 18's scenarios visually against the pulled Figma values.
 
+**Status:** ✅ done (2026-08-31) — `@frontend-subagent` styled `--in-range`/`--range-start`/`--range-end` in `bds-calendar-grid.scss` (14 lines) and `.bds-date-picker__calendars` gap/centering in `bds-date-picker.scss` (5 lines), both sourced from the 4 confirmed Figma nodes above; JSDoc for `range`/`value`/`bdsChange`/`valueChange` already conformed, no changes needed. Independently re-verified: diffs match exactly; both `$boreal-*` tokens and the `%flex-center` mixin confirmed to already exist in the codebase (not invented); `tsc --noEmit` clean except the same 5 pre-existing unrelated errors; full suite 297/297, 3269 passed, 0 regressions. `@qa-subagent` ran the manual visual test live via `playwright-cli`, reusing Task 18's `dp-range-expanded`/`dp-range-basic`/`dp-range-off` scenarios: range endpoints render solid primary-blue with white text (no distinct start/end cap shape, confirming the Figma finding), in-range days render light grey, both calendars render side by side with even spacing, in-range hover matches plain-day hover (no distinct style), and a live-injected disabled+in-range combination matched the plan's documented Figma rules exactly. Zero console errors, zero regressions vs. Task 18's functional pass. (Reported RGB values were close to but not byte-identical to the static token file's hex values — plausibly alpha-compositing/theme variance in the live browser vs. a static lookup; the semantic match — primary blue vs. light grey, per the SCSS rules — is unambiguous either way, not treated as a discrepancy worth re-verifying further.)
+
+**Correction (2026-09-01, user-caught via live QA screenshots, fixed immediately):** this task's range-band styling was insufficient. `table` uses `border-collapse: separate` with `border-spacing: $boreal-spatial-gap-2xs $boreal-spatial-gap-3xs` (4px/2px), so real whitespace separates every adjacent `<td>` that a cell's own `background-color`/`border-radius` cannot paint into — range endpoints and in-range days rendered as isolated solid squares with visible gaps between them instead of one continuous band. Also, this task's directional `border-radius` (`--range-start`: left corners only, `--range-end`: right corners only, per the "Correction (2026-08-31...)" note above) is itself superseded: live QA required `--range-start`/`--range-end` to render fully rounded on all four corners, like a normal single selected day.
+
+Fixed by `@frontend-subagent` in `bds-calendar-grid.scss`:
+
+- Removed the directional `border-radius` overrides on `--range-start`/`--range-end`/the combined `--range-start.--range-end` selector entirely — the base `&__day` rule's uniform `border-radius: $boreal-radius-xs` (all four corners) now applies unconditionally, giving every range endpoint the same fully-rounded cap as a single selected day.
+- `&__day` gained `position: relative; z-index: 0;` (the latter to establish a local stacking context so a negative-`z-index` pseudo-element paints behind the cell's own background, not behind unrelated sibling cells).
+- `--in-range` gained `::before`/`::after` pseudo-elements (one per side), and `--range-start`/`--range-end` each gained one pseudo-element on their connecting side only (`--range-start:not(.--range-end)::after` = trailing/right edge; `--range-end:not(.--range-start)::before` = leading/left edge; the combined single-day-range selector gets neither, matching the plan's existing "no distinct shape" single-day case). Each pseudo-element: `position: absolute`, `z-index: -1`, `background-color: $boreal-ui-base-light` (the in-range band color — not the endpoint's own `$boreal-ui-primary-base`/`-light`, since the visible portion sits in the gap adjacent to the band, not the cap), `width: calc(#{$boreal-spatial-gap-2xs} + #{$boreal-radius-xs})`, positioned via `left`/`right: calc(-1 * #{$boreal-spatial-gap-2xs})` — this offsets the pseudo-element's outer edge exactly `$boreal-spatial-gap-2xs` past the cell's own edge (satisfying the "overflow amount must be exactly the real border-spacing value" requirement) while its extra `$boreal-radius-xs` of width tucks the inner edge back under the cell's own rounded corner, so the corner's curved cutout doesn't leave a visible unfilled sliver.
+- No selector is gated on `:not(.--disabled)`, so disabled range-start/range-end/in-range cells (the `&--disabled` block, `$boreal-ui-primary-light`) get the identical overflow treatment automatically — the disabled block only overrides the cap's own `background-color`/`color`, not the band-connector pseudo-elements, matching the existing (non-disabled) band-color choice.
+- Vertical (row-wrap) continuity remains explicitly out of scope, unchanged from this task's original scope.
+
+Second, independent fix in this same correction pass: `helpers/renderRangeHeader.tsx`'s `"Start:"`/`"End:"` labels were hardcoded English literals, bypassing the project's established `DatePickerFooterLabels` i18n override mechanism (`labels` prop on `bds-date-picker`, already used for Clean/Cancel/Apply/Hour/Minute). Added `start?: string` / `end?: string` to `DatePickerFooterLabels` (`types/types.ts`) with English defaults `'Start:'`/`'End:'` added to `DEFAULT_FOOTER_LABELS` (`utils/constants.ts`). `RangeHeaderParams` gained an optional `labels?: DatePickerFooterLabels` field; `renderRangeHeader` resolves it with the same `{ ...DEFAULT_FOOTER_LABELS, ...labels }` spread pattern already used by `renderFooter`/`renderTimeSelector`, rather than hardcoding the label text. `bds-date-picker.tsx`'s `renderRangeHeader(...)` call site now passes `labels: this.labels`; the `labels` prop's JSDoc was updated to mention it now also covers the range-mode header's Start/End labels.
+
+Independently re-verified: `pnpm --filter @telesign/boreal-web-components build` (full type-check via Stencil transpile) clean, zero errors. Scoped suite re-run (`stencil test --spec -- src/components/forms/bds-date-picker`, which also picks up the sibling `bds-calendar-grid` suites under the same path): 14 test suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures, 0 regressions.
+
 **Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style range mode and finalize Phase 4 JSDoc"`
+
+**Correction (2026-09-01, second pass, user-caught via live QA screenshots #20/#21/#22/#25/#26):** the previous correction's pseudo-element technique still showed a grey sliver peeking through the rounded corners of `--range-start`/`--range-end` caps. Root-caused by pulling the real `_DatePickerNumber` dev-mode source directly (`get_design_context` on `14:23963`, `14:23967`, `14:23991`, `14:24011`, `14:24015`, `14:23771`, `14:23775`, `14:23799`, `14:23819`, `14:23823`) rather than inferring shape from screenshots: the design uses a **two-layer-per-cell structure** (`Bkgd` + `Selected`), not a single flat box with an overlapping pseudo-element:
+
+- `Bkgd` (bottom layer, always `$boreal-ui-base-light`): for `Start`, 34px wide, `rounded-tl`+`rounded-bl` only (square on the right), positioned flush with the cell's own left edge and extending exactly `$boreal-spatial-gap-2xs / 2` (2px — **half** the 4px border-spacing gap, not the full gap) past the cell's right edge. `End` is the exact mirror (`rounded-tr`+`rounded-br`, flush right, +2px left). `Full` (interior/middle day) is 36px, no rounding at all, +2px both sides. Two adjacent cells' `Bkgd` layers each contribute half the gap and meet flush in the middle — this (not the previous 4px-full-gap-plus-4px-own-cell-overlap sizing) is why the corner no longer peeks: `Bkgd`'s non-connecting-side corner shape is congruent with the cap's own corner there, and the connecting-side sliver is a flat edge, never a corner.
+- `Selected` (top layer): always exactly 32×32, uniformly rounded on all 4 corners regardless of `Start`/`End`/`Full`, painted on top of `Bkgd`.
+
+**Deliberate deviation from the literal Figma reading, confirmed with the user:** Figma's `Selection=Selected` (committed range) `Type=Full` variant shows a **blue** (`$boreal-ui-primary-base`) `Selected` cap layer identical in treatment to `Start`/`End` — i.e., literally, every day in a committed range gets its own rounded blue cap ("chained pills"), not a flat continuous band. This directly conflicts with the flat-grey-band-with-blue-endpoints-only visual already implemented, live-tested in browser, and approved by the user via Images #8–11 one round earlier. Presented both options to the user with a diagram; **user chose to keep the flat grey band (Option A)** — committed `Full`/interior days stay `$boreal-ui-base-light` flat fill (no blue cap layer), only `Start`/`End` get the blue cap. This is a deliberate, confirmed deviation from the literal design-system component, not an oversight — noted here so it isn't "corrected" back to the literal reading in a future pass without re-asking.
+
+**Hover-state spec, locked in (2026-09-01):** committed-range `Start`/`End` hover follows Figma literally (`$boreal-ui-primary-dark` `#023075` cap + `box-shadow: 0 1px 2px 0 rgba(19,19,22,.15)`, same `Bkgd` geometry, unchanged). Committed-range `Full`/interior-day hover does **not** follow Figma's literal `Selected+Hover+Full` (which is still the blue-chain-pill treatment, inconsistent with the Option-A override above) — instead it borrows the `Partial+Hover+Full` recipe: `$boreal-ui-default-lighter` (`#f7f7f8`) rounded 32×32 cap + the same drop-shadow, appearing as a floating rounded highlight over the flat band. This directly fixes the "trimmed hover" defect (Image #25): the previous flat `:hover` background swap only recolored the 32px cell and left the pseudo-element extensions in the old color, creating a visible seam; a proper cap-layer pop-up on hover has no such seam by construction.
+
+**Draft/"Partial"-selection preview band (new feature, not yet implemented):** hovering a day after `rangeStart` is committed but before `rangeEnd` is confirmed should preview the would-be range using `Selection=Partial` styling — identical `Bkgd`/`Selected` two-layer geometry to `Selected`, but monochrome: `Selected` cap = `$boreal-ui-base-light` (same as `Bkgd`, i.e. visually just a rounded cell, no blue) by default, `$boreal-ui-default-lighter` + shadow on hover (same recipe as committed `Full` hover above). Clears on `mouseleave` of the whole calendar grid, or immediately if the hovered day returns to the committed `rangeStart` day itself (no draft range against oneself).
+
+This work is split into three separately reviewed sub-tasks below (Task 19i, 19j, 19k) rather than one combined dispatch, per user request to ease review.
 
 ---
 
-### Task 20: Phase 4 unit tests (consolidated)
+### Task 19i (new — discovered during Task 19's second correction pass, 2026-09-01): `Bkgd`/`Selected` two-layer cell geometry
+
+**Executor:** @frontend-subagent (implementation)
+**Files:** `bds-calendar-grid.tsx` (modify — add `Bkgd`/`Selected` sub-DOM per day cell), `bds-calendar-grid.scss` (modify — replace pseudo-element technique with real two-layer geometry)
+
+**Scope:** implement exactly the `Bkgd`+`Selected` two-layer structure and pixel values documented in the correction note above, for the **default (non-hover) committed-range state only** — `Start`/`End` blue rounded cap + directional `Bkgd`; `Full` flat grey (`Bkgd` color reused for `Selected` too, i.e. no visible cap distinction, per the confirmed Option-A deviation). No hover-state changes, no draft/partial-preview feature — those are Tasks 19j and 19k. Remove the now-superseded pseudo-element (`::before`/`::after`) technique from the prior correction entirely rather than layering the new approach on top of it.
+
+**Acceptance criteria:** live-rendered range band (e.g. day 10–15 test scenario in `bds-calendar-grid`'s Task 17 playground section) shows no corner peek-through at `Start`/`End` caps; `Full`/interior days remain flat grey with no blue; gap-closing geometry matches the exact `Bkgd` widths/offsets/roundings documented above, sourced from `$boreal-*` tokens only.
+
+**Manual test (required):** reuse the existing `range-grid` Task 17 playground scenario (`Set range flags` button) — zoom-screenshot the day-10/11/12 and day-13/14/15 boundaries and confirm no grey/white sliver at either cap's rounded corners.
+
+**Status:** ✅ done (2026-09-01)
+
+Implemented in `bds-calendar-grid.tsx`: `renderDayCell` now computes `isRangeParticipant = cell.isInRange || cell.isRangeStart || cell.isRangeEnd` and, only for participating cells, renders two decorative `aria-hidden="true"` `<div>` children before the day-number text node — `bds-calendar-grid__day-background` then `bds-calendar-grid__day-cap` (in that DOM order; both `z-index: -1` inside the `<td>`'s own stacking context, so tree order alone puts `-cap` above `-background`, and the plain in-flow day-number text paints above both automatically since normal-flow content paints after negative-`z-index` descendants per CSS stacking rules — no extra wrapper/`z-index` needed on the number itself). Non-range cells (plain single-date `--selected`, `--today`, disabled, outside-month) get zero new DOM, unchanged from before.
+
+`bds-calendar-grid.scss`: removed the `::before`/`::after` pseudo-element technique entirely (old `--in-range`, `--range-start:not(--range-end)::after`, `--range-end:not(--range-start)::before` blocks). Replaced with:
+
+- `.bds-calendar-grid__day-background`/`.bds-calendar-grid__day-cap` base rules (`position: absolute; top/left: 0; z-index: -1;`), both defaulting to `$boreal-ui-base-light` fill.
+- `-background` default: `width: $boreal-spatial-layout-l` (32px), `height: 100%`, `border-radius: $boreal-radius-xs` (all 4 corners) — this is also the fallback for the same-day `rangeStart === rangeEnd` edge case, where neither directional `:not()` selector below matches.
+- `--in-range .day-background`: `left: calc(-1 * calc($boreal-spatial-gap-2xs / 2))` (-2px), `width: calc($boreal-spatial-layout-l + calc($boreal-spatial-gap-2xs / 2 * 2))` (36px), `border-radius: 0`.
+- `--range-start:not(--range-end) .day-background`: `left: 0`, `width: calc($boreal-spatial-layout-l + calc($boreal-spatial-gap-2xs / 2))` (34px), `border-radius: $boreal-radius-xs 0 0 $boreal-radius-xs` (TL+BL only).
+- `--range-end:not(--range-start) .day-background`: `right: 0; left: auto`, same 34px width, `border-radius: 0 $boreal-radius-xs $boreal-radius-xs 0` (TR+BR only).
+- `-cap` stays fixed 32×32 / `$boreal-radius-xs` all corners in every state (only its background-color changes); `--range-start .day-cap, --range-end .day-cap { background-color: $boreal-ui-primary-base; }` gives the blue cap — `--in-range .day-cap` is untouched, staying `$boreal-ui-base-light` (Option-A deviation: no blue chain-pill on interior days).
+- The pre-existing `&--selected, &--range-start, &--range-end { background-color: ...; &:hover/&:focus-visible/&:active {...} }` block (text color, today dashed-border-color, disabled override) was left completely untouched — hover/focus/active geometry is explicitly Task 19j's scope, not this task's.
+
+Verification: `pnpm --filter @telesign/boreal-web-components build` (forces a real Stencil transpile/type-check per this repo's Turbo-cache-false-positive gotcha) — clean, 0 errors. `stencil test --spec -- src/components/forms/bds-date-picker` (also picks up sibling `bds-calendar-grid` suites): 14 test suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures, 0 regressions — none of the existing specs assert on the day cell being a single flat element, so no test updates were needed; `textContent`-based assertions (e.g. `todayCells[0].textContent === '15'`) still pass since `.textContent` concatenates all descendant text regardless of the two new empty sibling `<div>`s.
+
+Not touched: `src/index.html`. The existing Task 17 `range-grid` playground scenario (`#range-set-btn`/`#range-clear-btn`) drives the day-state purely through `cell.isRangeStart`/`isInRange`/`isRangeEnd` flags on the mock grid data passed as a prop — it never reads or writes DOM classes directly — so it is unaffected by the new nested `<div>`s and continues to work as-is; not independently re-verified in a live browser this pass (no `qa-subagent`/Playwright dispatch was part of this task's scope), only confirmed by code inspection of the script that drives it.
+
+---
+
+### Task 19j (new — discovered during Task 19's second correction pass, 2026-09-01): committed-range hover states
+
+**Executor:** @frontend-subagent (implementation)
+**Files:** `bds-calendar-grid.scss` (modify)
+
+**Scope:** depends on Task 19i's two-layer structure existing first. Add `:hover` treatment for `Start`/`End` (`$boreal-ui-primary-dark` cap + drop-shadow, per Figma literally) and `Full`/interior days (`$boreal-ui-default-lighter` cap + drop-shadow, borrowed from `Partial+Hover+Full`, per the confirmed deviation) — both as the `Selected` layer's own hover-state color/shadow change, not a flat cell-background swap, so the hover treatment has no seam against the `Bkgd` extension.
+
+**Acceptance criteria:** hovering any in-range day (start, end, or interior) shows a full, seamless rounded highlight with drop-shadow, matching Image #26's reference states; no visible trim/seam at the cell's connecting edges during hover.
+
+**Manual test (required):** hover each of day 10 (start), 12 (interior), and 15 (end) in the `range-grid` playground scenario; confirm the full cap recolors/lifts with no visible seam at either connecting edge.
+
+**Status:** ✅ done (2026-09-01)
+
+Implemented entirely in `bds-calendar-grid.scss`, no `.tsx` changes needed. Added two new hover rules immediately after the existing `--range-start .day-cap, --range-end .day-cap { background-color: $boreal-ui-primary-base; }` base-color rule:
+
+- `&--range-start:not(.#{$prefix}__day--disabled):hover .#{$prefix}__day-cap, &--range-end:not(.#{$prefix}__day--disabled):hover .#{$prefix}__day-cap { background-color: $boreal-ui-primary-dark; box-shadow: 0 1px 2px 0 rgba(19, 19, 22, 0.15); @include bds-transition-surface; }` — verified against Figma dev-mode source nodes `14:23967`/`14:23991`.
+- `&--in-range:not(.#{$prefix}__day--disabled):hover .#{$prefix}__day-cap { background-color: $boreal-ui-default-lighter; box-shadow: 0 1px 2px 0 rgba(19, 19, 22, 0.15); @include bds-transition-surface; }` — verified against Figma node `14:23823` (`Partial+Hover+Full`), the confirmed non-blue-interior deviation carried over from Task 19i.
+
+Both rules target `.#{$prefix}__day-cap` exclusively — `.#{$prefix}__day-background` is untouched by hover in every state, so the still-grey directional bridge reads as a flat band with the recolored/lifted 32×32 cap floating over it, with no seam introduced at the bridge/cap boundary (the bridge was never blue at rest for `--in-range`, and for `--range-start`/`--range-end` the bridge stays the same resting grey it always was — only the cap itself darkens and gains the shadow).
+
+Also removed the now-redundant td-level `&:hover { background-color: $boreal-ui-primary-dark; @include bds-hover-shadow; }` for `--range-start`/`--range-end` from the pre-existing `&--selected, &--range-start, &--range-end { &:not(.#{$prefix}__day--disabled) { ... } }` block — that `<td>`-level hover was Task 19i-era dead-ish styling fully occluded by the opaque `.day-cap` layer above it (same 32×32 box, same `$boreal-radius-xs` corners, same top/left `0`), and its generic `bds-hover-shadow` mixin would have added an unwanted second shadow value on the `<td>` in addition to the new literal cap shadow. `&--selected` (plain single-date, non-range) is unaffected: split out into its own `&--selected:not(.#{$prefix}__day--disabled):hover { background-color: $boreal-ui-primary-dark; @include bds-transition-surface; @include bds-hover-shadow; }` rule so single-date hover keeps its original td-level treatment unchanged. `:focus-visible`/`:active` for all three (`--selected`, `--range-start`, `--range-end`) were left completely untouched — out of this task's scope (hover only).
+
+Disabled-cell exclusion: both new hover rules are guarded with `:not(.#{$prefix}__day--disabled)` on the state class itself (`&--range-start:not(...)`, `&--range-end:not(...)`, `&--in-range:not(...)`), matching the existing plain-day hover guard pattern — a disabled range cell never matches either new selector, so the pre-existing `&--disabled { cursor: not-allowed; ... }` rule (line ~169 in the file) continues to take sole precedence with no conflicting hover fill.
+
+Verification: `pnpm --filter @telesign/boreal-web-components build` — clean, 0 errors (forces a real Stencil transpile/type-check per this repo's Turbo-cache-false-positive gotcha). `stencil test --spec -- src/components/forms/bds-date-picker` (also picks up sibling `bds-calendar-grid` suites): 14 test suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures, 0 regressions — identical counts to Task 19i's verification run, confirming no spec asserts on hover-state CSS (none needed updating).
+
+Not touched: `src/index.html`. This pass was verified by code review and Figma dev-mode source inspection only — no live-browser/Playwright confirmation was performed (the `playwright` MCP server was unavailable this session — connection failure), so the "no visible seam while hovering" acceptance criterion is asserted from the CSS cascade/paint-order reasoning above, not from an actual rendered screenshot. Recommend a `qa-subagent` pass before this is considered fully closed out.
+
+**Correction (2026-09-01, user-caught via Image #27, fixed directly — no subagent dispatch, small isolated CSS fix):** `:focus-visible`/`:active`/`:hover` box-shadow rings on range-participating cells were being visually clipped by the next sibling cell's own painted content. Root cause: `bds-focus-ring`/`bds-focus-ring-active`/`bds-hover-shadow` (`_interactions.scss`) apply via `box-shadow`, which paints as part of the cell's own box, not a separate layer. Task 19i gave every `&__day` `position: relative; z-index: 0`, making each `<td>` its own stacking context. Sibling `<td>`s with the same explicit `z-index: 0` paint in DOM order — a later cell's entire subtree (including its `.day-background`, which deliberately overflows 2px into the shared border-spacing gap) paints above an earlier cell's box-shadow wherever the two overlap. Day 23's (range-start) focus ring was getting covered by day 24's (in-range) `.day-background` on the side facing it.
+
+Fix: added `z-index: 1` inside every `:hover`/`:focus-visible`/`:active` rule across `&__day` (plain days, `--selected`, `--range-start`, `--range-end`, `--in-range`), so the interacted cell's own stacking context temporarily rises above its neighbors', letting its box-shadow paint on top instead of being covered. Applied uniformly (not just to the exact `:focus-visible` case reported) since the same root cause affects `:hover`/`:active`'s box-shadows identically, and `--boreal-depth-box-shadow-focus`/`-active` is a hard, unblurred 4px ring (`0 0 0 1px white, 0 0 0 3px focus-color`) — clearly wide enough to reach into neighboring cells' territory, unlike the subtler blurred hover shadow.
+
+Decided to fix immediately rather than defer to Task 40 (arrow-key 2D grid traversal, Phase 8): this is a rendering regression introduced by Task 19i's own z-index architecture, not a keyboard-navigation-logic gap — Tab-key `:focus-visible` already applies today regardless of Task 40's arrow-key work, so deferring would leave a known visual defect live in already-shipped-looking work for many phases.
+
+Verified: `tsc --noEmit` — 5 pre-existing errors (`bds-dialog`/`bds-tooltip` test specs), 0 new, 0 in `bds-date-picker`/`bds-calendar-grid`. `stencil test --spec -- src/components/forms/bds-date-picker`: 14 suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures. Live-verified in browser (this was the exact gap the prior 19j pass flagged as unconfirmed): native `:focus-visible` couldn't be triggered via keyboard on day 10 directly (the grid uses roving `tabindex="-1"`/`"0"` with no arrow-key support yet — Task 40 — so Tab can't reach an arbitrary day cell without real keyboard-grid-traversal logic), so verified by temporarily injecting a scoped `:focus` override (identical box-shadow/z-index values) via a `<style>` tag and focusing the cell programmatically, then removing the override — this tests the exact CSS mechanism (box-shadow + z-index paint order) without depending on Chrome's `:focus-visible` heuristics or unbuilt keyboard-nav logic. Result: the ring rendered fully unclipped on all four sides of day 10, including the edge facing the grey band, zoomed in tight on the boundary to confirm. Cleaned up the injected style and blurred the cell afterward.
+
+**Correction (2026-09-01, third pass, user-caught via Images #29/#30, z-index fix disproven and replaced):** the z-index fix above was insufficient — it looked correct in a normal-resolution screenshot review, but the user pointed out the ring's top/bottom edges looked visibly thinner than its left/right edges, which led to pixel-level verification via `playwright` MCP (newly reconnected this session) that disproved the earlier "fully unclipped" claim. Root cause, precisely diagnosed via raw RGB pixel sampling (Python/PIL) at fixed offsets from each cell edge, not visual review: `box-shadow`'s table-cell background-painting order is not fully controlled by `z-index` in this browser/layout combination — the shipped ring (`--boreal-depth-box-shadow-focus`: `0 0 0 1px white, 0 0 0 3px focus-color`, a 4px/3px-CSS-equivalent ring) was measurably truncated to ~2px (top/bottom) and ~1px (left/right) of actual visible blue before the neighboring cell's own background took over, regardless of how high `z-index` was set — confirming the user's direct report that "increasing z-index doesn't change anything."
+
+Fix: replaced the outer ring layer with CSS `outline` instead of the outer portion of `box-shadow`. `outline` paints in a separate rendering layer from `box-shadow`/backgrounds and is not subject to the same table-cell background-painting-order clipping. Added two new local mixins in `bds-calendar-grid.scss` (`bds-calendar-day-focus-ring`, `bds-calendar-day-focus-ring-active` — local to this file only, the shared `_interactions.scss` `bds-focus-ring`/`bds-focus-ring-active` mixins were left untouched since they're correct for every other, non-table-cell component that uses them, and the compound `$boreal-depth-box-shadow-focus`/`-active` tokens they wrap can't be mechanically split across two CSS properties — they're opaque `var(--boreal-depth-box-shadow-*)` references, not a Sass list Sass can decompose at compile time): `outline: 3px solid $boreal-focus; outline-offset: 1px;` plus a small `box-shadow: 0 0 0 1px $boreal-white` (and the active state's `inset 0 1px 2px 0px rgba($boreal-black-rgb, .15)`) kept on `box-shadow` since those are thin/contained and don't need the same fix. `$boreal-focus`/`$boreal-white`/`$boreal-black-rgb` are the exact same Sass-aliased tokens (`packages/boreal-styleguidelines/dist/stencil/_theme.scss`) that `--boreal-depth-box-shadow-focus`/`-active` are themselves composed from — confirmed by reading the token source directly, not assumed — so this reuses the design system's actual color primitives rather than hand-picked hex/rgb values, and matches this file's own established `$boreal-*` token convention (initially written as raw `var(--boreal-*)`, corrected after user review to use the proper Sass aliases). Swapped into both the plain-day and `--selected`/`--range-start`/`--range-end` `:focus-visible`/`:active` rules; removed the now-redundant `outline: none` lines those rules previously used to suppress the browser default (superseded by the new intentional `outline` value).
+
+Verified via the same pixel-sampling method that disproved the prior fix, applied to a synthetic prototype first (to avoid repeating the same "looks right at a glance" mistake), then to the real shipped code: sampled raw RGB at fixed offsets from all three testable edges (top/bottom/left) of an interior in-range day genuinely focused via real `Tab`/`Shift+Tab` keyboard events (confirmed via `matches(':focus-visible') === true`, not a synthetic class) — all three sides now show the full, undipped `3px`-CSS-equivalent (6 device-px at this session's 2x DPR) band of focus color before transitioning to background, matching the intended token value exactly. `tsc --noEmit`: same 5 pre-existing unrelated errors, 0 new. `stencil test --spec -- src/components/forms/bds-date-picker`: 14 suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures, 0 regressions.
+
+**Follow-up (2026-09-01, same day): token cleanup + transition-smoothing + a specificity bug found along the way.**
+
+Token cleanup (user-requested review): replaced raw `var(--boreal-focus)`/`var(--boreal-white)`/hardcoded `rgba(19,19,22,.15)` in the new mixins with the proper Sass aliases `$boreal-focus`/`$boreal-white`/`$boreal-black-rgb` (`packages/boreal-styleguidelines/dist/stencil/_theme.scss`) — same underlying values, matches this file's existing `$boreal-*` convention. Confirmed byte-identical rendered output before/after (`rgb(158, 197, 255)`, `3px`) via live computed-style check.
+
+User then reported the new `:active`-state ring "blinks" (appears abruptly, no fade) where it previously was invisible. Root-caused live: `bds-transition-surface` (used everywhere else in this component) only lists `background-color`/`border-color`/`box-shadow` — never `outline` — so `outline-width` had no transition coverage and hard-cut. Fixed by adding a `bds-calendar-day-interaction-transition` mixin (background-color, border-color, box-shadow, outline-width) and restructuring the base state to `outline: 0 solid $boreal-focus` (constant color/style, only `outline-width` toggles 0↔3px) rather than `outline: none` → `outline: 3px solid ...`, since `outline-style` itself isn't animatable but `outline-width` is — transitioning a width from 0 avoids the non-animatable-keyword problem entirely.
+
+First attempt at this only declared the transition on the base `&__day` rule, reasoning it would cascade to every state. **User caught this didn't work and asked why** — real answer, verified via pixel/computed-style sampling: `transition` is a single CSS property; when a real click happens, `:hover` and `:active`/`:focus-visible` match the `<td>` _simultaneously_ (cursor stays over the cell while pressed), and whichever rule's selector wins the specificity/source-order cascade for the `transition` property is the one that applies — not necessarily the "intended" one. The base `&__day` rule (specificity ~(0,1,0)) always lost to the far more specific `:hover` selectors (`~(0,7,0)` for plain days, built from five chained `:not()` exclusions), which don't declare `outline-width` in their own transition list, so it was silently dropped. Redeclaring the transition directly on `:focus-visible`/`:active` fixed plain days (their selectors tie `:hover`'s specificity and win the source-order tie-break, since `:hover` is declared first for that block) — but the `--selected`/`--range-start`/`--range-end` block has `:hover` declared _after_ `:focus-visible`/`:active` in the file, so the same tie-break would favor `:hover` there instead, meaning that block's fix was suspected fragile even though it "looked" fixed.
+
+Real fix: rather than depend on winning a specificity tie-break at all, added `outline-width` to **every** `<td>`-level rule that can simultaneously match with `:focus-visible`/`:active` — the plain-day `:hover` and the `--selected:hover` rule (the `--range-start`/`--range-end`/`--in-range` `:hover` rules only touch the separate `.day-cap` child element, not the `<td>` itself, so they don't compete for this property and were left on `bds-transition-surface`, unchanged). Now every rule that could win the tie agrees on transitioning `outline-width`, so the outcome doesn't depend on which one wins.
+
+Verified live via `page.mouse.down()` held over the cell (replicating the exact real-click condition — cursor resting on the element, not just a synthetic `:active` class) with `outline-width` sampled at 40ms intervals: plain day (`0px→0.5px→1px→1.5px→2px→2.5px`) and `--range-start` (`0px→0.5px→1px→1.5px→2.5px`) both now ramp smoothly — the `--range-start` case is the one flagged as suspect above, confirmed fixed, not just assumed. `tsc --noEmit`: same 5 pre-existing unrelated errors, 0 new. `stencil test --spec -- src/components/forms/bds-date-picker`: 14 suites, 197 passed + 1 pre-existing todo = 198 total, 0 failures.
+
+**Correction — the release-snap "issue" above was already fixed, not a separate open item.** Initially reported (by the user, in a real browser) as not fading on `mouseup`, and hypothesized above as a fundamental `:active`-removal browser quirk requiring a JS-driven pressed-class workaround. That hypothesis was wrong: re-tested live via `page.mouse.up()` with `outline-width` sampled at 40ms intervals, and it fades smoothly (`3px→2.5px→1.5px→0.5px→0px`) on both a plain day and `--range-start` — no further fix needed. Root cause was identical to the press-direction bug already fixed: on release, with the cursor still resting on the cell (the normal case for a real click), the element doesn't go from "active" to "nothing" — it goes from "active" to **"hover"**, since the mouse never left. Adding `outline-width` to `:hover`'s own transition list (done above, to fix the press direction) fixed the landing state too, as a direct consequence, once actually re-verified instead of assumed.
+
+---
+
+### Task 19k (new — discovered during Task 19's second correction pass, 2026-09-01): preview/"Partial" hover-preview range band
+
+**Executor:** @frontend-subagent (implementation)
+**Files:** `bds-calendar-grid.tsx` (modify — new hover-tracked draft-range props/state), `bds-date-picker.tsx` (modify — owns `rangeStart`/hover tracking, computes draft `rangeEnd` preview), `bds-calendar-grid.scss` (modify — `Partial`-selection styling, reusing Task 19i's geometry)
+
+**Scope:** depends on Tasks 19i and 19j. New interaction: once `rangeStart` is committed and `rangeEnd` is still `null`, hovering a day previews the would-be range using `Selection=Partial` styling (monochrome grey `Bkgd`+`Selected`, `$boreal-ui-default-lighter`+shadow on hover, per the spec above) without mutating the committed `rangeStart`/`rangeEnd` state. Clears on `mouseleave` of the calendar grid, or when the hovered day is the committed `rangeStart` day itself.
+
+**Acceptance criteria:** hovering days after a committed `rangeStart` previews a live grey draft band with correct directional geometry (reusing Task 19i's `Bkgd` technique) that never touches the committed `rangeStart`/`rangeEnd` value; moving the mouse off the calendar or back onto the start day itself clears the preview with no leftover styling; committed range styling (Tasks 19i/19j) is completely unaffected when no draft is active.
+
+**Manual test (required):** new playground scenario: click a start day, hover forward across several days, confirm a live grey draft preview band appears and updates as the mouse moves; move mouse outside the calendar and confirm the preview clears; hover back onto the start day itself and confirm no draft renders; complete the range with a second click and confirm the final committed styling (Task 19i colors) takes over correctly.
+
+**Status:** ✅ done (2026-09-01)
+
+Implemented across `date-engine`, `bds-calendar-grid`, and `bds-date-picker`, landing on **"preview"** (not "draft") for every new name, per the dispatch brief's explicit naming decision — `bds-date-picker.tsx` already has an unrelated existing `draft` state property, so reusing that word for this new concept was avoided throughout.
+
+`packages/boreal-web-components/src/services/date-engine/types.ts`: `DayCell` gained `isPreviewInRange`/`isPreviewStart`/`isPreviewEnd` booleans, documented as mirroring `isInRange`/`isRangeStart`/`isRangeEnd`'s own exclusive-bounds logic but computed against `rangeStart`/`previewEnd`, all `false` when `previewEnd` isn't supplied.
+
+`packages/boreal-web-components/src/services/date-engine/grid.ts`: `GenerateMonthGridOptions` gained an optional `previewEnd?: Date`. New private `buildPreviewFlags(date, rangeStart, previewEnd)` helper reuses the existing `buildRangeFlags` pure function unchanged (rather than duplicating range-comparison logic) — called with `rangeStart`/`previewEnd` in place of `rangeStart`/`rangeEnd`, and short-circuits to all-`false` when `previewEnd` is `undefined` (so a committed `rangeStart` cell is never accidentally flagged as a preview endpoint just because `rangeStart` happens to be set). `buildDayCell` takes the new `previewEnd` parameter and spreads `buildPreviewFlags`'s result into the returned `DayCell` alongside the existing `buildRangeFlags` spread. `generateMonthGrid` destructures and forwards `options.previewEnd` through to `buildDayCell`, with its JSDoc extended to document the new parameter's independence from `rangeEnd` and the "caller decides when to pass it" contract.
+
+`packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/types/types.ts`: new `CalendarGridDayHoverDetail` interface (`{ date: string }`), parallel to the existing `CalendarGridDayClickDetail`.
+
+`bds-calendar-grid.tsx`: two new bare `@Event()`s — `bdsDayHover!: EventEmitter<CalendarGridDayHoverDetail>` and `bdsGridLeave!: EventEmitter<void>` — matching the existing `bdsDayClick`/`bdsMonthNavigate` controlled-component style exactly (component owns no selection state, only reports pointer activity upward). New private `handleDayHover(cell)` mirrors `handleDayClick`'s existing `!cell.isCurrentMonth || cell.isDisabled` guard verbatim, so hovering an outside-month or disabled cell never emits. New private `handleGridLeave` emits `bdsGridLeave` with no detail; wired via `onMouseLeave` on the `<table role="grid">` element itself (not the `Host`), so it fires only when the pointer leaves the day-grid table's own box (moving between child `<td>`s doesn't trigger it, since `mouseleave` doesn't fire for descendant transitions) — deliberately scoped to the grid body, not the header nav buttons above it, matching the plan's "leaves the calendar grid" wording. `dayCellClassMap` gained `--partial-in-range`/`--partial-start`/`--partial-end` modifiers driven by the new `DayCell` flags; `renderDayCell`'s `isRangeParticipant` check was extended to include the three preview flags so the `day-background`/`day-cap` sub-DOM (Task 19i's two-layer geometry) also renders for preview-only cells, and each `<td>` gained an `onMouseEnter={() => this.handleDayHover(cell)}` handler.
+
+`packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/value-mapping.ts`: `buildDisplayGrid` gained an optional trailing `previewEnd?: Date` parameter, forwarded as-is into `generateMonthGrid`'s options — JSDoc extended to note it's shared across both `expanded`-mode calendar instances the same way `rangeStart`/`rangeEnd` already are.
+
+`bds-date-picker.tsx`: new `@State() private previewEnd: string | null = null` (naive ISO date, matching `draft.rangeStart`/`draft.rangeEnd`'s own string convention — explicitly _not_ folded into the `draft` state object, per the naming-boundary decision). New `@Listen('bdsDayHover') handleDayHover` activates only when `this.effectiveRange && this.draft.rangeStart !== null && this.draft.rangeEnd === null`; clears `previewEnd` when the hovered date equals `draft.rangeStart` itself, otherwise reuses the exact same `compareDates(fromNaiveISODate(...), fromNaiveISODate(...)) > 0` "on or after start" check `selectRangeDay` (`utils/draft-state.ts`) already established as this codebase's precedent for range-forward-only behavior — a hovered date before `rangeStart` clears the preview rather than showing a backward band, matching that precedent instead of inventing new backward-hover UX. New `@Listen('bdsGridLeave') handleGridLeave` unconditionally clears `previewEnd`. The existing `@Listen('bdsDayClick') handleDayClick` was extended with a one-line `if (this.effectiveRange) { this.previewEnd = null; }` reset after updating `draft` — needed because without it, a stale `previewEnd` string from a prior selection could otherwise leak into a fresh range-start (`selectRangeDay`'s "start over" branch resets `rangeStart`/`rangeEnd` but has no reason to know about `previewEnd`, a sibling state field it doesn't own). `render()` computes `previewActive` (same three-part guard as the listener) and a `previewEndDate` (parsed via `fromNaiveISODate`, `undefined` when inactive or unset), passed as the new trailing argument to both `buildDisplayGrid` calls (~line 717 and ~line 736) so Task 18's existing dual-calendar `rangeStart`/`rangeEnd` sync extends naturally to the preview band too.
+
+`bds-calendar-grid.scss`: added `--partial-*` geometry by extending Task 19i's existing `--in-range`/`--range-start`/`--range-end` `.day-background` selectors with comma-joined `--partial-in-range`/`--partial-start`/`--partial-end` siblings — sharing the exact same pixel math (no duplication) since the geometry is identical between committed and preview states. Left the color rules completely separate: `--range-start`/`--range-end`'s `$boreal-ui-primary-base` cap-color rule was _not_ extended to the partial variants, so `--partial-*` cells fall through to `.day-cap`'s own base rule (already `$boreal-ui-base-light`) — i.e. visually just a rounded cell, no blue, per the locked-in "monochrome Partial" spec. Hover: extended Task 19j's existing `z-index: 1` and `$boreal-ui-default-lighter` + `bds-hover-shadow` interior-hover rules with the three `--partial-*` selectors joined into the same comma lists (all six of `--range-start`/`--range-end`/`--in-range`/`--partial-start`/`--partial-end`/`--partial-in-range` now share one non-blue hover recipe) — exactly the "same recipe as committed `Full` hover" the correction note above specified, reusing `bds-hover-shadow` rather than hand-rolling the `0 1px 2px 0 rgba(19,19,22,.15)` shadow value a second time. Did not touch the `&--selected, &--range-start, &--range-end { background-color: $boreal-ui-primary-base; color: $boreal-text-inverse; ... }` block or the `&--disabled` block — partial cells never reach either (the hover/click guards already exclude disabled cells from ever getting `--partial-*` classes, and partial cells were never meant to have inverse/white text).
+
+**Manual test:** new `src/index.html` playground section "bds-date-picker — range hover-preview band (EOA-17138 Task 19k)" (`dp-19k-preview`, `calendar-type="basic" range`) appended without touching any existing scenario. Live-verified end-to-end via `playwright` MCP against a scoped Stencil dev server (`stencil build --dev --watch --serve --port 3339`, bypassing the Turbo pipeline): clicked day 10 as start, hovered day 15 — screenshot confirmed a live grey band spanning 11–15 with correct rounded-end geometry and no blue; dispatched a real `mouseleave` on the grid's `<table>` and confirmed (post-render, polled) zero `--partial-*`-classed cells remained; hovered back onto day 10 itself and confirmed zero `--partial-*` cells; clicked day 15 to commit and confirmed via `querySelectorAll` counts (`partial: 0`, `committedStart: 1`, `committedEnd: 1`, `inRange: 4`) that the committed Task 19i/19j styling took over cleanly with no leftover preview classes. All four acceptance-criteria scenarios from the plan were exercised this way, not just asserted from code reading.
+
+Verification: `pnpm --filter @telesign/boreal-web-components build` — clean, 0 errors. `stencil test --spec -- src/components/forms/bds-date-picker` (also picks up sibling `bds-calendar-grid` suites): 14 test suites, 1 pre-existing todo + 203 passed = 204 total, 0 failures — 6 new tests added (3 `bdsDayHover`/`bdsGridLeave` event specs, 2 `--partial-*` class-rendering variant specs; the 6th is folded into the events file's hover-detail assertion). `stencil test --spec -- src/services/date-engine`: 4 test suites, 74 passed (up from 71), 0 failures — 3 new tests added to `grid.spec.ts` covering `previewEnd`-driven flags (all-false when omitted, correct start/interior/end flagging, and independence from `rangeEnd`/committed flags when both are supplied simultaneously).
+
+Not touched: `ICalendarGrid.ts` (props-only interface — the two new members are events, not props, so no change was needed there) and the pre-existing `range-grid` Task 17 playground scenario (left completely untouched, per the "never delete a manual QA scenario" convention).
+
+**Follow-up (2026-09-01, same day, user-caught): range header wrapping bug, fixed by removing the `headerPlaceholder` prop entirely.** User-tested the real `dp-19k-preview` picker (this task's own manual-test scenario) and found "Start: 2026/09/10 End: Select a date" wrapping to two lines inside the fixed-296px popover. Investigated three CSS-only fixes live via `playwright` MCP before any code was touched, and rejected all three: `width: 'auto'` for range mode fit the text but left the calendar grid stranded left-aligned with dead space on the right (unstable layout, user-rejected); `white-space: nowrap` + `text-overflow: ellipsis` didn't actually clip anything, because `bds-popover`'s own internal containers (`.popover-header__content`/`.popover-header__title`) lack `min-width: 0`, so — the classic flexbox gotcha — they refuse to shrink below content size and silently overflow the popover's fixed width instead of respecting it (a real gap in the shared `bds-popover` component, not fixable from this component alone); a version that also patched that gap then correctly clipped, but clipped the _committed_ start date exactly as eagerly as the placeholder, hiding real information, and a further attempt to prioritize the placeholder's shrink over the date's broke the layout outright (the `End:` label vanished, text overlapped) live-tested and rejected before it was ever proposed as a real fix.
+
+Root fix, proposed by the user and confirmed correct: derive the placeholder from `effectiveFormat` instead of free text — `effectiveFormat.toUpperCase()` (e.g. `'yyyy/MM/dd'` → `'YYYY/MM/DD'`). This has a load-bearing property: every date-fns date token maps 1:1 to its rendered digit count, so the placeholder is _mathematically guaranteed_ to never be longer than an actual formatted date in that same format — eliminating the wrapping bug's root cause rather than working around it with CSS. It also sidesteps i18n entirely (digits/separators, no English wording to translate) and automatically respects a consumer's custom `format` prop.
+
+User then asked to apply this consistently to _all_ variants (not just range) and to drop the `headerPlaceholder` prop entirely rather than keep it as a bounded override — reasoning that any free-text override reintroduces the same class of bug, and the format-derived value is strictly better UX (tells the user the expected shape) with no legitimate reason to override it. Implemented:
+
+- `bds-date-picker.tsx`: removed `@Prop() readonly headerPlaceholder: string = 'Select a date';` entirely; added `private get effectiveHeaderPlaceholder(): string { return this.effectiveFormat.toUpperCase(); }` next to the existing `effectiveFormat`/`effectiveWithTime` getters; both call sites (`renderRangeHeader`'s `placeholder` param and the plain single-date `<span slot="header-title">` fallback) now read `this.effectiveHeaderPlaceholder`.
+- `types/IDatePicker.ts`: removed `headerPlaceholder: string;` from the interface.
+- `__test__/bds-date-picker.basics.spec.ts`: renamed/rewrote the two tests that asserted the old `'Select a date'` literal and the "custom `headerPlaceholder`" override test (now impossible, since there's no prop to override) into a "format-derived placeholder" test (`'YYYY/MM/DD'`) and a "derives from a custom `format` prop" test (`format="dd-MM-yyyy"` → `'DD-MM-YYYY'`); updated two other pre-existing assertions that checked `.not.toBe('Select a date')`/`.toBe('Select a date')` to the new `'YYYY/MM/DD'` literal.
+- Storybook docs (`bds-date-picker.stories.ts`, `.mdx`): removed the now-nonexistent `headerPlaceholder` argType control, its story-args default, its template binding, and its entry in the MDX `ArgTypes` include list — left as broken references would have errored in Storybook, not just been incomplete (full doc polish is still Task 22's job, this was only removing dead bindings).
+- Confirmed via repo-wide grep: zero remaining references to `headerPlaceholder`/`header-placeholder` anywhere in `packages/` or `apps/` after the change (including the auto-generated `components.d.ts`, which had already regenerated via the running dev server's watch).
+
+Verified: `tsc --noEmit` — same 5 pre-existing unrelated errors, 0 new. `stencil test --spec -- src/components/forms/bds-date-picker`: 14 suites, 203 passed + 1 pre-existing todo = 204 total, 0 failures (same count as before — two tests renamed/repurposed, not net added/removed). Live-verified in browser: a `withTime` single-date picker (`dp1`) correctly shows `'YYYY/MM/DD HH:MM'` (confirming `DEFAULT_DATE_TIME_FORMAT.toUpperCase()` renders correctly, not just the plain-date case); `dp-19k-preview`'s range header now reads "Start: 2026/09/10 End: YYYY/MM/DD" on one line, popover still fixed-width, calendar grid unmoved — the original bug is gone at its root, no CSS overflow handling needed at all.
+
+**Second follow-up (2026-09-01, same day, user-caught): range header only showed the Start/End structure after a start day was picked, not on first load.** `render()`'s branch condition was `this.effectiveRange && headerText !== ''` — since `headerText` (from `formatRangeForDisplay`) is `''` until `draft.rangeStart` is set, range mode fell through to the plain single-`<span>` branch on first load, showing a bare "YYYY/MM/DD" placeholder with no labels, then switched to the full `renderRangeHeader` structure the instant a day was clicked — an inconsistent mid-interaction restructuring. Fixed by dropping the `headerText !== ''` half of the condition (`this.effectiveRange ? renderRangeHeader(...) : ...`) — `renderRangeHeader` already has its own per-group placeholder fallback (`startText !== '' ? startText : placeholder`), and `formatRangeForDisplay(null, null, ...)` already returns `''` for both bounds, so nothing new needed building; range mode now always renders the Start/End structure, with each side individually falling back to the placeholder until picked. Confirmed the single-date branch is unaffected by inspection, not just claimed: its trigger condition changes from "not range, or range with empty headerText" to just "not range" — for single-date mode `effectiveRange` is always `false`, so its own branch was never reachable via the `headerText === ''` clause in the first place; live-verified via `dp1` (a `withTime` single-date picker) both before and after picking a day, confirming identical output (`'YYYY/MM/DD HH:MM'` unpicked, `'2026/09/15 00:00'` after a click) to before this change. `tsc --noEmit`/tests re-verified: same 5 pre-existing errors, 204 total tests, 0 failures.
+
+**Third follow-up (2026-09-02, user-caught): the format-derived placeholder claim of "mathematically guaranteed to never overflow" was true for character _count_ but false for pixel _width_.** `effectiveFormat.toUpperCase()` maps 1:1 to digit count with a real formatted date, but a proportional font renders letter glyphs at a different width than digit glyphs — measured directly: `'YYYY/MM/DD'` renders at 80.2px vs. an equal-length real date `'2026/09/10'` at 66px, a ~14px difference per placeholder group. The `basic`+`range` scenario re-overflowed the fixed 296px popover under this discrepancy at a razor-thin margin the earlier test scenario happened to clear.
+
+Rather than another CSS patch, the user proposed a phased split, cross-checked against this plan's own prior research before implementing: `basic`+`range` shows a plain one-line dash-joined placeholder/value (`"YYYY/MM/DD – YYYY/MM/DD"`, no `Start:`/`End:` labels) for now; `expanded`+`range` keeps the labeled `renderRangeHeader` structure unchanged, since its popover is already `width: 'auto'` (Task 18) and has no overflow risk. `basic`+`range` is expected to regain the labeled format once Task 30's presets sidebar lands and widens its popover. Cross-checked against the plan before implementing: this isn't a new departure — Task 18's original header decision (line ~783, pre-`renderRangeHeader` correction) was already a plain one-line dash-joined display, and the presets sidebar (Task 30) was already gated on `range` alone rather than calendar type (2026-08-14 correction, restated in Phase 6's preamble) — so "sidebar always shows for range regardless of calendar type" required no plan change, only this note. One tension worth recording: the labeled `Start:`/`End:` format's original Figma source was a node named "Header Basic Time picker," suggesting it was designed for `basic` specifically, not `expanded` — no independently-confirmed Figma source exists for `expanded`'s own header. This split is therefore a conscious, acknowledged engineering tradeoff (leaning on `expanded`'s free `auto` width to avoid overflow risk) rather than a literal Figma-fidelity match, on the same footing as this plan's other recorded deliberate deviations (e.g. Task 19i's flat-band vs. blue-chain call).
+
+Implemented in `bds-date-picker.tsx`'s `render()`: `headerText` narrowed back to the single-date case only (its range-mode branch was redundant with the new `rangeStartText`/`rangeEndText` pair below and no longer read anywhere); added `rangeStartText`/`rangeEndText` (each `formatRangeForDisplay(bound, null, effectiveFormat, locale)`, reusing the exact per-bound formatting `renderRangeHeader`'s call site already used). The header-title branch now has three arms: `effectiveRange && isExpandedCalendarType` → `renderRangeHeader` (unchanged); `effectiveRange` (basic) → a plain `<span slot="header-title">` joining `rangeStartText`/`rangeEndText` with an en dash, each falling back individually to `effectiveHeaderPlaceholder` until picked (mirrors `renderRangeHeader`'s existing per-group placeholder pattern, just without the label wrapper); `!effectiveRange` → unchanged single-date span.
+
+No unit tests added for this split: confirmed via repo search that `bds-date-picker.range.spec.ts` doesn't exist yet — Task 20 (Phase 4 unit tests, consolidated) explicitly owns creating it and hasn't run yet, consistent with this plan's pattern of implementing range behavior across several tasks before a single consolidated test pass (see Task 15e precedent). Task 20's scope now needs to additionally cover: `basic`+`range` renders the plain dash-joined header (placeholder and partial/full picked states) with no `Start:`/`End:` labels; `expanded`+`range` still renders `renderRangeHeader`'s labeled structure; both share identical per-bound text via `rangeStartText`/`rangeEndText`.
+
+Verified: `tsc --noEmit` — same 5 pre-existing unrelated errors, 0 new. `stencil test --spec` (full suite, no path filter — the intended `testPathPattern` argument was mis-split by the shell into a character-class regex that happened to still match everything): 297 suites / 3278 passed + 1 pre-existing todo / 0 failed, no regressions.
+
+---
+
+### Task 19l (new — discovered during manual QA, 2026-09-02): `expanded` range visually duplicated across a phantom 6th grid row
+
+**Executor:** @frontend-subagent
+
+**Files:** `services/date-engine/grid.ts` (modify — `generateMonthGrid`)
+
+**Root cause (confirmed by reading, not yet fixed):** `generateMonthGrid` hardcodes `GRID_WEEKS = 6`, always emitting exactly 42 cells regardless of how many weeks the month actually spans. A month whose last day falls within row index 4 (e.g. September 2026: starts Tuesday, 30 days) still gets a superfluous row 5 that is entirely next-month filler days. Since range flags (`isInRange`/`isRangeStart`/`isRangeEnd`) are computed per real date, that phantom row correctly re-flags dates that are _also_ shown, correctly, in the real next-month grid rendered beside it in `calendarType="expanded"` — producing a visible duplicate range band. Not range-specific in origin; range banding just makes an existing latent bug visible.
+
+**Acceptance criteria:**
+
+- `generateMonthGrid` renders exactly as many weeks as the month needs (5 or 6), never an unconditional 6th week that is 100% next-month.
+- No visual duplication of range styling across `dp-range-expanded`'s two calendars for any month boundary (verify September 2026 specifically, plus at least one month that genuinely needs 6 rows, to confirm that case still renders correctly).
+- Confirm the emitted `value`/`bdsChange` detail was never affected by this bug (user's own observation) — add a regression note either way, not just an assumption.
+- No change to `MonthGrid`'s public shape (`weeks: DayCell[][]`) — only row count varies; every existing consumer (`bds-calendar-grid.tsx` render loop, tests) must keep working unmodified for the 5-row case, or be updated if a genuine fixed-height layout assumption is found.
+
+**Manual test (required):** `pnpm dev:components` — open `dp-range-expanded`, navigate to September 2026 in the left calendar, select Sept 29 → Oct 9 (or reproduce the range from the reported screenshot). Confirm no duplicate range band appears in either calendar. Repeat for a month/range combination that genuinely needs 6 rows (e.g. a month starting on a Saturday) and confirm the 6th row still renders correctly with no missing days. Also spot-check `basic`+`range` and a non-range `calendarType="expanded"` single-date picker for regressions.
+
+**Status:** ✅ done (2026-09-02) — the acceptance criteria above described the wrong fix direction and were superseded mid-execution; this note records what actually shipped.
+
+First pass implemented variable row count (5 or 6 weeks, dropping an unconditional-next-month 6th row) exactly as the criteria above describe. Live-verified against the reported Sept 29 → Oct 9 repro and a genuine 6-row month (Aug 2026) — worked. But independent review during verification caught a wrong constraint: the fix's `MIN_GRID_WEEKS = 5` floor is mathematically incorrect — a 28-day month starting exactly on the grid's own week-start day (e.g. February 2026: starts Sunday, 28 days, confirmed via direct `Date` computation) needs only 4 rows with zero padding, so a `5`-floor forces the _same_ phantom-row bug one boundary lower. Corrected to `MIN_GRID_WEEKS = 4` (the true floor — no month has fewer than 28 days) and re-verified (Feb 2026 renders 4 rows, a Feb→Mar range shows no duplication).
+
+Then the user provided a reference screenshot (an external date-range-picker mockup) showing the actually-intended design: every month keeps a **fixed 6-row grid always** — row count never varies — and adjacent-month filler cells simply render as muted, unstyled numbers even when their real date falls inside the selected range. This reframes the bug entirely: the phantom-row/row-count angle was solving the wrong layer. The real fix is that filler cells (`isCurrentMonth: false`) must never carry range/preview styling, regardless of what their real date's flags would otherwise compute to — the same real date already gets flagged correctly wherever it's a filler cell's _own_ proper month.
+
+**Final fix, `services/date-engine/grid.ts`:** reverted all row-count variability (`MIN_GRID_WEEKS` removed, `generateMonthGrid`'s week loop restored to its original unconditional `GRID_WEEKS` = 6). Added the real fix in `buildDayCell`: `isCurrentMonth` computed once up front, and `buildRangeFlags`/`buildPreviewFlags` are only applied when `isCurrentMonth` is `true` — filler cells get all-`false` range/preview flags (`NO_RANGE_FLAGS`/`NO_PREVIEW_FLAGS` constants) unconditionally, regardless of their real date's range membership. `isToday`/`isDisabled`/`isoDate`/`date` are unaffected — only range/preview styling is suppressed for filler cells.
+
+`grid.spec.ts` reverted to asserting `weeks.length === 6` unconditionally (matching the restored fixed-6 behavior) and gained a new regression test locking in the actual fix: generates September 2026's grid with `rangeStart`/`rangeEnd` spanning into October, asserts every October filler cell in September's 6th row has `isInRange`/`isRangeStart`/`isRangeEnd` all `false`, while the real September 29 cell (`isCurrentMonth: true`) correctly keeps `isRangeStart: true`.
+
+Value/`bdsChange` claim confirmed unaffected throughout all three passes — day identity is always the real ISO date string (`bdsDayClick` emits `{ date: cell.isoDate }`), never grid position, so none of this affected committed values.
+
+Verified independently, not just relayed: `tsc --noEmit` (same 5 pre-existing unrelated errors, 0 new) and full suite (297/297 suites, 3279 passed + 1 pre-existing todo — net -1 test vs. the intermediate variable-row pass since 2 row-count-specific tests were reverted and 1 gating test added) re-run directly, not taken on the subagent's word. Live-verified independently in the browser too: zoomed screenshots of `dp-range-expanded`'s Sept 29 → Oct 9 repro confirm September's own 6th row shows October 1-3/4-10 as plain muted numbers with zero band styling, while October's own grid correctly shows real styling for those same dates (and, symmetrically, plain muted text for September's 27-30 filler in October's own grid) — no duplication in either direction, matching the user's reference image exactly.
+
+**Commit:** `git commit -m "fix(web-components): EOA-17138 stop range styling duplicating across adjacent-month filler cells"`
+
+---
+
+### Task 19m — `expanded` dual calendars can drift out of consecutive months (split into 3 sequenced sub-tasks, 2026-09-02)
+
+**Split rationale (2026-09-02):** originally scoped as one task, but review found the three pieces below have meaningfully different blast radii and a real sequencing hazard, so they're dispatched and verified independently instead of in one commit:
+
+- **19m-1** touches a function (`resolveDisplayMonth`) shared by _both_ single-date and range modes, currently has zero direct unit coverage, and affects already-shipped Phase 3 (`basic` min/max) behavior as a side effect — it needs its own dedicated test pass and a regression run against `bds-date-picker.minmax.spec.ts` specifically, not to be silently bundled into a task labeled "Phase 4 dual-calendar fix."
+- **19m-3** (the nav-button lockstep + derived-state refactor) is confirmed lower-risk in isolation (grepped: zero tests anywhere reference `secondDisplayYear`/`secondDisplayMonth` directly, only via rendered DOM) — but it **must not ship before 19m-1**, because coupling the second calendar's Previous button to permanently-disabled is exactly what turns the pre-existing "opens on a disabled month" bug into an unrecoverable dead end (see the concrete repro below). Landing 19m-1 first means 19m-3 can never introduce that dead end, even transiently in git history.
+- **19m-2** (narrow-window warning) is small and shares the same investigation area as 19m-1, so it's bundled with it rather than given a fully separate dispatch.
+
+**Sequencing: 19m-1 → 19m-2 → 19m-3, each independently verified before the next starts.**
+
+---
+
+### Task 19m-1: clamp the initial/reopen display-month anchor against `min`/`max`
+
+**Status:** ✅ done (2026-09-03) — `resolveDisplayMonth` (`utils/value-mapping.ts`) gained optional `min`/`max` params and a new private `resolveFallbackDisplayMonth()`/`isValidDate()` pair; all three fallback-to-today branches (blank value, malformed `withTime` value, malformed naive-date value) now route through it. `resolveDraftDisplayMonth()` in `bds-date-picker.tsx` forwards `this.minDate`/`this.maxDate` in both the range and single-date branches. New `utils/__test__/value-mapping.spec.ts` (12 tests, this function's first-ever direct unit coverage) using `withMockedSystemTime`. Verified independently, not just trusted from the subagent report: diff reviewed line-by-line (matches scope exactly, no creep into 19m-2/19m-3); full `boreal-web-components` suite independently re-run twice (298 suites / 3291 passed + 1 todo / 3292 total / 0 failed, both times); `tsc --noEmit` confirmed only the same 5 pre-existing unrelated errors (`bds-dialog.behavior.spec.ts` ×1, `bds-tooltip-events.spec.ts` ×4); `eslint` clean on all three touched files. Manual `pnpm dev:components` + `playwright-cli` verification by `@qa-subagent`: `#dp-minmax` (min=2026-08-10, max=2026-08-20, no value, real clock 2026-09-03) now opens directly on **August 2026** with days 10-20 enabled (was opening on September, fully disabled, pre-fix) — screenshot-confirmed; regression scenarios (value inside window, no min/max set) both confirmed unaffected.
+Note: this repo's Stencil/Jest wrapper mis-parses a literal `--testPathPattern "a|b"` string as a character class (each character OR'd), so a "targeted" run silently becomes a full-suite run — harmless here since the full suite is the required regression check anyway, but don't rely on `--testPathPattern` to actually narrow scope in this repo.
+
+**Executor:** @frontend-subagent (implementation), @testing-subagent (unit tests)
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/utils/value-mapping.ts` (modify — `resolveDisplayMonth` gains optional `min`/`max` parameters), `components/forms/bds-date-picker/bds-date-picker/utils/__test__/value-mapping.spec.ts` (create — this function has zero direct unit coverage today), `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — `resolveDraftDisplayMonth` passes `minDate`/`maxDate` through to both call-site branches)
+
+**Root cause (confirmed by reading, not yet fixed):** `resolveDisplayMonth` (`utils/value-mapping.ts:34-38`) resolves the initial/reopen display month with **zero awareness of `min`/`max`** — falling back to "today's month" whenever there's no committed value. `resolveDraftDisplayMonth()` in `bds-date-picker.tsx` calls it from _both_ the range branch and the single-date branch, so this is shared Phase-3-and-Phase-4 code, not Phase-4-only. Concrete repro, using the real system date at time of writing (2026-09-02): open a `basic` (single-calendar) `min="2026-08-01" max="2026-08-31"` picker with no value today — it opens on September, entirely disabled, requiring an extra manual click of "Previous" to reach the valid month. This is a **pre-existing, already-shipped Phase 3 bug** that was never caught, because `bds-date-picker.minmax.spec.ts`'s 23 existing tests never mock system time and never assert the default-opened month against an unmocked clock (confirmed via grep — zero `withMockedSystemTime`/`new Date(202...)` calls in that file).
+
+**Industry research (external validation, 2026-09-02):**
+
+- **MUI X, `DateRangeCalendar`/`DateCalendar`** (https://mui.com/x/react-date-pickers/date-range-calendar/#choose-the-months-to-render, https://mui.com/x/react-date-pickers/date-calendar/#choose-the-initial-year-month): `currentMonthCalendarPosition` — MUI's own docs describe this exact bug and fix: "useful when using `disableFuture` to render the current month and the month before **instead of the current month and the month after**." `referenceDate` overrides the "today" default when it would be invalid.
+- **React Aria (Adobe), `useRangeCalendarState`** (https://react-aria.adobe.com/RangeCalendar/useRangeCalendarState.html): `selectionAlignment` explicitly controls how the visible window is anchored on initial render, for the same reason.
+- **Ant Design, `RangePicker`** (https://ant.design/components/date-picker — see `minDate`/`maxDate` under Common API): documented as "the minimum/maximum date, **which also limits the range of panel switching**" — `min`/`max` bounds navigation/anchoring directly, first-class.
+
+**Acceptance criteria:**
+
+- `resolveDisplayMonth(value, withTime, timezone, min?, max?)` — when `value` is blank (today-fallback path) and `min`/`max` are set, if today's month would be fully disabled (reuse `isMonthFullyDisabled`/`generateMonthGrid`, already imported in `bds-date-picker.tsx`), anchor to `max`'s month instead of today's (preferring the most recent valid month when both bounds are set).
+- `resolveDraftDisplayMonth()` passes `this.minDate`/`this.maxDate` through to `resolveDisplayMonth` in both the range and single-date branches.
+- Regression: when `value`/`rangeValue` is already set, `min`/`max` never override the value-derived anchor month — clamping only activates on the value-less fallback path.
+- Regression: `min`/`max` both unset behaves identically to today (no clamping logic engaged at all).
+- New `value-mapping.spec.ts` covers: today-outside-window clamps to `max`'s month; today-inside-window is unaffected; only `min` set and today is before it; only `max` set and today is after it; malformed `min`/`max` treated as unbounded (matching Task 13's existing convention for malformed values elsewhere in this component); a `≥2`-month window where today is outside it lands on a valid pair once combined with `expanded` (deferred to 19m-3's own manual test — this task's own tests are `resolveDisplayMonth` in isolation, not full-component).
+- Full regression run of `bds-date-picker.minmax.spec.ts` (existing Phase 3 suite, all 23 tests) confirms this change doesn't alter any already-asserted behavior — required specifically because this function is shared with already-shipped code, not just this plan's new work.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1: a `basic` min/max picker (reuse `dp-minmax`'s bounds or similar) opened with the real current date outside the window — confirm it opens on the bound's own month, not a disabled one. Scenario 2 (regression): a `basic` min/max picker opened with the current date inside the window — confirm no change from today's behavior. Scenario 3 (regression): a min/max picker with an already-committed `value` — confirm the value's own month still wins, unaffected by this change.
+
+**Commit:** `git commit -m "fix(bds-date-picker): EOA-17138 clamp initial display-month anchor to min/max bounds"`
+
+---
+
+### Task 19m-2: warn when `expanded`+`range`'s `min`–`max` window is narrower than 2 months
+
+**Status:** ✅ done (2026-09-03) — `componentWillLoad()` now calls a new private `warnIfNarrowExpandedRangeWindow()`, which fires a single `logger.warn('bds-date-picker', ...)` when `calendarType === 'expanded'` AND `effectiveRange` are both true AND both `min`/`max` are set with a calendar-month distance of less than 2 apart. Fires exactly once at mount (Stencil's `componentWillLoad` guarantee), not on re-render or interaction. Verified independently: diff reviewed line-by-line (24 lines added, fully localized, correctly reuses the pre-existing `isExpandedCalendarType`/`effectiveRange`/`minDate`/`maxDate` getters rather than duplicating logic); full `boreal-web-components` suite independently re-run (298 suites / 3291 passed + 1 todo / 3292 total / 0 failed); `tsc --noEmit` confirmed only the same 5 pre-existing unrelated errors; `eslint` clean. Manual `pnpm dev:components` + `playwright-cli` verification by `@qa-subagent`, using 4 new temporary playground scenarios added to `src/index.html` (`dp-19m2-narrow`/`dp-19m2-basic-narrow`/`dp-19m2-expanded-norange`/`dp-19m2-wide` — flagged as temporary; Task 19m-3 should decide whether to keep/extend/supersede them with its own formal scenario): warning fires exactly once for `expanded`+`range`+narrow-window, confirmed absent for `basic`, `expanded`-without-`range`, and a `>=2`-month-wide window; no rendering/interaction regression found (day click, nav-button disabled pattern, cell enabled/disabled counts all matched pre-existing, unrelated-to-this-change behavior).
+
+**Executor:** @frontend-subagent
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — a `logger.warn`, matching the existing pattern for other nonsensical prop combinations, e.g. `withTime` + `calendarType="default"`)
+
+**Rationale:** confirmed via the same industry research (19m-1's citations) that none of the four researched libraries (React Aria, React Day Picker, Ant Design, MUI X) auto-degrade a `min`–`max` window narrower than the number of rendered calendars — it's structurally impossible for 2 _different_ consecutive months to both be usable when the whole valid window fits inside 1, so all four treat it as a consumer misconfiguration to flag, not something to silently paper over with new fallback UI. This task documents that same stance for Boreal rather than building bespoke fallback logic.
+
+**Acceptance criteria:**
+
+- When `calendarType="expanded"` and `range` are both set, and `min`/`max` are both set with a calendar-month distance between them of less than 2, `logger.warn` fires once (not on every render) describing the limitation.
+- No behavior change beyond the warning — one of the two calendars is expected to remain permanently fully-disabled in this configuration, and that's accepted, documented behavior, not a bug this task fixes.
+- Regression: the warning never fires for `basic`/`default` `calendarType`, for `expanded` without `range`, or for a `≥2`-month window.
+
+**Manual test (required):** `pnpm dev:components` — an `expanded`+`range` picker with the same bounds as the existing `dp-navguard` single-month scenario (min/max both within August) — confirm the console warning fires once on mount, and confirm no change to rendering/behavior beyond the warning.
+
+**Commit:** `git commit -m "fix(bds-date-picker): EOA-17138 warn when expanded range min/max window is narrower than 2 months"`
+
+---
+
+### Task 19m-3: couple `expanded`'s dual-calendar navigation to stay consecutive (derived second-calendar state)
+
+**Status:** ✅ done (2026-09-03), commit `15c3d1b7` — implementation complete, two-pass QA verification complete (first pass found a real bug, second pass confirms the fix). `secondDisplayYear`/`secondDisplayMonth` converted from independent `@State` fields to private getters, always derived fresh as `nextMonthFrom(displayYear, displayMonth)` — confirmed via grep, zero `@State() secondDisplay*` matches remain, zero `secondCalendarEl`/`event.target === this.secondCalendarEl` matches remain (the field was removed entirely, not just its JSDoc, once `tsc`'s `noUnusedLocals` flagged it as write-only dead code). First calendar's `nextDisabled` now OR's in `this.isExpandedCalendarType`; second calendar's `prevDisabled` is forced `true`. `handleMonthNavigate` now shifts the single shared `displayYear`/`displayMonth` anchor by ±1 month via `event.detail.direction`, with no per-calendar branching. Verified independently: diff reviewed line-by-line against `computeNavGuard`/`render()`'s `calendars` array construction (both remaining live buttons — first's Previous, second's Next — still correctly guarded); full `boreal-web-components` suite independently re-run (298 suites / 3298 passed + 1 todo / 3299 total / 0 failed); `tsc --noEmit` (via an **absolute** `-p` path — a relative `tsconfig.json` path silently resolves the workspace-root config in this repo instead, producing thousands of bogus errors, a gotcha now documented) confirmed only the same 5 known pre-existing unrelated errors; `eslint` clean.
+
+**Bug found and fixed during manual QA (first pass), before this task could be marked done:** the acceptance criterion "opening an `expanded`+`range` picker with a `min`-`max` window ≥2 months, where today falls outside it, lands on a valid consecutive pair" failed for the new `dp-19m3-wide-excl-today` scenario (`min=2026-06-01`, `max=2026-08-31`) — it opened on **August/September** (September fully disabled), not a valid pair, because Task 19m-1's `resolveFallbackDisplayMonth()` anchors to `max`'s own month when today is out of range, with zero awareness that `expanded`+`range`'s second calendar is always `anchor + 1`. **Fixed** by adding an opt-in `reserveExtraMonth` parameter (`utils/value-mapping.ts`), set only by `resolveDraftDisplayMonth()`'s range branch when `this.isExpandedCalendarType`, which backs the anchor off one further month when it would otherwise land exactly on `max` — but only when that backed-off month is still `>= min`'s month (a no-op for the narrow, <2-month window Task 19m-2 already documents separately). 7 new regression tests added to `value-mapping.spec.ts` covering this exact scenario plus confirming non-`expanded`/non-`range` callers are unaffected. Second QA pass confirmed the fix: `dp-19m3-wide-excl-today` now correctly opens on **July/August** (not June/July — see note below), with all of the first pass's other confirmed-passing scenarios re-confirmed unaffected (`dp-range-expanded`'s no-min/max lockstep nav; `dp-19m2-wide`'s boundary-guarding at June/July and November/December, a _different_ scenario with a wider min=2026-06-01/max=2026-12-31 window; `dp-19m2-narrow`'s unchanged single-calendar-disabled limitation; day click/range/swap/Apply).
+
+**Documentation bug found and fixed separately (2026-09-03, post-QA):** `src/index.html`'s own Scenario 5 prose (describing `dp-19m3-wide-excl-today`) was stale — it said `max=2026-07-31` ("2-month-wide", expecting June/July) when the actual element uses `max=2026-08-31` (a 3-calendar-month window, correctly opening on July/August per the fix above). Corrected the prose to match the element and the QA-confirmed result. **Do not confuse `dp-19m2-wide`'s June/July boundary-guard result (a different, wider min=June/max=December scenario, unrelated to this bug) with `dp-19m3-wide-excl-today`'s July/August anchor-fallback result** — both are individually correct, for two different scenarios with two different `max` bounds.
+
+**Executor:** @frontend-subagent
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — `handleMonthNavigate`, the `calendars` array construction in `render()`, `secondDisplayYear`/`secondDisplayMonth` converted from independent `@State` to a derived value, `listenClickTrigger`, and the `secondDisplayYear`/`secondDisplayMonth`/`secondCalendarEl` JSDoc blocks — see acceptance criteria)
+
+**Precondition:** Tasks 19m-1 and 19m-2 are merged first — this task assumes the initial anchor is already correctly clamped against `min`/`max`, so the only remaining out-of-range scenario when this task's coupling lands is the already-warned-about narrow-window case (19m-2), never a new dead end.
+
+**Root cause (confirmed by reading, not yet fixed):** `secondDisplayYear`/`secondDisplayMonth`'s own JSDoc (lines 239-241) states the second calendar "navigates fully independently via its own `bdsMonthNavigate`" — this is the current, intentional design. `handleMonthNavigate` (lines 686-693) updates only the calendar that emitted the event (branching on `event.target === this.secondCalendarEl`), with zero coupling to the other calendar's displayed month. Nothing prevents a user from advancing the second calendar forward (or the first calendar's own next-month button, which is currently live and unguarded against the second calendar) until the two show non-consecutive, or even identical/reversed, months. **Before this task, the second calendar's own Previous button is still independently clickable, so a user can self-recover from a bad default by walking it back manually — this task's own fix removes that recovery path, which is exactly why 19m-1 must land first** (see that task's repro).
+
+**Industry research (external validation, 2026-09-02):**
+
+- **React Aria (Adobe), `useRangeCalendarState`** (https://react-aria.adobe.com/RangeCalendar/useRangeCalendarState.html): tracks a single `focusedDate` + `visibleDuration` (e.g. `{ months: 2 }`); `visibleRange` is _derived_ from that pair as one unit, not two independent states — structurally prevents drift, the exact bug class this task is otherwise patching reactively via disabled buttons.
+- **React Day Picker, `numberOfMonths`/`pagedNavigation`/`startMonth`/`endMonth`** (https://daypicker.dev/docs/navigation, https://daypicker.dev/docs/grid-and-months): one `month` state, N months derived from it; `startMonth`/`endMonth` bound navigation itself, not just day-cell disabling.
+
+**Required behavior (per user's own spec, plus the industry-pattern finding above):**
+
+- First (left) calendar's "Next month" button is disabled/hidden unconditionally, layered on top of its existing min/max nav-guard for "Previous month" (not replacing it).
+- Second (right) calendar's "Previous month" button is disabled/hidden unconditionally, layered on top of its existing min/max nav-guard for "Next month".
+- First calendar's "Previous month" moves _both_ calendars back one month each, staying consecutive.
+- Second calendar's "Next month" moves _both_ calendars forward one month each, staying consecutive.
+- The two calendars are always exactly one month apart, in every reachable state — matching the standard dual-month range-picker convention (e.g. Airbnb-style, MUI `DateRangePicker`).
+- **`secondDisplayYear`/`secondDisplayMonth` are converted from independent `@State` to a value derived fresh every render/reopen from `displayYear`/`displayMonth` (`nextMonthFrom`)** — matching React Aria's single-`focusedDate`-plus-`visibleDuration` model and React Day Picker's single-`month`-plus-`numberOfMonths` model (both cited above). This makes the whole "two calendars can drift apart" bug class structurally impossible, rather than merely guarded against by disabled buttons — the disabled-button behavior above still applies, but as a UI consequence of the derivation, not the mechanism preventing drift.
+
+**Implementation approach:** `bds-calendar-grid` already accepts `prevDisabled`/`nextDisabled` props (used today for the min/max guard) and `CalendarGridMonthNavigateDetail` already carries a `direction: 'prev' | 'next'` field — no new plumbing needed. In `render()`'s `calendars` array construction: force the first calendar's `nextDisabled` to `true` unconditionally (OR'd with its existing min/max guard result for `prevDisabled`, unchanged); force the second calendar's `prevDisabled` to `true` unconditionally (OR'd similarly for `nextDisabled`). In `handleMonthNavigate`: since only two live buttons remain (first's prev, second's next) once the above lands, shift _both_ `displayYear`/`displayMonth` by the same one-month delta on any incoming event, with `secondDisplayYear`/`secondDisplayMonth` simply re-derived from the new `displayYear`/`displayMonth` on the next render (no separate assignment) — the existing `event.target === this.secondCalendarEl` branch becomes unnecessary entirely once the second calendar is derived rather than independently stateful, since there's only ever one pair of values to update.
+
+**Acceptance criteria:**
+
+- The two `expanded` calendars can never be navigated into a non-consecutive (or identical/reversed) state, through any combination of button clicks.
+- First calendar's "Next" and second calendar's "Previous" are unclickable (disabled or hidden — pick one, consistent with this project's existing disabled-button convention rather than introducing a new hide-based pattern).
+- Existing min/max nav-guard behavior (Task 9's confirmed design) is preserved unchanged for the two remaining live buttons (first's "Previous", second's "Next").
+- `basic`/`default` `calendarType` unaffected — this is scoped entirely to `expanded`'s dual-calendar case.
+- Day click, range selection, swap, Apply/Cancel/Clean all continue to work unchanged.
+- `secondDisplayYear`/`secondDisplayMonth`'s JSDoc (currently "...then navigates fully independently via its own `bdsMonthNavigate`") is corrected to describe the new derived, lockstep/consecutive-month behavior instead — this exact sentence goes stale the moment this task ships, and it's easy to miss since it sits above the `@State()` declarations, not inside `handleMonthNavigate` itself where the rest of this task's diff lives.
+- `secondCalendarEl`'s own JSDoc ("so `handleMonthNavigate` can tell it apart from the first... and route the `bdsMonthNavigate` event accordingly") is updated to match, since the branch it describes is removed entirely once the second calendar is derived rather than independently stateful.
+- **`secondDisplayYear`/`secondDisplayMonth` no longer exist as independent `@State` fields** — verify via a diff/grep, not just behavior, that they're now computed values (e.g. a private getter or inline in `render()`), not assigned to directly anywhere outside their own derivation.
+- **Opening (or reopening) an `expanded` + `range` picker with a `min`–`max` window ≥ 2 months, where "today" falls outside that window, lands on a valid consecutive pair** — this should already hold true given 19m-1 landed first; this task's own manual test re-confirms it holds with coupling active too.
+- **The narrow-window (`min`–`max` spans <2 months) case never produces a total dead end (zero live nav buttons)** even though one of the two calendars is expected to remain permanently fully-disabled in that configuration — matches 19m-2's documented, warned-about limitation, not something this task is expected to make fully navigable.
+
+**Manual test (required):** `pnpm dev:components` — open `dp-range-expanded`. Confirm the first calendar's "Next month" button and the second calendar's "Previous month" button are both disabled from the start. Click the first calendar's "Previous" repeatedly — confirm both calendars move back together, staying exactly one month apart. Click the second calendar's "Next" repeatedly — confirm both move forward together. Confirm min/max guarding still correctly disables navigation at the bound, on the two remaining live buttons. Spot-check day click/range selection/swap/Apply still work correctly throughout. **New scenario (add to `src/index.html`, since Task 11's min/max playground never combined with `range`/`expanded`):** an `expanded`+`range` picker with a ≥2-month-wide `min`/`max` window that excludes today's month — confirm it opens on a valid, selectable consecutive pair (re-confirms 19m-1's fix holds with coupling active). **New scenario:** the same narrow-window picker from 19m-2 — confirm no complete dead end (at least the calendar containing the valid month remains selectable, even though the other stays permanently disabled).
+
+**Commit:** `git commit -m "fix(web-components): EOA-17138 keep expanded dual calendars on consecutive months"`
+
+---
+
+### Task 19n (new — discovered during design review, 2026-09-02): Clean button should stay open (not close popover); Cancel confirmed correct as-is
+
+**Status:** ✅ done (2026-09-03) — `handleFooterAction`'s `CLEAN` branch no longer calls `closePopover()`; `CANCEL`/`APPLY` unchanged. Both `CLEAN` and `CANCEL` now also set `this.previewEnd = null` when `effectiveRange` is true (defensive, matching `handleDayClick`'s existing convention). `handleFieldClear` already delegates to `handleFooterAction(FOOTER_ACTION.CLEAN)`, so the slotted field's own clear (✕) button inherited the fix with no separate change. Both flagged tests in `bds-date-picker.events.spec.ts` (~line 310, ~line 418) were inverted (assert `hidePopover` **not** called) and renamed to match. Verified independently, not just relayed: diff reviewed line-by-line (matches scope exactly — a 6-line change to `bds-date-picker.tsx`, a 4-line test-assertion inversion, both confirmed via `git diff`); `tsc --noEmit` re-run directly (same 5 pre-existing unrelated errors, 0 new); full `boreal-web-components` suite re-run directly (298/298 suites, 3298 passed + 1 todo, 0 failed); `eslint` clean on both touched files. Live-verified independently in the browser too (not just trusting the subagent's manual-test report): drove Scenario 1 in `src/index.html`'s new QA section (`dp-19n-single`) — selected a day, clicked Clean, confirmed the popover stayed open with the field reset to its empty placeholder and no day marked selected; then selected a fresh day and clicked Cancel, confirmed the popover closed with the field reverted to empty (last-committed value). No console errors during either interaction.
+
+**Executor:** @frontend-subagent
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — `handleFooterAction`), `components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.events.spec.ts` (modify — see acceptance criteria, two existing tests directly contradict the new behavior)
+
+**Background:** Reviewed live during a design discussion, not from a QA run. `handleFooterAction`'s `CANCEL` and `CLEAN` branches were both found to call `void this.bdsPopover?.closePopover();` unconditionally. Traced and confirmed:
+
+- **`CANCEL`** (discard in-progress edits, revert draft to the last-committed `value`, close) is correct as designed — it's a session-ending action, same category as every other Cancel button in the system. No change.
+- **`CLEAN`** conflates two different actions: resetting the draft to empty (a draft-editing action, same category as picking a day) and ending the session (closing the popover). Only the latter justifies a close. Since Apply is the only other action in this component that commits and closes, Clean forcing an identical close-then-reopen round trip to make a second selection is unnecessary friction and inconsistent with the draft-until-Apply model the rest of the component follows.
+
+**Shared code path with the slotted field's own clear (✕) button — confirmed by reading, not yet fixed:** `handleFieldClear` (the handler wired to the slotted field's own `bdsClear` event, e.g. via `clearable`/`clear-on-hover`) calls `this.handleFooterAction(FOOTER_ACTION.CLEAN)` directly — it is not a separate implementation. Fixing `CLEAN` therefore automatically fixes the field's own clear button too; no second code path to touch. However, **two existing tests in `bds-date-picker.events.spec.ts` explicitly assert the old (soon-to-be-wrong) behavior and will fail once this ships**, found by grepping for existing `hidePopover`/Clean assertions rather than assumed:
+
+- `it('Clean closes the popover', ...)` (line 310) — asserts `HTMLElement.prototype.hidePopover` **was** called after clicking the footer's Clean button. Must invert to assert it was **not** called.
+- `it("the slotted field's own bdsClear also closes the popover, matching the footer's Clean action", ...)` (line 418) — same assertion, via the field's own clear (✕) button. Must invert identically, and its title updated (it currently documents the very behavior being removed).
+
+No other spec file in this component asserts Clean-closes-popover (checked `bds-date-picker.a11y/basics/calendartype/form/keyboard/variants.spec.ts` — their `hidePopover` assertions are all click-outside/Escape-driven, unrelated to Clean).
+
+**Range-preview (`previewEnd`) edge case — investigated, confirmed not a bug:** traced `previewEnd`'s full lifecycle (`handleDayHover`/`handleGridLeave`/`handleDayClick`) against `render()`'s `previewActive = this.effectiveRange && this.draft.rangeStart !== null && this.draft.rangeEnd === null` gate. Since `CLEAN` resets `draft.rangeStart` to `null`, `previewActive` is immediately `false` regardless of `previewEnd`'s stale value, so no stale preview band can render while the popover stays open. The next day click (starting a fresh range) unconditionally zeroes `previewEnd` in `handleDayClick` before any new preview could compute, closing the window entirely. **Not a blocking issue** — keeping the popover open after Clean does not need a `previewEnd` reset to avoid a visible bug. Adding one anyway is cheap defense-in-depth (see acceptance criteria) so the "no stale preview" guarantee doesn't rest solely on `previewActive`'s current gating logic surviving future changes (e.g. a presets/quick-select feature).
+
+**Acceptance criteria:**
+
+- `CLEAN` no longer calls `closePopover()` — only resets the draft (`resetRangeDraft('')`/`resetDraft('', ...)`) and commits the empty value (`commitValue('')`), exactly as today, minus the close.
+- `CLEAN` and `CANCEL` both explicitly set `this.previewEnd = null` when `effectiveRange` is true, matching `handleDayClick`'s existing convention — defensive, not fixing an observed bug.
+- `CANCEL`'s existing behavior (revert draft to last-committed value, close popover) is unchanged.
+- After Clean, the popover stays open with an empty draft (no day/range selected, header shows the placeholder), ready for an immediate new selection.
+- After Clean, the committed `value` is cleared immediately (`bdsChange`/`valueChange` still emit `''`), matching today's eager-commit behavior — only the close is removed.
+- Regression: Apply and Cancel still close the popover as before; only Clean's close is removed.
+- Regression: single-date mode's Clean (no `range`) behaves identically minus the close — draft/committed value both reset to empty, popover stays open.
+- The slotted field's own clear (✕) button (`handleFieldClear` → `handleFooterAction(FOOTER_ACTION.CLEAN)`) inherits the same fix automatically, since it's the same code path — no separate implementation needed, but the two existing tests below must be updated or this task isn't actually verified as done.
+- `bds-date-picker.events.spec.ts`'s `'Clean closes the popover'` test (line 310) is rewritten to assert `hidePopover` is **not** called, and renamed to reflect the new behavior (e.g. `'Clean does not close the popover'`).
+- `bds-date-picker.events.spec.ts`'s `"the slotted field's own bdsClear also closes the popover, matching the footer's Clean action"` test (line 418) is rewritten identically (assert `hidePopover` not called) and renamed to match.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 1 (single-date): select a day, click Clean, confirm the popover stays open, the field clears immediately, and a new day can be picked right away without reopening. Scenario 2 (range, `basic`/`expanded`): select a start (and optionally an end) date, click Clean, confirm the popover stays open with both endpoints cleared, then hover/select a fresh range immediately — confirm no stale preview band flashes before the new `rangeStart` is set. Scenario 3 (regression): confirm Cancel and Apply both still close the popover in every `calendarType`/`range` combination. Scenario 4 (field's own clear button): with the popover open and a value selected, click the slotted field's own clear (✕) icon (requires `clearable` on the field) instead of the footer's Clean button — confirm identical behavior: value clears immediately, popover stays open.
+
+**Commit:** `git commit -m "fix(bds-date-picker): EOA-17138 keep popover open after Clean instead of closing it"`
+
+---
+
+### Task 19o (new — discovered during manual QA, 2026-09-02): `calendarType="default"` + `required` shows a transient invalid flash on day click
+
+**Status:** ✅ done (2026-09-03) — resolved directly by the user, not via subagent dispatch. The first-pass CSS-transition fix (`skipFieldErrorTransitionOnce`/`ensureSkipFieldTransitionStyle` in `bds-date-picker.tsx`) targeted the wrong root cause and was fully reverted by the user — confirmed via `grep` for both symbol names in `bds-date-picker.tsx`, zero matches, and `git diff` showing that file untouched. The actual fix — `validation-timing="submit"` added to Scenario 4's slotted `<bds-text-field>` in `src/index.html` (`packages/boreal-web-components/src/index.html:205`) — was applied by the user directly and confirmed working live. No `bds-date-picker.tsx`/`bds-text-field` component code changes were needed; this was purely a consumption-pattern fix. Task 22 (Phase 4 documentation) already carries the requirement to document `validation-timing="submit"` as necessary for any `required` `bds-date-picker` consumer.
+
+**Executor:** @frontend-subagent
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (investigate first — likely `handleDayClick`/`commitValue`/`@Watch('value')` interaction; exact fix location depends on root cause found)
+
+**Reported behavior:** Scenario 4 in "bds-date-picker — calendarType (EOA-17138 Task 15c)" (`src/index.html`) — with the field `required` and `calendarType="default"`, selecting a day briefly shows the field's invalid/error state immediately after the click, before the popover finishes closing, then it self-corrects to valid.
+
+**Root cause — confirmed via two independent rounds of live instrumentation (2026-09-03):**
+
+First round (both a dispatched `@frontend-subagent` and, separately, the orchestrating session, using two different techniques — a patched internal field setter and a property-descriptor override) found the `error` _property itself_ transitions cleanly `true → false` in one synchronous step, with zero bounce, across all of: synthetic `.click()`, a full realistic pointer/mouse event sequence, a real Playwright click, and `basic`/`expanded` via Apply. This made the bug look non-reproducible — but that was only checking JS state, not what's actually painted.
+
+**The user reported it still visibly reproduces**, which prompted a second look at the _paint_ layer instead of the property layer: `.bds-text-field__container` (inside `bds-text-field`, the slotted field date-picker renders into) carries `transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s`. While the popover is open with `required` + an empty value, the field is focused _and_ invalid, so its border renders red. The moment a day is clicked, `error` flips to `false` correctly and instantly (as the first round proved) — but the border-color does not snap to its new color; it **animates** over 300ms. Combined with the popover's own close animation firing at roughly the same time, that 300ms red→gray fade is what reads as "briefly shows invalid, then self-corrects." Confirmed directly by temporarily forcing all page CSS transitions to 2s (`* { transition-duration: 2s !important }`) and watching the border visibly fade from red to its default color well after `error` had already settled to `false`.
+
+**This is a CSS transition/paint-timing issue, not a data/validity logic bug** — `handleDayClick`/`commitValue`/`watchValue`/`syncFieldError` are all already correct and need no change. `validation-timing` (`bds-text-field`'s own prop controlling when its _internal_ constraint validation runs — blur/change/input/submit) is unrelated: it doesn't apply here since `bds-date-picker` deliberately never sets `required` on the slotted field itself (see `componentDidLoad`'s existing warning against that) and drives `error`/`errorMessage` imperatively instead: the 300ms transition fires on any `error` toggle regardless of which mechanism changed it.
+
+**Fix scope decision (user, 2026-09-03):** scope the fix to `bds-date-picker` only, not `bds-text-field`'s shared transition — `bds-text-field` is consumed broadly and the fade is desirable in its normal use (typing, blur, etc.); only this specific commit-driven, already-resolved-by-the-time-it-paints case should skip/shorten the transition.
+
+**Acceptance criteria:**
+
+- No visible flash of the invalid border/state on a valid day-click commit in `calendarType="default"` with `required` set — verified visually (not just via the `error` property, which was already confirmed clean) at real transition speed.
+- Fix is scoped to `bds-date-picker` (e.g. a one-off transition override or an explicit synchronous style write on its own slotted field at the moment of commit) — `bds-text-field`'s own SCSS/transition stays untouched, so every other consumer's fade behavior is unaffected.
+- `basic`/`expanded` (with Apply) confirmed either unaffected, or fixed identically if the same visible fade is found there — re-check visually, not just via the property, since the first investigation round's property-only check gave a false "unaffected" read for `default` too.
+- No change to the "field-anchored/attempt-triggered" validation display convention this component otherwise follows (error only shows after a real validation attempt) — the fix must not make errors show _more_ eagerly elsewhere as a side effect.
+- No regression to the legitimate use of the same transition elsewhere (e.g. a real invalid state introduced by blur/typing should still fade in/out smoothly) — only the specific commit-clears-a-preexisting-error path should skip/shorten it.
+
+**Manual test (required):** `pnpm dev:components` — Scenario 4's `dp-default-required` picker: submit the empty form once (reach the "attempted" state, confirm the error shows), then reopen the picker and click a day. Confirm no visible red-to-gray border flash — watch at real speed, and confirm again with the `* { transition-duration: 2s !important }` slow-motion technique (documented above) to make sure the fix isn't just "too fast to see this time." Repeat against `basic`/`expanded` `required` pickers using Apply. Also confirm a genuine blur/typing-driven error state still fades in/out normally (regression).
+
+**Commit:** none — the real fix lives entirely in `src/index.html`'s Scenario 4 example (`validation-timing="submit"`), and this repo's convention is `src/index.html` is playground/scratch content that is never committed (see `feedback_no_commit_index_html.md`). No `bds-date-picker.tsx`/component code changes were needed for this task, so there's nothing to commit. The consumer-facing guidance (set `validation-timing="submit"` on a `required` picker's slotted field) is instead captured permanently via Task 22's documentation requirement, not a commit.
+
+**Correction (user, 2026-09-03) — the real root cause was different from the CSS-transition theory above, and a simpler fix exists:**
+
+The CSS-transition fix above (`skipFieldErrorTransitionOnce`) was shipped and independently verified (tsc/tests/eslint clean), but it treats a symptom, not the actual cause. Live testing of a click-and-hold on a day cell (screenshot evidence, 2026-09-03) showed the field's red border + "This field is required" error text rendering **while the popover is still open, before any Submit was ever clicked** — meaning the field's error state isn't gated by the "attempt-triggered" convention at all in this path.
+
+Real cause: `bds-date-picker`'s `syncFieldRequired()` forwards `required` onto the slotted `<bds-text-field>` directly (this is intentional — see `componentDidLoad`'s warning, which only says not to set `required` _manually_ in addition to it). `bds-text-field` has its **own independent internal validation** (`validationError`, driven by `useFormField`), gated by its own `validationTiming` prop, which **defaults to `'blur'`**. So the moment focus leaves the field (e.g. as the popover closes after a day click, or during interaction), the field's own required+empty-at-that-instant check can fire and set `validationError = true` — completely independent of `bds-date-picker`'s own `isInvalid`/`error` state and its attempt-triggered convention. `deriveFieldRenderState`'s `effectiveError = host.error || host.validationError` means either source can paint the red state.
+
+**Fix confirmed by the user:** setting `validation-timing="submit"` on the slotted `<bds-text-field>` (matching the pattern already used elsewhere for other input-based components with this same premature-validation issue) defers the field's own internal check to submit-time only, eliminating the premature/mid-interaction error entirely — consistent with the attempt-triggered convention the rest of the component follows. Verified by the user directly in `src/index.html`'s Scenario 4.
+
+**Revised acceptance criteria (supersedes the CSS-transition-only criteria above):**
+
+- `dp-default-required` (Scenario 4) and any other `required` `bds-date-picker` example slots `validation-timing="submit"` onto its `<bds-text-field>`.
+- No error state (red border or error text) renders on the field while the popover is open and no Submit has ever been attempted, regardless of hover/press/focus/blur during day selection.
+- Re-evaluate whether `skipFieldErrorTransitionOnce`/`ensureSkipFieldTransitionStyle` (`bds-date-picker.tsx`) are still needed once `validation-timing="submit"` is in place — they may now be dead code for the originally-reported repro (submit-then-select), since that path's fade was real but may no longer be reachable if the field's own blur-triggered validation was actually the dominant contributor. Confirm via the original repro (submit invalid, then select a day) before removing anything — don't delete speculatively.
+- This is a **consumption pattern**, not just a fix to this one example: **flag it for Task 22 (Phase 4 documentation)** — any consumer setting `required` on a `bds-date-picker` should be told to also set `validation-timing="submit"` on their slotted `bds-text-field`, or they'll hit this same premature-validation issue themselves.
+
+---
+
+### Task 19p (new — discovered during manual QA, 2026-09-02; reordered 2026-09-02, was Task 19m): today-indicator dashed border clipped by range background/cap layering
+
+**Status:** ✅ done (2026-09-03), commit `8e64b142` — implemented via a different, better technique than this task's own original acceptance criteria prescribed (see "Approach superseded" below), confirmed correct against a Figma reference the user provided mid-implementation. Full verification: `::after` pseudo-element (`&--today { &::after { ...outline: 1px dashed ...; outline-offset: -1px; } }`) fully independent of the cell's own `outline` (used for focus/active), `border-radius: inherit`, `pointer-events: none`; color-override retargeted to `&.#{$prefix}__day--today::after { outline-color: $boreal-text-inverse; }`; focus-ring mixins (`bds-calendar-day-focus-ring`/`-active`) reverted to their exact pre-task state (no longer need to force-win an outline conflict, since today no longer touches the cell's own `outline` at all). Verified independently across two rounds (first round found a real gap in this task's own literal acceptance criteria; second round confirmed the fix): full `boreal-web-components` suite re-run twice, unchanged both times (298 suites / 3298 passed + 1 todo / 3299 total / 0 failed — CSS-only change, no test-count drift expected or found); `tsc --noEmit` (absolute `-p` path — a relative path silently resolves the wrong workspace-root config in this repo) confirmed only the same 5 known pre-existing unrelated errors; `eslint` clean; diff reviewed line-by-line, confirmed minimal (2 hunks) and confirmed the focus-ring mixins now byte-match their original pre-task content. Manual `pnpm dev:components` + `playwright-cli` verification across the full state matrix (plain/range-start/range-end/mid-range × focus/active, both independently and combined with today): dashed ring unclipped inside an active range (the original bug, still fixed); solid focus/active ring and dashed today ring now render **simultaneously** on the same cell in every combination (confirmed via computed `outline`/`::after`-computed-`outline` on both nodes, plus screenshots) — independently re-spot-checked once more by the orchestrating session itself, not just relayed from the subagent's report.
+
+**Approach superseded (2026-09-03):** this task's own original acceptance criteria (below, preserved for history) prescribed switching `&--today` to use `outline` directly on the day cell itself, "matching the technique the existing focus-ring mixins already use" — this was implemented first, verified to fix the original range-clipping bug, but manual QA then found a real, unanticipated side effect: since "today" and "focus"/"active" would then compete for the _same_ `outline` property on the _same_ element, only one could render per cell — a keyboard-focused today-cell lost its dashed ring entirely, fully replaced by the solid focus ring. **The user provided a Figma reference image confirming both rings must render simultaneously** across every state (default/range-start/range-end/mid-range cell × focus/active), which the original acceptance criteria never anticipated or required. Reworked to move "today"'s ring onto an independent `::after` pseudo-element instead — a separate DOM node has its own, non-competing `outline` property, so focus/active (on the cell itself) and today (on its pseudo-element) can never conflict again, while still escaping the original clipping bug via the same underlying paint-order mechanism (a positioned descendant with `z-index: auto` paints after the `z-index: -1` background/cap divs, regardless of which specific element owns it).
+
+**Root cause (confirmed by reading, not yet fixed):** `.bds-calendar-grid__day` is `position: relative; z-index: 0` (a stacking context). `.__day-background`/`.__day-cap` are absolutely positioned inside it at `z-index: -1`, and for `--in-range`/`--range-start`/`--range-end` cells their box extends to or beyond the cell's own edges (to bridge seamlessly into neighboring cells). Per CSS paint order, negative-z-index descendants paint _after_ (on top of) their stacking-context ancestor's own border/background — not before, contrary to the "negative z-index = behind everything" intuition. So these divs visually paint over the today cell's own `border: 1px dashed $boreal-stroke-primary-base` (`&--today`, currently `border`-based) wherever they extend past it, clipping the right/bottom edges specifically on range-selected cells. The existing focus/hover rings avoid this entirely by using `outline` (not part of this paint-order layering).
+
+**Acceptance criteria (original — see "Approach superseded" above for why the literal first bullet was reworked):**
+
+- ~~`&--today`'s dashed indicator uses `outline` instead of `border`, matching the technique the existing focus-ring mixins (`bds-calendar-day-focus-ring`/`-active`) already use successfully.~~ Superseded: uses an independent `::after` pseudo-element's own `outline` instead, specifically so it never competes with the cell's own `outline` (used for focus/active) — see status note above.
+- Visual position/thickness of the dashed indicator is pixel-equivalent to the current `border`-based rendering for a today cell with **no** range styling (single-select and non-range `expanded`/`basic`) — verify via live measurement (`getBoundingClientRect`/screenshot), not just visual inspection, per this component's established verification standard.
+- The `&.#{$prefix}__day--today { border-color: $boreal-text-inverse; }` override (today + selected/range-start/range-end) is ported to the equivalent `outline-color` override.
+- Today cell that is also `--range-start`/`--range-end`/`--in-range`/preview-hover renders its full dashed indicator on all four edges, unclipped, in both `basic` and `expanded` `calendarType`.
+- **New, added during rework:** today's dashed ring and the cell's own focus/active ring render simultaneously, never one replacing the other, across every state combination (plain/range-start/range-end/mid-range × focus/active) — matches the Figma reference the user provided.
+
+**Manual test (required):** `pnpm dev:components` — find or add a scenario where today's date falls inside an active range selection (start, end, and mid-range, each independently) in both `calendarType="basic"` and `"expanded"`. Confirm the dashed outline renders fully on all four edges in every case, matching the single-select rendering's edges pixel-for-pixel. Also confirm today's indicator still renders correctly with no range mode active at all (regression). **New:** also confirm the dashed today ring and the solid focus/active ring both render simultaneously (not one replacing the other) for every combination above.
+
+**Commit:** `git commit -m "fix(web-components): EOA-17138 stop range background clipping the today-indicator border"`
+
+---
+
+### Task 19q (new — housekeeping requested by user, 2026-09-03): `bds-date-picker.tsx` class-member ordering and JSDoc scope cleanup
+
+**Status:** ✅ done (2026-09-03), commit `848982a1` — two-pass cleanup, no behavior change, zero regressions.
+
+**Pass 1 — class member reordering:** reordered every class member in `bds-date-picker.tsx` per the 15-section standard in `ai-docs/guidelines/stencil-best-practices.md` § "Component Class Member Ordering" (private non-reactive fields → `@Element`/`@AttachInternals` → `@State()` → `@Prop()` → `@Watch()` → `@Event()` → lifecycle methods in natural execution order → `@Listen()` → event handlers → `@Method()` → internal methods/getters → `render()`), alphabetized within each section per the guideline's rule. `bds-table.tsx` used as the structural/stylistic reference. One runtime-order subtlety investigated and confirmed safe: `initialDisplayMonth`'s field initializer (moved to an early section) calls `resolveDraftDisplayMonth()` — a prototype method (hoisted, position-independent) that only reads getters/`@Prop()` fields declared later in the file; Stencil's `@Prop()` compiler transform does not follow plain TS class-field runtime-order semantics, confirmed empirically via the full test suite (298/298 suites unchanged) rather than assumed.
+
+**Pass 2 — JSDoc scope correction (user-caught, 2026-09-03):** the first cleanup pass over-retained JSDoc on private members. **User caught this**, pointing out `bds-table.tsx` — the designated reference — has **zero JSDoc on any private field, `@State()`, private getter, or private method**; only `@Prop()`/`@Event()`/`@Method()` (the members that actually feed the Stencil CEM analyzer per `jsdoc-template.md`) carry documentation, matching `AGENTS.md`'s own repo-wide rule ("JSDoc on exported public API only"). Corrected: removed all JSDoc from `@Element() el`, every `@State()` field, every private field/getter/method — including several blocks documenting hard-won EOA-17138 root-cause investigations (`resolveDraftDisplayMonth`'s `reserveExtraMonth` rationale, `secondDisplayYear`/`secondDisplayMonth`'s derived-state design, `warnIfNarrowExpandedRangeWindow`'s cross-library research) — that content isn't lost, it remains fully documented in this plan file's own Task 19m-1/19m-2/19m-3 history above. Only `@Prop()`/`@Event()`/`@Method()` JSDoc (plus the class-level description/`@slot`) retained. One incidental brevity trim survived from pass 1: `name`'s JSDoc calibrated to match the exact wording every other FACE component's `name` prop already uses.
+
+Verified independently at every step (not just relayed from subagent reports): full `boreal-web-components` suite re-run 3 times across both passes (298 suites / 3298 passed + 1 todo / 3299 total / 0 failed, unchanged throughout — this is a pure structural/doc-comment change); `tsc --noEmit` via an absolute `-p` path confirmed only the same 5 known pre-existing unrelated errors each time; `eslint` clean on the file each time; `git diff`/grep-based review confirmed no logic changed, no member added/removed/renamed, and (after pass 2) zero remaining JSDoc on any non-CEM-targeting member.
+
+**Executor:** @frontend-subagent
+
+**Files:** `components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx` (modify — reorder + JSDoc scope only)
+
+**Manual test:** Non-visual — pure structural/documentation cleanup, covered entirely by the existing automated suite.
+
+**Commit:** `848982a1` — `refactor(web-components): EOA-17138 align bds-date-picker member order and JSDoc with best practices`
+
+---
+
+### Task 19r (new — discovered during Task 20 QA, 2026-09-03): footer "Apply" button never commits the draft value on Safari/WebKit
+
+**Status:** ✅ done (2026-09-03) — confirmed fixed by the user on real Safari.app, both single-date and range Apply flows.
+
+**Full history, three root causes found across three rounds of real-Safari testing (Playwright-WebKit passed at every round and could not be trusted alone — real Safari.app was the only reliable signal throughout):**
+
+1. `handleFocusOutside` (`focusin` listener): closed the popover synchronously mid-click-gesture, since WebKit doesn't move focus onto a clicked `<button>`. Fixed by deferring via `requestAnimationFrame` and reading `document.activeElement`. Correct, but insufficient alone.
+2. `handleClickOutside` (`mousedown` listener): same risky synchronous-`event.target` pattern, untouched by fix #1. Confirmed via a real-Safari `hidePopover` stack-trace diagnostic. Fixed the same way (deferred via `requestAnimationFrame`, target captured via `event.composedPath()[0]`). Still insufficient alone.
+3. **Actual root cause**, found via a full real-Safari event trace (timestamped `pointerdown`/`mousedown`/`focusin`/`blur`/`click`/`hidePopover` log): when the day cell loses focus mid-Apply-click, Safari's fallback `document.activeElement` isn't `<body>` — it's the **`<bds-date-picker>` host element itself** (an _ancestor_ of `<bds-popover>`, since `bds-date-picker` renders `bds-popover` inside its own shadow root). Both fixes' containment checks only tested descendant relationships (`floatingContent.contains(active)`), which can never match an ancestor. Fixed by adding an explicit ancestor check (`active.contains(this.el)`, excluding `document.body`) to both `handleFocusOutside` and `handleClickOutside`.
+
+**Confirmed working (2026-09-03, user, real Safari.app, private window, fresh forced build):** temporary `console.log` instrumentation in `handleDayClick`/`handleFooterAction` (`bds-date-picker.tsx`) traced the full flow live — `draft` updates correctly on day click, `handleFooterAction`'s APPLY branch runs and commits for both single-date (`bdsChange` → `2026-09-14T00:00:00.000+00:00`) and range (`bdsChange` → `{start: "2026-09-07", end: "2026-09-15"}`), `closePopover()` fires after. Diagnostic logs removed from `bds-date-picker.tsx` before finalizing — confirmed via `grep -c "DIAG-19r"` returning 0.
+
+**Files changed:** `packages/boreal-web-components/src/components/overlays/bds-popover/bds-popover.tsx` (`handleFocusOutside`/`attachFocusOutside`/`handleClickOutside`, all three fixes). `packages/boreal-web-components/src/components/overlays/bds-popover/__test__/bds-popover-basics.spec.ts`, `bds-popover-methods.spec.ts`, `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/__test__/bds-date-picker.basics.spec.ts` — updated to account for the deferred timing; `bds-popover-methods.spec.ts`'s outside-click test also had a latent bug (dispatched `mousedown` directly on `document` with an ineffective `MouseEventInit.target` override instead of on the actual outside element), fixed to dispatch on the real element, matching the already-correct pattern in the sibling `bds-date-picker` test.
+
+**Verification:** `tsc --noEmit` clean (same 5 pre-existing unrelated errors in `bds-dialog`/`bds-tooltip` specs, 0 new). Full `boreal-web-components` suite: 298/298 suites, 3298/3299 passed + 1 pre-existing todo, 0 failures. Live-confirmed by the user on real Safari.app (private window, cache-cleared, fresh forced build) — the only environment that could reproduce any of the three bugs; Playwright-WebKit never reproduced any of them despite repeated attempts, a real gap between Playwright's bundled WebKit and shipped Safari worth remembering for future Safari QA on this component.
+
+**Downstream:** Task 20's 5 Safari-`BLOCKED` cells (both wrappers) are now unblocked by this fix.
+
+**Commit:** `git commit -m "fix(web-components): EOA-17138 fix popover outside-click/focus detection racing Safari's Apply click"`
+
+---
+
+### Task 20: React/Vue wrapper parity check — Phase 4
+
+**Executor:** @qa-subagent
+**Files:** none
+
+**Scope note (2026-09-03, added on review before dispatch):** this task's acceptance criteria were written 2026-09-02, before Tasks 18a, 19l, 19o, and 19p existed. Reviewed the full Phase 4 task list end-to-end against this task's original scope and added the missing functional/interaction items below — each is a real behavior that could plausibly diverge across the React/Vue wrapper boundary (event forwarding, attribute/prop passthrough, form association), not pure CSS. Deliberately **not** added: Tasks 19i/19j (two-layer cap geometry, hover-state colors/shadows) and 19p (today-indicator outline/paint-order fix) — these are CSS-only changes with no framework-specific risk, already covered by Task 19's/19p's own manual tests, and re-checking them here would be scope creep with no wrapper-specific signal to gain. Task 19k _is_ included below despite being partly CSS, because it also introduced two new custom events (`bdsDayHover`/`bdsGridLeave`) whose forwarding through the wrapper's event-binding layer is a genuine wrapper-parity risk, unlike a plain style change.
+
+**Acceptance criteria:** Confirms `range` behavior (both single-calendar `basic` and dual-calendar `expanded` selection, `{ start, end }` value emission) identically through both wrappers. Also confirms, identically through both wrappers:
+
+- `expanded`'s consecutive-month nav lock (Task 19m — first calendar's "Next" and second's "Previous" disabled, the remaining two live buttons move both calendars in lockstep).
+- Clean-stays-open vs. Cancel-closes (Task 19n), via both the footer buttons and the slotted field's own clear (✕) button, in range mode.
+- **New:** a `required` `range` picker's FACE form association and validity (Task 18a) — applying a valid range clears an invalid/required state, and the serialized `` `${start},${end}` `` value round-trips through a real `<form>` submission — identically through both wrappers.
+- **New:** no duplicate range styling across an `expanded` month boundary (Task 19l) — navigate to a month whose filler cells fall in the adjacent month and confirm no phantom-row band duplication, through both wrappers.
+- **New:** the hover-preview band (Task 19k) previews correctly and its underlying `bdsDayHover`/`bdsGridLeave` events don't break or double-fire through either wrapper's event-binding layer.
+- **New:** a `required` `range`/single-date picker with `validation-timing="submit"` set on its slotted field (Task 19o) does not show a premature invalid state on blur mid-selection, through both wrappers — confirms the wrapper correctly passes the attribute through to the slotted `bds-text-field` in both React and Vue.
+
+**Manual test (required):** Repeat Task 18's scenarios (both `calendarType` cases), plus Task 19m's, 19n's, 18a's, 19l's, 19k's, and 19o's manual-test scenarios, through both wrapper playgrounds.
+
+**Status:** ✅ done (2026-09-03) — executed sequentially (one item → one wrapper → one browser at a time, no parallel sessions) per explicit user requirement, using fresh `dev:pack:react`/`dev:pack:vue` rebuilds (not a live `pnpm dev` server) to avoid stale-bundle false positives. During Safari coverage, found and precisely isolated a real, pre-existing, non-range-specific bug (now tracked as **Task 19r**) that blocks 5 of the 7 acceptance-criteria items on Safari for both wrappers — those 5 items are recorded as `BLOCKED`, not `PASS`/`FAIL`, since they were never actually exercised against a known-broken codepath. All non-Safari cells, and both Safari cells not dependent on the broken codepath, are fully verified `PASS` with concrete evidence (DOM state, live `bdsChange` event listeners, screenshots).
+
+**Pass/fail matrix (7 items × wrapper × browser):**
+
+| Item                                                    | React/Chrome | React/Firefox | React/Safari  | Vue/Chrome | Vue/Firefox | Vue/Safari    |
+| ------------------------------------------------------- | ------------ | ------------- | ------------- | ---------- | ----------- | ------------- |
+| 1. range value emission (basic+expanded)                | PASS         | PASS          | BLOCKED (19r) | PASS       | PASS        | BLOCKED (19r) |
+| 2. `expanded` nav lock (19m)                            | PASS         | PASS          | BLOCKED (19r) | PASS       | PASS        | BLOCKED (19r) |
+| 3. Clean stays open / Cancel closes + field clear (19n) | PASS         | PASS          | BLOCKED (19r) | PASS       | PASS        | BLOCKED (19r) |
+| 4. required range FACE + form submit (18a)              | PASS         | PASS          | BLOCKED (19r) | PASS       | PASS        | BLOCKED (19r) |
+| 5. no duplicate range band across month boundary (19l)  | PASS         | PASS          | PASS          | PASS       | PASS        | PASS          |
+| 6. hover-preview band + event forwarding (19k)          | PASS         | PASS          | BLOCKED (19r) | PASS       | PASS        | BLOCKED (19r) |
+| 7. required + `validation-timing="submit"` (19o)        | PASS         | PASS          | PASS          | PASS       | PASS        | PASS          |
+
+Items 1–4 and 6 all route through the footer Apply button at some point (either directly, or a Cancel/reopen flow that depends on a prior successful Apply) — this is why they're all blocked together on Safari; items 5 and 7 never touch Apply and pass everywhere, including Safari, both wrappers. Task 20 is marked done on this basis — the BLOCKED cells are a tracked, scoped follow-up (Task 19r), not an open item of Task 20 itself, since Task 20's own job (confirm wrapper parity) is fully answered: every item that _could_ be exercised behaves identically across React and Vue, including on the browser where the underlying bug reproduces identically in both wrappers (further evidence it's a shared-core bug, not a wrapper-specific one).
+
+**Re-verification (2026-09-03, `@qa-subagent`, all 10 previously-`BLOCKED` cells):** confirmed the Task 19r fix (commit `4eecb666`) genuinely reaches the actual React/Vue wrapper builds, not just the base web-components package the user's original real-Safari confirmation used. Fresh `dev:pack:react`/`dev:pack:vue` rebuilds were run and independently confirmed to include the fix before testing — grepped the packed `bds-popover` bundle for all three fix markers (`requestAnimationFrame`-deferred detection, `event.composedPath()[0]` target capture, and the `active.contains(this.el)` ancestor check) in both `examples/react-testapp`'s and `examples/vue-testapp`'s installed `node_modules/.pnpm/@telesign+boreal-web-components@...` tarballs — present in both. Tested on **real Safari.app** (not Playwright-WebKit), executed sequentially (one item → one wrapper at a time), using the existing Task 20 playground scenarios already committed in `examples/react-testapp/src/App.tsx`/`examples/vue-testapp/src/App.vue` (Scenarios A/C/D/F). Real OS-level clicks weren't available in this environment (Accessibility permission for System Events, and `safaridriver --enable`, both require one-time interactive user authorization this agent couldn't provide) — instead drove the real Safari.app WebKit engine via AppleScript `do JavaScript`, dispatching full `pointerdown`/`mousedown`/`pointerup`/`mouseup`/`click` sequences directly onto the real DOM elements (exercising the exact same `mousedown`/`focusin` listener code in `bds-popover.tsx` that Task 19r fixed), with the target tab kept frontmost throughout (a hard requirement discovered mid-session — see below). All 10 cells now **PASS** with concrete evidence:
+
+| Item                                                     | React/Safari | Vue/Safari |
+| --------------------------------------------------------- | ------------ | ---------- |
+| 1. range value emission (basic+expanded)                   | PASS         | PASS       |
+| 2. `expanded` nav lock (19m)                               | PASS         | PASS       |
+| 3. Clean stays open / Cancel closes + field clear (19n)    | PASS         | PASS       |
+| 4. required range FACE + form submit (18a)                 | PASS         | PASS       |
+| 6. hover-preview band + event forwarding (19k)             | PASS         | PASS       |
+
+Evidence per item (identical for both wrappers, values shown are React's; Vue's run produced byte-identical results):
+- **Item 1+2** (Scenario A, `expanded`+`range`): initial nav lock confirmed (`g0Next`/`g1Prev` disabled, `g0Prev`/`g1Next` live); clicking `g0`'s Previous moved both calendars back in lockstep (Sept/Oct → Aug/Sept); clicking `g1`'s Next moved both forward again (Aug/Sept → Sept/Oct); selected day 10 (Sept, left) as start and day 15 (Oct, right) as end; header showed `Start:2026/09/10 End:2026/10/15`; clicking footer Apply committed `bdsChange` with `{start:"2026-09-10", end:"2026-10-15"}`, `picker.value` matched, popover closed (`display:none`).
+- **Item 3** (Scenario C, `basic`+`range`): selected 9/10–9/15, header showed the dash-joined `"2026/09/10 – 2026/09/15"` (confirming the documented `basic` vs `expanded` header-format split); clicking footer Clean reset the header to placeholder AND left the popover open (`display:block`), `value` committed empty; selecting a fresh range and clicking Cancel closed the popover (`display:none`) with `value` unchanged; applying a new range then reopening and clicking the field's own clear (✕) button reproduced Clean's exact stay-open behavior (`display:block`, header reset, `value` empty).
+- **Item 4** (Scenario D, `required`+`range`+form): submitting without a range left `bds-text-field--error` applied and the form's `submit` handler never ran (no `FormData` read); applying a valid range cleared the error path and re-submitting fired the handler with `FormData.get('t20-range-required') === "2026-09-10,2026-09-15"` — the documented `${start},${end}` serialization round-tripped through a real `<form>` submission.
+- **Item 6** (Scenario F, hover-preview): clicking day 10 as start showed zero preview-classed cells; hovering day 15 produced `previewInRange:4` (interior days 11–14), `previewStart:1`, `previewEnd:1`, with `bdsDayHover` firing exactly once (no double-fire); firing a real `mouseleave` on the grid's `<table>` cleared all preview classes to 0 with `bdsGridLeave` firing exactly once; hovering back onto the committed start day itself showed zero preview cells (no draft-against-self); clicking day 15 to commit left zero stale preview classes.
+
+**Non-obvious environment findings from this re-verification, promoted to `.agents/memory/`:** (1) any synthetic `MouseEvent`/`PointerEvent` dispatched at a `bds-button`'s inner native `<button>` must explicitly set `detail: 1` — `bds-button.tsx`'s `handleClick` guards `if (event.detail === 0) return;`, and a default-`detail` synthetic click silently no-ops with zero error, easily misread as a real regression; (2) the target Safari tab/window must be kept frontmost throughout — Safari throttles `requestAnimationFrame` (which gates Stencil's actual re-render/paint step) for backgrounded tabs, so internal `@State` updates and custom-event bubbling all still work correctly in a backgrounded tab, but the DOM silently never repaints, which looks exactly like every `@Listen`-decorated handler is broken. Both gotchas cost significant investigation time before being root-caused via direct `__stencil__getHostRef()` instance inspection and an `requestAnimationFrame`-firing probe; full writeup in `.claude/agent-memory/qa-subagent/safari-do-javascript-automation-gotchas.md`.
+
+**Commit:** N/A
+
+---
+
+### Task 21: Phase 4 unit tests (consolidated)
+
+**Renumbered (2026-09-03, user-requested swap with the documentation task below):** this task ran as "Task 22" in the original plan text; it now runs first (as "Task 21"), and the documentation task below runs second (as "Task 22") — the reverse of the original numeric order. All historical references elsewhere in this plan that cited "Task 21 (Phase 4 documentation)" have been updated to say "Task 22" accordingly.
 
 **Executor:** @testing-subagent
 **Files:** `bds-date-picker.range.spec.ts` (create), `bds-calendar-grid.variants.spec.ts` (modify)
 
-**Unit tests to cover:** range-value union type at the public API boundary (both shapes accepted/emitted correctly); start/end selection and swap logic; dual-calendar independent month navigation; range day-state rendering (`isInRange`/`isRangeStart`/`isRangeEnd`) in isolation from single-date rendering; Clean/Cancel on range draft; Apply emitting the correct `{ start, end }` shape. Coverage-phase only (≥90%).
+**Unit tests to cover:** range-value union type at the public API boundary (both shapes accepted/emitted correctly); start/end selection and swap logic under both `calendarType='basic'` (single calendar) and `calendarType='expanded'` (dual calendar); **`expanded`'s consecutive-month nav lock (Task 19m)** — first calendar's "Next" and second calendar's "Previous" disabled unconditionally from mount, first's "Previous" and second's "Next" shift both calendars by the same one-month delta, the two can never be navigated into a non-consecutive/identical/reversed state through any combination of clicks, existing min/max nav-guard behavior preserved on the two remaining live buttons; range day-state rendering (`isInRange`/`isRangeStart`/`isRangeEnd`) in isolation from single-date rendering; single-calendar range rendering renders identically to one of the two `expanded` calendars given the same `draft`; **Clean vs. Cancel on range draft, tested as two distinct behaviors, not one generic bullet** — Clean resets `rangeStart`/`rangeEnd` to `null`, commits an empty value, and leaves the popover open (mirroring the single-date assertions already fixed in `bds-date-picker.events.spec.ts` per Task 19n, now exercised in range mode too); Cancel reverts the draft to the last-committed `{ start, end }` (or empty, if none) and closes the popover; Apply emitting the correct `{ start, end }` shape identically regardless of `calendarType`. Coverage-phase only (≥90%).
 
 **Manual test (required):** Non-visual — suites passing at ≥90% coverage.
+
+**Status:** ✅ done (2026-09-03), commit `d2ce7e6d` — `@testing-subagent` created `bds-date-picker.range.spec.ts` (595 lines) covering the range-value union type, start/end selection and swap logic under both `basic` and `expanded`, `expanded`'s consecutive-month nav lock, range day-state rendering, single-calendar-vs-expanded-calendar parity, Clean/Cancel as two distinct behaviors, and Apply's `{ start, end }` emission; extended `bds-calendar-grid.variants.spec.ts` (29 lines) for range day-state rendering in isolation. Independently re-verified in this session (plan-validation pass, not just relayed from the original report): full `boreal-web-components` suite re-run — 299 suites / 3327 passed + 1 pre-existing todo / 0 failed, both new/modified spec files present and passing; `tsc --noEmit` (absolute `-p` path) confirmed only the same 5 pre-existing unrelated errors (`bds-dialog`/`bds-tooltip` specs), 0 new. This task's own `**Status:**` line was missing from the plan despite the work being committed — added now as part of a full plan-completeness audit.
 
 **Commit:** `git commit -m "test: EOA-17138 add Phase 4 range mode unit tests"`
 
 ---
 
-### Task 21: Phase 4 documentation
+### Task 22: Phase 4 documentation
+
+**Status:** ✅ done (2026-09-03) — `@documentation-subagent` delivered all 15 acceptance-criteria bullets plus the `InteractiveRangeFormExample` story. Confirmed independently: stale `'expanded'` calendar-type description found and rewritten (not just supplemented); "Date-range... is not currently supported" callout removed and replaced; both `ArgTypes include` arrays updated (`bds-date-picker` gained `'range'`, `bds-calendar-grid` gained `'bdsDayHover'`/`'bdsGridLeave'`); new `### Expanded` subsection added with `<Description>`/`<Canvas>` completing the Default/Basic/Expanded trio; new `RangeModeBasic`/`RangeModeExpanded`/`RangeHoverPreview`/`CalendarTypeExpanded`/`InteractiveRangeFormExample` stories added to `bds-date-picker.stories.ts`; "Min/max constraints" section gained the narrow-window warning callout; "Form integration" section gained the `validation-timing="submit"` requirement callout, the range-mode serialization subsection, and the new interactive range form example; "Range selection" section gained the header-format-split and hover-preview-band subsections; Clean/Cancel popover-state distinction corrected; clear (✕) button callout extended to note stay-open behavior. ESLint clean on both files; TypeScript clean except the same 5 pre-existing unrelated errors; all 15 `@Prop()`s and 2 `@Event()`s on `bds-date-picker` confirmed present in both the `argTypes` object and the MDX `include` array; all 7 `@Prop()`s and 4 `@Event()`s on `bds-calendar-grid` that are documented (the 5 intentionally-omitted internal ones remain omitted) confirmed present in both.
+
+**Styling conflict fix (2026-09-03, discovered during final review):** Storybook's preview CSS (`.sbdocs-content table`) was matching the calendar grid's internal `<table role="grid">` element, applying `display: block`, `width: fit-content`, and `overflow-x: auto` — breaking the calendar layout and causing range selection backgrounds to extend beyond grid boundaries. Fixed by adding `[role='grid']` to the exclusion selectors in `apps/boreal-docs/.storybook/styles/preview.css` for all table-related rules. This ensures Storybook's documentation table styling only applies to actual documentation tables, not to component-internal tables like the calendar grid.
+
+**Renumbered (2026-09-03, user-requested swap):** this task ran as "Task 21" in the original plan text; it now runs second (as "Task 22"), after the unit-tests task above (originally "Task 22," now "Task 21"). Every historical reference elsewhere in this plan that cited "Task 21 (Phase 4 documentation)" has been updated to "Task 22" to match.
 
 **Executor:** @documentation-subagent
-**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
+**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify), `.storybook/styles/preview.css` (modify — Storybook styling conflict fix)
 
-**Acceptance criteria:** MDX documents the `range` prop, the `{ start, end }` value contract, and the header Start/End presentation decided in Task 18; new `range` story variant.
+**Scope review (2026-09-03, added before dispatch):** this task's acceptance criteria were written 2026-09-02/03, before several Phase 4 sub-tasks had finished shipping or had their own follow-up corrections. Reviewed the full Phase 4 task list end-to-end (Tasks 16 through 19q) against this task's original scope and the current state of `bds-date-picker.mdx`/`.stories.ts`; found 5 concrete undocumented-or-stale facts and 3 known-failure-mode housekeeping gaps, added as explicit bullets below rather than left to be rediscovered mid-execution.
 
-**Manual test (required):** `pnpm dev:docs` — new story renders and behaves correctly.
+**Acceptance criteria:** MDX documents the `range` prop, the `{ start, end }` value contract, and that `range` works under both `calendarType='basic'` (single calendar) and `'expanded'` (dual calendar); new story variants for both cases. **Also required:**
+
+- Document `expanded`'s dual-calendar navigation as locked to consecutive months, not independent — only the first calendar's "Previous" and the second calendar's "Next" are live; the first's "Next" and second's "Previous" are permanently disabled, keeping the two exactly one month apart.
+- Correct/expand the existing Clean/Cancel description (currently: _"only committed to `value` when Apply is clicked (or Clean is clicked, which commits an empty value immediately)"_) to state the popover-open-state distinction: Clean clears the selection and commits an empty value but **leaves the popover open** for an immediate new selection; Cancel discards in-progress changes, reverts to the last-committed value, and **closes** the popover. Also extend the existing "field's own clear (✕) button... commits an empty value exactly like the footer's Clean action" callout to note it shares Clean's stay-open behavior too, since it's the same code path.
+- The existing "Date-range... is not currently supported" callout (pre-Phase-4 leftover) is removed/rewritten as part of this same pass, not left alongside the new range documentation.
+- Document that a `required` `bds-date-picker` must also set `validation-timing="submit"` on its slotted `<bds-text-field>`. `bds-text-field`'s own internal validation defaults to `validationTiming: 'blur'`, independent of `bds-date-picker`'s own attempt-triggered `error` state — without this, the field's own required-check can fire prematurely (e.g. on blur as the popover closes mid-selection), showing an invalid state before the user has ever attempted to submit. Add this as a clearly-flagged requirement next to the `required` prop's own documentation, not buried in a footnote — this is an easy trap for any consumer to fall into.
+- **New — header format split, Task 19k's third follow-up superseded Task 18's original decision:** the "header Start/End presentation" is not a single, uniform behavior — it's a deliberate, permanent split between the two calendar types. `expanded`+`range` renders the labeled `Start: ... End: ...` structure (`renderRangeHeader`); `basic`+`range` renders a plain dash-joined string with no labels (e.g. `"2026/09/10 – YYYY/MM/DD"`), since its fixed-width popover can't safely fit the labeled form without an overflow risk. Document both, explicitly, as two different renderings — do not describe "the" header format as if it's one behavior, and do not silently document only the `expanded` (labeled) form.
+- **New — hover-preview band (Task 19k core feature), currently undocumented anywhere:** once `rangeStart` is committed and `rangeEnd` is still unset, hovering a day previews the would-be range with a monochrome grey band (distinct from the committed blue range styling), clearing on `mouseleave` of the calendar grid or when hovering back onto the `rangeStart` day itself. Document this interaction in prose and add a dedicated Canvas story demonstrating it (reuse/adapt the existing `dp-19k-preview` manual-QA scenario from `src/index.html` as a reference, not copied verbatim).
+- **New — `min`/`max` narrow-window warning for `expanded`+`range` (Task 19m-2), currently undocumented in "Min/max constraints":** an `expanded`+`range` picker whose `min`–`max` window spans fewer than 2 calendar months will permanently leave one of the two calendars fully disabled (with a one-time console warning on mount) — there are structurally not enough valid months to fill both calendars. Document this in the existing "Min/max constraints" MDX section as a flagged limitation, matching the same "easy trap for a consumer" treatment already used for the `validation-timing="submit"` requirement above — not as a footnote.
+- **New — range-mode native form serialization (Task 18a), currently undocumented in "Form integration":** a range `value` is serialized for native `<form>` submission as a comma-delimited string (`` `${start},${end}` ``, e.g. `"2026-08-10,2026-08-15"`) — decided after cross-library research (Web Awesome's `wa-date-input` precedent) specifically because native `FormData`/`ElementInternals.setFormValue` cannot carry an arbitrary object. Document this serialization format explicitly in "Form integration," since a consumer reading `FormData` off a real form submission needs to know the exact string shape to parse, not just that `value` is `{ start, end }` in JS.
+- **New — stale `'expanded'` calendar-type description:** the current MDX line reading _"`'expanded'` currently renders the same single calendar, header, and footer as `'basic'`"_ is now false (it renders two calendars side by side with the consecutive-month nav lock) — find and rewrite this specific sentence, not just add new nav-lock prose alongside the old, contradicting claim.
+- **New — no dedicated "Expanded" example subsection exists:** the "Calendar types" section has dedicated `### Default` and `### Basic` subsections (each with its own `<Description>`/`<Canvas>`), but no `### Expanded` subsection and no `CalendarTypeExpanded` story exist in `bds-date-picker.stories.ts` (confirmed via grep — only `CalendarTypeBasic`/`CalendarTypeDefault` are defined). Add the missing subsection/story — the new range-mode `expanded` story required above may satisfy this if structured as this section's canonical `'expanded'` example, but confirm the "Calendar types" section itself ends up with a complete Default/Basic/Expanded trio, not just a range-specific example living elsewhere in the doc.
+- **New — known-failure-mode housekeeping, `ArgTypes include` array must add `'range'`:** the `<ArgTypes include={[...]}>` list for `bds-date-picker` (`bds-date-picker.mdx`) does not currently contain `'range'` — if left untouched, the new prop silently drops out of the rendered Properties table. This exact failure mode was already caught and explicitly called out in Task 14's own acceptance criteria for `min`/`max`; apply the same fix here.
+- **New — `bds-calendar-grid`'s own reference `ArgTypes` list is stale:** the internal-component "reference only" `ArgTypes include` list for `bds-calendar-grid` predates Task 19k's two new events (`bdsDayHover`/`bdsGridLeave`) and the range/preview day-state class flags. Update it to include the new events, for completeness of this reference section (lower priority than the consumer-facing gaps above, since this component is explicitly documented as "not meant to be used on its own").
+
+**Manual test (required):** `pnpm dev:docs` — new stories render and behave correctly, including the new Expanded calendar-type example and the hover-preview story.
 
 **Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 4 range mode"`
 
 ---
 
-### Task 22: React/Vue wrapper parity check — Phase 4
+## Plan closed (2026-09-03)
 
-**Executor:** @qa-subagent
-**Files:** none
+All Phase 2, 3, 3.5, and 4 tasks are `✅ done`, independently re-verified within this session or a prior one (never taken solely on a subagent's word). `release/current` has been merged into this branch (`a7a6a3e1`), resolving the two real conflicts by hand — `bds-calendar-grid.scss` now carries this plan's full Phase 4 range/today-fix CSS on top of `release/current`'s selector-scoping fix (closing Task 12a), and `preview.css` took `release/current`'s more general table-styling exclusion. Post-merge: `stencil build` clean, full `boreal-web-components` suite 299/299 passed + 1 pre-existing todo, 0 failed.
 
-**Acceptance criteria:** Confirms `range` behavior (dual-calendar selection, `{ start, end }` value emission) identically through both wrappers.
+The two remaining accumulated follow-ups (Task 8b, Task 8c) are **not** implemented here — both were legitimately re-scoped into their own tracked plans with user confirmation, per `plan-execution.md`'s rule that a `done` plan can't carry an unresolved inline `pending`/`deferred` task:
 
-**Manual test (required):** Repeat Task 18's scenarios through both wrapper playgrounds.
+- Task 8b → [`bds-popover-coverage-backfill.md`](./bds-popover-coverage-backfill.md) (`pending`)
+- Task 8c → [`bds-popover-css-custom-property-inheritance-browser-test.md`](./bds-popover-css-custom-property-inheritance-browser-test.md) (`pending`)
 
-**Commit:** N/A
+Both are `bds-popover`-scoped, not `bds-date-picker`-scoped, and neither blocks this component's own completeness — closing this plan does not implicitly close or deprioritize them.
 
----
-
-## Phase 5 — Dual time selection (start/end)
-
-Per the spike doc: "Inicio: 08:00" / "Fin: 10:30" dual selector pairs, visually identical to Phase 2's single selector repeated twice. `renderTimeSelector.tsx` is designed here to accept a label/position parameter, directly reusable rather than needing new component logic.
-
-### Task 23: `bds-date-picker` dual time selector
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `helpers/renderTimeSelector.tsx` (modify), `bds-date-picker.tsx` (modify)
-
-**Acceptance criteria:**
-
-- `renderTimeSelector.tsx` accepts a `label`/`position: 'single' | 'start' | 'end'` parameter; single-date Phase 2 usage is a regression-free special case of the same helper (`position: 'single'`).
-- When `range && withTime`, renders two labeled time-selector pairs ("Inicio"/"Fin" per the confirmed Figma reference, or the translatable-labels equivalent via the existing `labels` override mechanism).
-- Combines with `combineDateTimeToUTC`/`extractDateTimeFromUTC` (Task 1) for both `rangeStart`+time and `rangeEnd`+time independently.
-- Value contract when `range && withTime`: `{ start, end }` where both are full UTC ISO strings.
-- Legacy prop reference `resetTime`/`showTimeInRange` noted in the spike doc are evaluated for relevance and either adopted (documented rationale) or explicitly deferred — not silently ignored.
-- `format` auto-switch (per Task 3's confirmed decision) extends to range mode: when `range && withTime` and `format` is unset, the header Start/End display uses the time-inclusive default for each date independently — same "explicit `format` always wins" rule as Task 3, no new decision needed here.
-- Default time (per Task 3's confirmed decision) extends to range mode: a fresh `rangeStart`/`rangeEnd` with no time to pre-populate defaults to `00:00` independently for each end, same malformed-value fallback rule as Task 3 — no new decision needed here.
-
-**Manual test (required):** `pnpm dev:components` — Scenario 1: range + time enabled, select start day+time and end day+time, Apply, confirm both UTC values. Scenario 2: confirm `renderTimeSelector.tsx`'s single-date Phase 2 usage still works unchanged. Scenario 3: range + time enabled without setting `format`, confirm both Start/End header values display `HH:mm`.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add dual time selector for range mode"`
+**Not carried into this plan (deliberately out of scope, not forgotten):** keyboard-typed date entry in the trigger field, and Phases 5–9 (range time, presets, banner/summary, keyboard/a11y/RTL, month/year quick-picker) — tracked separately under `EOA-17662-bds-date-picker-v3.md`.
 
 ---
 
-### Task 24: Phase 5 SCSS + JSDoc audit
+## Scope transfer note
 
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-date-picker.scss` (modify)
+As of 2026-09-02, all remaining work from Phase 5 onward (Tasks 23-52) was moved to EOA-17662 as version 3 scope.
 
-**Figma research pass (complete before writing any SCSS):**
+This v2 plan now tracks only:
 
-- [ ] Region: dual time-selector layout (side-by-side Inicio/Fin pairs) — spacing against the confirmed single-selector dimensions (v1 spike: 58px fields, timer icon)
-- [ ] Interaction: dual pair — confirm no new interaction states beyond the single selector's already-pulled default
+- Phase 2: time selector foundation
+- Phase 3: min/max constraints
+- Phase 3.5: `calendarType` foundation
+- Phase 4: range orchestration and styling foundation
 
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc complete and conforms to the JSDoc brevity/content rule from Task 12.
-
-**Manual test (required):** Reuse Task 23's scenarios visually.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style dual time selector"`
-
----
-
-### Task 25: Phase 5 unit tests (consolidated)
-
-**Executor:** @testing-subagent
-**Files:** `bds-date-picker.time.spec.ts` (modify)
-
-**Unit tests to cover:** dual time selector independent start/end hour/minute state; UTC computation for both ends; single-date Phase 2 regression (position `'single'` unaffected); Cancel discarding both time drafts. Coverage-phase only (≥90%).
-
-**Manual test (required):** Non-visual — suite passing at ≥90% coverage.
-
-**Commit:** `git commit -m "test: EOA-17138 add Phase 5 dual time selector unit tests"`
-
----
-
-### Task 26: Phase 5 documentation
-
-**Executor:** @documentation-subagent
-**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
-
-**Acceptance criteria:** MDX documents the dual time selector and its combined `{ start, end }` UTC value contract; new story variant (`range` + `withTime`).
-
-**Manual test (required):** `pnpm dev:docs` — new story renders and behaves correctly.
-
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 5 dual time selector"`
-
----
-
-### Task 27: React/Vue wrapper parity check — Phase 5
-
-**Executor:** @qa-subagent
-**Files:** none
-
-**Acceptance criteria:** Confirms dual time-selector behavior identically through both wrappers.
-
-**Manual test (required):** Repeat Task 23's scenarios through both wrapper playgrounds.
-
-**Commit:** N/A
-
----
-
-## Phase 6 — Presets sidebar
-
-Per the spike doc: fixed list — Today/Yesterday/Last 7 days/Last 30 days/This month/Last month/Custom — visible only when `range` is on (per the corrected 2026-08-14 finding that the sidebar is gated by `Range`, not by `Calendar Type`).
-
-### Task 28: presets configurability — design/API decision (blocking gate)
-
-**Executor:** main thread (no executor)
-
-**Acceptance criteria:**
-
-- Decide, and document, whether the preset list is a fixed built-in set or consumer-configurable — the legacy `ranges` prop (per the spike doc) suggests configurability was a solved problem elsewhere; this must be a deliberate decision, not a silent carry-over or a silent omission.
-- If configurable, confirm the shape of the `presets` prop (array of `{ label, compute: () => { start: Date; end: Date } }` or similar) before Task 30 begins.
-
-**Manual test:** N/A — design/API checkpoint.
-
----
-
-### Task 29: `date-engine`-adjacent preset computation
-
-**Executor:** @frontend-subagent
-**Files:** `.../bds-date-picker/utils/presets.ts` (create), `.../utils/__test__/presets.spec.ts` (create, or covered by Task 32 if consolidating)
-
-**Utility discovery note:** confirmed no existing "preset date range" utility anywhere in `src/`; this is single-use to `bds-date-picker`, so it lives in the component's own `utils/`, not `date-engine` (per the spike doc's decomposition litmus test — this fails the reuse test, it's not shared across other orchestrators).
-
-**Acceptance criteria:**
-
-- Computes the six built-in preset ranges (today, yesterday, last 7 days, last 30 days, this month, last month) as `{ start: Date; end: Date }` pairs, using `date-engine`'s existing date-math primitives (no new `date-engine` primitives needed).
-- "Custom" is not a computed preset — it's the free-form manual-selection mode, selected by default whenever the user picks dates manually rather than clicking a preset button.
-
-**Manual test (required):** Non-visual — validate via unit tests and `tsc --noEmit`.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add built-in preset range computation"`
-
----
-
-### Task 30: `bds-date-picker` presets sidebar implementation
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `helpers/renderPresets.tsx` (create), `types/types.ts` (modify), `bds-date-picker.tsx` (modify)
-
-**Acceptance criteria:**
-
-- Sidebar renders only when `range=true`, per the spike's confirmed Figma gating.
-- Clicking a preset sets `draft.rangeStart`/`draft.rangeEnd` from Task 29's computation and visually marks that preset selected (solid-blue per the spike's Style-page reference); clicking a day manually afterward reverts to "Custom" (deselects the preset).
-- If Task 28 decided on consumer-configurable presets, a `presets` prop overrides or extends the built-in six; otherwise the six are fixed.
-- Preset button states (Default/Hover/Focus/Active/Disabled, per the spike's `_DatePickerRange` node reference) are real interactive elements matching the day-cell's own established real-button precedent (v1's Hover-state finding).
-
-**Manual test (required):** `pnpm dev:components` — Scenario 1: click each preset, confirm the correct range is selected and highlighted. Scenario 2: click a preset then manually click a day, confirm the preset deselects. Scenario 3 (if configurable): pass a custom `presets` list, confirm it renders instead of/alongside the built-ins per Task 28's decision.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add presets sidebar"`
-
----
-
-### Task 31: Phase 6 SCSS + JSDoc audit
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-date-picker.scss` (modify)
-
-**Figma research pass (complete before writing any SCSS):**
-
-- [ ] Region: `_DatePickerRange` (fileKey `rtiE5zGA4aoOuxIQMgfD6h`, frame node `14:23420`) — pull `get_design_context` for exact tokens/spacing, deliberately deferred until now per the spike doc
-- [ ] Interaction: preset button — Default/Hover/Focus/Active/Disabled × Selected/Unselected (10 variants total)
-- [ ] Dimensions: sidebar width and alignment against the dual-calendar layout from Phase 4's Task 19
-
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; every state × selected combination has an explicit rule; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 6 conforms to the JSDoc brevity/content rule from Task 12.
-
-**Manual test (required):** Reuse Task 30's scenarios visually against the pulled Figma values.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style presets sidebar"`
-
----
-
-### Task 32: Phase 6 unit tests (consolidated)
-
-**Executor:** @testing-subagent
-**Files:** `bds-date-picker.presets.spec.ts` (create), `presets.spec.ts` (create)
-
-**Unit tests to cover:** each built-in preset computes the expected `{ start, end }` pair for a fixed reference date; clicking a preset updates draft and marks it selected; manual day click after a preset selection reverts to Custom; consumer-configurable `presets` override behavior if Task 28 chose that path. Coverage-phase only (≥90%).
-
-**Manual test (required):** Non-visual — suites passing at ≥90% coverage.
-
-**Commit:** `git commit -m "test: EOA-17138 add Phase 6 presets sidebar unit tests"`
-
----
-
-### Task 33: Phase 6 documentation
-
-**Executor:** @documentation-subagent
-**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
-
-**Acceptance criteria:** MDX documents the presets sidebar, the built-in list, and the configurability decision from Task 28; new story variant.
-
-**Manual test (required):** `pnpm dev:docs` — new story renders and behaves correctly.
-
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 6 presets sidebar"`
-
----
-
-### Task 34: React/Vue wrapper parity check — Phase 6
-
-**Executor:** @qa-subagent
-**Files:** none
-
-**Acceptance criteria:** Confirms presets-sidebar behavior identically through both wrappers.
-
-**Manual test (required):** Repeat Task 30's scenarios through both wrapper playgrounds.
-
-**Commit:** N/A
-
----
-
-## Phase 7 — Info banner + footer range summary
-
-Per the spike doc: an info banner (blue background, info icon, title "Info", message, closable) inside the popover above the calendar; a footer range-summary text ("Range: 18 days, 2 hours, 30 minutes") to the left of Clean/Cancel/Apply.
-
-### Task 35: `bds-date-picker` banner + range summary implementation
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `helpers/renderBanner.tsx` (create), `helpers/renderFooter.tsx` (modify), `types/types.ts` (modify), `bds-date-picker.tsx` (modify)
-
-**Acceptance criteria:**
-
-- `@Prop() readonly banner?: { title: string; message: string; closable?: boolean; state?: string; visible?: boolean }` — shape adapted from the spike's cited legacy `infoBanner` prop (prop name changed to match Boreal conventions, shape kept as reasonable prior art).
-- Banner renders above the calendar body inside the popover when `visible` (or when the prop is present, per whichever default Task 35's implementer confirms against the shape above); closable via an `X` button when `closable`.
-- Footer range-summary text renders only in `range` mode, to the left of the footer buttons, computed from `draft.rangeStart`/`draft.rangeEnd` (days/hours/minutes granularity per the spike's example, using `date-engine` date-math — no new primitives expected).
-
-**Manual test (required):** `pnpm dev:components` — Scenario 1: set a `banner` prop, confirm it renders and is closable. Scenario 2: select a range, confirm the footer summary text updates live and matches the selected span.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add info banner and footer range summary"`
-
----
-
-### Task 36: Phase 7 SCSS + JSDoc audit
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-date-picker.scss` (modify)
-
-**Figma research pass (complete before writing any SCSS):**
-
-- [ ] Region: info banner — default, and its closable-hover state
-- [ ] Modifier: banner `state` variants (info/warning/error, if the design supports more than one — confirm before assuming info-only)
-- [ ] Region: footer range-summary label — spacing against the existing Clean/Cancel/Apply buttons (confirmed 48px footer height, 24px/16px padding from Phase 4's Task 19)
-
-**Acceptance criteria:** Every row checked off before SCSS; `$boreal-*` tokens exclusively; JSDoc for every `@Prop`/`@Event`/`@Method` touched in Phase 7 (including the new `banner` prop from Task 35) conforms to the JSDoc brevity/content rule from Task 12.
-
-**Manual test (required):** Reuse Task 35's scenarios visually.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 style info banner and range summary"`
-
----
-
-### Task 37: Phase 7 unit tests (consolidated)
-
-**Executor:** @testing-subagent
-**Files:** `bds-date-picker.banner.spec.ts` (create)
-
-**Unit tests to cover:** banner renders/hides per `visible`; close button removes/hides the banner and does not affect draft state; footer range-summary text computes the correct days/hours/minutes span and updates live as the range changes. Coverage-phase only (≥90%).
-
-**Manual test (required):** Non-visual — suite passing at ≥90% coverage.
-
-**Commit:** `git commit -m "test: EOA-17138 add Phase 7 banner and range summary unit tests"`
-
----
-
-### Task 38: Phase 7 documentation
-
-**Executor:** @documentation-subagent
-**Files:** `bds-date-picker.stories.ts` (modify), `bds-date-picker.mdx` (modify)
-
-**Acceptance criteria:** MDX documents the `banner` prop shape and the footer range-summary behavior; new story variant.
-
-**Manual test (required):** `pnpm dev:docs` — new story renders and behaves correctly.
-
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 7 banner and range summary"`
-
----
-
-### Task 39: React/Vue wrapper parity check — Phase 7
-
-**Executor:** @qa-subagent
-**Files:** none
-
-**Acceptance criteria:** Confirms banner/range-summary behavior identically through both wrappers.
-
-**Manual test (required):** Repeat Task 35's scenarios through both wrapper playgrounds.
-
-**Commit:** N/A
-
----
-
-## Phase 8 — Keyboard navigation, accessibility, RTL
-
-Per the spike doc: only calendar-specific arrow-key 2D grid traversal is deferred to this phase — baseline keyboard operability already ships via `bds-popover`. `src/utils/a11y/keyboard/navigation/grid-navigation.ts` already exists and is generic; `bds-calendar-grid`'s native `<table role="grid">` markup was chosen specifically to make this phase additive.
-
-### Task 40: `bds-calendar-grid` arrow-key 2D grid traversal
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-calendar-grid.tsx` (modify)
-
-**Utility discovery note:** `src/utils/a11y/keyboard/navigation/grid-navigation.ts` is the confirmed integration point (flagged by a code comment left in v1's Task 9) — this task wires it, it does not reimplement grid-traversal logic.
-
-**Acceptance criteria:**
-
-- Arrow keys move focus cell-to-cell within the visible grid (including across week rows); Home/End jump to the first/last day of the visible week or month per the WAI-ARIA APG reference; PageUp/PageDown (or the APG's specified equivalent) navigate months.
-- Focus crossing a month boundary via arrow keys triggers the same `bdsMonthNavigate` event already used for the prev/next buttons — no duplicate navigation code path.
-- Out-of-month and disabled cells remain excluded from arrow-key focus stops per the interactivity contract already established in v1/Phase 3.
-- Works correctly for both single and dual (range-mode) grid instances independently.
-
-**Manual test (required):** `pnpm dev:components` — Scenario: tab into the grid, use arrow keys to traverse across a full month boundary in both directions, confirm focus and `bdsMonthNavigate` firing correctly; repeat in range mode across both calendars independently.
-
-**Commit:** `git commit -m "feat(bds-calendar-grid): EOA-17138 add arrow-key 2D grid traversal"`
-
----
-
-### Task 41: live region + RTL audit
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `helpers/renderCalendarPanel.tsx` (modify), `bds-calendar-grid.scss` (modify), `bds-date-picker.scss` (modify)
-
-**Acceptance criteria:**
-
-- An `aria-live` region (visually hidden) announces the current month/year on navigation, per the WAI-ARIA APG reference and react-day-picker's cited pattern.
-- RTL audit across `bds-calendar-grid` and `bds-date-picker`: logical CSS properties (`margin-inline-start`/`inset-inline-*`, etc.) replace any remaining physical-direction properties; nav-icon mirroring confirmed for RTL locales; sidebar (Phase 6)/footer (all phases) layout confirmed to flip correctly.
-- No visual regression in LTR mode.
-
-**Manual test (required):** `pnpm dev:components` — Scenario 1: navigate months with a screen reader active (or inspect the live region's DOM update), confirm announcement. Scenario 2: force `dir="rtl"` on the playground host, confirm calendar, sidebar, footer, and nav icons all mirror correctly.
-
-**Commit:** `git commit -m "feat(bds-date-picker): EOA-17138 add live region announcements and RTL support"`
-
----
-
-### Task 42: Phase 8 unit tests (consolidated)
-
-**Executor:** @testing-subagent
-**Files:** `bds-calendar-grid.keyboard.spec.ts` (create), `bds-calendar-grid.a11y.spec.ts` (modify), `bds-date-picker.keyboard.spec.ts` (modify)
-
-**Unit tests to cover:** arrow-key traversal in every direction including month-boundary crossing; Home/End/PageUp/PageDown per the confirmed keymap; disabled/out-of-month cells excluded from focus stops; live-region text updates on navigation; dual-grid (range mode) independent traversal. Coverage-phase only (≥90%).
-
-**Manual test (required):** Non-visual — suites passing at ≥90% coverage.
-
-**Commit:** `git commit -m "test: EOA-17138 add Phase 8 keyboard navigation and a11y unit tests"`
-
----
-
-### Task 43: Phase 8 documentation
-
-**Executor:** @documentation-subagent
-**Files:** `bds-date-picker.mdx` (modify)
-
-**Acceptance criteria:** MDX documents the full keyboard interaction model (arrow keys, Home/End, month/year hotkeys) and RTL support.
-
-**Manual test (required):** `pnpm dev:docs` — MDX reviewed for clarity and accuracy against the shipped behavior.
-
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 8 keyboard navigation and RTL support"`
-
----
-
-### Task 44: React/Vue wrapper parity check — Phase 8
-
-**Executor:** @qa-subagent
-**Files:** none
-
-**Acceptance criteria:** Confirms keyboard traversal and RTL rendering identically through both wrappers.
-
-**Manual test (required):** Repeat Tasks 40/41's scenarios through both wrapper playgrounds.
-
-**Commit:** N/A
-
----
-
-## Phase 9 — Month/year quick-picker
-
-Per the spike doc's "Unscheduled — month/year quick-picker" section: clicking the month/year header label opens an inline month-grid or year-grid replacing the day grid, letting the user jump directly to a target month/year. Confirmed present in Figma (`datePickerMonths`/`datePickerYears`/`_DatePickerMonthYear` nodes) but never UX/UI-validated for its drill-down interaction model — this phase starts with that validation.
-
-This lives inside `bds-calendar-grid` itself (not a new registered element), per the spike doc's decomposition litmus test: it's a mode of the same reusable, dumb, controlled grid component shared by every orchestrator, not a consumer-composed or single-use piece.
-
-### Task 45: quick-picker interaction model — UX confirmation (blocking gate)
-
-**Executor:** main thread (no executor)
-
-**Acceptance criteria:**
-
-- Confirm or correct the spike doc's inferred three-level drill-down model with the user before Task 47 begins: click the month/year label → month grid (12 months, middle button = year, prev/next steps by year) → click a month → back to day grid for that month; click the middle year button while in the month grid → year grid (12-year range, prev/next steps by decade) → click a year → back to the month grid for that year.
-- In particular, confirm step 4 (clicking a year returns to the month grid, not directly to a day) — the spike doc flags this as inferred from the universal pattern, not directly observed in a Figma prototype.
-- Document the confirmed model as a short addendum before Task 47 starts.
-
-**Manual test:** N/A — design/UX checkpoint.
-
----
-
-### Task 46: `date-engine` month-grid/year-grid generators
-
-**Executor:** @frontend-subagent
-**Files:** `packages/boreal-web-components/src/services/date-engine/grid.ts` (modify), `.../date-engine/types.ts` (modify), `.../date-engine/__test__/grid.spec.ts` (modify)
-
-**Acceptance criteria:**
-
-- `generateMonthPickerGrid(year: number, currentMonth: number): MonthGridCell[]` — 12 cells (Jan–Dec), each flagging whether it's the currently-displayed month (dashed-outline indicator per Figma).
-- `generateYearPickerGrid(centerYear: number, currentYear: number): YearGridCell[]` — a 12-year range, each flagging whether it's the current year and whether it's disabled (future years greyed/disabled per the spike's Figma note — confirm against Task 45's confirmed model whether this applies to Boreal's use case or was an artifact of the source mockup).
-- Both are pure functions, framework-agnostic, following `generateMonthGrid`'s existing testing/typing conventions exactly.
-
-**Manual test (required):** Non-visual — validate via unit tests and `tsc --noEmit`.
-
-**Commit:** `git commit -m "feat(date-engine): EOA-17138 add month-picker and year-picker grid generators"`
-
----
-
-### Task 47: `bds-calendar-grid` quick-picker drill-down implementation
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-calendar-grid/types/ICalendarGrid.ts` (modify), `bds-calendar-grid.tsx` (modify)
-
-**Acceptance criteria:**
-
-- Internal `@State() private view: 'days' | 'months' | 'years' = 'days'` — not exposed as a public `@Prop`, matching `bds-calendar-grid`'s existing "dumb but internally stateful for rendering" pattern (it already owns `hover`/`focus` interaction state internally; this is the same class of concern).
-- The month/year header label becomes a real interactive button (per the spike's confirmed `_Button/month-year` finding, already noted as a dropdown-styled button rather than plain text since v1) — clicking it switches `view` to `'months'`.
-- Month-grid cell click resolves back to `view: 'days'`, updating `displayMonth` and emitting `bdsMonthNavigate` upward (reusing the existing event, not a new one) so the orchestrator's `@State` stays in sync.
-- Year-grid cell click resolves to `view: 'months'` for the clicked year, per Task 45's confirmed model (not directly to `'days'`).
-- Middle year-button inside the month grid switches `view` to `'years'`.
-- Works correctly for both single and dual (range-mode) grid instances independently — each grid instance manages its own `view` state.
-
-**Manual test (required):** `pnpm dev:components` — Scenario 1: click the month/year label, confirm the month grid replaces the day grid. Scenario 2: click a month, confirm it resolves back to the day grid showing that month. Scenario 3: from the month grid, click the year button, confirm the year grid appears; click a year, confirm it resolves to the month grid for that year (per Task 45's confirmed model).
-
-**Commit:** `git commit -m "feat(bds-calendar-grid): EOA-17138 add month/year quick-picker drill-down"`
-
----
-
-### Task 48: Phase 9 SCSS + JSDoc audit
-
-**Executor:** @frontend-subagent (implementation), @qa-subagent (manual test)
-**Files:** `bds-calendar-grid.scss` (modify), `bds-calendar-grid.tsx` (JSDoc)
-
-**Figma research pass (complete before writing any SCSS):**
-
-- [ ] Region: `datePickerMonths` grid (node `14:24131`) — cell layout, spacing
-- [ ] Region: `datePickerYears` grid (node `14:24151`) — cell layout, spacing
-- [ ] Region: `_DatePickerMonthYear` cell (node `14:23473`) — `State` (Default/Hover/Focus/Active/Disabled) × `State Actual` (True/False, presumed "is current") × `Selected` (True/False) — none of these three nodes pulled yet per the spike doc; pull all now
-- [ ] Region: month/year header label button — the confirmed `_Button/month-year` state matrix (~10 rows: Default/Hover/Focus/Active/Disabled × unselected/selected)
-
-**Acceptance criteria:** Every row checked off before SCSS, with pulled values recorded; `$boreal-*` tokens exclusively; JSDoc for the new internal `view` state complete and conforms to the JSDoc brevity/content rule from Task 12.
-
-**Manual test (required):** Reuse Task 47's scenarios visually against the pulled Figma values.
-
-**Commit:** `git commit -m "feat(bds-calendar-grid): EOA-17138 style month/year quick-picker"`
-
----
-
-### Task 49: Phase 9 unit tests (consolidated)
-
-**Executor:** @testing-subagent
-**Files:** `bds-calendar-grid.quickpicker.spec.ts` (create), `date-engine/__test__/grid.spec.ts` (modify)
-
-**Unit tests to cover:** `generateMonthPickerGrid`/`generateYearPickerGrid` correctness (12 cells/range, current-item flagging); header-label click switches `view`; month-cell click resolves to `'days'` and updates `displayMonth`/emits `bdsMonthNavigate`; year-cell click resolves to `'months'` for the clicked year (per Task 45's confirmed model); independent `view` state across dual grid instances in range mode. Coverage-phase only (≥90%).
-
-**Manual test (required):** Non-visual — suites passing at ≥90% coverage.
-
-**Commit:** `git commit -m "test: EOA-17138 add Phase 9 month/year quick-picker unit tests"`
-
----
-
-### Task 50: Phase 9 documentation
-
-**Executor:** @documentation-subagent
-**Files:** `bds-date-picker.mdx` (modify) — internal-only note, per `bds-calendar-grid`'s existing no-standalone-docs convention
-
-**Acceptance criteria:** MDX's internal `bds-calendar-grid` note is extended to describe the quick-picker drill-down behavior at a level consumers of `bds-date-picker` need to understand (it's automatic, no new public props), consistent with the existing internal-documentation-only convention for `bds-calendar-grid`.
-
-**Manual test (required):** `pnpm dev:docs` — MDX reviewed for clarity.
-
-**Commit:** `git commit -m "docs(bds-date-picker): EOA-17138 document Phase 9 month/year quick-picker"`
-
----
-
-### Task 51: React/Vue wrapper parity check — Phase 9
-
-**Executor:** @qa-subagent
-**Files:** none
-
-**Acceptance criteria:** Confirms quick-picker drill-down behavior identically through both wrappers.
-
-**Manual test (required):** Repeat Task 47's scenarios through both wrapper playgrounds.
-
-**Commit:** N/A
-
----
-
-## Final task — Consolidated mutation testing (Stryker) across all of v2
-
-### Task 52: Consolidated mutation testing — Phases 2–9
-
-**Executor:** @testing-subagent
-**Files:**
-
-- `packages/boreal-web-components/src/services/date-engine/stryker.date-engine.config.mjs` (modify — re-run, now covering `value.ts`, min/max wiring, and the Phase 9 grid generators)
-- `.../bds-date-picker/stryker.bds-date-picker.config.mjs` (modify — re-run, now covering every Phase 2–8 addition)
-- `.../bds-calendar-grid/stryker.bds-calendar-grid.config.mjs` (modify — re-run; first time since v1 this config needs re-running, now covering Phase 4 range rendering, Phase 8 keyboard traversal, and Phase 9 quick-picker)
-
-**Acceptance criteria:**
-
-- This is the single point in the entire v2 scope where mutation testing runs — not per phase, not per task.
-- Target: ≥90% mutation score per component. Any surviving mutant below threshold gets either a new test closing the gap (in the relevant phase's existing spec file) or a documented, justified exception.
-- Any mutant survivor pattern revealing a genuine test-coverage gap from any earlier phase is fixed by extending that phase's existing spec file — do not add new source files at this stage.
-
-**Manual test (required):** Non-visual — run all three Stryker configs locally, confirm ≥90% mutation score (or documented exceptions) for each.
-
-**Commit:** `git commit -m "test: EOA-17138 run consolidated mutation testing across all v2 phases (2-9)"`
-
----
-
-## Remaining Open Questions (resolve at the task checkpoint noted, not before starting)
-
-- **Phase 3 (Task 9):** disabled-date interaction design — no Figma mockup exists beyond the generic "Day disabled" token; must be resolved via the design check-in before Task 11.
-- **Phase 4 (Task 18):** exact popover header Start/End prefix presentation (one line vs. two; whether `headerPlaceholder` needs a start/end pair of its own) — the spike doc flags this as deliberately deferred to whoever picks up this phase; resolve it in Task 18, not before.
-- **Phase 4:** the spike doc notes an as-yet-unexplored Figma combination — `Basic` `Calendar Type` with `Range: true` and a single calendar (not the dual `Expanded` layout) — confirm during Task 18 whether Boreal's range mode should support this single-calendar range variant, or whether dual-calendar (`Expanded`) is the only supported range presentation for v2.
-- **Phase 6 (Task 28):** fixed vs. consumer-configurable presets — the legacy `ranges` prop suggests configurability was solved elsewhere; must be a deliberate decision, not a silent carry-over.
-- **Phase 9 (Task 45):** the quick-picker's drill-down interaction model is inferred from the universal MUI X/Ant Design/react-day-picker/Vaadin pattern, not directly observed in a Figma prototype — especially step 4 (year click → month grid, not day grid). Confirm with the user before Task 47.
-- **Explicitly not a question for this plan:** keyboard-typed date entry in the trigger field remains deferred per the 2026-08-19 decision in the spike doc — do not resolve or reopen it as a side effect of any task above.
+No additional phases are planned under EOA-17138.

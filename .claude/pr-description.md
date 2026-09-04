@@ -1,53 +1,94 @@
 # PR Title
 
-fix(web-components): EOA-17138 scope bds-table and bds-calendar-grid CSS to their host elements
+feat(web-components): EOA-17138 add bds-date-picker v2 (time, min/max, calendarType, range)
 
 ---
 
 # PR Body
 
-## Description of the Bug
+## Description
 
-`bds-table` and `bds-calendar-grid` (used by `bds-date-picker`) each shipped unscoped, top-level `table`/`thead`/`th`/`td` CSS selectors outside their component's host block. Once both components' stylesheets loaded on the same page, each leaked its styles onto the other's tables — most visibly, the date picker's weekday headers ("Sun Mon Tue…") wrapping into single letters per line.
+Implements `bds-date-picker` v2 (Phases 2–4 of ADR-0003): a timezone-aware time selector, min/max date constraints, the `calendarType` foundation (`default` | `basic` | `expanded`), and range-mode dual-calendar orchestration — without breaking v1's single-date, naive-date `value` contract.
 
-## Root Cause
+## Implementation Details
 
-Stencil compiles bare top-level selectors straight into each component's global stylesheet with no scoping. `bds-table.scss` and `bds-calendar-grid.scss` both had `table { }` / `thead th { }` rules sitting outside their `bds-table { }` / `bds-calendar-grid { }` blocks, so they matched any matching element on the page, not just their own markup.
+- **Phase 2 — Time selector:** timezone-aware date-time → UTC ISO conversion in `date-engine`, plus a new `renderTimeSelector.tsx` composed into the existing popover.
+- **Phase 3 — Min/max constraints:** wires already-existing `date-engine`/`bds-calendar-grid` capacity (`isWithinRange`, `compareDates`, `DayCell.isDisabled`) into `bds-date-picker`, with nav guards and helper text.
+- **Phase 3.5 — `calendarType` foundation:** new prop (default `'basic'`, non-breaking) adding `default` mode's immediate-commit, chrome-less interaction — a prerequisite for range behavior.
+- **Phase 4 — Range mode:** new `range: boolean` prop, independent of calendar count; a second `bds-calendar-grid` is gated on `calendarType === 'expanded'` only. Public `value` becomes `string | { start: string; end: string }` when `range` is on. Includes continuous-band styling, hover-preview band, and FACE validity/form submission for range values.
+- Light DOM throughout (ADR-0001); no external calendar library.
 
-## Description of the Fix
+## Impact Analysis
 
-- Nested all previously top-level selectors (including the BEM class block) under their host tag in `bds-table.scss` and `bds-calendar-grid.scss`, so every selector now compiles as a genuine descendant of `bds-table`/`bds-calendar-grid`.
-- Fixed a related specificity bug in `apps/boreal-docs/.storybook/styles/preview.css` (`:not()` → `:not(:where())`) that was overriding Storybook's own props-table styling, and removed two now-dead rules.
-
-## Impact of the Fix
-
-- No visual or behavioral change for either component in isolation — compiled CSS rule/declaration counts are identical before and after (pure scoping change).
-- No breaking changes, no API changes.
+- Additive — v1's single-date, naive-date `value` contract is unchanged for existing consumers.
+- `bds-table`/`bds-calendar-grid` CSS scoping fix (unscoped selectors were leaking styles between the two components) landed as part of this branch.
+- Several Safari/WebKit-specific fixes: popover outside-click/focus race with the Apply click, today-indicator border clipped by range background.
+- No breaking API changes.
 
 ## Testing Conducted
 
 **Automated:**
 
-- [x] Full `boreal-web-components` unit test suite passing (295 suites / 3,209 tests)
-- [x] `prettier --check` clean on all touched files
+- [x] Unit tests added per phase (time selector + date-engine conversion, min/max, calendarType, range) with the two-phase coverage/mutation gate
+- [x] Full `boreal-web-components` suite passing post-merge with `release/current`
 
 **Manual:**
 
-- [x] Live-verified in Storybook: navigating Table → Date Picker no longer corrupts the calendar header
-- [x] Cross-checked table rendering at full width and 775px against the last-released Chromatic build
+- [x] QA pass per phase across web-components, React, and Vue playgrounds
+- [x] Cross-browser check surfaced and fixed the Safari popover/Apply race and range-background/today-indicator clipping
+
+## Related Changes
+
+- **boreal-react** / **boreal-vue**: wrapper parity checked and fixed per phase (including a min/max initial FACE-validity race in the framework wrappers)
+- **boreal-docs**: Storybook stories and MDX documentation added per phase (time selector, min/max, calendarType, range mode)
+
+## Additional Remarks
+
+- Keyboard-typed date entry in the trigger field remains explicitly out of scope.
+- Phases 5–9 (range time, presets, banner/summary, keyboard/a11y/RTL, month/year quick-picker) moved to v3 under EOA-17662.
+- Two `bds-popover` follow-ups discovered during this work (coverage backfill, CSS custom-property-inheritance browser test) were re-scoped into their own tracked plans rather than bundled here.
+- Full plan: `ai-work/plans/EOA-17138-bds-date-picker-v2.md`
 
 ## References
 
-Refs EOA-17138
-
-Full investigation, root cause, and verification detail: EOA-17495 (subtask under EOA-17277); local copy at `ai-work/qa/bug-reports/2026-08-27-bds-table-bug-001.md`.
+Closes EOA-17138
 
 ## Checklist
 
-- [x] Follows conventional commit format: `fix(web-components): EOA-17138 description`
-- [x] Root cause identified and documented
-- [x] Fix addresses the root cause, not just symptoms
-- [x] Bug no longer reproducible with the fix applied
-- [x] Design tokens preserved — no style regressions
-- [x] No console warnings or errors introduced
-- [x] No breaking changes introduced
+### General
+
+- [x] Follows conventional commit format: `feat(scope): EOA-17138 description`
+- [x] Ticket reference included (`Closes EOA-17138`)
+- [x] Code adheres to TypeScript strict mode — no `any` or implicit types
+- [x] All tests pass locally
+
+### Boreal DS — Component Standards
+
+- [x] Design tokens used exclusively — no hard-coded colors, spacing, or radii
+- [x] Component tag uses `bds-` prefix
+- [x] All props have explicit TypeScript types
+- [x] SCSS follows `@use` pattern (no `@import`)
+- [x] Light DOM patterns documented
+
+### Boreal DS — Form Components
+
+- [x] Uses formAssociatedMixin for FACE boilerplate
+- [x] Validation tested (min/max, required, range) with built-in validators
+
+### Testing
+
+- [x] Unit test coverage ≥ 90% statements per phase
+- [x] Tests cover happy path, error cases, and edge cases
+- [x] Manual testing completed across web-components, React, and Vue
+
+### Documentation
+
+- [x] JSDoc added to all public APIs (props, events, methods)
+- [x] Storybook story created with usage examples
+- [x] Storybook MDX documentation added (usage, API, examples)
+
+### Performance & Compatibility
+
+- [x] No new console warnings or errors
+- [x] Compatible across supported browsers (Chrome, Firefox, Safari, Edge) — Safari-specific regressions found and fixed
+- [x] No regression in existing functionality

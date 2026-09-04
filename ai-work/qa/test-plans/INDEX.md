@@ -10,4 +10,5 @@
 | [EOA-15507-bds-table-v3-test-plan.md](./EOA-15507-bds-table-v3-test-plan.md) | EOA-15507 | `bds-table` | 2026-07-23 | This test plan covers the 11 shipped tasks from the v3 implementation plan (ai-work/plans/EOA-15507-… |
 | [EOA-16000-bds-table-v4-test-plan.md](./EOA-16000-bds-table-v4-test-plan.md) | EOA-16000 | `bds-table` | 2026-08-05 | Covers the 14 shipped v4 tasks (grouping, reorder, resize, right-pinning, expand/collapse, template cells, 5 selection refinements, opt-in toolbar), web components only — no React/Vue parity; Task 15 (mutation testing) dropped |
 | [EOA-16692-bds-date-picker-test-plan.md](./EOA-16692-bds-date-picker-test-plan.md) | EOA-16692 | `bds-date-picker` | 2026-08-20 | bds-date-picker is a composite, form-associated (FACE) date-picker control composing a consumer-supplied bds-text-field … |
+| [EOA-17138-bds-date-picker-v2-test-plan.md](./EOA-17138-bds-date-picker-v2-test-plan.md) | EOA-17138 | `bds-date-picker` | 2026-09-03 | Covers Phase 2–4 (time selector, min/max, calendarType, range) on top of the Phase 0–1 baseline, including three cross-cutting fixes discovered during Phase 4 QA |
 </content>

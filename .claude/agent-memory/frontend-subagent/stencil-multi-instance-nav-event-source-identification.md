@@ -1,0 +1,18 @@
+---
+name: stencil-multi-instance-nav-event-source-identification
+description: How to tell apart bubbled events from two sibling instances of the same dumb child component (bds-date-picker dual-calendar bdsMonthNavigate, EOA-17138 Task 18)
+metadata:
+  type: project
+---
+
+**Superseded for `bds-date-picker` by Task 19m-3 (EOA-17138):** once the two calendars are required to stay locked exactly one month apart (industry-standard dual-month range-picker convention), the `ref` + `event.target` discriminator pattern below became unnecessary — `secondDisplayYear`/`secondDisplayMonth` were converted from independent `@State` to a value derived fresh every render from `displayYear`/`displayMonth` via `nextMonthFrom()`, `secondCalendarEl` was deleted entirely (once its only read site — the `event.target` branch — was removed, `tsc`'s `noUnusedLocals` correctly flagged the leftover `ref`-only-written field as dead code), and `handleMonthNavigate` now always shifts the single shared `displayYear`/`displayMonth` pair by ±1 month based on `event.detail.direction`, regardless of which calendar's (sole remaining live) nav button emitted the event. The pattern below remains valid for any *other* future case where two sibling instances legitimately need independent, uncoupled state — just not for this component's dual-calendar nav anymore.
+
+When a parent orchestrator renders two sibling instances of the same fully-controlled, non-shadow child component (e.g. two `<bds-calendar-grid>` for `calendarType="expanded"`), a single `@Listen('bdsMonthNavigate')` on the parent receives events from both, with no per-instance discriminator in the event `detail`. `EventEmitter.emit()` dispatches on the child's own host element (`this.el`), and since these are non-shadow (light DOM) components, `event.target` in the parent's listener is reliably the actual originating `<bds-calendar-grid>` host element (no shadow-boundary retargeting to worry about).
+
+**Fix:** give only the "extra" instance(s) a `ref` callback to capture their element reference (e.g. `secondCalendarEl`), then branch in the listener with `event.target === this.secondCalendarEl`, treating anything else as the first/default instance. No ref is needed for the first instance — a `firstCalendarEl` field just goes unused (`tsc` flags it as dead via noUnusedLocals) since the branch structure already treats "not the tracked one(s)" as the default case.
+
+**Also relevant to this pattern:** when building an array of per-instance render params where entries have an optional field (e.g. `ref`) added only on push (not in the literal array initializer), TypeScript infers the array's element type from the first literal and rejects the later `.push()` with the extra field — annotate the `const array: SomeParamType[] = [...]` explicitly rather than relying on inference.
+
+**Why:** discovered implementing `bds-date-picker`'s dual-calendar range mode (EOA-17138 Task 18) — `renderCalendarPanel.tsx` maps over a `calendars: CalendarInstanceParams[]` array, and `bds-date-picker.tsx`'s `handleMonthNavigate` needed to route to either `displayYear`/`displayMonth` or `secondDisplayYear`/`secondDisplayMonth` state depending on which of the two rendered `bds-calendar-grid` fired.
+
+**How to apply:** any future Boreal DS component that renders more than one sibling instance of the same event-emitting child and needs per-instance state should reach for this `ref` + `event.target` comparison pattern rather than trying to thread an index through the child's own props/events (which would require modifying the child component itself — `bds-calendar-grid` here stayed completely untouched).

@@ -1,0 +1,1 @@
+../../.agents/memory/component-interface-required-optional-field-ordering.md
