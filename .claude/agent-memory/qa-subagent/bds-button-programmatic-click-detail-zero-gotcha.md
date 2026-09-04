@@ -39,13 +39,3 @@ fresh refs before clicking.
 This is distinct from the existing memory note "`bds-button` swallows native `click`" (which
 covers `stopPropagation()`/re-emitting `bdsClick`) — that note is about listening for the wrong
 event name; this one is about *triggering* the click in the first place.
-
-**Confirmed to generalize beyond `bds-button` itself (EOA-17362, `bds-color-picker` QA):**
-`bds-color-picker`'s own trigger container (`.bds-color-picker__container`, a plain `<div
-role="group">`, not a `bds-button`) has the same `event.detail === 0` guard on its click-to-open
-handler — `container.click()` via `eval` silently leaves `aria-expanded="false"`, while a real
-`playwright-cli click <ref>` (or a real Playwright `locator.click()` inside `run-code`) opens it
-correctly every time. Treat this as a repo-wide convention on any element with a
-click-to-toggle/open trigger, not just `bds-button` — always reach for a real pointer-dispatched
-click first when a JS-triggered `.click()` appears to silently no-op, before assuming a
-regression.

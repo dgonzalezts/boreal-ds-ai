@@ -6,12 +6,6 @@
 | ---- | ------ | --------- | -------- | -------- | ----- |
 | [2026-07-06-bds-search-bar-bug-001.md](2026-07-06-bds-search-bar-bug-001.md) | — | `bds-search-bar`, `VirtualScrollController` | Medium | P2 | `bds-search-bar`/`bds-select` suggestion-list "virtualization" only repositions DOM nodes — it does not reduce mounted component count |
 | [2026-08-06-bds-button-accessible-name-remaining.md](2026-08-06-bds-button-accessible-name-remaining.md) | EOA-17133 | `bds-button` | Low | P3 | Finding 4 (2026-08-24): `checkAccessibleName()` lifecycle-timing race fires a false-positive warning for nested `bds-button`s despite a correct `label` prop in source — distinct from the already-fixed Findings 1–3 |
-| [EOA-17362-bds-color-picker-bug-001.md](EOA-17362-bds-color-picker-bug-001.md) | EOA-17362 | `bds-color-picker` | High | P1 | Internal `bds-number-field`/`bds-text-field` `valueChange` events bubble to the host, indistinguishable from the component's own public event |
-| [EOA-17362-bds-color-picker-bug-002.md](EOA-17362-bds-color-picker-bug-002.md) | EOA-17362 | `bds-color-picker` | Medium | P1 | Oversized HEX input does not restore the last valid color — it silently commits a truncated, unrelated color |
-| [EOA-17362-bds-color-picker-bug-003.md](EOA-17362-bds-color-picker-bug-003.md) | EOA-17362 | `bds-color-picker` | Medium | P1 | Opacity field display gets stuck showing an unclamped value when a new value arrives quickly (paste, fast typing) — never reproduces on normal hand-typed input; confirmed identical through the Vue wrapper (live repro in `examples/vue-testapp`) |
-| [EOA-17362-bds-color-picker-bug-004.md](EOA-17362-bds-color-picker-bug-004.md) | EOA-17362 | `bds-color-picker` | High | P1 | Invalid/unsupported external `.value` (garbage strings, 8-digit hex+alpha, rgba(), named colors) is accepted with no event fired and no error — opacity has no public API at all, so `v-model` can't reach it |
-| [EOA-17362-bds-color-picker-bug-005.md](EOA-17362-bds-color-picker-bug-005.md) | EOA-17362 | `bds-color-picker` | Medium | P2 | HEX/opacity text clips at narrow `custom-width`, and the popover overflows the viewport at mobile widths |
-| [EOA-17362-bds-color-picker-bug-006.md](EOA-17362-bds-color-picker-bug-006.md) | EOA-17362 | `bds-color-picker` | Low | P3 | Popover's dropper/eyedropper toggle button has no accessible name |
 
 ## Fixed
 
