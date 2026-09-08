@@ -586,6 +586,75 @@ A prototype-monkey-patch approach (patching `customElements.get('bds-x').prototy
 
 ---
 
+## Memoizing Expensive `render()` Computation
+
+**Problem:** "Reference-Stable State Updates" above prevents a render from being *scheduled* when nothing actually changed. This is a different bug: the render is legitimately happening (some unrelated `@State`/`@Prop` genuinely changed), but `render()`'s own body redundantly recomputes something expensive — either because a sub-computation isn't cached across renders at all, or because the same value is re-derived multiple times within one render pass. This tends to surface in two shapes:
+
+1. A private method called from `render()` performs real work (DOM/grid generation, formatting, anything that scales with data size) from scratch on *every* render, including renders triggered by state that has nothing to do with that method's own inputs.
+2. The same derived value is recomputed more than once within a single `render()` call — e.g. via a getter accessed several times across the method body — to produce the exact same result each time.
+
+**Pattern 1 — memoize across renders when the computation is genuinely expensive and depends on more than the render trigger:**
+
+```ts
+// ❌ Recomputes the expensive result on every render, regardless of what actually changed
+private computeDerivedValue(a: number, b: number): Result {
+  const { x, y } = this;
+  return buildExpensiveResult(a, b, x, y); // does real, scaling work
+}
+
+// ✅ Cache keyed on the computation's actual inputs; cache hit skips the expensive path entirely
+private readonly derivedValueCache = new Map<Slot, { a: number; b: number; x?: X; y?: Y; result: Result }>();
+
+private computeDerivedValue(a: number, b: number, slot: Slot): Result {
+  const { x, y } = this;
+  const cached = this.derivedValueCache.get(slot);
+  const isCacheHit =
+    cached !== undefined &&
+    cached.a === a &&
+    cached.b === b &&
+    cached.x?.getTime() === x?.getTime() && // if x is a getter/derived value constructing a new instance each access, compare by value, never by reference
+    cached.y === y;
+  if (isCacheHit) return cached.result;
+
+  const result = buildExpensiveResult(a, b, x, y);
+  this.derivedValueCache.set(slot, { a, b, x, y, result });
+  return result;
+}
+```
+
+Key detail: cache-key comparison must use value equality (`.getTime()`, deep-equal, etc.), never `===`, whenever an input is itself a getter or derived value that constructs a new object on every access — a naive `===` comparison would never hit the cache and silently defeat the entire memoization.
+
+When there are multiple independent instances of the same computation in one component, key the cache by an explicit slot identifier — a single-entry cache would thrash between them, missing on every call.
+
+**Pattern 2 — hoist within a single render pass when the computation is cheap but redundantly repeated:**
+
+```ts
+// ❌ Re-derives the same value multiple times via multiple separate getter accesses
+const guard = this.computeDerivedValue(this.derivedYear, this.derivedMonth, 'secondary');
+// ...
+grid: buildDisplayGrid(this.derivedYear, this.derivedMonth, ...),
+// ...
+{ year: this.derivedYear, month: this.derivedMonth, ... }
+
+// ✅ Computed once, reused for every consumption site in this render() call
+const derived = this.deriveFromBase(this.baseYear, this.baseMonth);
+const guard = this.computeDerivedValue(derived.year, derived.month, 'secondary');
+// ...
+grid: buildDisplayGrid(derived.year, derived.month, ...),
+// ...
+{ year: derived.year, month: derived.month, ... }
+```
+
+Don't reach for a `Map`-based cross-render cache (Pattern 1) here — the value only needs to live for the duration of one `render()` call, and a cheap derivation is inexpensive enough that eliminating the *intra-render* duplication is the entire fix. Adding cross-render caching for O(1) work is over-engineering for a problem that doesn't exist at that cost level.
+
+**Decision rule:** if the computation is expensive (grid/DOM generation, formatting, anything that scales with data size) *and* its inputs don't change on every render, memoize across renders (Pattern 1). If the computation is cheap but called more than once per render for the same inputs, just hoist it to a local variable (Pattern 2). Don't apply Pattern 1 where Pattern 2 suffices — it adds cache-invalidation surface for no measurable benefit.
+
+**Verifying the fix:** Same technique as reference-stability bugs — no visible symptom in a static screenshot. Add temporary logging inside the expensive path only (not the cheap memoized wrapper), reproduce the render-triggering interaction in the browser, and confirm the log stops firing on renders that don't change the computation's actual inputs, while still firing when they do. Remove the instrumentation before committing.
+
+**Testing:** `jest.spyOn` the expensive inner method (not the memoized wrapper) and assert its call count doesn't increase across a render triggered by an unrelated state change, but does increase when an actual input changes.
+
+---
+
 ## Event Listener Placement: vDOM vs `@Listen` vs `addEventListener`
 
 ### Decision rule

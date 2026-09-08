@@ -561,6 +561,124 @@ Use DevTools → Accessibility panel or axe DevTools extension. Baseline grid/da
 
 ---
 
+### Functional — PR-Comment Review Follow-up (2026-09-07)
+
+Addendum covering a post-review commit batch on top of the Phase 4 work above (`548b1790` nav-guard memoization, `c78e3aa2` second-calendar dedup, `c7865adf` `watchRange`→`watchMinMax` rename, `7d875537` icon color tokens, plus an unreleased eager-validity change to `watchValue`/`watchMinMax`/`watchRequired`). Executed by `qa-subagent` across all three consumption surfaces (raw web components, `boreal-react`, `boreal-vue`) via the `dev:pack:react`/`dev:pack:vue` pipeline, with Safari/WebKit coverage where reachable. Scope: not a re-test of Phase 2–4 functional behavior (covered above) — only the delta introduced by this commit batch.
+
+---
+
+#### TC-FUNC-701: Nav-guard memoization — dual-calendar nav lock and bounds-disable unaffected
+
+**Priority:** P1
+
+**Preconditions:**
+
+- [ ] `dp-range-expanded` (`calendar-type="expanded" range`, no bounds) and `dp-19m2-narrow` (`calendar-type="expanded" range min="2026-08-01" max="2026-08-31"`) from the existing playground
+
+**Steps:**
+
+1. On `dp-range-expanded`, click Next 3× then Previous 3×
+   **Expected:** Both calendars move together at every step, staying exactly one month apart; no visual lag or stale button-disabled state from the new per-slot (`primary`/`secondary`) cache
+2. On `dp-19m2-narrow`, navigate to each bound
+   **Expected:** Previous/Next disable at `min`/`max` exactly as before the memoization change — identical to pre-refactor behavior since this is a pure perf fix
+
+---
+
+#### TC-FUNC-702: Second-calendar month dedup — consecutive-month offset holds under repeated nav
+
+**Priority:** P1
+
+**Steps:**
+
+1. Open `dp-range-expanded`, note both calendar headers, then click Next 5× and Previous 5×, checking the header pair after every click
+   **Expected:** Calendar 2's header is always exactly one month after calendar 1's, in both directions, with no drift and no console error — confirms the hoisted `secondDisplayMonth` local produces the same result as the two removed getters did
+
+---
+
+#### TC-FUNC-703 (visual): Icon color token updates render consistently, no layout shift
+
+**Priority:** P2
+
+**Steps:**
+
+1. Open `dp1` (`with-time`) — inspect the timer icon's computed color
+2. Open any picker's popover header calendar icon and the popover close button
+3. Open a `with-time` picker's hour/minute select chevrons
+4. Open `dp-range-expanded`'s prev/next month nav arrows
+   **Expected:** All five icon locations render a visibly darker/consistent color (matching `$boreal-icon-default-dark`/`-ink`, not the prior `$boreal-icon-default-light`/inherited color); no layout shift versus pre-change; no console warnings about the new `--popover-close-icon-color`/`--bds-text-field-icon-right-color` custom properties
+
+---
+
+#### TC-FUNC-704: Eager validity — post-mount out-of-range `value` shows error immediately
+
+**Priority:** P0
+
+**Preconditions:**
+
+- [ ] A mounted, non-required picker with `min`/`max` set (e.g. `dp-minmax`, `min="2026-08-10" max="2026-08-20"`), no prior `checkValidity()` or submit attempt
+
+**Steps:**
+
+1. Programmatically set `.value` to a date outside `min`/`max` (e.g. `document.querySelector('#dp-minmax').value = '2026-08-25'`)
+   **Expected:** The slotted `bds-text-field` immediately shows its error state (red border + error message) with no explicit `checkValidity()` call or form submit — this is the behavioral delta from before (previously gated behind `if (this.isInvalid)`, so nothing appeared until an error was already showing)
+
+---
+
+#### TC-FUNC-705: Eager validity — narrowing/widening `min`/`max` is bidirectional
+
+**Priority:** P0
+
+**Steps:**
+
+1. On a picker with an in-range committed `value`, programmatically narrow `max` below that value
+   **Expected:** Error appears immediately, no `checkValidity()`/submit needed
+2. Widen `max` back out so the value is in range again
+   **Expected:** Error clears immediately
+
+---
+
+#### TC-FUNC-706: Eager validity — toggling `required` on an empty picker is bidirectional
+
+**Priority:** P0
+
+**Steps:**
+
+1. On an empty, non-required picker, programmatically set `.required = true`
+   **Expected:** Error appears immediately
+2. Set `.required = false`
+   **Expected:** Error clears immediately
+
+---
+
+#### TC-FUNC-707 (regression guard): Initial out-of-range `value` as an HTML attribute does NOT error on mount
+
+**Priority:** P0
+
+**Steps:**
+
+1. Reload/mount a picker whose `value`, `min`, and `max` are all set as initial HTML attributes such that `value` is out of range, with no post-mount interaction
+   **Expected:** No error shown immediately on mount — deliberately unchanged, since Stencil does not fire `@Watch` for a prop's initial value; only *post-mount* changes trigger the new eager behavior (TC-FUNC-704–706)
+
+---
+
+#### TC-FUNC-708 (Safari-mandatory): Eager-validity timing vs. the popover Apply-flow race (commit `4eecb666`)
+
+**Priority:** P0
+
+**Preconditions:**
+
+- [ ] Real Safari.app or `playwright-cli --browser=webkit`
+- [ ] A `required` and/or `min`/`max`-constrained picker with its popover open, draft selection pending
+
+**Steps:**
+
+1. Click Apply, and while the popover's outside-click/focus-detection teardown is in flight, immediately trigger a prop change that fires `watchValue`/`watchMinMax`/`watchRequired` (e.g. a queued `.value =`/`.required =` assignment right after the click)
+   **Expected:** No regression of the Task 19r/commit-`4eecb666` fix — popover closes cleanly, focus returns correctly, no double-fire or stuck-open state from the now-unconditional watchers firing more eagerly
+2. Click the same Apply trigger twice in a row while already closed/idempotent, and reselect an already-committed value
+   **Expected:** No flicker or reset of the error state; matches the idempotency requirements above
+
+---
+
 ### Regression Smoke Suite
 
 Run after any change to `bds-date-picker.tsx`, `bds-calendar-grid.tsx`, `bds-popover.tsx`, or a shared date-engine module.
@@ -576,6 +694,10 @@ Run after any change to `bds-date-picker.tsx`, `bds-calendar-grid.tsx`, `bds-pop
 | S-107 | Required range picker blocks/allows form submit correctly            | Invalid before applying, valid after, correct `FormData` shape | [ ]   |
 | S-108 | Safari: Apply commits the draft value (single-date and range)        | **Real Safari.app**, no stale-value regression                | [ ]   |
 | S-109 | No console errors/warnings on any playground scenario                | Clean console, except the one intentional narrow-window warning | [ ]  |
+| S-110 | Eager validity (TC-FUNC-704–707) holds across web-components, React, and Vue | Post-mount error appears/clears immediately in all three surfaces; initial-attribute value still silent on mount | [x] |
+| S-111 | Eager-validity watchers do not regress the Safari Apply-flow race fix (`4eecb666`) | Real Safari.app/WebKit, no stuck-open popover or focus loss    | [x]   |
+
+**Execution results (2026-09-07, `qa-subagent`):** TC-FUNC-701–708 all PASS on web-components (`localhost:3333`) and React (`localhost:5173`, via `dev:pack:react`) and Vue (`localhost:5174`, via `dev:pack:vue`). TC-FUNC-708 (Safari) executed via `playwright-cli --browser=webkit` on web-components and React (Apply-click racing a `required` prop mutation, plus reselect-and-reapply idempotency) — popover closed cleanly, focus returned into the host, no stuck-open state, 0 console errors in every session; not separately re-run on Vue/WebKit (time-boxed — same underlying custom-element code path already confirmed on two of three surfaces). Real Safari.app was not available in this environment; WebKit via Playwright was used per the subagent's documented fallback. Icon-color tokens (TC-FUNC-703) confirmed bound to `--boreal-icon-default-dark`/`-ink` correctly in every surface, though the raw resolved hex differs between the dev-server playground (`#8a8e96`/`#272a2f`) and the packed React/Vue dist (`#a8abaf`/`#2f343a`) under the same `proximus` theme — flagged as a separate, out-of-scope observation, not a defect in this change.
 
 ---
 
