@@ -541,6 +541,72 @@ all of Phase 4's core logic is currently exercised by nothing but its own type s
 - **Why it matters:** direct regression lock for a real, previously-shipped bug (Task 18a); zero test currently protects it in this component's own `__test__/` tree (`bds-date-picker.form.spec.ts` only covers the single-date string branch)
 - **Covered by:** `bds-date-picker.range.spec.ts::'serializes a committed range value as a comma-delimited string for ElementInternals.setFormValue'`, `bds-date-picker.range.spec.ts::'syncs the slotted field's displayed value to the formatted range text after a range commit'`, `bds-date-picker.range.spec.ts::'formAssociatedCallback registers the serialized range string for a pre-set range value'`
 
+### FM-42 | `expanded`+`range` renders two independent time selectors driven by the new per-bound `startHour`/`startMinute`/`endHour`/`endMinute` fields, each wired through the bound-aware `selectBoundHour`/`selectBoundMinute` selectors
+- **ID:** FM-42
+- **Category:** equivalence / component-contract-bypass
+- **Risk:** if the `.map()` over `[RANGE_BOUND.START, RANGE_BOUND.END]` were wired to the wrong field, or `setBoundTime` dispatched to the shared `hour`/`minute` fields instead of the per-bound ones, the two selectors would silently desync or clobber each other on every keystroke
+- **Input that reveals it:** mount `calendar-type="expanded"` + `range` + `with-time`, change the start selector's hour, confirm only `draft.startHour` changed; change the end selector's minute, confirm only `draft.endMinute` changed
+- **Observed current behavior:** `render()` (`bds-date-picker.tsx:891-904`) maps over `[RANGE_BOUND.START, RANGE_BOUND.END]`, passing `bound === RANGE_BOUND.START ? this.draft.startHour : this.draft.endHour` (and the minute counterpart) into each `renderTimeSelector` call, with `onHourChange`/`onMinuteChange` calling `this.setBoundTime(bound, field, value)`, which dispatches to `selectBoundHour`/`selectBoundMinute` (`draft-state.ts:89-107`) keyed off `bound === 'start' ? 'startHour' : 'endHour'`
+- **Recommended contract:** exactly as observed — each bound's selector reads and writes only its own pair of draft fields
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("independent start/end UTC computation via the new per-bound fields and their bound-aware selectors")
+- **Covered by:** `bds-date-picker.time.spec.ts::'changing the start hour updates only startHour, leaving endHour untouched'`, `bds-date-picker.time.spec.ts::'changing the end minute updates only endMinute, leaving startMinute untouched'`
+
+### FM-43 | `basic`+`range` and single-date mode share one time selector backed by the pre-existing single `hour`/`minute` fields, left untouched/unrepurposed by the new per-bound fields
+- **ID:** FM-43
+- **Category:** equivalence
+- **Risk:** a careless refactor could repoint `basic`'s shared selector at one of the new per-bound fields (e.g. always `startHour`), silently breaking `basic`+`range`'s "one shared time for both bounds" contract
+- **Input that reveals it:** mount `calendar-type="basic"` + `range` + `with-time`, change the single hour/minute selector, confirm `draft.hour`/`draft.minute` change while `draft.startHour`/`draft.endHour` stay at their defaults
+- **Observed current behavior:** `render()`'s non-`expanded` branch (`bds-date-picker.tsx:906-913`) calls `renderTimeSelector` once with `hour: this.draft.hour, minute: this.draft.minute`, `onHourChange: this.handleHourChange`/`onMinuteChange: this.handleMinuteChange` — identical to the single-date-mode call, both routed through `selectHour`/`selectMinute` (`draft-state.ts:71-83`), which only ever touch `hour`/`minute`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan bullet ("confirm these are untouched/unrepurposed by the new per-bound fields")
+- **Covered by:** `bds-date-picker.time.spec.ts::'changing the shared hour updates draft.hour without touching startHour/endHour'`
+
+### FM-44 | Only `expanded`+`range`'s two time selectors render a `Start:`/`End:` bound label (default English text or a `labels` override); `basic`+`range` and single-date render no label
+- **ID:** FM-44
+- **Category:** equivalence
+- **Risk:** a missing `bound` prop pass-through would silently drop the disambiguating label consumers rely on to tell the two `expanded` selectors apart, or an incorrectly-always-set `bound` would wrongly label `basic`'s single shared selector
+- **Input that reveals it:** mount `expanded`+`range`, confirm both selectors render `.bds-date-picker__time-bound-label` with `'Start:'`/`'End:'` text (default) and with an overriding `labels` prop; mount `basic`+`range` and single-date, confirm no such element exists at all
+- **Observed current behavior:** `renderTimeSelector` (`helpers/renderTimeSelector.tsx:39-48`) only renders `<span class="bds-date-picker__time-bound-label">` when `bound !== undefined`, resolving text via `resolvedLabels.start`/`.end` (defaults `'Start:'`/`'End:'` from `DEFAULT_FOOTER_LABELS`); only the `expanded`+`range` render-path in `bds-date-picker.tsx` passes a `bound`, every other call site omits it
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("`expanded`'s `Start:`/`End:` time-selector labels render... with no `Start:`/`End:` label rendered" for `basic`)
+- **Covered by:** `bds-date-picker.time.spec.ts::'renders two time selectors labeled Start:/End: by default'`, `bds-date-picker.time.spec.ts::'applies custom Start/End labels from the labels prop'`, `bds-date-picker.time.spec.ts::'renders a single shared time selector with no Start:/End: label'`, `bds-date-picker.time.spec.ts::'renders no Start:/End: bound label in single-date mode'`
+
+### FM-45 | Apply's range-commit path combines each bound with its own drafted time independently under `expanded`, but applies one shared drafted time to both bounds under `basic`
+- **ID:** FM-45
+- **Category:** equivalence / race-timing
+- **Risk:** swapping which set of fields `buildRangeCommitValue` receives per `calendarType`, or accidentally sharing one pair of fields across both branches, would commit the wrong UTC datetime for one or both bounds without any visible symptom short of inspecting the emitted value
+- **Input that reveals it:** under `expanded`, draft two different times for start/end, click Apply, confirm the committed `{ start, end }` reflects each bound's own time via `combineDateTimeToUTC`; under `basic`, draft one time, click Apply, confirm both `start` and `end` are combined with that same time
+- **Observed current behavior:** `handleFooterAction`'s `FOOTER_ACTION.APPLY` branch (`bds-date-picker.tsx:412-436`) calls `buildRangeCommitValue` with `this.draft.startHour, this.draft.startMinute, this.draft.endHour, this.draft.endMinute` when `this.isExpandedCalendarType`, and with `this.draft.hour, this.draft.minute, this.draft.hour, this.draft.minute` (same pair reused for both parameters) otherwise; `buildRangeCommitValue` (`utils/value-mapping.ts:303-317`) independently calls `combineDateTimeToUTC` once per bound with whatever hour/minute it was given
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("the Apply-commit path calling the UTC combination correctly per bound")
+- **Covered by:** `bds-date-picker.time.spec.ts::'Apply combines each bound with its own drafted time independently'`, `bds-date-picker.time.spec.ts::'Apply applies the shared drafted time to both range bounds'`
+
+### FM-46 | `resetRangeDraft` derives `startHour`/`startMinute`/`endHour`/`endMinute` independently from each bound of a committed UTC-datetime range value, and separately mirrors the start bound's time into the shared `hour`/`minute` fields — unconditionally, regardless of `calendarType`
+- **ID:** FM-46
+- **Category:** equivalence / null-empty
+- **Risk:** since only one of the two field sets is ever read depending on `calendarType` (per FM-42/FM-43), a bug that populates only one set (or mixes up which bound feeds the shared fields) would stay invisible under one `calendarType` and only surface as wrong times under the other
+- **Input that reveals it:** call `resetRangeDraft` directly with a `{ start, end }` value where both bounds are valid, distinct UTC datetimes; assert all six time fields (`hour`, `minute`, `startHour`, `startMinute`, `endHour`, `endMinute`) independently
+- **Observed current behavior:** `resetRangeDraft` (`draft-state.ts:151-179`)'s `withTime` branch extracts `start`/`end` independently via `extractDateTimeFromUTC`, then returns an object setting `hour`/`minute` from `start`'s extraction *and* `startHour`/`startMinute`/`endHour`/`endMinute` from both bounds' own extractions in the same return statement
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** this is the single function both Cancel (FM-47) and the initial-mount/reopen draft hydration depend on — a mistake here silently breaks time hydration for whichever `calendarType` isn't currently being manually tested
+- **Covered by:** `bds-date-picker.time-helpers.spec.ts::'resetRangeDraft derives independent per-bound hour/minute from valid UTC datetimes, and mirrors start into the shared hour/minute fields'`
+
+### FM-47 | Cancel discards drafted time changes for both the per-bound (`expanded`) and shared (`basic`) fields, reverting to the last-committed range's times on reopen
+- **ID:** FM-47
+- **Category:** race-timing
+- **Risk:** same class of bug as FM-06 (single-date Cancel) but for the newer per-bound fields specifically — a regression here would leave a drafted-but-uncommitted per-bound time visible after Cancel, or worse, silently commit it on the next Apply
+- **Input that reveals it:** commit a range with distinct start/end times, reopen, draft new (different) times for both bounds, click Cancel, reopen again, confirm both selectors show the originally-committed times, not the discarded draft
+- **Observed current behavior:** `handleFooterAction`'s `FOOTER_ACTION.CANCEL` branch (`bds-date-picker.tsx:445-453`) calls `resetRangeDraft(this.rangeValue ?? '', this.effectiveWithTime, this.timezone)` for range mode regardless of `calendarType`, which (per FM-46) always repopulates every time field from the last-committed value
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan bullet ("Cancel discarding time drafts in both calendarType cases, including the new per-bound fields for expanded")
+- **Covered by:** `bds-date-picker.time.spec.ts::'Cancel discards drafted per-bound time changes, reverting to the last committed times on reopen'`, `bds-date-picker.time.spec.ts::'Cancel discards the shared drafted time change, reverting on reopen'`
+
 ## Reconciliation against Task 21's stated unit-test list
 
 Task 21's list ("range-value union type at the public API boundary; start/end selection and swap logic under both
@@ -561,3 +627,102 @@ manual QA already found and fixed once).
 ## Pending-decision rows requiring a ruling before any test is written for them
 
 None — all of FM-31 through FM-41 are `confirmed` and carry a `Covered by` entry.
+
+## Extension — 2026-09-09, Task 25 (Phase 5, dual time selector consolidated unit tests)
+
+Extending the existing catalog per "Existing component under a new plan version" — audited `bds-date-picker.tsx`,
+`utils/draft-state.ts`, `utils/value-mapping.ts`, `types/types.ts`, `types/enum.ts`, and
+`helpers/renderTimeSelector.tsx` as they stand today (post the Phase 5 dual-time-selector implementation) for the
+`expanded`/`basic` range-time feature, not re-auditing the Phase 1-4 rows above. Confirmed via grep before writing
+anything: zero existing spec file references `selectBoundHour`, `selectBoundMinute`, `buildRangeCommitValue`,
+`formatRangeValueForDisplay`, `RANGE_BOUND`, or `.bds-date-picker__time-bound-label` — this feature currently has no
+automated coverage above the manual verification already performed for it.
+
+### FM-42 | `expanded`+`range` renders two independent time selectors driven by the new per-bound `startHour`/`startMinute`/`endHour`/`endMinute` fields, each wired through the bound-aware `selectBoundHour`/`selectBoundMinute` selectors
+- **ID:** FM-42
+- **Category:** equivalence / component-contract-bypass
+- **Risk:** if the `.map()` over `[RANGE_BOUND.START, RANGE_BOUND.END]` were wired to the wrong field, or `setBoundTime` dispatched to the shared `hour`/`minute` fields instead of the per-bound ones, the two selectors would silently desync or clobber each other on every keystroke
+- **Input that reveals it:** mount `calendar-type="expanded"` + `range` + `with-time`, change the start selector's hour, confirm only `draft.startHour` changed; change the end selector's minute, confirm only `draft.endMinute` changed
+- **Observed current behavior:** `render()` (`bds-date-picker.tsx:891-904`) maps over `[RANGE_BOUND.START, RANGE_BOUND.END]`, passing `bound === RANGE_BOUND.START ? this.draft.startHour : this.draft.endHour` (and the minute counterpart) into each `renderTimeSelector` call, with `onHourChange`/`onMinuteChange` calling `this.setBoundTime(bound, field, value)`, which dispatches to `selectBoundHour`/`selectBoundMinute` (`draft-state.ts:89-107`) keyed off `bound === 'start' ? 'startHour' : 'endHour'`
+- **Recommended contract:** exactly as observed — each bound's selector reads and writes only its own pair of draft fields
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("independent start/end UTC computation via the new per-bound fields and their bound-aware selectors")
+- **Covered by:** `bds-date-picker.time.spec.ts::'changing the start hour updates only startHour, leaving endHour untouched'`, `bds-date-picker.time.spec.ts::'changing the end minute updates only endMinute, leaving startMinute untouched'`
+
+### FM-43 | `basic`+`range` and single-date mode share one time selector backed by the pre-existing single `hour`/`minute` fields, left untouched/unrepurposed by the new per-bound fields
+- **ID:** FM-43
+- **Category:** equivalence
+- **Risk:** a careless refactor could repoint `basic`'s shared selector at one of the new per-bound fields (e.g. always `startHour`), silently breaking `basic`+`range`'s "one shared time for both bounds" contract
+- **Input that reveals it:** mount `calendar-type="basic"` + `range` + `with-time`, change the single hour/minute selector, confirm `draft.hour`/`draft.minute` change while `draft.startHour`/`draft.endHour` stay at their defaults
+- **Observed current behavior:** `render()`'s non-`expanded` branch (`bds-date-picker.tsx:906-913`) calls `renderTimeSelector` once with `hour: this.draft.hour, minute: this.draft.minute`, `onHourChange: this.handleHourChange`/`onMinuteChange: this.handleMinuteChange` — identical to the single-date-mode call, both routed through `selectHour`/`selectMinute` (`draft-state.ts:71-83`), which only ever touch `hour`/`minute`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan bullet ("confirm these are untouched/unrepurposed by the new per-bound fields")
+- **Covered by:** `bds-date-picker.time.spec.ts::'changing the shared hour updates draft.hour without touching startHour/endHour'`
+
+### FM-44 | Only `expanded`+`range`'s two time selectors render a `Start:`/`End:` bound label (default English text or a `labels` override); `basic`+`range` and single-date render no label
+- **ID:** FM-44
+- **Category:** equivalence
+- **Risk:** a missing `bound` prop pass-through would silently drop the disambiguating label consumers rely on to tell the two `expanded` selectors apart, or an incorrectly-always-set `bound` would wrongly label `basic`'s single shared selector
+- **Input that reveals it:** mount `expanded`+`range`, confirm both selectors render `.bds-date-picker__time-bound-label` with `'Start:'`/`'End:'` text (default) and with an overriding `labels` prop; mount `basic`+`range` and single-date, confirm no such element exists at all
+- **Observed current behavior:** `renderTimeSelector` (`helpers/renderTimeSelector.tsx:39-48`) only renders `<span class="bds-date-picker__time-bound-label">` when `bound !== undefined`, resolving text via `resolvedLabels.start`/`.end` (defaults `'Start:'`/`'End:'` from `DEFAULT_FOOTER_LABELS`); only the `expanded`+`range` render-path in `bds-date-picker.tsx` passes a `bound`, every other call site omits it
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("`expanded`'s `Start:`/`End:` time-selector labels render... with no `Start:`/`End:` label rendered" for `basic`)
+- **Covered by:** `bds-date-picker.time.spec.ts::'renders two time selectors labeled Start:/End: by default'`, `bds-date-picker.time.spec.ts::'applies custom Start/End labels from the labels prop'`, `bds-date-picker.time.spec.ts::'renders a single shared time selector with no Start:/End: label'`, `bds-date-picker.time.spec.ts::'renders no Start:/End: bound label in single-date mode'`
+
+### FM-45 | Apply's range-commit path combines each bound with its own drafted time independently under `expanded`, but applies one shared drafted time to both bounds under `basic`
+- **ID:** FM-45
+- **Category:** equivalence / race-timing
+- **Risk:** swapping which set of fields `buildRangeCommitValue` receives per `calendarType`, or accidentally sharing one pair of fields across both branches, would commit the wrong UTC datetime for one or both bounds without any visible symptom short of inspecting the emitted value
+- **Input that reveals it:** under `expanded`, draft two different times for start/end, click Apply, confirm the committed `{ start, end }` reflects each bound's own time via `combineDateTimeToUTC`; under `basic`, draft one time, click Apply, confirm both `start` and `end` are combined with that same time
+- **Observed current behavior:** `handleFooterAction`'s `FOOTER_ACTION.APPLY` branch (`bds-date-picker.tsx:412-436`) calls `buildRangeCommitValue` with `this.draft.startHour, this.draft.startMinute, this.draft.endHour, this.draft.endMinute` when `this.isExpandedCalendarType`, and with `this.draft.hour, this.draft.minute, this.draft.hour, this.draft.minute` (same pair reused for both parameters) otherwise; `buildRangeCommitValue` (`utils/value-mapping.ts:303-317`) independently calls `combineDateTimeToUTC` once per bound with whatever hour/minute it was given
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct target of the plan's own Task 25 bullet ("the Apply-commit path calling the UTC combination correctly per bound")
+- **Covered by:** `bds-date-picker.time.spec.ts::'Apply combines each bound with its own drafted time independently'`, `bds-date-picker.time.spec.ts::'Apply applies the shared drafted time to both range bounds'`
+
+### FM-46 | `resetRangeDraft` derives `startHour`/`startMinute`/`endHour`/`endMinute` independently from each bound of a committed UTC-datetime range value, and separately mirrors the start bound's time into the shared `hour`/`minute` fields — unconditionally, regardless of `calendarType`
+- **ID:** FM-46
+- **Category:** equivalence / null-empty
+- **Risk:** since only one of the two field sets is ever read depending on `calendarType` (per FM-42/FM-43), a bug that populates only one set (or mixes up which bound feeds the shared fields) would stay invisible under one `calendarType` and only surface as wrong times under the other
+- **Input that reveals it:** call `resetRangeDraft` directly with a `{ start, end }` value where both bounds are valid, distinct UTC datetimes; assert all six time fields (`hour`, `minute`, `startHour`, `startMinute`, `endHour`, `endMinute`) independently
+- **Observed current behavior:** `resetRangeDraft` (`draft-state.ts:151-179`)'s `withTime` branch extracts `start`/`end` independently via `extractDateTimeFromUTC`, then returns an object setting `hour`/`minute` from `start`'s extraction *and* `startHour`/`startMinute`/`endHour`/`endMinute` from both bounds' own extractions in the same return statement
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** this is the single function both Cancel (FM-47) and the initial-mount/reopen draft hydration depend on — a mistake here silently breaks time hydration for whichever `calendarType` isn't currently being manually tested
+- **Covered by:** `bds-date-picker.time-helpers.spec.ts::'resetRangeDraft derives independent per-bound hour/minute from valid UTC datetimes, and mirrors start into the shared hour/minute fields'`
+
+### FM-47 | Cancel discards drafted time changes for both the per-bound (`expanded`) and shared (`basic`) fields, reverting to the last-committed range's times on reopen
+- **ID:** FM-47
+- **Category:** race-timing
+- **Risk:** same class of bug as FM-06 (single-date Cancel) but for the newer per-bound fields specifically — a regression here would leave a drafted-but-uncommitted per-bound time visible after Cancel, or worse, silently commit it on the next Apply
+- **Input that reveals it:** commit a range with distinct start/end times, reopen, draft new (different) times for both bounds, click Cancel, reopen again, confirm both selectors show the originally-committed times, not the discarded draft
+- **Observed current behavior:** `handleFooterAction`'s `FOOTER_ACTION.CANCEL` branch (`bds-date-picker.tsx:445-453`) calls `resetRangeDraft(this.rangeValue ?? '', this.effectiveWithTime, this.timezone)` for range mode regardless of `calendarType`, which (per FM-46) always repopulates every time field from the last-committed value
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan bullet ("Cancel discarding time drafts in both calendarType cases, including the new per-bound fields for expanded")
+- **Covered by:** `bds-date-picker.time.spec.ts::'Cancel discards drafted per-bound time changes, reverting to the last committed times on reopen'`, `bds-date-picker.time.spec.ts::'Cancel discards the shared drafted time change, reverting on reopen'`
+
+## Reconciliation against Task 25's stated unit-test list
+
+Task 25's list ("`expanded` dual selector independent start/end UTC computation... `expanded`'s `Start:`/`End:` labels...
+`basic`+`range` shared-time application... confirm untouched/unrepurposed... time-inclusive range formatter...
+Apply-commit path calling `combineDateTimeToUTC` per bound... single-date Phase 2 regression... Cancel discarding
+time drafts in both `calendarType` cases") maps directly onto FM-42 through FM-47 above, plus the pre-existing FM-02
+(single-date regression, re-verified unaffected) and the `formatRangeValueForDisplay`/`buildRangeCommitValue`
+plain-function coverage added to `bds-date-picker.time-helpers.spec.ts`. No plan-listed item assumes a
+`pending-decision` row is already settled — none of FM-42 through FM-47 ever reached `pending-decision`.
+
+One pre-existing, out-of-scope observation surfaced by this audit and *not* turned into a row: `resetRangeDraft`'s
+`withTime` branch only hydrates from a committed value when **both** `start` and `end` independently pass
+`isValidUtcDateTimeValue` (`draft-state.ts:160`) — if exactly one bound is malformed, the function falls through to
+the naive-date branch, which also fails to parse the malformed UTC-format bound as a naive date, so *both*
+`rangeStart` and `rangeEnd` end up `null` (not just the malformed one). This all-or-nothing gate predates Phase 5
+(the single-bound version of this check existed before `startHour`/`endHour` were added) and is unrelated to
+Phase 5's own dual-selector changes, so it is flagged here for visibility rather than given its own FM row or test —
+raise it separately if a mixed valid/malformed range value turns out to be a real consumer scenario.
+
+## Pending-decision rows requiring a ruling before any test is written for them
+
+None — all of FM-42 through FM-47 are `confirmed` and carry a `Covered by` entry.

@@ -11,4 +11,4 @@ Root `pnpm run dev:pack:react` / `dev:pack:vue` scripts are `turbo run build --f
 
 **How to apply:** Launch `dev:pack:react` as its own background task first, wait for its dev server's "ready" line (e.g. `VITE ... ready`, `Local: http://localhost:5173/`) in the task output, then launch `dev:pack:vue` as a second, separate background task. Vue's vite instance will auto-fall back to the next free port (`5174` observed) since 5173 is already taken by react's server. Do not `&&`-chain them, and do not fire both simultaneously in the same turn.
 
-See [[qa-subagent-synthetic-click-vs-real-click]] for the companion interaction-testing gotcha found in the same session.
+See [[qa-subagent-synthetic-click-vs-real-click]] for the companion interaction-testing gotcha found in the same session, and [[concurrent-dev-pack-builds-race-condition]] for the confirmed dist-corruption symptom and a third-party watcher variant of the same race.

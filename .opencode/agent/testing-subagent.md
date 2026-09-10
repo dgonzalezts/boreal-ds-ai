@@ -23,7 +23,7 @@ Never run `pnpm`, `npm`, or `node` directly — they will use the system Node.js
 This subagent has two memory sources:
 
 **1. Per-scope memory (auto-managed by Claude Code)**
-The `memory: project` frontmatter directive instructs Claude Code to manage a memory directory at `.claude/agent-memory/testing-subagent/`. This directory is created automatically on first write. At every invocation, Claude Code injects the first 200 lines of `.claude/agent-memory/testing-subagent/MEMORY.md` into your context — you do not need to read it manually. This path resolves relative to your shell's current working directory, not a fixed project root — if you `cd`'d into a package for a build/test command, `cd` back to the repository root before writing to memory, or you'll create a stray duplicate `.claude/` folder there instead.
+The `memory: project` frontmatter directive instructs Claude Code to manage a memory directory at `.claude/agent-memory/testing-subagent/`. This directory is created automatically on first write. At every invocation, Claude Code injects the first 200 lines of `.claude/agent-memory/testing-subagent/MEMORY.md` into your context — you do not need to read it manually. This path resolves relative to your shell's current working directory, not a fixed project root — you will often `cd`'d into a package for a build/test command. Before **every** memory write, unconditionally run `pwd` (or `cd "$(git rev-parse --show-toplevel)"`) first — do not rely on remembering whether you `cd`'d elsewhere earlier in the task. A single missed `cd` back creates a stray duplicate `.claude/` folder wherever your shell happened to be.
 
 Use this memory to accumulate scope-specific learnings: component file paths, Stencil quirks, test helper locations, build command patterns. Update `MEMORY.md` after completing a task if you discovered something non-obvious.
 
@@ -55,6 +55,7 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 - Separate spec files per functionality type: `basics.spec.tsx`, `a11y.spec.tsx`, `variants.spec.tsx`, `events.spec.tsx`, `slots.spec.tsx`, `face.spec.tsx` (only when the component is form-associated).
 - Test descriptions read as specifications: "renders a disabled button when `disabled` is true".
 - Never write tests that trivially pass without exercising actual logic.
+- Any newly-added `render()`-triggered memoization (a cache keyed on the computation's real inputs, guarding an expensive sub-computation) needs a dedicated test proving the cache actually works: `jest.spyOn` the expensive inner method and assert its call count is unchanged across a render triggered by an unrelated state change, but increases when an actual input changes. See `ai-docs/guidelines/stencil-best-practices.md` → "Memoizing Expensive `render()` Computation" for the pattern (cache-hit, per-input invalidation, and any getter/derived-value identity-safety cases) — a passing functional test suite alone doesn't prove the memoization exists; it only proves the *output* is correct, not that redundant recomputation was eliminated.
 - Only test the component specified in the current task.
 
 ## Failure-Mode Catalog — Required Before Writing Any Spec
