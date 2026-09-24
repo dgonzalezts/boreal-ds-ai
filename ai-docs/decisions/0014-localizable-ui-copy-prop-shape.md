@@ -79,3 +79,9 @@ This is not retroactive for components currently below the threshold: `bds-searc
 - **A visible two-shape system persists by design**: `bds-tag.closeButtonLabel` (flat) and `bds-date-picker.labels` (bundled) are both correct under this rule, for different reasons (string count), not inconsistency. Document the threshold in the component-authoring conventions (`.agents/memory/` or the Stencil component-knowledge skill) so future component authors don't rediscover this ADR from scratch.
 - **Coverage gaps remain**: the eight components with zero localization props today (see Context) are unaffected by this ADR and need their own tracked follow-up work to add props under this rule.
 - **Pluralization and a locale-catalog mechanism remain open**: any component needing plural forms (Phase 7's footer summary) needs a follow-up ADR before that specific string ships, since neither prop shape in this decision expresses plural rules.
+
+---
+
+## Update — 2026-09-10
+
+`bds-date-picker`'s `DatePickerFooterLabels`/`DEFAULT_FOOTER_LABELS` (cited above as the pattern's originating precedent) were renamed to `DatePickerLabels`/`DEFAULT_DATE_PICKER_LABELS` once Phase 6 (presets sidebar) added labels covering the range-mode header and presets sidebar, not just the footer — "Footer" no longer described the prop's scope. The naming convention itself (`labels?: <ComponentName>Labels` / `DEFAULT_<COMPONENT_NAME>_LABELS`) is unchanged; `bds-date-picker` simply now conforms to it. Every `DatePickerFooterLabels`/`DEFAULT_FOOTER_LABELS` reference above reflects the name at the time this ADR was written and should be read as historical.

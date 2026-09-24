@@ -726,3 +726,370 @@ raise it separately if a mixed valid/malformed range value turns out to be a rea
 ## Pending-decision rows requiring a ruling before any test is written for them
 
 None — all of FM-42 through FM-47 are `confirmed` and carry a `Covered by` entry.
+
+## Extension — 2026-09-11, Task 32 (Phase 6, presets sidebar consolidated unit tests)
+
+Extending the existing catalog per "Existing component under a new plan version" — audited `utils/presets.ts`,
+`utils/draft-state.ts`, `utils/value-mapping.ts`, `helpers/renderPresets.tsx`, `helpers/renderCalendarPanel.tsx`,
+and the relevant slices of `bds-date-picker.tsx` (`handlePresetClick`, `rangeEndShiftApplies`, `resolveRangeEndIso`,
+the `render()` container/date-time/calendars structure) as they stand today, post Tasks 29/30a/30b/31a. Confirmed
+via grep before writing anything: zero existing spec file references `computePresetRange`, `computePresetCoverageEnd`,
+`isPresetWithinBounds`, `selectPresetRange`, `renderPresets`, `BUILT_IN_PRESET_KEYS`, or `.bds-date-picker__preset` —
+this entire feature area had zero automated coverage before this task, and `selectDay`/`selectRangeDay` (pre-existing,
+unrelated to Phase 6) had never been unit-tested directly either, per this task's own backfill note.
+
+### FM-48 | `computePresetRange`'s per-preset day arithmetic matches Task 29's final semantics for all six built-ins
+- **ID:** FM-48
+- **Category:** boundary / equivalence
+- **Risk:** an off-by-one in any preset's day-count arithmetic (e.g. "Last 7 days" excluding today, or "This month" running to month-end instead of today) would silently mis-report ranges to a consumer relying on the documented semantics
+- **Input that reveals it:** call `computePresetRange` for each of the six `BUILT_IN_PRESET_KEY` values against a fixed mocked "today"
+- **Observed current behavior:** `presets.ts:30-49` `computeRawRange` — Today/Yesterday single-day; Last 7/30 days inclusive of today (7/30 days total, not N days *before* today); This month is month-to-date (`startOfMonth` through today); Last month is the full previous calendar month (`startOfMonth`/`endOfMonth` of `subMonths(today, 1)`)
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** these are consumer-facing, previously undocumented-until-ADR-0015 semantics with real ambiguity (e.g. "This month" could plausibly have meant the full calendar month) — a wrong test would have encoded the wrong contract
+- **Covered by:** `presets.spec.ts::'Today resolves to a single-day range covering only today'`, `'Yesterday resolves to a single-day range covering only yesterday'`, `'Last 7 days resolves to a 7-day range inclusive of today, not 7 days before today'`, `'Last 30 days resolves to a 30-day range inclusive of today, not 30 days before today'`, `'This month resolves to month-to-date (the 1st through today), not the full calendar month'`, `'Last month resolves to the full previous calendar month, start to end'`, `'never returns a with-time-shifted end for any preset, regardless of the caller'`
+
+### FM-49 | `computePresetRange` computes "today" from the passed `timezone`, not the device clock, and re-derives it fresh on every call
+- **ID:** FM-49
+- **Category:** boundary / race-timing
+- **Risk:** a consumer in a different timezone than the server/device running the picker would see the wrong "today" for every preset; a cached/memoized "today" would also silently go stale across a long-lived session or a real-time re-click
+- **Input that reveals it:** call `computePresetRange` for two different `timezone` arguments against the same mocked instant chosen so their local calendar dates differ; call it again after advancing the mocked clock and confirm the result changes
+- **Observed current behavior:** `presets.ts:62-66` — `new TZDate(new Date(), timezone)` read inline on every call, never cached
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 30a coverage requirement; a device-clock or cached-value regression here would be invisible to any test that only exercises a single timezone/instant
+- **Covered by:** `presets.spec.ts::'computes distinct "today" values for two different timezones given the same instant'`, `'re-derives "today" fresh on every call rather than caching the first computed value'`
+
+### FM-50 | `computePresetCoverageEnd`'s with-time end-boundary shift is off-unchanged / on-plus-one-day uniformly, with no double-shift for Yesterday/Last month
+- **ID:** FM-50
+- **Category:** boundary
+- **Risk:** a naive per-preset special case (e.g. explicitly skipping the shift for Yesterday/Last month "since they already land on the boundary") would either double-shift them or under-shift the other four presets inconsistently
+- **Input that reveals it:** call `computePresetCoverageEnd(range, false)` and `(range, true)` for every preset's real range
+- **Observed current behavior:** `presets.ts:81-87` — single unconditional `withTime ? addDays(range.end, 1) : range.end`, no per-preset branching at all
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet naming Yesterday/Last month's "no double-shift" case specifically, since their shifted value coincidentally equals a different, easily-confusable milestone (today / start of current month)
+- **Covered by:** `presets.spec.ts::'returns range.end unchanged when with-time is off, for every preset'`, `'shifts range.end forward by exactly one day when with-time is on, for a mid-range preset (Today)'`, `'shifts Last 7 days and Last 30 days forward by exactly one day past today'`, `"shifts Yesterday's end to exactly today, with no double-shift beyond the natural next-period boundary"`, `"shifts Last month's end to exactly the first day of the current month, with no double-shift"`
+
+### FM-51 | `isPresetWithinBounds` operates on the real range only, with independently-optional min/max and inclusive boundaries
+- **ID:** FM-51
+- **Category:** boundary
+- **Risk:** if a future edit accidentally fed the with-time-shifted coverage end into this check (instead of the real range), a preset landing exactly on `max` would wrongly disable itself the moment `with-time` is on; a non-inclusive boundary check would also wrongly disable an exact-match range
+- **Input that reveals it:** a range fully inside, fully outside, and only partially outside `min`/`max`; a range exactly touching a bound; the same range compared against its own with-time-shifted counterpart
+- **Observed current behavior:** `presets.ts:97-107` — compares `range.start`/`range.end` (never a shifted value) against optionally-set `min`/`max` via `compareDates`, `< 0`/`> 0` only (so `0` is always in-bounds)
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct Task 29/32 coverage bullet; the real-vs-shifted distinction is exactly the kind of subtle mistake a careless refactor could introduce silently
+- **Covered by:** `presets.spec.ts::'returns true for a range fully inside min and max'`, `'returns false for a range fully outside the bounds (entirely before min)'`, `'returns false for a range only partially outside the bounds, never clamping to true'`, `'treats each of min/max as independently optional, and both unset as unbounded'`, `'treats an exact-equality boundary (range touching min/max precisely) as inside, inclusive on both ends'`, `'operates on the real range, never a with-time-shifted coverage end'`
+
+### FM-52 | Clicking a built-in preset sets `draft.rangeStart`/`rangeEnd` to the real unshifted days, and zeroes the relevant time field(s) when with-time is on
+- **ID:** FM-52
+- **Category:** equivalence
+- **Risk:** a preset click could leak the shifted coverage end into the draft's own `rangeEnd` (double-applying the shift once more at commit time), or leave stale non-zero time fields from a prior manual edit
+- **Input that reveals it:** click a preset under `basic`/`expanded` with with-time off and on, inspecting `draft.rangeStart`/`rangeEnd`/`hour`/`minute`/`startHour`/`startMinute`/`endHour`/`endMinute`
+- **Observed current behavior:** `handlePresetClick` (`bds-date-picker.tsx:512-519`) calls `selectPresetRange(this.draft, range, this.effectiveWithTime)`; `selectPresetRange` (`draft-state.ts:81-105`) sets `rangeStart`/`rangeEnd` from the real `range.start`/`range.end` unconditionally, and zeroes all six time fields only when `withTime` is `true`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct Task 32 coverage bullet; the double-shift risk specifically is the kind of bug that would only surface downstream, at Apply, making this component-level draft assertion the more direct regression guard
+- **Covered by:** `bds-date-picker.presets.spec.ts::'sets rangeStart/rangeEnd to the real range, unaffected by with-time coverage shifting'`, `'zeroes the shared hour/minute fields when with-time is on under basic'`, `"zeroes both bounds' independent time fields when with-time is on under expanded"`, `'marks the clicked preset as selected, and no other preset'`
+
+### FM-53 | The popover header displays `computePresetCoverageEnd`'s shifted value as `End:` for an active with-time preset, identically in `basic` and `expanded`
+- **ID:** FM-53
+- **Category:** equivalence
+- **Risk:** the header could show the real last day instead of the shifted coverage boundary, contradicting the value that will actually be committed on Apply — a visible, confusing mismatch a consumer would perceive as a bug
+- **Input that reveals it:** click a with-time preset, read the `.bds-date-picker__range-value` header text for both `Start:`/`End:` under both `calendarType`s
+- **Observed current behavior:** `render()`'s `rangeEndText` (`bds-date-picker.tsx:834-843`) always runs the resolved end through `resolveRangeEndIso`, which (per `rangeEndShiftApplies`, `:669-672`) shifts whenever a preset is active, regardless of `calendarType`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct Task 32 coverage bullet; this is the one visible surface a consumer sees before ever clicking Apply, so it must never disagree with the eventual commit
+- **Covered by:** `bds-date-picker.presets.spec.ts::'shows the shifted end (not the real last day) under basic'`, `'shows the shifted end (not the real last day) under expanded, identically to basic'`
+
+### FM-54 | `basic`+`range`+`with-time`'s Apply commit uses the coverage-shifted end for both preset-driven and manual selections
+- **ID:** FM-54
+- **Category:** boundary / equivalence
+- **Risk:** since `basic` has only one shared time field, a manual (non-preset) range selection has no other way to express "cover the whole last day" — if the shift were gated on `selectedPreset !== 'custom'` under `basic` too (mirroring `expanded`'s own gating), a manual `basic` selection would under-cover its last day by nearly 24 hours with no way for the consumer to fix it, per ADR-0015
+- **Input that reveals it:** complete a manual two-day range under `basic`+`with-time` (leaving the shared time at its `00:00` default, and separately with a user-set shared time), click Apply, inspect the committed `end`
+- **Observed current behavior:** `rangeEndShiftApplies` (`bds-date-picker.tsx:669-672`) — `this.isExpandedCalendarType ? this.selectedPreset !== PRESET_KEY.CUSTOM : true` — under `basic` this is unconditionally `true`, independent of `selectedPreset`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** this is the exact `basic`-only special case the plan calls out explicitly, and the one most likely to be "fixed" incorrectly by someone assuming `basic`/`expanded` should behave symmetrically
+- **Covered by:** `bds-date-picker.presets.spec.ts::'basic: a preset-driven commit uses the coverage-shifted end'`, `'basic: a manual selection with the shared time left at its default also uses the coverage-shifted end'`, `"basic: a manual selection with a user-set shared time preserves that time on both the real start and the shifted end"`
+
+### FM-55 | `expanded`+`range`+`with-time`'s Apply commit shifts only for preset-driven selections; a manual selection commits each bound's own exact time with no shift
+- **ID:** FM-55
+- **Category:** equivalence
+- **Risk:** the inverse of FM-54 — since `expanded` gives the consumer two fully independent time fields, silently shifting a manual selection's end would corrupt an intentionally precise, non-`00:00` end time the user explicitly set
+- **Input that reveals it:** complete a manual two-day range under `expanded`+`with-time` with distinct, non-zero start/end times, click Apply, confirm the committed end matches the real last day (not shifted) at exactly the drafted time; separately, click a preset and confirm its commit **is** shifted
+- **Observed current behavior:** same `rangeEndShiftApplies` getter as FM-54 — under `expanded`, `false` whenever `selectedPreset === PRESET_KEY.CUSTOM` (the state a manual day click or time edit always reverts to)
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** direct Task 32 coverage bullet, explicitly contrasted against FM-54 as the other half of the same design decision
+- **Covered by:** `bds-date-picker.presets.spec.ts::'expanded: a preset-driven commit uses the coverage-shifted end'`, `"expanded: a manual selection commit is completely unaffected by the shift, using each bound's own exact time"`
+
+### FM-56 | A preset click while a selection is mid-progress overwrites rather than merges with the in-progress selection
+- **ID:** FM-56
+- **Category:** race-timing
+- **Risk:** `selectPresetRange` fully replaces `rangeStart`/`rangeEnd` (per its own doc comment, "never routed through `selectRangeDay`"), but nothing before this task proved that end-to-end through a real click sequence — a wiring regression could instead merge or ignore the preset's range
+- **Input that reveals it:** manually click one day (setting `rangeStart`, leaving `rangeEnd` null), then click a preset, and confirm the draft reflects only the preset's range
+- **Observed current behavior:** `handlePresetClick` (`bds-date-picker.tsx:512-519`) unconditionally calls `selectPresetRange`, independent of the draft's prior state
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet
+- **Covered by:** `bds-date-picker.presets.spec.ts::'overwrites an in-progress manual selection instead of merging with it'`
+
+### FM-57 | Re-clicking the currently-selected preset recomputes its range rather than short-circuiting as a no-op
+- **ID:** FM-57
+- **Category:** race-timing
+- **Risk:** a naive "already selected, skip" optimization would leave the user with a stale "Today"/"Last 7 days" range if real time had advanced since the first click (e.g. the popover left open overnight)
+- **Input that reveals it:** click "Today", then advance the mocked clock and click "Today" again, confirming the draft's range changes to reflect the new "today"
+- **Observed current behavior:** `handlePresetClick` has no identity/equality guard against `this.selectedPreset === key` — it always recomputes `computePresetRange(key, this.timezone)` fresh
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet; directly follows from FM-49's "never cached" contract but needed its own component-level proof through the real click handler
+- **Covered by:** `bds-date-picker.presets.spec.ts::'recomputes rather than short-circuiting when the same preset is clicked again after "today" changes'`
+
+### FM-58 | A manual day click or a manual time-selector edit each independently revert an active preset selection to Custom, preserving whatever time was already drafted
+- **ID:** FM-58
+- **Category:** race-timing
+- **Risk:** if either revert path were missing, a user editing the calendar or the time selector after picking a preset would see the preset's button still marked selected despite having manually changed the underlying data — a stale, misleading UI state; separately, a careless revert implementation could reset the time fields to `00:00` instead of preserving the value already there
+- **Input that reveals it:** click a preset, then independently (a) click a different day, (b) change the time selector, each time confirming `selectedPreset` becomes Custom and the untouched draft fields (time, for the day-click case; the range dates, for the time-edit case) carry over exactly
+- **Observed current behavior:** `handleDayClick` (`bds-date-picker.tsx:360-375`) sets `this.selectedPreset = PRESET_KEY.CUSTOM` whenever `effectiveRange`, independent of `selectDay`/`selectRangeDay`'s own return value; `handleHourChange`/`handleMinuteChange`/`setBoundTime` (`:490-502,413-419`) do the same for time edits — neither path touches any field it doesn't own
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet, with the "assert the exact carried-over values, not just no crash" requirement called out specifically
+- **Covered by:** `bds-date-picker.presets.spec.ts::'a manual day click reverts an active preset to Custom, preserving the already-drafted time'`, `'a manual time-selector edit reverts an active preset to Custom, preserving the edited value exactly'`
+
+### FM-59 | "Custom" is selected by default on a fresh draft and is never reverse-matched from a value that numerically coincides with a preset's computed range
+- **ID:** FM-59
+- **Category:** equivalence
+- **Risk:** an over-clever implementation could try to infer `selectedPreset` by comparing the committed/drafted range against each preset's live computation — which would be both wasteful and wrong the instant "today" moves and the coincidental match stops holding, silently reselecting the wrong preset's chrome
+- **Input that reveals it:** mount fresh (no value) and confirm Custom is selected with no built-in preset marked; separately, mount with a committed range that exactly equals what "Last 7 days" currently computes, and confirm Custom (not "Last 7 days") is selected
+- **Observed current behavior:** `@State() selectedPreset` (`bds-date-picker.tsx:151`) defaults to `PRESET_KEY.CUSTOM` and is only ever reassigned by explicit preset/Custom clicks, day clicks, time edits, or footer actions — never derived from `draft`/`value` content
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet naming this exact false-positive risk
+- **Covered by:** `bds-date-picker.presets.spec.ts::'selects Custom by default on a fresh draft, with no built-in preset marked selected'`, `'keeps Custom selected even when a pre-existing value numerically coincides with what a preset would compute'`
+
+### FM-60 | Clicking "Custom" directly marks it selected without altering `rangeStart`/`rangeEnd`/time
+- **ID:** FM-60
+- **Category:** component-contract-bypass
+- **Risk:** `handleCustomClick` could have been (mis)implemented to also clear the draft (conflating "switch to Custom" with "start a fresh selection", which is a distinct, separately-triggered behavior)
+- **Input that reveals it:** select a preset, then click "Custom", and confirm the draft's range/time fields are byte-for-byte unchanged from what the preset had set
+- **Observed current behavior:** `handleCustomClick` (`bds-date-picker.tsx:421-423`) — `this.selectedPreset = PRESET_KEY.CUSTOM;` and nothing else
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet
+- **Covered by:** `bds-date-picker.presets.spec.ts::'clicking Custom directly marks it selected without altering the draft'`
+
+### FM-61 | A disabled (out-of-bounds) preset button does not update the draft when clicked, guarded by `handlePresetClick`'s own bounds check, not by the native `disabled` attribute
+- **ID:** FM-61
+- **Category:** component-contract-bypass
+- **Risk:** `mock-doc`'s `.click()` unconditionally dispatches a click event regardless of the `disabled` attribute (confirmed by inspecting `@stencil/core/mock-doc`'s `click()` implementation) — if the only protection were the native attribute, a programmatic `.click()` (or a real browser bypass) would still corrupt the draft; the real guard must live in the handler itself
+- **Input that reveals it:** mount with `min`/`max` excluding a preset's range, confirm the button carries `disabled`, call `.click()` on it directly, and confirm the draft is untouched
+- **Observed current behavior:** `handlePresetClick` (`bds-date-picker.tsx:512-514`) — `if (!isPresetWithinBounds(range, this.minDate, this.maxDate)) return;`, evaluated independently of the button's own `disabled` attribute (`renderPresets.tsx:52,62`)
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet; the mock-doc click-dispatch behavior means this test genuinely exercises the handler's own guard, not an artifact of the DOM refusing to fire the event
+- **Covered by:** `bds-date-picker.presets.spec.ts::'does nothing when a disabled (out-of-bounds) preset is clicked'`
+
+### FM-62 | Preset label text resolves from the `labels` prop, with correct English defaults and consumer overrides
+- **ID:** FM-62
+- **Category:** equivalence
+- **Risk:** consumer-supplied i18n labels for the preset buttons could be silently ignored, mirroring the exact class of gap Task 25 found for the time-selector's own labels (FM-15)
+- **Input that reveals it:** mount with no `labels` override, confirm every preset shows its English default text; set `labels.presetToday`/`labels.presetCustom`, confirm those two update while the rest keep their defaults
+- **Observed current behavior:** `renderPresets.tsx:44-45` — `resolvedLabels = { ...DEFAULT_DATE_PICKER_LABELS, ...labels }`, applied per-button via `PRESET_LABEL_KEY`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 32 coverage bullet, mirroring Task 25's established labels-override test pattern (FM-15)
+- **Covered by:** `bds-date-picker.presets.spec.ts::'renders every preset label using the English defaults when no labels override is provided'`, `'applies consumer-supplied preset label overrides from the labels prop'`
+
+### FM-63 | Clicking a built-in preset sets `displayYear`/`displayMonth` from the preset's real `range.start`, in both `basic` and `expanded`; Cancel/Clean/Apply and manual selection leave them unchanged
+- **ID:** FM-63
+- **Category:** equivalence / race-timing
+- **Risk:** without this navigation, clicking e.g. "Last month" while viewing the current month would leave the calendar showing the wrong month entirely, with the highlighted range invisible off-screen — a confusing, easily-missed UX gap; conversely, a careless implementation could navigate the calendar on every draft change (including Cancel/Clean/manual selection), causing jarring, unwanted scrolling
+- **Input that reveals it:** click "Last month" while the calendar displays the current month, confirm it navigates to the preset's month, under both `calendarType`s (confirming `expanded`'s second calendar shifts too, staying one month ahead); separately, click a day manually and run Cancel/Clean, confirming the displayed month never moves
+- **Observed current behavior:** `handlePresetClick` (`bds-date-picker.tsx:512-519`) sets `this.displayYear = range.start.getFullYear(); this.displayMonth = range.start.getMonth();` unconditionally after a successful preset click; no other handler (`handleDayClick`, `handleFooterAction`'s Cancel/Clean/Apply branches, `handleHourChange`/`handleMinuteChange`/`setBoundTime`) ever reassigns `displayYear`/`displayMonth`
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 30b coverage requirement folded into this task
+- **Covered by:** `bds-date-picker.presets.spec.ts::"sets displayYear/displayMonth from the preset's real range start under basic"`, `"sets displayYear/displayMonth from the preset's real range start under expanded, shifting both calendars"`, `'leaves displayYear/displayMonth unchanged for manual selection, Cancel, and Clean'`
+
+### FM-64 | `renderCalendarPanel`'s wrapper, and the `container`/`date-time`/`time-band` structure, render correctly across every `calendarType`/`with-time` combination, with no `slot="content-band"` anywhere
+- **ID:** FM-64
+- **Category:** equivalence
+- **Risk:** Task 31a's markup restructuring (removing the old `.bds-date-picker__body`, always wrapping in `.calendars`, introducing `.date-time`/`.time-band`) had zero coverage before this task — a regression here would be a real, visible layout break with no automated signal; separately, a reintroduced `slot="content-band"` usage would silently target a slot that no longer exists on `bds-popover` at all (removed as dead code), producing orphaned, unrelocated content
+- **Input that reveals it:** inspect the rendered DOM structure under `default` (no range/time), `basic`/`expanded` with and without `with-time`, for both a single grid and two grids
+- **Observed current behavior:** `renderCalendarPanel.tsx:29-47` always returns `<div class="bds-date-picker__calendars">{grids}</div>` regardless of `calendars.length`; `bds-date-picker.tsx`'s `render()` (`:944-986`) renders `.calendars` as `.container`'s only non-presets child under `default`, or wraps it plus a conditionally-rendered `.time-band` inside `.date-time` under `basic`/`expanded`; no code path in this component references a `content-band` slot at all (confirmed via grep)
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 31a/32 coverage requirement; this is the first automated coverage of the restructured markup at all
+- **Covered by:** `bds-date-picker.presets.spec.ts::'wraps a single grid (basic) in .bds-date-picker__calendars'`, `'wraps two grids (expanded) in a single .bds-date-picker__calendars element'`, `"renders .calendars as the container's only child under calendar-type=\"default\""`, `'wraps .calendars and .time-band inside .date-time when with-time is on, under basic/expanded'`, `'renders .date-time with no .time-band when with-time is off, under basic/expanded'`, `'renders no element carrying slot="content-band" under any configuration'`
+
+### FM-65 | `resolveFallbackDisplayMonth` (via `resolveDisplayMonth`) and `generateMonthGrid`'s `now` option both compute "today" from an explicit input, never the device clock directly; `generateMonthGrid`'s own device-clock default is unchanged
+- **ID:** FM-65
+- **Category:** boundary
+- **Risk:** the other two "today"-computing call sites in this component's dependency chain (besides `computePresetRange`, FM-49) could have been missed when the timezone-awareness work landed, leaving the display-month fallback or the grid's `isToday` flag still silently tied to the device clock while presets themselves were correctly fixed
+- **Input that reveals it:** call `resolveDisplayMonth('', false, zone)` for two different timezones at an instant whose calendar month differs between them; call `generateMonthGrid` with an explicit `now` option and confirm it (not the device clock) decides `isToday`
+- **Observed current behavior:** `value-mapping.ts:49-56` `resolveFallbackDisplayMonth` reads `new TZDate(new Date(), timezone)`, the same pattern as `computePresetRange`; `grid.ts:19,135` `generateMonthGrid`'s `now` option defaults to `new Date()` only when the caller omits it, and `buildDisplayGrid` (`value-mapping.ts:157-171`) always passes an explicit, timezone-derived `now` rather than relying on that default
+- **Recommended contract:** exactly as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 30a coverage requirement; closes the same class of gap as FM-49 for the two other call sites in the chain, and locks in `generateMonthGrid`'s pre-existing device-clock-default behavior as unchanged for every caller that doesn't pass `now`
+- **Covered by:** `value-mapping.spec.ts::'computes the fallback month from the passed timezone, not a single global device clock'`, `grid.spec.ts::'uses an explicitly passed \`now\` option to decide isToday, independent of the device clock'`
+
+### Backfill | `selectDay`/`selectRangeDay` direct unit coverage (pre-existing gap, unrelated to Phase 6's own new code)
+Not a new failure mode in the catalog sense — `draft-state.spec.ts` was added purely to close a pre-existing coverage
+gap the plan's own Task 32 text calls out: `selectDay`/`selectRangeDay` had never been unit-tested directly (only
+indirectly, through full-component click simulation in `bds-date-picker.range.spec.ts`), unlike every sibling
+function in the same file. Direct tests now cover: `selectDay`'s set/no-op branches; `selectRangeDay`'s fresh-start,
+forward-extend, backward-swap, third-click-fresh-start, and both no-op cases (equal-to-`rangeStart` mid-selection,
+and the edge case where a fresh-start's new `rangeStart` coincidentally equals the old completed range's `rangeEnd`).
+See `draft-state.spec.ts` for the full list.
+
+One pre-existing, out-of-scope observation surfaced by this audit and *not* turned into a row, since it is dead code
+rather than a behavioral failure mode (nothing production-facing can ever reach it, so no test can be written against
+it without first changing the guard conditions around it — out of this task's scope, which is tests only): three
+defensive `return draft`/fallback branches are unreachable given their own enclosing guard conditions —
+`selectRangeDay`'s inner check at `draft-state.ts:51` (can only be true when `draft.rangeStart` is a non-null string
+equal to `isoDate` **and** `draft.rangeEnd === null`, but the enclosing `if` at `:50` only enters this branch when
+`draft.rangeStart === null || draft.rangeEnd !== null` — both of which contradict the inner condition) and `:58`
+(same shape, inside the mid-selection branch where `draft.rangeEnd` is always `null` by construction); and
+`resolveFallbackDisplayMonth`'s `anchor === undefined` fallback at `value-mapping.ts:70-72` (unreachable because the
+function already returns early at `:60-62` whenever both `validMin` and `validMax` are `undefined`, so `anchor` —
+`validMax ?? validMin` — can never be `undefined` by the time it's checked). None of these affect any currently
+observable contract; flagged here for visibility in case a future refactor of the surrounding guards changes that.
+
+### FM-66 | A second click on the day already selected as `rangeStart` sets `rangeEnd` equal to it, confirming a one-day range, and returns a genuinely new draft reference
+- **ID:** FM-66
+- **Category:** race-timing
+- **Risk:** the prior no-op behavior made a one-day same-day range structurally unreachable via the calendar UI; the fix must also not regress the reference-stability convention used elsewhere in this file (a no-op branch must return the same reference, a real-change branch must not)
+- **Input that reveals it:** click a day, then click the same day again while `rangeEnd` is still `null`
+- **Observed current behavior:** `selectRangeDay` (`draft-state.ts:61`) returns `{ ...draft, rangeEnd: isoDate }`, a new object, with `rangeStart === rangeEnd`
+- **Recommended contract:** same as observed — a second click on `rangeStart` confirms a one-day range and must allocate a new draft (this is not the reference-stable no-op case; the resulting state genuinely differs from the input, `rangeEnd` going from `null` to a real value)
+- **Contract status:** confirmed
+- **Why it matters:** per ADR 0016 / Task 34d, this is the only way to manually reach a same-day `expanded+range+with-time` selection, which is itself the precondition for every other row below
+- **Covered by:** `draft-state.spec.ts::'sets rangeEnd equal to rangeStart, confirming a one-day range, when the clicked day equals the already-selected rangeStart'`, `bds-date-picker.time.spec.ts::'a second click on the same day sets rangeEnd equal to rangeStart, enabling independent Start/End time edits'`
+
+### FM-67 | A same-day `expanded+range+with-time` selection with End later than or equal to Start commits and displays with no date shift
+- **ID:** FM-67
+- **Category:** boundary
+- **Risk:** a false-positive shift on a genuinely ordered (or zero-duration) same-day pair would silently corrupt a correct intraday selection into a spurious overnight one
+- **Input that reveals it:** same-day selection with Start `14:00`/End `18:00` (later), and separately Start `14:00`/End `14:00` (equal)
+- **Observed current behavior:** `resolveEffectiveRangeEndIso` (`bds-date-picker.tsx:748-764`) only shifts when `endMinutes < startMinutes` — strictly less than, so both "later" and "equal" leave `rangeEnd` unshifted
+- **Recommended contract:** same as observed; the strict `<` is deliberate, matching ADR 0016's framing of the shift as resolving a literal inversion, not a same-instant or forward-ordered pair. A zero-duration same-day range (equal times) commits as literally the same instant, which is consistent with allowing a one-day range with identical bounds at all (FM-66) — nothing in ADR 0016 or Task 34d asks for a minimum duration
+- **Contract status:** confirmed
+- **Why it matters:** boundary correctness of the `<` vs `<=` comparison in the shift condition; flagged to the user as worth a final sanity check even though the code's intent reads as deliberate, since "no one explicitly asked to allow a zero-duration range" is a fair question to raise even where the implementation is internally consistent
+- **Covered by:** `bds-date-picker.time.spec.ts::'a same-day range with End later than Start commits with no shift, matching the header'`, `bds-date-picker.time.spec.ts::'does not shift the effective end date when Start and End times are exactly equal on the same day'`
+
+### FM-68 | A same-day `expanded+range+with-time` selection with End earlier than Start shifts the effective end date +1 day, shown live in the header before Apply and matching the trigger field text after Apply
+- **ID:** FM-68
+- **Category:** equivalence
+- **Risk:** per ADR 0016, a silent shift (visible only after Apply) or a disagreement between the pre-Apply header and the post-Apply trigger field would reintroduce exactly the "silent disagreement" class of bug ADR 0015 was written to eliminate
+- **Input that reveals it:** same-day selection, Start `14:00`, End `09:00` (inverted)
+- **Observed current behavior:** `resolveEffectiveRangeEndIso` returns `rangeEnd + 1 day` once the inversion condition holds; both the header's `rangeEndText` (`bds-date-picker.tsx:909-918`) and the Apply commit's `commitRangeEnd` (`bds-date-picker.tsx:451-452`) call this same method, so they agree by construction; `syncFieldValue` (`bds-date-picker.tsx:800-818`) then formats the already-shifted committed value for the trigger field
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed
+- **Why it matters:** this is the core new behavior ADR 0016/Task 34d introduces; the pre-Apply/post-Apply text-equality requirement is the part a test that only checks the final committed value would miss entirely
+- **Covered by:** `bds-date-picker.time.spec.ts::'a same-day range with End earlier than Start shifts the effective end +1 day, live in the header and at commit'`, `bds-date-picker.time.spec.ts::'shows the same resolved end date in the trigger field after Apply as the header showed before Apply'`
+
+### FM-69 | `basic`+`range`+`with-time` cannot reach the inverted-same-day shift condition; its existing unconditional coverage shift applies unaffected
+- **ID:** FM-69
+- **Category:** component-contract-bypass
+- **Risk:** if the new `isExpandedCalendarType`-gated condition in `resolveEffectiveRangeEndIso` were ever accidentally un-gated, `basic`'s single shared time field would be double-shifted or shifted for the wrong reason
+- **Input that reveals it:** a same-day selection in `basic+range+with-time` (structurally has only one shared `hour`/`minute`, no independent `endHour`/`endMinute`)
+- **Observed current behavior:** `isSameDayInvertedTime` (`bds-date-picker.tsx:754-759`) requires `this.isExpandedCalendarType`, so `basic` always short-circuits to `coverageShiftedEnd` — the pre-existing ADR 0015 unconditional shift (`rangeEndShiftApplies` returns `true` unconditionally for `basic`, per `bds-date-picker.tsx:726-728`)
+- **Recommended contract:** same as observed — no interaction between the two ADRs' shifts for `basic`
+- **Contract status:** confirmed
+- **Why it matters:** explicit Task 34d/ADR 0016 acceptance criterion that `basic` is structurally unaffected, verified rather than assumed
+- **Covered by:** `bds-date-picker.time.spec.ts::'a same-day selection in basic (structurally single shared time) never triggers the inverted-time shift'`
+
+### FM-70 | `renderBanner` renders nothing when `banner` is unset or `banner.visible` is not exactly `true`
+- **ID:** FM-70
+- **Category:** null-empty
+- **Risk:** an empty banner shell rendering when the consumer hasn't opted in, or a merely-truthy (non-boolean) `visible` value producing unexpected output, since the guard is a strict equality check rather than a plain falsy check
+- **Input that reveals it:** `banner` unset; `banner` set with `visible` unset; `banner` set with `visible: false`
+- **Observed current behavior:** `renderBanner.tsx:26` — `if (banner === undefined || banner.visible !== true) return null;`
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed — plan's Task 35 design decision (2026-09-22): "`visible` default: `false` (or prop itself `undefined`) — renders nothing when unset, no empty banner shell"
+- **Why it matters:** regression guard for the no-banner default state, across all three `calendarType` values
+- **Covered by:** `bds-date-picker.banner.spec.ts::'renders no banner element when banner is unset'`, `'renders no banner element when banner.visible is false'`
+
+### FM-71 | Banner `closable` defaults to `true` when unset, diverging from `bds-banner`'s own component-level default of `false`
+- **ID:** FM-71
+- **Category:** equivalence
+- **Risk:** if this composing default ever regressed to a plain passthrough of `bds-banner`'s own default, every mockup-driven consumer relying on an always-dismissible banner would silently lose its close icon
+- **Input that reveals it:** `banner` set with `closable` unset
+- **Observed current behavior:** `renderBanner.tsx:28` — `const closable = banner.closable ?? true;`
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed — plan's Task 35 design decision: "`closable` default: `true` — every mockup shows the close (`X`) icon by default, even though `bds-banner`'s own component-level default is `false`"
+- **Why it matters:** explicit, deliberate divergence from the child component's own default; easy to regress unnoticed since both defaults are booleans
+- **Covered by:** `bds-date-picker.banner.spec.ts::'shows a close button by default when banner.closable is unset'`
+
+### FM-72 | Banner `state` defaults to `'info'` when unset
+- **ID:** FM-72
+- **Category:** equivalence
+- **Risk:** a missing default would leave `bds-banner`'s own `variant` prop `undefined`, which happens to coincide with its own default, masking a regression here until a consumer explicitly overrides `state`
+- **Input that reveals it:** `banner` set with `state` unset; separately, `state` explicitly set to a non-default variant
+- **Observed current behavior:** `renderBanner.tsx:29` — `const state: StatusVariant = banner.state ?? 'info';`, forwarded to `bds-banner`'s `variant` prop
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed — plan's Task 35 design decision: "`state` default: `'info'`, matching both `bds-banner`'s own default and every mockup"
+- **Why it matters:** locks in the explicit default rather than relying on coincidental agreement with the child's own default
+- **Covered by:** `bds-date-picker.banner.spec.ts::'renders the info variant by default when banner.state is unset'`, `'renders the variant matching an explicit banner.state override'`
+
+### FM-73 | Banner dismissal via the close (`X`) button does not persist across a popover reopen
+- **ID:** FM-73
+- **Category:** race-timing
+- **Risk:** without a reset, a consumer-set banner meant to always show on open could silently vanish forever after the user's first dismissal in a session
+- **Input that reveals it:** open the popover, click `bds-banner`'s close icon, close the popover, reopen it
+- **Observed current behavior:** `bds-date-picker.tsx:445-447` `handleBannerClose` sets `this.bannerDismissed = true`; `:1076-1079` renders `banner: this.bannerDismissed ? undefined : this.banner`; `:558-564` `listenClickTrigger` (guarded to only run when the popover is not already open) unconditionally resets `this.bannerDismissed = false` on every fresh open
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed — plan's Task 36 note and TC-24 manual verification (2026-09-22): "confirmed reopening the popover re-shows the banner — a same-session dismissal does not persist"
+- **Why it matters:** the plan explicitly flagged this as a boundary case needing an explicit ruling before implementation; now shipped and worth locking in with a regression test
+- **Covered by:** `bds-date-picker.banner.spec.ts::'dismisses the banner when its close button is clicked'`, `'re-shows the banner after the popover is closed and reopened following a dismissal'`
+
+### FM-74 | `renderBanner` never exposes `bds-banner`'s `actions` slot — structurally impossible, not merely unused
+- **ID:** FM-74
+- **Category:** component-contract-bypass
+- **Risk:** a future edit wiring a consumer-supplied action element through would violate the "pure display surface, never drives date-picker-internal logic" contract; must be checked as an absence of the slotted DOM node, not just an absence of a prop, since `DatePickerBanner` has no field that could carry one anyway
+- **Input that reveals it:** `banner` set with any `state` value
+- **Observed current behavior:** `renderBanner.tsx:31-38` — the only children passed into `<bds-banner>` are `<span slot="title">` and the default-slot message text; no `slot="actions"` element exists anywhere in the source, and `DatePickerBanner` (`types.ts:3-9`) has no field that could produce one
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan acceptance criterion ("no `actions` slot exposed") that a future edit could violate without any type-level guard rail
+- **Covered by:** `bds-date-picker.banner.spec.ts::'never renders an actions slot regardless of banner.state'`
+
+### FM-75 | The footer's `Range:` label and its value are two independent elements, both present only when a range is committed
+- **ID:** FM-75
+- **Category:** null-empty
+- **Risk:** rendering the label without a value (or vice versa) around the commit boundary would look broken; string-concatenating them instead of independent elements would prevent the label/value from being styled independently (per the Task 36 Figma audit)
+- **Input that reveals it:** footer before any range is drafted/committed vs. after a range is selected
+- **Observed current behavior:** `renderFooter.tsx:27-28` — `summary` is `''` until `rangeDuration !== undefined`; `:32-37` the `<Fragment>` wrapping both `.bds-date-picker__range-summary-label` and `.bds-date-picker__range-summary-value` spans only renders when `summary !== ''`, so both appear together or neither does
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed — plan's Task 36 design decision 3: the label/value pair renders "only when a range is actually committed... NOT permanently rendered before any selection"
+- **Why it matters:** the two-span structure is new (Task 36 fix); a regression collapsing it back to a single concatenated string, or rendering the label alone as permanent chrome, would both be silent visual regressions
+- **Covered by:** `bds-date-picker.banner.spec.ts::'renders both the range-summary label and value once a range is committed'`, `'renders neither the range-summary label nor the value before any range is committed'`
+
+### FM-76 | `showRangeTimeUnits` is wired to `isExpandedCalendarType` alone — `basic` always renders a days-only summary regardless of the underlying duration's hour/minute components
+- **ID:** FM-76
+- **Category:** equivalence
+- **Risk:** if `basic`'s shared start/end time field ever produced a genuinely non-zero-hour/minute duration (e.g. a future change granting independent per-bound times under `basic`), an un-gated summary would leak time-unit text into a UI with no per-bound time selectors to explain it
+- **Input that reveals it:** `basic` + `with-time`, non-zero shared hour, multi-day range
+- **Observed current behavior:** `bds-date-picker.tsx:1120` — `showRangeTimeUnits: this.isExpandedCalendarType`; `formatRangeSummary` (`value-mapping.ts:379-397`) only appends the hours/minutes parts when `showTimeUnits` is `true`
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan hypothesis ("`basic`: days only / `expanded`: days/hours/minutes") that the plan itself flagged as needing verification against the actual `render()` wiring rather than being assumed
+- **Covered by:** `bds-date-picker.banner.spec.ts::'never shows hour/minute text under basic, even with a non-zero shared hour set'`
+
+### FM-77 | The footer's range-summary is derived from `this.draft` (not the committed `this.value`), so it updates live on every render while a range is still being selected, before Apply
+- **ID:** FM-77
+- **Category:** race-timing
+- **Risk:** if the summary were derived from the committed value instead, it would read stale (frozen or blank) throughout the entire selection gesture and only "jump" to the correct text after Apply — the same class of stale-derived-value bug already fixed for the header/highlight code paths elsewhere in this catalog
+- **Input that reveals it:** select a range's start day, then click a second, farther-away day, without pressing Apply
+- **Observed current behavior:** `bds-date-picker.tsx:960-974` computes `rangeDuration` from `this.draft.rangeStart`/`durationRangeEndIso` (itself derived from `this.draft.rangeEnd`), never from `this.value`; recomputed on every `render()` call
+- **Recommended contract:** same as observed
+- **Contract status:** confirmed
+- **Why it matters:** explicit plan acceptance criterion ("`banner` is expected to be reactive after mount... a consumer can update `banner.message` while the popover is already open") extended to the sibling range-summary feature landing in the same task; a stale-until-Apply summary would be a materially worse UX than the header/highlight already provide
+- **Covered by:** `bds-date-picker.banner.spec.ts::'updates the footer summary live as a farther end day is selected, before Apply'`
+
+## Pending-decision rows requiring a ruling before any test is written for them
+
+None — all of FM-48 through FM-77 are `confirmed` and carry a `Covered by` entry. FM-67 records a boundary decision (equal-times same-day range does not shift) that reads as deliberate from the code but is worth a final human sanity check — flagged to the user in this session's report, not blocking.

@@ -37,3 +37,21 @@ restricted.
   call instead, or explicitly quote/split.
 
 See also [[dev-pack-pipeline-commands]] for the specific pipeline this was discovered while cleaning up.
+
+## `lsof -ti:<port>` returns CLIENTS too — never feed it straight into `kill`
+
+The documented teardown idiom (`lsof -ti:<port> | xargs kill`) is unsafe on a machine where the
+user has a real browser open. `lsof -ti:<port>` lists every process with a socket on that port,
+including **client** connections — a Brave/Chrome tab pointed at `localhost:<port>` shows up
+alongside the actual dev server. Confirmed 2026-09-23 (EOA-17662 Task 39): `lsof -ti:3333` returned
+the Stencil dev-server worker **and** a `Brave Browser Helper --type=utility --sub-type=network`
+process; killing both took down the user's browser network-service helper (Brave respawned it, so
+no lasting damage, but it was collateral).
+
+**How to apply:** always restrict to the listening socket before killing —
+`lsof -sTCP:LISTEN -ti:<port>` — and print `ps -o pid,ppid,command -p <pids>` first to confirm
+every PID is the process you actually mean to stop. Only then kill.
+
+Companion zsh gotcha (also hit here): `PIDS=$(lsof -ti:3333); kill $PIDS` fails with
+`illegal pid: 21319\n83454` — an unquoted `$VAR` holding newline-separated PIDs is passed as a
+single argument. Pass PIDs as literal space-separated arguments, or split explicitly.

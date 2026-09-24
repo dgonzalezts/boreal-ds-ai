@@ -1,6 +1,6 @@
 # PR Title
 
-feat(web-components): EOA-17138 add bds-date-picker v2 (time, min/max, calendarType, range)
+feat(web-components): EOA-17662 add range-mode time selection and presets sidebar to bds-date-picker
 
 ---
 
@@ -8,58 +8,62 @@ feat(web-components): EOA-17138 add bds-date-picker v2 (time, min/max, calendarT
 
 ## Description
 
-Implements `bds-date-picker` v2 (Phases 2–4 of ADR-0003): a timezone-aware time selector, min/max date constraints, the `calendarType` foundation (`default` | `basic` | `expanded`), and range-mode dual-calendar orchestration — without breaking v1's single-date, naive-date `value` contract.
+Extends `bds-date-picker`'s range mode with time-of-day selection and a built-in date presets sidebar.
 
-## Implementation Details
-
-- **Phase 2 — Time selector:** timezone-aware date-time → UTC ISO conversion in `date-engine`, plus a new `renderTimeSelector.tsx` composed into the existing popover.
-- **Phase 3 — Min/max constraints:** wires already-existing `date-engine`/`bds-calendar-grid` capacity (`isWithinRange`, `compareDates`, `DayCell.isDisabled`) into `bds-date-picker`, with nav guards and helper text.
-- **Phase 3.5 — `calendarType` foundation:** new prop (default `'basic'`, non-breaking) adding `default` mode's immediate-commit, chrome-less interaction — a prerequisite for range behavior.
-- **Phase 4 — Range mode:** new `range: boolean` prop, independent of calendar count; a second `bds-calendar-grid` is gated on `calendarType === 'expanded'` only. Public `value` becomes `string | { start: string; end: string }` when `range` is on. Includes continuous-band styling, hover-preview band, and FACE validity/form submission for range values.
-- Light DOM throughout (ADR-0001); no external calendar library.
+- **Range-mode time selection**: `basic` calendar type gets a single shared time field applied to both range bounds; `expanded` calendar type gets independent start/end time fields.
+- **Presets sidebar**: a fixed list of six relative-date presets (Today, Yesterday, Last 7 days, Last 30 days, This month, Last month) plus a Custom state, shown alongside the calendar(s) in range mode. Selecting a preset computes and applies the corresponding range and navigates the calendar to it; any manual edit to the draft reverts selection to Custom.
 
 ## Impact Analysis
 
-- Additive — v1's single-date, naive-date `value` contract is unchanged for existing consumers.
-- `bds-table`/`bds-calendar-grid` CSS scoping fix (unscoped selectors were leaking styles between the two components) landed as part of this branch.
-- Several Safari/WebKit-specific fixes: popover outside-click/focus race with the Apply click, today-indicator border clipped by range background.
-- No breaking API changes.
+- Purely additive to `bds-date-picker`'s existing range-mode API — no breaking changes to single-date or non-range usage.
+- `labels` prop gains optional preset button-text overrides; all new fields are optional with English defaults.
+- Minor unrelated fix: `bds-popover` cleanup included in this branch.
 
 ## Testing Conducted
 
 **Automated:**
 
-- [x] Unit tests added per phase (time selector + date-engine conversion, min/max, calendarType, range) with the two-phase coverage/mutation gate
-- [x] Full `boreal-web-components` suite passing post-merge with `release/current`
+- [x] Unit tests for the dual/single time selector and its draft-state logic
+- [x] Unit tests for preset range computation and the presets sidebar (selection, bounds-checking, calendar navigation on click)
+- [x] Coverage and mutation thresholds met per project quality gates
 
 **Manual:**
 
-- [x] QA pass per phase across web-components, React, and Vue playgrounds
-- [x] Cross-browser check surfaced and fixed the Safari popover/Apply race and range-background/today-indicator clipping
+- [x] Verified in Storybook across `basic`/`expanded` calendar types, with/without `withTime`, and with `min`/`max` bounds restricting preset availability
 
 ## Related Changes
 
-- **boreal-react** / **boreal-vue**: wrapper parity checked and fixed per phase (including a min/max initial FACE-validity race in the framework wrappers)
-- **boreal-docs**: Storybook stories and MDX documentation added per phase (time selector, min/max, calendarType, range mode)
+- **boreal-docs**: Storybook story and MDX documentation updated for both features
+- **boreal-react** / **boreal-vue**: no manual changes needed — wrappers pick up the new props automatically
+
+## Design Decisions
+
+Two architecture decisions were made as part of this work:
+
+- **Localizable UI copy prop shape**: a threshold rule — a component with a single localizable string uses a flat `@Prop() <name>Label`, two or more uses a bundled `labels` object. The `labels` prop's growth in this PR (preset button-text overrides) follows this rule; no shipped component's API changes as a result.
+- **Preset date/time coverage semantics**: with `with-time` on, each preset's submitted end boundary is shifted to the start of the day after its last real day (e.g. "Last 7 days" submits an end of tomorrow at `00:00`), producing an exact whole-day-multiple duration identical across both calendar types. The calendar grid still highlights only the real days; the popover header and trigger field always display the same shifted boundary that gets submitted, so nothing silently disagrees.
 
 ## Additional Remarks
 
-- Keyboard-typed date entry in the trigger field remains explicitly out of scope.
-- Phases 5–9 (range time, presets, banner/summary, keyboard/a11y/RTL, month/year quick-picker) moved to v3 under EOA-17662.
-- Two `bds-popover` follow-ups discovered during this work (coverage backfill, CSS custom-property-inheritance browser test) were re-scoped into their own tracked plans rather than bundled here.
-- Full plan: `ai-work/plans/EOA-17138-bds-date-picker-v2.md`
+This PR covers range-mode time selection and the presets sidebar only. Still outstanding for `bds-date-picker` and out of scope here:
+
+- Info banner and footer range summary
+- Full keyboard navigation, accessibility, and RTL audit
+- Month/year quick-picker
+- Presets are a fixed built-in list — no consumer-configurable presets API in this PR
 
 ## References
 
-Closes EOA-17138
+Refs EOA-17662
 
 ## Checklist
 
 ### General
 
-- [x] Follows conventional commit format: `feat(scope): EOA-17138 description`
-- [x] Ticket reference included (`Closes EOA-17138`)
+- [x] Follows conventional commit format: `feat(scope): TICKET-ID description`
+- [x] Ticket reference included (`Refs` EOA-17662)
 - [x] Code adheres to TypeScript strict mode — no `any` or implicit types
+- [x] Self-reviewed code for quality, readability, and correctness
 - [x] All tests pass locally
 
 ### Boreal DS — Component Standards
@@ -67,28 +71,31 @@ Closes EOA-17138
 - [x] Design tokens used exclusively — no hard-coded colors, spacing, or radii
 - [x] Component tag uses `bds-` prefix
 - [x] All props have explicit TypeScript types
+- [x] Events use bare `@Event()` (no `bubbles`/`composed` unless required)
 - [x] SCSS follows `@use` pattern (no `@import`)
-- [x] Light DOM patterns documented
 
 ### Boreal DS — Form Components
 
-- [x] Uses formAssociatedMixin for FACE boilerplate
-- [x] Validation tested (min/max, required, range) with built-in validators
+- [x] Implements `IFormControl<T>` interface (unchanged from prior work)
+- [x] Validation unaffected by new range/preset behavior
 
 ### Testing
 
-- [x] Unit test coverage ≥ 90% statements per phase
-- [x] Tests cover happy path, error cases, and edge cases
-- [x] Manual testing completed across web-components, React, and Vue
+- [x] Unit test coverage ≥ 90% statements
+- [x] Tests cover happy path, error cases, and edge cases (min/max bounds, custom fallback)
+- [x] Manual testing completed in Storybook
 
 ### Documentation
 
 - [x] JSDoc added to all public APIs (props, events, methods)
-- [x] Storybook story created with usage examples
-- [x] Storybook MDX documentation added (usage, API, examples)
+- [x] Storybook story updated with usage examples
+- [x] Storybook MDX documentation updated
 
 ### Performance & Compatibility
 
 - [x] No new console warnings or errors
-- [x] Compatible across supported browsers (Chrome, Firefox, Safari, Edge) — Safari-specific regressions found and fixed
 - [x] No regression in existing functionality
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+https://claude.ai/code/session_01MmVJGQ2qQTnHmRR8RjitFx

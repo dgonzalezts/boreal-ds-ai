@@ -40,5 +40,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "outputStyle": "Explanatory"
+  "outputStyle": "default"
 }
