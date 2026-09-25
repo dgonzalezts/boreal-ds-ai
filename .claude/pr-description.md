@@ -1,6 +1,6 @@
 # PR Title
 
-feat(web-components): EOA-17662 add range-mode time selection and presets sidebar to bds-date-picker
+feat(web-components): EOA-17662 add quick-picker, banner and keyboard navigation
 
 ---
 
@@ -8,51 +8,46 @@ feat(web-components): EOA-17662 add range-mode time selection and presets sideba
 
 ## Description
 
-Extends `bds-date-picker`'s range mode with time-of-day selection and a built-in date presets sidebar.
+Part 2 of the `bds-date-picker` v3 work, covering TC-23–TC-33 of [Jira Test Plan](https://telesign.atlassian.net/browse/EOA-18534):
 
-- **Range-mode time selection**: `basic` calendar type gets a single shared time field applied to both range bounds; `expanded` calendar type gets independent start/end time fields.
-- **Presets sidebar**: a fixed list of six relative-date presets (Today, Yesterday, Last 7 days, Last 30 days, This month, Last month) plus a Custom state, shown alongside the calendar(s) in range mode. Selecting a preset computes and applies the corresponding range and navigates the calendar to it; any manual edit to the draft reverts selection to Custom.
+- **Month/year quick-picker** — the calendar header's month/year label opens a month grid, then a year grid, as an elevated overlay over the dimmed day grid.
+- **Keyboard traversal** — 2D arrow/Home/End navigation, PageUp/PageDown paging, Escape/backdrop return to day view, and live-region announcements.
+- **Info banner and footer range summary** — optional dismissible banner and a pluralized days/hours/minutes duration summary in range mode.
+
+## Implementation Details
+
+- New `generateMonthPickerGrid`/`generateYearPickerGrid` generators in `date-engine`, plus `now`/range-bound options on the day grid generator.
+- Quick-picker overlays with a nested header and roving tabindex; each `expanded` grid keeps its own independent picker state and resets on preset, clear, and cross-grid day picks.
+- Selection state is selection-based (not display-based) and wired for both single and range modes; focus is retained across year-window paging and returns to the day grid on Escape/backdrop.
+- Footer summary uses `Intl.PluralRules` for singular/plural unit selection; `renderBanner` and summary helpers use design tokens only, with all new labels optional and English by default.
 
 ## Impact Analysis
 
-- Purely additive to `bds-date-picker`'s existing range-mode API — no breaking changes to single-date or non-range usage.
-- `labels` prop gains optional preset button-text overrides; all new fields are optional with English defaults.
-- Minor unrelated fix: `bds-popover` cleanup included in this branch.
+- Additive to `bds-date-picker` — no breaking API changes; existing usage is unchanged.
+- Playground QA examples added to `packages/boreal-web-components/src/index.html`.
 
 ## Testing Conducted
 
 **Automated:**
 
-- [x] Unit tests for the dual/single time selector and its draft-state logic
-- [x] Unit tests for preset range computation and the presets sidebar (selection, bounds-checking, calendar navigation on click)
-- [x] Coverage and mutation thresholds met per project quality gates
+- [x] New suites: quick-picker (`bds-calendar-grid`, `bds-date-picker`), keyboard, banner, range, date-engine grid, a11y navigation
+- [x] Full unit suite green (328 suites / 3804 tests)
 
-**Manual:**
+**Manual (Part 2 scenarios):**
 
-- [x] Verified in Storybook across `basic`/`expanded` calendar types, with/without `withTime`, and with `min`/`max` bounds restricting preset availability
+- [x] Banner: `dp-banner-s1`–`s4` (TC-23–TC-26)
+- [x] Quick-picker: `dp-quickpicker-s1`–`s4` (TC-27–TC-32)
+- [x] Keyboard traversal: `dp-keyboard-s1`–`s3` (TC-33)
 
 ## Related Changes
 
-- **boreal-docs**: Storybook story and MDX documentation updated for both features
-- **boreal-react** / **boreal-vue**: no manual changes needed — wrappers pick up the new props automatically
-
-## Design Decisions
-
-Two architecture decisions were made as part of this work:
-
-- **Localizable UI copy prop shape**: a threshold rule — a component with a single localizable string uses a flat `@Prop() <name>Label`, two or more uses a bundled `labels` object. The `labels` prop's growth in this PR (preset button-text overrides) follows this rule; no shipped component's API changes as a result.
-- **Preset date/time coverage semantics**: with `with-time` on, each preset's submitted end boundary is shifted to the start of the day after its last real day (e.g. "Last 7 days" submits an end of tomorrow at `00:00`), producing an exact whole-day-multiple duration identical across both calendar types. The calendar grid still highlights only the real days; the popover header and trigger field always display the same shifted boundary that gets submitted, so nothing silently disagrees.
+- **boreal-docs**: date-picker stories and MDX updated (quick-picker, banner, keyboard)
+- **boreal-react** / **boreal-vue**: no manual changes — wrappers pick up the new props
 
 ## Additional Remarks
 
-This PR covers range-mode time selection and the presets sidebar only. Still outstanding for `bds-date-picker` and out of scope here:
-
-- Info banner and footer range summary
-- Full keyboard navigation, accessibility, and RTL audit
-- Month/year quick-picker
-- Presets are a fixed built-in list — no consumer-configurable presets API in this PR
-
-## References
+- Target branch is `release/current`; it is already merged into this branch (`6f66ec5c`), so the PR is conflict-free.
+- Playground examples in `index.html` are marked for manual QA (TBD) — remove before merge if the release convention requires a clean playground.
 
 Refs EOA-17662
 
@@ -60,42 +55,21 @@ Refs EOA-17662
 
 ### General
 
-- [x] Follows conventional commit format: `feat(scope): TICKET-ID description`
-- [x] Ticket reference included (`Refs` EOA-17662)
-- [x] Code adheres to TypeScript strict mode — no `any` or implicit types
-- [x] Self-reviewed code for quality, readability, and correctness
+- [x] Conventional commit format and ticket reference
+- [x] TypeScript strict — no `any` or implicit types
 - [x] All tests pass locally
 
-### Boreal DS — Component Standards
+### Component Standards
 
-- [x] Design tokens used exclusively — no hard-coded colors, spacing, or radii
-- [x] Component tag uses `bds-` prefix
-- [x] All props have explicit TypeScript types
-- [x] Events use bare `@Event()` (no `bubbles`/`composed` unless required)
-- [x] SCSS follows `@use` pattern (no `@import`)
-
-### Boreal DS — Form Components
-
-- [x] Implements `IFormControl<T>` interface (unchanged from prior work)
-- [x] Validation unaffected by new range/preset behavior
+- [x] Design tokens only — no hard-coded colors, spacing, or radii
+- [x] `bds-` prefix, explicit prop types, bare `@Event()`, SCSS `@use`
 
 ### Testing
 
-- [x] Unit test coverage ≥ 90% statements
-- [x] Tests cover happy path, error cases, and edge cases (min/max bounds, custom fallback)
-- [x] Manual testing completed in Storybook
+- [x] Coverage and mutation thresholds met
+- [x] Happy path, error, and edge cases covered; accessibility specs included
 
 ### Documentation
 
-- [x] JSDoc added to all public APIs (props, events, methods)
-- [x] Storybook story updated with usage examples
-- [x] Storybook MDX documentation updated
-
-### Performance & Compatibility
-
-- [x] No new console warnings or errors
-- [x] No regression in existing functionality
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-https://claude.ai/code/session_01MmVJGQ2qQTnHmRR8RjitFx
+- [x] JSDoc on all public APIs
+- [x] Storybook story and MDX documentation updated

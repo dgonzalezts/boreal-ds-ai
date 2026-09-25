@@ -31,3 +31,14 @@ a boolean JSX prop bound to an `aria-*` attribute name, not a test bug. Fixing i
 the component to explicitly stringify (`aria-selected={String(cond)}`), which is a component-code
 change, out of scope for a test-only task. Flag it to the component's implementer rather than
 silently working around it if this behavior is caught again on another component's a11y tests.
+
+**Second occurrence — EOA-17662 Task 43, and this time it caused a functional bug, not just an
+invalid ARIA value.** `bds-calendar-grid`'s `getInitialActiveSelector()` returns the CSS selector
+`'[aria-selected="true"]'` and `setupGridNavigation` does `positions.find(cell => cell.matches(sel))`.
+Because the selected cell actually carries `aria-selected=""`, that selector never matches, so the
+grid's intended "selected date gets the initial roving-tabindex stop" priority silently falls back
+to the first cell of the month (verified: `selectedDate='2026-02-15'` → the single `tabindex="0"`
+cell is Feb 1). The `today` half works because `aria-current={cond ? 'date' : undefined}` is
+string-valued. A boolean ARIA attribute is therefore a landmine for any code that later *matches on*
+that attribute — always stringify ARIA state attributes (`aria-selected={cond ? 'true' : undefined}`)
+rather than passing a boolean. Deferred as a `frontend-subagent` fix (failure-mode row FM-85).

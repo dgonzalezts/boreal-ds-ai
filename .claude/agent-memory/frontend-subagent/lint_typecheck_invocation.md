@@ -17,3 +17,5 @@ Plain `pnpm run lint` at the package level also fails for a targeted file list �
 `pnpm --filter <package>` runs the command with that package as the effective root, sidestepping both the with-node.sh cwd reset and turbo's repo-wide fan-out. Paths passed to eslint must be relative to the package directory (e.g. `src/components/forms/...`), not the repo root.
 
 Known pre-existing, unrelated `tsc --noEmit` failures (do not treat as new regressions) as of 2026-08: `bds-dialog.behavior.spec.ts` and `bds-tooltip-events.spec.ts` (Coords/MouseEvent type mismatches) — already flagged in `ai-work/plans/EOA-17138-bds-date-picker-v2.md` Task 11's status note.
+
+The default `tsconfig.json` `include`s `src/**/__test__`, which is why those spec errors surface. The **clean gate** (what the build/CI uses) is `tsc --noEmit -p tsconfig.build.json`, which `exclude`s `src/**/__test__` and `src/utils/testing` — it exits 0 with no output on the current tree. Use it to prove a non-test source change type-checks without wading through the known spec errors; use `-p tsconfig.json` only when you specifically need the specs type-checked.

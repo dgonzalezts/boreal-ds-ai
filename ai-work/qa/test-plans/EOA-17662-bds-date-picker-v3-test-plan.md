@@ -15,13 +15,17 @@ Component sources:
 
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/bds-date-picker.tsx`
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/utils/presets.ts`, `draft-state.ts`, `value-mapping.ts`
-- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderPresets.tsx`, `renderTimeSelector.tsx`
+- `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-date-picker/helpers/renderPresets.tsx`, `renderTimeSelector.tsx`, `renderCalendarPanel.tsx`
 - `packages/boreal-web-components/src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx`
 - `packages/boreal-web-components/src/services/date-engine/grid.ts`
 
 Brand theme in scope: **Proximus only** (consistent with v1/v2 plans).
 Created: 2026-09-14
 Updated: 2026-09-22 — added TC-14 through TC-22 (presets reopen/Cancel/shift correctness, `expanded`+`range=false` warnings, same-day intraday ranges, reverse-order click, bidirectional hover-preview, preselected-date-outside-month confirmation); removed the multi-month preselected-range playground scenario (now a documented, intentional limitation with no dedicated test case — see Out of scope). Added TC-23 through TC-26 (info banner positioning/dismissal, footer range-summary text and pluralization).
+Updated: 2026-09-24 — added TC-27 through TC-31 (month/year quick-picker: overlay/nested-header, drill-down, selected-date/range flagging, auto-close/sync on preset/clear/cross-grid actions, keyboard navigation/ARIA). Removed "month/year quick-picker — not yet implemented" from Out of scope (Tasks 46-48h). TC-31 (keyboard/ARIA) covers a task implemented but not yet live-QA-verified as of this update — mark its **Pass?** accordingly until confirmed.
+Updated: 2026-09-24 — added TC-32 (quick-picker PageUp/PageDown paging per view, and year-window focus retention after a ±10 shift — Tasks 48i, 48j). TC-31 has since been live-QA-verified.
+Updated: 2026-09-24 — added TC-33 (day-grid arrow-key traversal — the Phase 8 keyboard behavior previously only tracked in the implementation plan's Task 43 checklist, now a first-class test case so every playground keyboard section maps to a TC).
+Updated: 2026-09-24 — aligned every test case with its `packages/boreal-web-components/src/index.html` playground scenario/element id (new **Playground:** field), aligned TC-11 to the playground's "Last 30 days → Next" scenario, and split the document into **Part 1** (TC-01 – TC-22, validated & merged) and **Part 2** (TC-23 – TC-33, in progress).
 
 ---
 
@@ -38,13 +42,15 @@ Updated: 2026-09-22 — added TC-14 through TC-22 (presets reopen/Cancel/shift c
 - Confirmation that opening the calendar with a preselected date outside the currently visible month already navigates there automatically (no code change was needed for this — see Out of scope for what remains undone).
 - Idempotency of preset selection and trigger toggling.
 - Info banner (display-only, no action buttons, positioned as the first child of the calendar column in all `calendarType` values) and footer range-summary text (days-only under `basic`, days/hours/minutes under `expanded`, with `Intl.PluralRules`-based singular/plural word forms).
+- Month/year quick-picker: drill-down (label click → month grid → year grid and back), superposed as a dimmed-backdrop overlay with its own nested header over the day grid, selected-date/range-boundary highlighting, auto-close/resync on preset click/Clear/cross-grid day-pick/cross-grid month-year navigation, and its own keyboard navigation, Escape, backdrop-click dismissal, and live-region announcements.
 
 **Out of scope:**
 
 - v1/v2 baseline behavior (single-date, `withTime`, `min`/`max`, `calendarType`, range core selection) — already covered by prior plans, not duplicated here.
-- Keyboard/arrow-key grid navigation and RTL, month/year quick-picker — not yet implemented on this branch.
+- RTL — formally descoped as a blocking gate pending ticket-owner sign-off (see Task 41a in the implementation plan); not implemented, not tested here.
 - Banner `state`/`variant` visual styling per severity (info/success/warning/danger) — the type is flexible but visual styling per state is pulled from Figma in a later SCSS-audit task, not tested here.
 - Consumer-configurable presets — not implemented; the preset list is fixed.
+- **Unified popover content markup** — the playground's `.bds-date-picker__calendars` / `.bds-date-picker__date-time` / `.bds-date-picker__time-band` structural section is a supplementary developer aid, explicitly not tracked as a test case; its observable outcomes are already covered by TC-23 (banner alignment) and TC-27/TC-28 (grid layout).
 - **Multi-month preselected range display** — a preselected range whose `start`/`end` fall in different months than the calendar can show at once (e.g. a 3-month spread under `basic`, which shows one month) leaves `end` genuinely off-screen on open. This is a documented, intentional limitation (the display always anchors on `start`), not a bug — no dedicated test case or playground scenario for it.
 - **Live external `value` reassignment while the popover is already open** (no close/reopen in between) does not re-sync the displayed month. Confirmed real, but explicitly not built — it isn't what the original request asked for (opening the calendar already navigates correctly; only a value change with the popover already open, no open/close transition, is unhandled). No test case here.
 - Linking an external IANA timezone reference from the docs — documentation-only, no runtime behavior to test.
@@ -75,6 +81,15 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 ## Test Cases
 
+The plan is split into two parts, matching the playground's two halves. Every test case names the `index.html` playground scenario/element id it maps to in a **Playground:** field, so a tester can jump straight to the right picker.
+
+- **Part 1 — validated & merged:** range-mode time selection, presets sidebar, and the range-selection/highlighting fixes (**TC-01 – TC-22**). Already QA-verified and merged; retained here for regression reference.
+- **Part 2 — in progress:** info banner, footer range summary, day-grid keyboard traversal, and the month/year quick-picker (**TC-23 – TC-33**). Not yet validated as a whole at the time of this update.
+
+---
+
+## Part 1 — Range time, presets & range-selection fixes (validated & merged)
+
 ### Range-mode time selection
 
 ---
@@ -82,6 +97,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-01: `basic` + range + withTime — single shared time applies to both bounds
 
 **Priority:** P0
+
+**Playground:** `dp-range-time-s2` (basic + range + withTime)
 
 **Steps:**
 
@@ -94,6 +111,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P0
 
+**Playground:** `dp-range-time-s1` (expanded + range + withTime)
+
 **Steps:**
 
 1. Open a `calendar-type="expanded" range with-time` picker, pick a start date/time and end date/time with different hour/minute values, click Apply
@@ -105,6 +124,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-range-time-s3` (basic, single date + withTime)
+
 **Steps:**
 
 1. On a non-range `with-time` picker, pick a day + time, click Apply
@@ -115,6 +136,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-04: Popover header shows time in both layouts
 
 **Priority:** P1
+
+**Playground:** `dp-range-time-s4a` (expanded, step 1), `dp-range-time-s4b` (basic, step 2)
 
 **Steps:**
 
@@ -133,16 +156,22 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P0
 
+**Playground:** `dp-presets-s1` (expanded), `dp-presets-s2` (basic)
+
 **Steps:**
 
 1. On both `expanded` + range and `basic` + range pickers, click each of the six presets in turn
    **Expected:** Calendar highlights the correct real days for each (Today = 1 day; Last 7/30 days include today; This month = 1st through today; Last month = full previous month); clicked preset shows selected; "Custom" is selected by default before any preset is clicked
+2. On the `basic` picker, inspect the popover header
+   **Expected:** Header uses the labeled `Start:`/`End:` format, not the old dash-joined line
 
 ---
 
 #### TC-06: Manual edit after a preset reverts selection to Custom
 
 **Priority:** P0
+
+**Playground:** `dp-presets-s1` (expanded), `dp-presets-s2` (basic)
 
 **Steps:**
 
@@ -156,6 +185,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-07: Clicking "Custom" directly does not clear the selection
 
 **Priority:** P2
+
+**Playground:** `dp-presets-s1` (expanded)
 
 **Steps:**
 
@@ -172,6 +203,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-presets-s3` (`min="2026-09-05" max="2026-09-15"`)
+
 **Steps:**
 
 1. Open a picker with `min`/`max` set so some presets' ranges fall partially or fully outside the bounds
@@ -182,6 +215,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-09: "Today" reflects configured `timezone`, not the device clock
 
 **Priority:** P1
+
+**Playground:** `dp-presets-tz-s1` (step 1), `dp-presets-tz-s2` (step 2) — both `timezone="Pacific/Kiritimati"`
 
 **Steps:**
 
@@ -200,6 +235,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-presets-s4` (expanded + range + withTime)
+
 **Steps:**
 
 1. On `expanded` + range + `with-time`, click a preset (e.g. Last 7 days), note the header, then click Apply
@@ -211,11 +248,15 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-presets-nav-s1` (basic; steps 1-2), `dp-presets-nav-s2` (expanded; step 3)
+
 **Steps:**
 
 1. On `basic` + range, navigate 2+ months forward, then click a preset whose range isn't in the currently-shown month
    **Expected:** View jumps to the preset's start month with correct days highlighted, no manual navigation needed
-2. On `expanded` + range, click a preset spanning two calendar months
+2. On the same picker, click "Last 30 days" (or whichever built-in spans two calendar months), then click Next once
+   **Expected:** The view shows the start month first; clicking Next shows the following month with the remaining range days still highlighted through today
+3. On `expanded` + range, click the same spanning-months preset
    **Expected:** Calendar 1 shows the start month, calendar 2 automatically shows the following month, together covering the full range
 
 ---
@@ -223,6 +264,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-12: Re-anchoring after reverting to Custom
 
 **Priority:** P2
+
+**Playground:** `dp-presets-nav-s1` (basic)
 
 **Steps:**
 
@@ -238,6 +281,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-13: Repeated preset click / trigger toggle produces no duplicate side effects
 
 **Priority:** P2
+
+**Playground:** `dp-idempotency-s1` (expanded + range)
 
 **Steps:**
 
@@ -256,6 +301,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P0
 
+**Playground:** `dp-presets-s1` (expanded), `dp-presets-s4` (expanded + withTime)
+
 **Steps:**
 
 1. Apply a built-in preset (e.g. "Today"), close the popover, then reopen it
@@ -269,6 +316,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-presets-s1` (expanded)
+
 **Steps:**
 
 1. Apply a preset, reopen the popover, then click Cancel
@@ -281,6 +330,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-16: Reopening a with-time preset shows the real day(s) only, with no header double-shift or value drift
 
 **Priority:** P0
+
+**Playground:** `dp-presets-s4` (expanded + range + withTime)
 
 **Steps:**
 
@@ -299,6 +350,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-expanded-no-range-s1` (expanded, `range` unset, `with-time`)
+
 **Steps:**
 
 1. Open a `calendar-type="expanded"` picker with `range` not set and `with-time` set
@@ -309,6 +362,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-18: No duplicate day-highlight at a month boundary under `expanded` + `range=false`
 
 **Priority:** P1
+
+**Playground:** `dp-expanded-no-range-s1` (`value` preset to `2026-09-30`)
 
 **Steps:**
 
@@ -324,6 +379,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-19: Same-day double-click confirms a one-day range; an inverted end time shifts live, consistently across Apply and reopen
 
 **Priority:** P0
+
+**Playground:** `dp-intraday-range-s1` (expanded + range + withTime)
 
 **Steps:**
 
@@ -348,6 +405,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P0
 
+**Playground:** `dp-reverse-range-s1` (basic; step 1), `dp-reverse-range-s2` (expanded; step 2), `dp-reverse-range-s3` (expanded + withTime; step 3)
+
 **Steps:**
 
 1. In a `basic` + `range` picker, click a later day first, then an earlier day
@@ -368,6 +427,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-21: Hover-preview works in both directions; a lone first click shows no premature directional strip
 
 **Priority:** P1
+
+**Playground:** `dp-reverse-range-s1` / `s2` / `s3` (reused from TC-20)
 
 **Steps:**
 
@@ -392,12 +453,16 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-preselected-outside-month-s1` (`value` preset to `2027-04-12`)
+
 **Steps:**
 
 1. Set `value` on a fresh (never-opened) picker to a date several months from today, then click the field to open the popover for the first time
    **Expected:** The calendar opens already showing the preselected date's month — not today's month — with no manual navigation needed to reach it
 
 ---
+
+## Part 2 — Info banner, keyboard traversal & month/year quick-picker (in progress)
 
 ### Info banner and footer range summary
 
@@ -406,6 +471,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 #### TC-23: Banner renders correctly positioned in all `calendarType` values, including `default`
 
 **Priority:** P1
+
+**Playground:** `dp-banner-s1` (`default`; step 1), `dp-banner-s2` (`basic`, no range; step 2), `dp-banner-s3` (`basic` + range; step 3) — all seeded with a visible `banner`
 
 **Steps:**
 
@@ -422,6 +489,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-banner-s1` (any banner scenario works)
+
 **Steps:**
 
 1. With a visible, closable banner, click the close ("X") button
@@ -435,6 +504,8 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-banner-s3` (basic + range)
+
 **Steps:**
 
 1. Under `calendarType="basic"` + `range`, select and Apply a multi-day range, then reopen
@@ -446,12 +517,159 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 
 **Priority:** P1
 
+**Playground:** `dp-banner-s4` (expanded + range + withTime)
+
 **Steps:**
 
 1. Under `calendarType="expanded"` + `range` + `with-time`, select a range with distinct, non-`00:00` start/end times, Apply, then reopen
    **Expected:** The footer shows a days/hours/minutes summary reflecting raw elapsed time between the committed start/end instants (e.g. Sept 1 10:00 → Sept 18 12:30 is "17 days, 2 hours, 30 minutes")
 2. Select a range that resolves to exactly 1 day, 1 hour, and 1 minute
    **Expected:** Each unit renders in its singular form ("1 day, 1 hour, 1 minute"), confirming `Intl.PluralRules`-based singular/plural selection works correctly at the boundary
+
+---
+
+### Month/year quick-picker
+
+---
+
+#### TC-27: Quick-picker overlay superposes over the (dimmed) day grid with its own nested header
+
+**Priority:** P1
+
+**Playground:** `dp-quickpicker-s1` (basic, single date)
+
+**Steps:**
+
+1. Click the month/year header label on `dp-quickpicker-s1` (single-date)
+   **Expected:** A white, elevated card with a connector arrow toward the label opens superposed over the day grid; the day grid stays visible underneath, dimmed (~40% opacity), not removed
+2. While the month picker is open, inspect the outer (day-grid) header
+   **Expected:** The outer header (label + prev/next month buttons) is also dimmed, and the picker card shows its own separate inner header (prev/next-year buttons + year label) — two visually distinct header rows, not one swapped for the other
+3. Click the year label inside the picker's own header
+   **Expected:** The month grid is replaced by a year grid (12-year window), current year flagged; the outer day-grid header remains dimmed throughout
+4. Click a year, then a month
+   **Expected:** Drills back down (year → month grid for that year → day grid), outer header and day grid un-dim and return to normal interactivity once back on day view
+
+---
+
+#### TC-28: Drill-down click path — single and `expanded` dual-grid independence
+
+**Priority:** P0
+
+**Playground:** `dp-quickpicker-s1` (step 1), `dp-quickpicker-s2` (step 2), `dp-quickpicker-s3` (step 3), `dp-quickpicker-s4` (step 4)
+
+**Steps:**
+
+1. On `dp-quickpicker-s1`, click a month in the open month picker
+   **Expected:** Returns to day view showing that month; `bdsMonthNavigate` fires with the correct target
+2. On `dp-quickpicker-s2` (`expanded` + `range`), open the **left** grid's month picker only
+   **Expected:** The right grid's day grid is completely unaffected — no dimming, no `aria-hidden`/`inert`, still fully interactive
+3. On `dp-quickpicker-s3` (bounded `min`/`max`), open the month and year pickers
+   **Expected:** Months/years entirely outside the bounds are disabled and unclickable; partially-in-range ones stay enabled; no "future is disabled" behavior
+4. On `dp-quickpicker-s4` (`expanded`), pick a month from the **right** calendar's own month picker
+   **Expected:** The picked month appears in the right calendar specifically (left anchors to picked − 1) — the clicked calendar shows the picked month, not the other one
+
+---
+
+#### TC-29: Selected-date and range-boundary highlighting in the quick-picker
+
+**Priority:** P1
+
+**Playground:** `dp-quickpicker-s1` (steps 1-2), `dp-quickpicker-s2` (steps 3-4)
+
+**Steps:**
+
+1. Select a single date (e.g. Sept 15), then open the month picker
+   **Expected:** Exactly that date's month shows a solid `--selected` highlight; no other month does
+2. Navigate the day grid forward/back to a different month (without selecting a new date), then open the month picker
+   **Expected:** The originally *selected* month stays highlighted — not whichever month is currently displayed — confirming selection-based, not display-position-based, semantics
+3. On `dp-quickpicker-s2`, select a range with both endpoints in the same year (e.g. Mar 10 – Sep 20), open either grid's month picker
+   **Expected:** Both March and September show `--selected` independently; no highlight on the months between them (no spanning "in-range" treatment); both grids show identical flagging since they share the same range
+4. Select a range spanning two different years, open a month picker showing only one of those years
+   **Expected:** Only the boundary that falls in the currently-displayed year is highlighted; navigate the picker to the other year and the other boundary lights up there instead
+5. With no date selected yet, open the month or year picker
+   **Expected:** No cell shows `--selected` (only `--current`/today, if applicable) — no false-positive highlight
+
+---
+
+#### TC-30: Quick-picker auto-closes and resyncs on preset, Clear, and cross-grid actions
+
+**Priority:** P1
+
+**Playground:** `dp-quickpicker-s1` or `s2` (steps 1-2), `dp-quickpicker-s2` (steps 3-4)
+
+**Steps:**
+
+1. Open a quick-picker (month or year view), then click a sidebar preset (e.g. "Last 7 days")
+   **Expected:** The picker closes back to day view immediately and the day grid reflects the preset's range — no stale overlay left showing unrelated context
+2. Reopen a quick-picker, then click the footer "Clear" button
+   **Expected:** The picker closes back to day view; the day grid shows the cleared state
+3. On `dp-quickpicker-s2`, open the left grid's quick-picker, then click a day on the right grid to make a range selection
+   **Expected:** The left grid's quick-picker closes back to day view once the right-grid click completes
+4. On `dp-quickpicker-s2`, open **both** grids' quick-pickers simultaneously (open one, then separately open the other), then complete a month or year pick in one of them
+   **Expected:** The other grid's quick-picker also closes back to day view — no stale overlay left open on it, even though its own navigation had nothing to do with the pick
+
+---
+
+#### TC-31: Quick-picker keyboard navigation, Escape, backdrop-click dismissal, and live-region announcements
+
+**Priority:** P1
+
+**Playground:** `dp-quickpicker-s1` (single-date; keyboard-only path) and `dp-quickpicker-s2` (expanded range), reusing the scenarios above
+
+**Steps:**
+
+1. Tab to the month/year header label (no mouse), activate with Enter/Space
+   **Expected:** The month picker opens as an overlay above the dimmed day grid, identical to a mouse click; the label's accessible name describes its function (e.g. "September 2026, choose month")
+2. With the month or year grid focused, use arrow keys and Home/End
+   **Expected:** Focus moves cell-to-cell following the same interaction model as the day grid (Task 40); no focus loss, no keyboard trap; a live region announces each view transition (entering month view, entering year view, returning to day view) exactly once, with no duplicate when a selection also triggers `bdsMonthNavigate`
+3. With a picker view open, press Escape
+   **Expected:** Returns to day view without closing the whole popover (distinct from Escape from day view, which still closes the popover per Task 42); real DOM focus lands on a sensible cell in the day grid, not dropped to `<body>`
+4. With a picker view open, click the dimmed backdrop area outside the picker card
+   **Expected:** Same result as Escape — returns to day view without closing the popover; clicking inside the card itself has no such effect
+5. Complete a full keyboard-only drill-down cycle (Tab to label → Enter → arrow to a month → Enter → back on day view)
+   **Expected:** Matches the mouse-driven cycle exactly at every step, with correct final focus
+
+---
+
+#### TC-32: Quick-picker PageUp/PageDown paging and year-window focus retention
+
+**Priority:** P1
+
+**Playground:** `dp-quickpicker-s1` (steps 1-2), `dp-quickpicker-s3` (step 3), `dp-quickpicker-s2` (step 6)
+
+**Steps:**
+
+1. On `dp-quickpicker-s1`, open the month picker and note the inner year label (e.g. "2026")
+   **Expected:** Pressing PageDown advances the year by one (the 12 month cells re-render for that year) and PageUp steps back by one — the same result as the picker's own prev/next-year header buttons; no `bdsMonthNavigate` is emitted for picker paging
+2. From the month view, click the year button to open the year grid
+   **Expected:** PageDown advances the 12-year window by a decade (window label `startYear – startYear+11` → +10) and PageUp steps back −10, matching the header's prev/next-years buttons
+3. On `dp-quickpicker-s3` (`min="2026-06-01" max="2027-03-31"`), page toward a fully out-of-range year or decade window
+   **Expected:** The key no-ops — the year/window label does not change, matching the disabled header buttons; a partially-in-range year still pages
+4. In the year grid, focus a year cell (arrow to it), then press PageDown
+   **Expected:** The window advances and `document.activeElement` is a **year cell in the new window** (not `<body>`) — the previously focused year advanced by the same delta where still in-window and enabled. Pressing PageDown again immediately still pages (focus was retained by the first press); PageUp steps back with focus retained each time
+5. With the picker closed (day view), press PageUp/PageDown
+   **Expected:** The day grid still navigates prev/next month and emits `bdsMonthNavigate` — unchanged (regression)
+6. On `dp-quickpicker-s2` (`expanded`), open one grid's picker and page
+   **Expected:** Only that grid's picker pages; the other grid is unaffected
+
+---
+
+#### TC-33: Day-grid arrow-key traversal (2D keyboard navigation)
+
+**Priority:** P1
+
+**Playground:** `dp-keyboard-s1` (steps 1-2), `dp-keyboard-s2` (step 3), `dp-keyboard-s3` (step 4)
+
+**Steps:**
+
+1. On `dp-keyboard-s1` (`default`, single-date), Tab into the field, then Tab again into the calendar grid
+   **Expected:** Tab enters the grid once (roving tabindex — a single `tabindex="0"` cell); arrow keys / Home / End move focus cell-to-cell per the ARIA APG date-grid pattern, wrapping within the visible month, with no focus loss and disabled/out-of-month cells skipped
+2. On the same picker, traverse across a month boundary with PageUp/PageDown
+   **Expected:** `bdsMonthNavigate` fires and the grid re-renders the new month with focus landing on the correct cell
+3. On `dp-keyboard-s2` (`expanded` + `range`), Tab into each grid in turn and traverse
+   **Expected:** Each grid's focus/traversal state is fully independent — no shared/leaking focus state between the two instances
+4. On `dp-keyboard-s3` (`min`/`max` narrowing part of the month), traverse near the disabled boundary
+   **Expected:** Disabled and out-of-month cells are never a focus stop — traversal skips over them entirely
 
 ---
 
@@ -466,6 +684,6 @@ from the monorepo root, opening `packages/boreal-web-components/src/index.html`.
 ## Verification (how to run)
 
 1. `fnm use && pnpm dev:components` from the monorepo root
-2. Open `packages/boreal-web-components/src/index.html` — each TC above maps to a labeled section with matching scenario IDs
-3. Execute in order: Range-mode time selection → Presets selection/computation → Presets bounds/timezone → Presets coverage/navigation → Idempotency → Presets reopen/Cancel correctness → `expanded`+`range=false` → Same-day intraday ranges → Reverse-order range click → Hover-preview/first-click highlight → Preselected date outside visible month → Info banner and footer range summary
+2. Open `packages/boreal-web-components/src/index.html` — each TC above names the playground element id (**Playground:** field) it maps to
+3. Execute in order: **Part 1** — Range-mode time selection → Presets selection/computation → Presets bounds/timezone → Presets coverage/navigation → Idempotency → Presets reopen/Cancel correctness → `expanded`+`range=false` → Same-day intraday ranges → Reverse-order range click → Hover-preview/first-click highlight → Preselected date outside visible month; **Part 2** — Info banner and footer range summary → Month/year quick-picker → Quick-picker keyboard/paging → Day-grid arrow-key traversal
 4. Log defects: `.claude/skills/qa-test-planner/scripts/create_bug_report.sh ai-work/qa`

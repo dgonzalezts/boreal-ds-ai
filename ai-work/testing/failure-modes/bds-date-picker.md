@@ -798,7 +798,7 @@ unrelated to Phase 6) had never been unit-tested directly either, per this task'
 - **Category:** equivalence
 - **Risk:** the header could show the real last day instead of the shifted coverage boundary, contradicting the value that will actually be committed on Apply — a visible, confusing mismatch a consumer would perceive as a bug
 - **Input that reveals it:** click a with-time preset, read the `.bds-date-picker__range-value` header text for both `Start:`/`End:` under both `calendarType`s
-- **Observed current behavior:** `render()`'s `rangeEndText` (`bds-date-picker.tsx:834-843`) always runs the resolved end through `resolveRangeEndIso`, which (per `rangeEndShiftApplies`, `:669-672`) shifts whenever a preset is active, regardless of `calendarType`
+- **Observed current behavior:** `render()`'s `rangeEndText` (`bds-date-picker.tsx:1013-1022`) always runs the resolved end through `resolveEffectiveRangeEndIso`, which (per `rangeEndShiftApplies`, `:787-797`) shifts a preset's equal-time bounds regardless of `calendarType`
 - **Recommended contract:** exactly as observed
 - **Contract status:** confirmed
 - **Why it matters:** direct Task 32 coverage bullet; this is the one visible surface a consumer sees before ever clicking Apply, so it must never disagree with the eventual commit
@@ -807,24 +807,24 @@ unrelated to Phase 6) had never been unit-tested directly either, per this task'
 ### FM-54 | `basic`+`range`+`with-time`'s Apply commit uses the coverage-shifted end for both preset-driven and manual selections
 - **ID:** FM-54
 - **Category:** boundary / equivalence
-- **Risk:** since `basic` has only one shared time field, a manual (non-preset) range selection has no other way to express "cover the whole last day" — if the shift were gated on `selectedPreset !== 'custom'` under `basic` too (mirroring `expanded`'s own gating), a manual `basic` selection would under-cover its last day by nearly 24 hours with no way for the consumer to fix it, per ADR-0015
+- **Risk:** since `basic` has only one shared time field, its two bounds always carry the same time-of-day, so the coverage shift always applies — there is no other way for a `basic` manual selection to express "cover the whole last day". A regression that dropped the shift for `basic` would under-cover the last day by nearly 24 hours with no way for the consumer to fix it, per ADR-0015
 - **Input that reveals it:** complete a manual two-day range under `basic`+`with-time` (leaving the shared time at its `00:00` default, and separately with a user-set shared time), click Apply, inspect the committed `end`
-- **Observed current behavior:** `rangeEndShiftApplies` (`bds-date-picker.tsx:669-672`) — `this.isExpandedCalendarType ? this.selectedPreset !== PRESET_KEY.CUSTOM : true` — under `basic` this is unconditionally `true`, independent of `selectedPreset`
+- **Observed current behavior:** `rangeEndShiftApplies` (`bds-date-picker.tsx:787-797`) returns `true` for `basic` whenever `with-time` is on and the range is active — its single shared field means both bounds always satisfy the "same time-of-day" condition — independent of `selectedPreset`
 - **Recommended contract:** exactly as observed
 - **Contract status:** confirmed
-- **Why it matters:** this is the exact `basic`-only special case the plan calls out explicitly, and the one most likely to be "fixed" incorrectly by someone assuming `basic`/`expanded` should behave symmetrically
+- **Why it matters:** the `basic` half of ADR 0015's data-driven coverage rule (revised 2026-09-24) — `basic` satisfies the rule's "both bounds share a time-of-day" precondition by construction, so it always shifts; the shift no longer keys on whether the selection came from a preset or a manual click
 - **Covered by:** `bds-date-picker.presets.spec.ts::'basic: a preset-driven commit uses the coverage-shifted end'`, `'basic: a manual selection with the shared time left at its default also uses the coverage-shifted end'`, `"basic: a manual selection with a user-set shared time preserves that time on both the real start and the shifted end"`
 
-### FM-55 | `expanded`+`range`+`with-time`'s Apply commit shifts only for preset-driven selections; a manual selection commits each bound's own exact time with no shift
+### FM-55 | `expanded`+`range`+`with-time`'s Apply commit shifts a manual selection only when both bounds share the same time; a deliberately distinct End time is committed exactly
 - **ID:** FM-55
 - **Category:** equivalence
-- **Risk:** the inverse of FM-54 — since `expanded` gives the consumer two fully independent time fields, silently shifting a manual selection's end would corrupt an intentionally precise, non-`00:00` end time the user explicitly set
-- **Input that reveals it:** complete a manual two-day range under `expanded`+`with-time` with distinct, non-zero start/end times, click Apply, confirm the committed end matches the real last day (not shifted) at exactly the drafted time; separately, click a preset and confirm its commit **is** shifted
-- **Observed current behavior:** same `rangeEndShiftApplies` getter as FM-54 — under `expanded`, `false` whenever `selectedPreset === PRESET_KEY.CUSTOM` (the state a manual day click or time edit always reverts to)
+- **Risk:** since `expanded` gives the consumer two fully independent time fields, a *deliberately different* End time must never be silently shifted — that would corrupt an intentionally precise end time. Conversely, equal-time bounds (including the untouched `00:00` default) describe a whole-day span and must shift exactly as a preset does, so that switching a selection from a preset to Custom with no time change does not silently alter the committed value, header, or footer summary
+- **Input that reveals it:** complete a manual two-day range under `expanded`+`with-time` with distinct, non-zero start/end times, click Apply, confirm the committed end matches the real last day (not shifted) at exactly the drafted time; repeat with both times left equal (e.g. the `00:00` default) and confirm the end **is** shifted +1 day
+- **Observed current behavior:** same `rangeEndShiftApplies` getter as FM-54 — under `expanded` it returns `false` when the two bounds' times differ, and `true` when they are equal (including the untouched default), except for a same-day, non-midnight, zero-duration instant. It no longer keys on `selectedPreset`
 - **Recommended contract:** exactly as observed
 - **Contract status:** confirmed
-- **Why it matters:** direct Task 32 coverage bullet, explicitly contrasted against FM-54 as the other half of the same design decision
-- **Covered by:** `bds-date-picker.presets.spec.ts::'expanded: a preset-driven commit uses the coverage-shifted end'`, `"expanded: a manual selection commit is completely unaffected by the shift, using each bound's own exact time"`
+- **Why it matters:** the `expanded` half of ADR 0015's data-driven coverage rule (revised 2026-09-24) — the shift is a function of the draft's values, not of the active preset, so a preset→Custom toggle with no time change leaves the committed value, header, and footer summary unchanged
+- **Covered by:** `bds-date-picker.presets.spec.ts::'expanded: a preset-driven commit uses the coverage-shifted end'`, `"expanded: a manual selection commit is completely unaffected by the shift, using each bound's own exact time"`, `'expanded+with-time: a manual selection with two highlighted days and untouched default times reports a 2-day (not 1-day) footer summary'`, `'expanded+with-time: switching from a preset to Custom with zero date/time change leaves the footer summary, header End, and committed value identical to the preset alone'`
 
 ### FM-56 | A preset click while a selection is mid-progress overwrites rather than merges with the in-progress selection
 - **ID:** FM-56
@@ -1093,3 +1093,413 @@ observable contract; flagged here for visibility in case a future refactor of th
 ## Pending-decision rows requiring a ruling before any test is written for them
 
 None — all of FM-48 through FM-77 are `confirmed` and carry a `Covered by` entry. FM-67 records a boundary decision (equal-times same-day range does not shift) that reads as deliberate from the code but is worth a final human sanity check — flagged to the user in this session's report, not blocking.
+
+## Extension — 2026-09-24, Task 43 (Phase 8, `bds-calendar-grid` keyboard traversal + picker integration)
+
+Audit scope: the keyboard surface wired by Task 40 in `bds-calendar-grid.tsx` (via `KeyboardController.setGridNavigation`), the `bdsMonthNavigate` cross-month path, and the picker-level integration (`@Listen('bdsMonthNavigate')`). The generic 2D-nav math is already proven in `utils/a11y/keyboard/__test__/navigation.spec.ts`; these rows cover the component-level integration, not the utility.
+
+### FM-78 | Arrow keys move real DOM focus cell-to-cell across the visible month through the wired grid utility
+
+- **ID:** FM-78
+- **Category:** component-contract-bypass
+- **Risk:** the component could wire the utility incorrectly (wrong `items` shape, stale cell refs, wrong root) so arrow keys move nothing or move to the wrong cell, even though the utility's own math is correct
+- **Input that reveals it:** render a deterministic month (February 2026, a Sunday-start month with no filler in the first four rows), focus day 1, dispatch ArrowRight/ArrowRight/ArrowDown/ArrowLeft/ArrowUp and inspect `document.activeElement` after each
+- **Observed current behavior:** `componentDidLoad` (`bds-calendar-grid.tsx:88-97`) wires `setGridNavigation({ items: () => this.getGridItems(), wrap: true, ... })`; `getGridItems` (`:242-246`) maps each cell to `null` for out-of-month/disabled cells and to its `<td>` ref otherwise
+- **Recommended contract:** ArrowRight/Left move one column, ArrowUp/Down one row, following the ARIA Grid pattern
+- **Contract status:** confirmed
+- **Why it matters:** this is Task 40's core acceptance criterion, and Task 43 exists specifically to assert it at the integration level rather than only via the generic utility's unit tests
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'moves DOM focus cell-to-cell with the arrow keys across the visible month'`, `bds-calendar-grid.keyboard.spec.ts::'keeps exactly one roving-tabindex stop on the focused cell after arrow traversal'`
+
+### FM-79 | Home/End move within the current row; Ctrl+Home/Ctrl+End jump to the grid start/end
+
+- **ID:** FM-79
+- **Category:** component-contract-bypass
+- **Risk:** the row-vs-grid distinction could be lost (e.g. Home jumping to the grid start), silently diverging from the agreed interaction model
+- **Input that reveals it:** focus a mid-row cell, press Home/End; then press Ctrl+Home/Ctrl+End and confirm the first/last enabled cell of the whole month
+- **Observed current behavior:** `setupGridNavigation` registers `Home`/`End` → `moveToEdge('row-start'|'row-end')` and `['control', Home|End]` → `moveToEdge('grid-start'|'grid-end')` (`grid-navigation.ts:228-231`)
+- **Recommended contract:** Home/End stay within the focused cell's row; Ctrl+Home/Ctrl+End target the first/last navigable cell of the grid
+- **Contract status:** confirmed
+- **Why it matters:** APG grid behavior; a regression here is invisible to the generic utility tests if the component passes a different modifier binding
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'moves focus to the current row start and end with Home and End'`, `bds-calendar-grid.keyboard.spec.ts::'moves focus to the grid start and end with Ctrl+Home and Ctrl+End'`
+
+### FM-80 | PageUp/PageDown emit `bdsMonthNavigate` with the rolled-over `{ year, month, direction }`, and the picker follows it
+
+- **ID:** FM-80
+- **Category:** boundary
+- **Risk:** PageUp/PageDown could no-op, emit the wrong direction, or emit a month that doesn't roll the year — and the picker's `@Listen('bdsMonthNavigate')` could fail to re-render the displayed month from a grid-originated event (only proven for the header nav buttons before this task)
+- **Input that reveals it:** dispatch PageUp/PageDown on a focused day cell in a February grid (year-roll boundary: December→January also exercised by the events spec); assert the emitted detail and, through the picker, the resulting live-region month text
+- **Observed current behavior:** `onPageUp: this.handlePrevClick` / `onPageDown: this.handleNextClick` (`bds-calendar-grid.tsx:94-95`) delegate to `subMonths`/`addMonths` (`:177-185`); `bds-date-picker.tsx:437-442` `@Listen('bdsMonthNavigate')` shifts the shared display anchor
+- **Recommended contract:** PageUp = previous month, PageDown = next month, both with correct year rollover; month-crossing is the sole cross-month traversal path (arrow keys never cross a month)
+- **Contract status:** confirmed
+- **Why it matters:** the picker-level path had no coverage from a grid-originated keyboard event — only from header-button clicks
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'emits bdsMonthNavigate with the previous month on PageUp'`, `bds-calendar-grid.keyboard.spec.ts::'emits bdsMonthNavigate with the next month on PageDown'`, `bds-date-picker.keyboard.spec.ts::'advances the displayed month when PageDown is pressed on a focused day cell'`, `bds-date-picker.keyboard.spec.ts::'moves the displayed month back when PageUp is pressed on a focused day cell'`
+
+### FM-81 | Disabled cells are never a keyboard focus stop
+
+- **ID:** FM-81
+- **Category:** component-contract-bypass
+- **Risk:** arrow traversal could land on or wrap through a disabled cell, letting a `min`/`max`-narrowed picker focus an unselectable day
+- **Input that reveals it:** a grid with `min` excluding the first nine days; assert the initial stop is the first enabled cell and that ArrowLeft from it wraps to the last enabled cell without ever setting `tabindex="0"` on a disabled cell
+- **Observed current behavior:** `getGridItems` (`bds-calendar-grid.tsx:242-246`) maps disabled cells to `null`, and `grid-navigation.ts`'s `getPositions`/`findRowWithCells` skip `null` entries natively
+- **Recommended contract:** disabled cells are excluded from focus stops and from wrap targets
+- **Contract status:** confirmed
+- **Why it matters:** Task 40's stated exclusion requirement; a regression would reintroduce focusable unselectable days
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'skips disabled cells so they are never a focus stop'`
+
+### FM-82 | Out-of-month filler cells are never a keyboard focus stop
+
+- **ID:** FM-82
+- **Category:** component-contract-bypass
+- **Risk:** a leading/trailing adjacent-month cell could become focusable, letting arrow traversal leave the visible month without a `bdsMonthNavigate`
+- **Input that reveals it:** an August 2026 grid (Saturday start, leading July filler); ArrowLeft from August 1 must land on the last in-month cell, never on July 31
+- **Observed current behavior:** `getGridItems` maps `!cell.isCurrentMonth` to `null` (`bds-calendar-grid.tsx:244`)
+- **Recommended contract:** out-of-month cells are excluded from focus stops and from wrap targets
+- **Contract status:** confirmed
+- **Why it matters:** Task 40's stated exclusion requirement; also asserted structurally in the a11y spec's roving-tabindex check
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'skips out-of-month filler cells so they are never a focus stop'`, `bds-calendar-grid.a11y.spec.ts::'exposes exactly one day cell as the roving-tabindex stop, keeping out-of-month cells untabbable'`
+
+### FM-83 | Wrap at row and grid edges (`wrap: true`)
+
+- **ID:** FM-83
+- **Category:** boundary
+- **Risk:** focus could be lost at a row end or grid edge, or `wrap: false` could be wired by mistake
+- **Input that reveals it:** February 2026 — ArrowRight at day 7 wraps to day 8; ArrowLeft at day 8 wraps to day 7; ArrowDown at day 28 wraps to day 7; ArrowUp at day 1 wraps to day 22
+- **Observed current behavior:** `setGridNavigation({ wrap: true })` (`bds-calendar-grid.tsx:91`); `move`'s wrap branches (`grid-navigation.ts:152-160`) and `findRowWithCells` wrap handling (`:62-77`)
+- **Recommended contract:** horizontal wrap crosses into the adjacent row's first/last enabled cell; vertical wrap cycles the first/last row
+- **Contract status:** confirmed
+- **Why it matters:** explicitly part of Task 40's acceptance ("ArrowLeft/Right/Up/Down cycle continuously within the visible month's enabled cells")
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'wraps focus from the end of a row to the start of the next row'`, `bds-calendar-grid.keyboard.spec.ts::'wraps focus from the start of a row to the end of the previous row'`, `bds-calendar-grid.keyboard.spec.ts::'wraps focus vertically from the last row to the first row and back'`
+
+### FM-84 | Initial roving-tabindex stop priority: today, then first enabled cell
+
+- **ID:** FM-84
+- **Category:** equivalence
+- **Risk:** Tab into the grid could land on a disabled cell, an out-of-month cell, or no cell at all when no selection exists
+- **Input that reveals it:** a grid whose `now` falls in-month (stop = today, carrying `aria-current="date"`); a grid whose `now` falls outside the month (stop = first enabled cell)
+- **Observed current behavior:** `getPriorityFocusCell` (`bds-calendar-grid.tsx:265-273`) and `getInitialActiveSelector` (`:248-263`) resolve today via `[aria-current="date"]`, falling back to `positions[0]`
+- **Recommended contract:** no-selection initial stop is today when visible, otherwise the first enabled in-month cell (never a disabled cell — see FM-90)
+- **Contract status:** confirmed
+- **Why it matters:** establishes where keyboard focus enters the grid on first Tab
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'starts on today when no date is selected'`, `bds-calendar-grid.keyboard.spec.ts::'starts on the first enabled cell when neither a selection nor today falls in the month'`
+
+### FM-85 | BUG (handoff): the selected-date initial tabbable cell is never selected — `aria-selected` renders as `""`, not `"true"`
+
+- **ID:** FM-85
+- **Category:** component-contract-bypass
+- **Risk:** Task 40's stated priority ("selected date → today → first enabled") is silently broken for the selected case. `getInitialActiveSelector()` returns `'[aria-selected="true"]'`, but `renderDayCell` writes `aria-selected={cell.isCurrentMonth && cell.isoDate === this.selectedDate}` (`bds-calendar-grid.tsx:306`); Stencil's `setAccessor` maps a boolean `true` to an **empty-string** attribute (`internal/client/index.js`: `newValue === true ? "" : newValue`). `Element.matches('[aria-selected="true"]')` therefore never matches an `aria-selected=""` cell, so `setupGridNavigation` falls back to `positions[0]` and Tab lands on the first cell of the month, not the selected date. The empty value is also invalid ARIA state (should be `"true"`/`"false"`), so AT never receives a valid selected state.
+- **Input that reveals it:** render a grid with `selectedDate='2026-02-15'` and no `now` in-month; the single `tabindex="0"` cell is February 1, not February 15. (Observed during Task 43; the same empty value is visible in `bds-calendar-grid.a11y.spec.ts`'s `aria-selected` fixture.)
+- **Observed current behavior:** `getInitialActiveSelector` (`bds-calendar-grid.tsx:248-263`) returns `'[aria-selected="true"]'`; `setupGridNavigation` (`grid-navigation.ts:243-247`) finds no match and uses `positions[0]`
+- **Recommended contract:** the selected date receives the initial roving-tabindex stop when present, ahead of today and first-enabled; `aria-selected` is emitted as the string `"true"` (matching this codebase's `aria-disabled`/`aria-current` convention and the `String(...)` pattern in `bds-tab.tsx`)
+- **Contract status:** confirmed
+- **Why it matters:** a real, user-reachable a11y defect (Tab enters the grid on the wrong day; invalid ARIA state), found while writing Task 43's initial-stop coverage. Per the failure-mode workflow this is a `frontend-subagent` fix, not a testing change; the test is deferred until the corrected behavior lands (same precedent as FM-03).
+- **Covered by:** not yet — deferred pending the `bds-calendar-grid.tsx` fix. The passing `today`/`first-enabled` halves of the priority are covered by FM-84; the selected half is covered indirectly via the month-change re-render path in `bds-calendar-grid.keyboard.spec.ts::'moves the roving-tabindex stop to the selected date when the displayed month changes'` and `'prefers the selected date over today when both fall in the displayed month'`.
+
+### FM-86 | BUG (handoff): a prop-only re-render leaves two `tabindex="0"` cells, breaking the single-roving-stop invariant
+
+- **ID:** FM-86
+- **Category:** race-timing
+- **Risk:** the roving-tabindex invariant (exactly one tabbable cell) is violated whenever the grid re-renders without its `grid` prop changing — e.g. a `selectedDate` change after a day click, or a hover-preview change. `componentDidUpdate` (`bds-calendar-grid.tsx:99-115`) calls `markTabbableCell(getPriorityFocusCell())` on the `targetDay == null` branch, but `markTabbableCell` (`:275-281`) only sets `tabindex="0"` on the target and never demotes the previously-tabbable cell. On a `grid`-prop change the cells remount (fresh `tabindex="-1"`), masking the issue; on a prop-only re-render the cells are keyed by `isoDate` and reused, and Stencil skips the unchanged `tabIndex={-1}` vdom write, so the old stop keeps `tabindex="0"` and a second one is added. Task 40's `componentDidUpdate` fix introduced this path.
+- **Input that reveals it:** render February 2026 with no selection (stop = Feb 1), then set `element.selectedDate = '2026-02-15'` and `waitForChanges()`; both Feb 1 and Feb 15 carry `tabindex="0"`.
+- **Observed current behavior:** observed during Task 43 — `[tabbable texts] = ['1','15']` after the prop-only re-render
+- **Recommended contract:** exactly one `tabindex="0"` cell at all times; a passive re-mark must demote every other cell (or route through `KeyboardController.rovingTabindex`)
+- **Contract status:** confirmed (the single-stop invariant is already asserted by `bds-calendar-grid.basics.spec.ts::'renders exactly one day cell as the roving tabindex stop, all others untabbable'`)
+- **Why it matters:** a real regression from Task 40 that makes Tab visit two day cells; also invalidates the roving-tabindex model. `frontend-subagent` fix; test deferred until corrected (FM-03 precedent).
+- **Covered by:** not yet — deferred pending the `bds-calendar-grid.tsx` fix. The invariant is only asserted on the initial render today (`bds-calendar-grid.basics.spec.ts`, FM-84/FM-88).
+
+### FM-87 | Enter/Space on the focused cell activate it, emitting `bdsDayClick`
+
+- **ID:** FM-87
+- **Category:** component-contract-bypass
+- **Risk:** `onActivate` could be unwired or resolve the wrong cell, so keyboard users cannot select a day even though mouse clicks work
+- **Input that reveals it:** focus a day cell, press Enter then Space; both emit `bdsDayClick` with the focused cell's ISO date
+- **Observed current behavior:** `onActivate: this.handleActivate` (`bds-calendar-grid.tsx:93`) → `findFocusedIsoDate` → `handleDayClick` (`:121-131`); `activateKeys` defaults to `[Enter, Space]`
+- **Recommended contract:** Enter and Space both activate the focused day cell via the same click path
+- **Contract status:** confirmed (ARIA Grid activation pattern, referenced by Task 40's "agreed interaction model")
+- **Why it matters:** activation was previously only proven for mouse clicks (`bds-calendar-grid.events.spec.ts`), leaving `handleActivate` uncovered
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'activates the focused cell with Enter and Space, emitting bdsDayClick'`
+
+### FM-88 | Roving-tabindex state is re-established after the displayed month changes (Task 40's `@Watch`/`componentDidUpdate`)
+
+- **ID:** FM-88
+- **Category:** race-timing
+- **Risk:** a full month re-render remounts every `<td>` with `tabindex="-1"`, so without re-establishment the grid would permanently lose Tab-reachability after any mouse-driven month navigation (the exact gap Task 40 fixed)
+- **Input that reveals it:** render February 2026, replace `grid` with March 2026; assert exactly one `tabindex="0"` and that a focused day-of-month is retained across the change
+- **Observed current behavior:** `@Watch('grid') handleGridChange` (`bds-calendar-grid.tsx:62-68`) captures the focused day-of-month and clears `_cellRefs`; `componentDidUpdate` (`:99-115`) re-establishes via `focusCell`/`markTabbableCell`
+- **Recommended contract:** exactly one tabbable cell after a month change; when a cell was focused, focus follows the same day-of-month
+- **Contract status:** confirmed
+- **Why it matters:** protects Task 40's non-obvious fix, which had no unit coverage before this task
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'re-establishes a single roving-tabindex stop after the displayed month changes'`, `bds-calendar-grid.keyboard.spec.ts::'keeps focus on the same day of month after the displayed month changes'`
+
+### FM-89 | Two grid instances keep independent focus and roving-tabindex state
+
+- **ID:** FM-89
+- **Category:** equivalence
+- **Risk:** shared module-level focus state (or a mis-scoped controller) could let traversal in one `expanded`-mode grid move the other grid's focus stop
+- **Input that reveals it:** render two grids in one spec page, arrow in the first, assert the second's single tabbable cell is unchanged
+- **Observed current behavior:** each `BdsCalendarGrid` instance owns its own `_keyboard` controller and `_cellRefs` map (`bds-calendar-grid.tsx:35-36`)
+- **Recommended contract:** per-instance keyboard/focus state; no cross-instance leakage
+- **Contract status:** confirmed
+- **Why it matters:** Task 40's "works for both single and dual grid instances" acceptance criterion
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'keeps focus state independent between two grid instances'`
+
+### FM-90 | BUG (fixed): a disabled "today" cell is chosen as the initial roving-tabindex stop when today falls outside `min`/`max`
+
+- **ID:** FM-90
+- **Category:** component-contract-bypass
+- **Risk:** with a narrow `min`/`max` window that excludes today, `getPriorityFocusCell` returned the in-month "today" cell without checking `isDisabled`, so `markTabbableCell` set `tabindex="0"` on a disabled cell. Because `getGridItems` excludes disabled cells (maps them to `null`), `isNonCellFocusWithinRoot` then classified that focused cell as "non-cell focus" and `move()` early-returned — arrow-key traversal became a complete no-op from the initial stop.
+- **Input that reveals it:** September 2026 with `min=2026-09-10`, `max=2026-09-20`, `now=2026-09-24` (today disabled). Initial stop must be Sep 10 (first enabled), never Sep 24, and arrow keys must traverse. Requires a re-render after mount (the defect fires from `componentDidUpdate` → `markTabbableCell`, which does not run on initial mount).
+- **Observed current behavior (fixed 2026-09-24):** `getPriorityFocusCell` (`bds-calendar-grid.tsx:265-273`) now requires `!cell.isDisabled` on both the selected-date and today branches.
+- **Recommended contract:** the initial roving-tabindex stop is the selected date, else today, else the first enabled in-month cell — always an enabled, in-month cell; a disabled cell is never a focus stop (refines FM-84).
+- **Contract status:** confirmed
+- **Why it matters:** found live during Task 45's manual QA on the raw web component (and React/Vue/WebKit); a real keyboard-reachability defect for any picker whose `min`/`max` excludes today. Fixed as Task 40e.
+- **Covered by:** `bds-calendar-grid.keyboard.spec.ts::'anchors to the first enabled cell, not a disabled today, after a re-render when today falls outside min/max'`, `bds-calendar-grid.keyboard.spec.ts::'does not anchor to a disabled selected date after a re-render'`
+
+## Reconciliation against Task 43's stated unit-test list
+
+Task 43's stated list — grid-level full key traversal (arrows/Home/End), boundary crossing via PageUp/PageDown → `bdsMonthNavigate`, disabled/out-of-month cells excluded from focus stops, wrap, dual-grid independence — maps onto FM-78 through FM-84, FM-87, FM-88, and FM-89. The audit additionally surfaced FM-85 and FM-86 (two real defects) and FM-87 (uncovered activation), which the plan's list did not call out.
+
+## Pending-decision rows requiring a ruling before any test is written for them
+
+None. FM-85 and FM-86 are `confirmed`-contract rows whose tests are deferred pending a `frontend-subagent` fix — not open contract questions. FM-78 through FM-84 and FM-87 through FM-89 are `confirmed` and carry a `Covered by` entry.
+
+## Phase 9 — month/year quick-picker (EOA-17662 Task 50)
+
+Audit source: `bds-calendar-grid.tsx` (internal `view`/`pickerYear` state, picker render/cell methods, paging, year-window focus), `grid-navigation.ts` (`onActivate` wrapper), `renderCalendarPanel.tsx` (per-instance `onBdsMonthNavigate`), `bds-date-picker.tsx` (`resetCalendarViews` call sites, slot-aware anchor). All rows below are `confirmed` (Task 46's model is the contract; the implementation matches it).
+
+### FM-91 | Activating the header month/year label opens the month view
+
+- **ID:** FM-91
+- **Category:** component-contract-bypass
+- **Risk:** the label is the only entry point into the quick-picker; if it stayed inert text or opened the wrong level, the whole month/year feature would be unreachable
+- **Input that reveals it:** click (or Enter/Space on) `.bds-calendar-grid__header .bds-calendar-grid__label-button`
+- **Observed current behavior:** `handleLabelClick` (`bds-calendar-grid.tsx:268-272`) sets `pickerYear = this.year`, announces `'Month view'`, sets `view = 'months'`; the label renders as a native `<button>` with `aria-label="{Month} {YYYY}, choose month"` (`:789-796`)
+- **Recommended contract:** activating the label opens the month picker overlay, scoped to the displayed year, with exactly one 12-cell grid
+- **Contract status:** confirmed
+- **Why it matters:** Task 46 decision 7 / Task 48's primary entry point
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'opens the month picker when the header month/year label is activated'`, `bds-calendar-grid.quickpicker.spec.ts::'opens the month picker exactly once from Enter on the focused header label'`, `bds-calendar-grid.quickpicker.spec.ts::'opens the month picker exactly once from Space on the focused header label'`, `bds-calendar-grid.quickpicker.spec.ts::'renders the header month/year label as a button with a choose-month accessible name'`
+
+### FM-92 | A month activation returns to the day view and emits the absolute `bdsMonthNavigate` target
+
+- **ID:** FM-92
+- **Category:** component-contract-bypass
+- **Risk:** a quick-picker month jump must reach the orchestrator as an absolute `{year, month}` (not a ±1 step), or arbitrary year jumps silently fail (GB)
+- **Input that reveals it:** open month view, activate a month cell by click, Enter, or Space
+- **Observed current behavior:** `handleMonthCellClick` (`bds-calendar-grid.tsx:293-301`) emits `{ year: this.pickerYear, month: cell.month, direction }` then sets `view = 'days'`
+- **Recommended contract:** exactly one `bdsMonthNavigate` carrying `pickerYear`/`cell.month`; day view returns
+- **Contract status:** confirmed
+- **Why it matters:** Task 48 GB; keyboard activation routes through `handleMonthActivate` (`:274-291`)
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated'`, `bds-calendar-grid.quickpicker.spec.ts::'selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view'`, `bds-calendar-grid.quickpicker.spec.ts::'selects the focused month cell with Space, emitting bdsMonthNavigate'`
+
+### FM-93 | The year control opens the year view; a year activation returns to the month view, not the day view
+
+- **ID:** FM-93
+- **Category:** component-contract-bypass
+- **Risk:** drilling straight from year to day would skip the month level and break Task 46 decision 1's confirmed drill-down model
+- **Input that reveals it:** activate the picker's year button, then activate a year cell
+- **Observed current behavior:** `handleYearButtonClick` (`:379-382`) sets `view = 'years'`; `handleYearCellClick` (`:384-392`) sets `pickerYear = cell.year` and `view = 'months'`
+- **Recommended contract:** year button → year view; year cell → month view for that year
+- **Contract status:** confirmed
+- **Why it matters:** Task 46 decision 1; shared by click and keyboard (`handleYearActivate`, `:365-377`)
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'opens the year picker from the month view year control without leaving the overlay'`, `bds-calendar-grid.quickpicker.spec.ts::'returns to the month picker for the chosen year when a year is activated, not the day grid'`, `bds-calendar-grid.quickpicker.spec.ts::'selects the focused year cell with Enter, returning to the month view for that year'`
+
+### FM-94 | Month/year pickers render as `role="grid"` tables of `row`/`gridcell` cells
+
+- **ID:** FM-94
+- **Category:** component-contract-bypass
+- **Risk:** a `<div>`/`<button>` structure would break ARIA-grid addressing and the shared `setupGridNavigation` integration (Task 48a)
+- **Input that reveals it:** open either picker and inspect the table structure
+- **Observed current behavior:** `renderMonthPicker`/`renderYearPicker` (`:822-844`, `:922-939`) emit `<table role="grid">` › `<tbody>` › `<tr role="row">` › `<td role="gridcell">` chunked by `PICKER_COLUMNS`
+- **Recommended contract:** `role="grid"` table, 4 rows of 3 `gridcell` cells (12 total)
+- **Contract status:** confirmed
+- **Why it matters:** Task 48a rewrote the picker onto the day grid's structural pattern so Task 48e could reuse its navigation
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'renders the month picker as a role="grid" table of row/gridcell cells'`, `bds-calendar-grid.quickpicker.spec.ts::'renders the year picker as a role="grid" table of row/gridcell cells'`
+
+### FM-95 | The day grid stays mounted but `aria-hidden`/`inert`/dimmed while a picker is open, and is restored on return
+
+- **ID:** FM-95
+- **Category:** component-contract-bypass
+- **Risk:** the overlay approach (Task 48b) needs the day grid excluded from the tab order and assistive tech while covered, then fully restored — a stale `inert` would make the calendar permanently unreachable
+- **Input that reveals it:** open a picker, inspect the day `<table>` and outer header; Escape back to day view
+- **Observed current behavior:** `render()` (`:967-996`) applies `aria-hidden`/`inert`/`--dimmed` to the day `<table>` and header when `view !== 'days'`; `renderHeader` (`:776-802`) applies the same to the header
+- **Recommended contract:** day grid + header carry `aria-hidden="true"`, `inert`, and the `--dimmed` class only while a picker view is active; all cleared on return
+- **Contract status:** confirmed
+- **Why it matters:** Task 48b/48c; the day grid is not removed from the DOM, so visibility must be attribute-driven
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'keeps the day grid mounted but hidden from assistive tech and the tab order while a picker view is open'`, `bds-calendar-grid.quickpicker.spec.ts::'restores the day grid and outer header to their interactive state on returning to the day view'`
+
+### FM-96 | The picker has its own nested header while the outer header keeps reflecting `this.year`/`this.month`
+
+- **ID:** FM-96
+- **Category:** component-contract-bypass
+- **Risk:** swapping the outer header for the picker's nav header (Task 48's original shape) lost the day-grid context; the picker's controls also need the same `min`/`max` fully-disabled guards
+- **Input that reveals it:** open a picker; step its inner prev/next controls; inspect the outer label
+- **Observed current behavior:** `renderHeader` (`:776-802`) is `view`-independent and reflects `this.year`/`this.month`; `renderMonthPickerHeader` (`:846-868`) and `renderYearPickerHeader` (`:941-965`) render inside the card, gated by `isPickerYearFullyDisabled`/`isYearWindowFullyDisabled`
+- **Recommended contract:** outer header unchanged by `view`; picker header nested in the card; its controls step identically to pre-relocation logic including full-disabled no-ops
+- **Contract status:** confirmed
+- **Why it matters:** Task 48c relocated the picker nav; this protects the relocation
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'keeps the outer header reflecting the displayed year/month and gives the picker its own year header'`, `bds-calendar-grid.quickpicker.spec.ts::'steps the picker year from its own header without changing the outer header'`, `bds-calendar-grid.quickpicker.spec.ts::'steps the year picker window by a decade from its own header'`, `bds-calendar-grid.quickpicker.spec.ts::'disables a picker year control when its target year is fully outside min/max'`, `bds-calendar-grid.quickpicker.spec.ts::'no-ops a picker year step when its target year is fully outside min/max'`
+
+### FM-97 | `--selected` follows `selectedDate`'s month/year, not the displayed picker year
+
+- **ID:** FM-97
+- **Category:** equivalence
+- **Risk:** highlighting the browsed-to month/year instead of the real selection would show a false selection whenever the two diverge; a cross-year selection must show no highlight, matching day-cell behavior
+- **Input that reveals it:** open the month/year picker with `selectedDate` in the displayed year, then in a different year
+- **Observed current behavior:** `isMonthCellSelected`/`isYearCellSelected` (`:641-646`, `:652-654`) compare against `selectedYear`/`selectedMonth` (sliced from `this.selectedDate`) AND require `pickerYear` to match the displayed grid; `monthCellClassMap`/`yearCellClassMap` set `--selected` and `renderMonthCell`/`renderYearCell` set `aria-selected`
+- **Recommended contract:** exactly one flagged cell matching `selectedDate` in the displayed year; none cross-year; `aria-selected="true"` accompanies the class
+- **Contract status:** confirmed
+- **Why it matters:** Task 48d semantics confirmed with the user ("selection-based, not display-position-based")
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'flags the selected date month with --selected and aria-selected, and no other month'`, `bds-calendar-grid.quickpicker.spec.ts::'flags no month when the selected date falls in a different year than the displayed picker'`, `bds-calendar-grid.quickpicker.spec.ts::'flags the selected date year with aria-selected in the year picker'`
+
+### FM-98 | Range mode flags either boundary's month/year independently, with no spanning treatment
+
+- **ID:** FM-98
+- **Category:** equivalence
+- **Risk:** range pickers have `draft.selectedDate === null` for their lifetime; without a range-aware path the picker would never show any selection, and inventing an in-range span would have no Figma source
+- **Input that reveals it:** open the picker with `rangeStart`/`rangeEnd` set (same year, and cross-year), and with neither set
+- **Observed current behavior:** `isMonthCellSelected`/`isYearCellSelected` also match `rangeStartYear/Month` and `rangeEndYear/Month` independently (`:641-654`), each also requiring the displayed `pickerYear` to match
+- **Recommended contract:** both boundaries flagged independently (one cell if same month), no span between them, no highlight cross-year, no false positive when unset
+- **Contract status:** confirmed
+- **Why it matters:** Task 48g confirmed with the user — two independent boundary flags, no spanning visual
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'flags both range boundary months independently with no spanning highlight'`, `bds-calendar-grid.quickpicker.spec.ts::'flags no month when neither a selected date nor range boundaries are set'`, `bds-calendar-grid.quickpicker.spec.ts::'flags both range boundary years independently in the year picker'`
+
+### FM-99 | Enter/Space selects the focused month/year cell, routed per view; disabled cells are inert
+
+- **ID:** FM-99
+- **Category:** component-contract-bypass
+- **Risk:** without the shared `setupGridNavigation` `onActivate` wiring, keyboard users could traverse a picker but never select from it; activating no cell (or a disabled one) must be a safe no-op
+- **Input that reveals it:** focus a month/year cell and press Enter/Space; repeat with a disabled cell and with no cell focused
+- **Observed current behavior:** `handleActivate` (`:189-201`) branches on `view`; `handleMonthActivate`/`handleYearActivate` resolve the focused cell from `_pickerCellRefs` (returning when none) and delegate to `handleMonthCellClick`/`handleYearCellClick` (which no-op when `isDisabled`)
+- **Recommended contract:** Enter/Space on an enabled focused cell activates it; disabled or unfocused activation is a no-op
+- **Contract status:** confirmed
+- **Why it matters:** Task 48e keyboard/ARIA scope
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view'`, `bds-calendar-grid.quickpicker.spec.ts::'selects the focused month cell with Space, emitting bdsMonthNavigate'`, `bds-calendar-grid.quickpicker.spec.ts::'selects the focused year cell with Enter, returning to the month view for that year'`, `bds-calendar-grid.quickpicker.spec.ts::'ignores keyboard activation of a disabled year cell'`, `bds-calendar-grid.quickpicker.spec.ts::'ignores activation in the month view when no picker cell holds focus'`, `bds-calendar-grid.quickpicker.spec.ts::'ignores activation in the year view when no picker cell holds focus'`, `bds-calendar-grid.quickpicker.spec.ts::'ignores day-view activation when no day cell is focused'`
+
+### FM-100 | Arrow/Home/End traverse the picker grids with exactly one roving-tabindex stop
+
+- **ID:** FM-100
+- **Category:** race-timing
+- **Risk:** a second tabbable cell would break Tab entry into the grid; wrong cell addressing would make traversal skip or wrap incorrectly
+- **Input that reveals it:** in month view arrow Right/Down; in year view Home/End/Ctrl+Home/Ctrl+End
+- **Observed current behavior:** `getGridItems` (`:555-565`) branches per `view` to `getMonthPickerGridItems`/`getYearPickerGridItems`, chunked to `PICKER_COLUMNS`; `setupGridNavigation` applies roving tabindex
+- **Recommended contract:** arrow/Home/End move focus cell-to-cell with exactly one `tabindex="0"`
+- **Contract status:** confirmed
+- **Why it matters:** Task 48e reuses Task 40's integration rather than re-deriving grid semantics
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'traverses month cells with the arrow keys keeping exactly one roving-tabindex stop'`, `bds-calendar-grid.quickpicker.spec.ts::'moves within the current year row and to the window edges with Home/End'`
+
+### FM-101 | Escape from a picker view returns to the day view without closing the popover
+
+- **ID:** FM-101
+- **Category:** component-contract-bypass
+- **Risk:** two independent Escape handlers (grid + outer `bds-popover`) racing for one keystroke; a picker Escape must not also close the whole popover
+- **Input that reveals it:** open a picker, press Escape; then press Escape again from the day view
+- **Observed current behavior:** `handleGridEscape` (`:245-252`) `stopPropagation()`s and returns to day view only when `view !== 'days'`; from day view it returns without stopping, letting the outer popover's Escape close it
+- **Recommended contract:** first Escape returns to day view with the popover open; second Escape closes the popover
+- **Contract status:** confirmed
+- **Why it matters:** Task 46 decision 5 / Task 48e
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'returns to the day view on Escape without emitting a navigation event'`, `bds-calendar-grid.quickpicker.spec.ts::'does not leave the day view or emit navigation on Escape from the day view'`, `bds-date-picker.quickpicker.spec.ts::'returns from the picker overlay to the day view on Escape without closing the popover, then closes it on a second Escape'`
+
+### FM-102 | A backdrop click dismisses the overlay but a click inside the card does not
+
+- **ID:** FM-102
+- **Category:** component-contract-bypass
+- **Risk:** using `event.target !== event.currentTarget` in reverse would dismiss on every inside-card interaction (or never dismiss)
+- **Input that reveals it:** click `.bds-calendar-grid__picker-overlay` directly vs. click a descendant card element
+- **Observed current behavior:** `handlePickerOverlayClick` (`:344-350`) returns unless `event.target === event.currentTarget`
+- **Recommended contract:** only a click landing on the backdrop itself returns to day view
+- **Contract status:** confirmed
+- **Why it matters:** folded-in Task 48e scope (mouse-equivalent of Escape)
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'dismisses on a backdrop click but not on a click originating inside the picker card'`
+
+### FM-103 | The local live region announces each view transition once, with no duplicate on selection
+
+- **ID:** FM-103
+- **Category:** race-timing
+- **Risk:** a selection-driven return that re-announces would double-speak; a missing announcement would leave screen-reader users unaware of the view change
+- **Input that reveals it:** open month view, open year view, Escape back; separately pick a month
+- **Observed current behavior:** `pickerAnnouncement` is written on `handleLabelClick` (`'Month view'`), `handleYearButtonClick` (`'Year view, {start}–{end}'`), `handleYearCellClick` (`'Month view'`), and `returnToDayView` (`getMonthYearLabel(...)`); `handleMonthCellClick` leaves it untouched so a selection return does not re-announce
+- **Recommended contract:** exactly one announcement per transition; no extra entry on selection-driven return
+- **Contract status:** confirmed
+- **Why it matters:** Task 48e's accepted local-live-region deviation
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'announces each view transition once through the local live region'`, `bds-calendar-grid.quickpicker.spec.ts::'does not re-announce through the local live region on a selection-driven return to the day view'`
+
+### FM-104 | PageUp/PageDown route per view and no-op when the target is fully outside `min`/`max`
+
+- **ID:** FM-104
+- **Category:** boundary
+- **Risk:** the pre-48i guard made PageUp/PageDown dead inside a picker; routing them to the wrong handler (or letting them page the hidden day grid) would silently navigate the wrong context
+- **Input that reveals it:** PageUp/PageDown in day, month, and year views; repeat against a bounded picker whose adjacent year/window is fully out of range
+- **Observed current behavior:** `handlePageDown`/`handlePageUp` (`:308-334`) route day → `handleNextClick`/`handlePrevClick`, months → `handlePickerNextYear`/`PrevYear` (guarded by `isPickerYearFullyDisabled`), years → `handleYearWindowNext`/`Prev` (guarded by `isYearWindowFullyDisabled`)
+- **Recommended contract:** day pages month + emits `bdsMonthNavigate`; month view pages ±1 year; year view pages ±10; fully-out-of-bound targets no-op; picker paging emits no `bdsMonthNavigate`
+- **Contract status:** confirmed
+- **Why it matters:** Task 48i parity completion
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'pages the day grid by month with PageUp and PageDown, emitting bdsMonthNavigate'`, `bds-calendar-grid.quickpicker.spec.ts::'pages the month picker by year with PageUp and PageDown'`, `bds-calendar-grid.quickpicker.spec.ts::'pages the year picker window by a decade with PageUp and PageDown'`, `bds-calendar-grid.quickpicker.spec.ts::'does not emit bdsMonthNavigate from picker paging'`, `bds-calendar-grid.quickpicker.spec.ts::'no-ops paging the month picker when the target year is entirely outside min/max'`, `bds-calendar-grid.quickpicker.spec.ts::'no-ops paging the year picker window when the target window is entirely outside min/max'`
+
+### FM-105 | A year-window shift keeps DOM focus on a year cell, never `<body>`
+
+- **ID:** FM-105
+- **Category:** race-timing
+- **Risk:** year cells are keyed by year, so a ±10 shift remounts them and DOM focus would fall to `<body>`, making a second consecutive PageUp/PageDown a no-op
+- **Input that reveals it:** focus a year cell, shift the window via PageUp/PageDown or the header controls; press again; repeat where the equivalent year is disabled
+- **Observed current behavior:** `@Watch('pickerYear') handlePickerYearChange` (`:104-114`) captures the focused year and delta before the patch; `componentDidUpdate` (`:177-182`) consumes it via `focusYearWindowCell` (`:541-547`) — same-relative-position preferred, else `getPriorityYearCell`
+- **Recommended contract:** after a shift, focus lands on the same-relative-position enabled year, else the priority cell, never `<body>`; two consecutive presses both take effect
+- **Contract status:** confirmed
+- **Why it matters:** Task 48j
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'keeps real focus on the equivalent year cell after a year-window shift'`, `bds-calendar-grid.quickpicker.spec.ts::'applies two consecutive year-window shifts'`, `bds-calendar-grid.quickpicker.spec.ts::'falls back to the priority enabled year cell when the equivalent year is out of range'`, `bds-calendar-grid.quickpicker.spec.ts::'falls back to a priority year cell when the window shifts with no picker cell focused'`, `bds-calendar-grid.quickpicker.spec.ts::'falls back to a priority year cell when a non-cell element holds focus during a window shift'`
+
+### FM-106 | Two `bds-calendar-grid` instances keep independent `view` state
+
+- **ID:** FM-106
+- **Category:** equivalence
+- **Risk:** a shared/module-level `view` would make `expanded`-mode grids drill together, breaking the "both calendars always show subsequent months" invariant (Task 46 decision 6)
+- **Input that reveals it:** render two grids, open the first's month view
+- **Observed current behavior:** `view`/`pickerYear` are per-instance `@State` (`:54-58`)
+- **Recommended contract:** opening one grid's picker leaves the other's `view` at `'days'`
+- **Contract status:** confirmed
+- **Why it matters:** Task 46 decision 6 / Task 48 dual-instance requirement
+- **Covered by:** `bds-calendar-grid.quickpicker.spec.ts::'keeps the view state independent between two grid instances'`
+
+### FM-107 | `resetCalendarViews()` returns any open quick-picker to the day view on preset, Clear, cross-grid day-pick, and month/year navigation
+
+- **ID:** FM-107
+- **Category:** race-timing
+- **Risk:** an open picker left floating over changed state is stale and disorienting; in `expanded` mode it can strand the *other* grid's picker
+- **Input that reveals it:** open a picker, then click a preset / Clear / a day on the other grid / complete a month-year navigation
+- **Observed current behavior:** `resetCalendarViews` (`bds-date-picker.tsx:803-807`) calls `resetView()` on every grid; invoked from `handlePresetClick` (`:566`), the footer `CLEAN` case (`:523`), `handleDayClick` (`:409`), and `handleMonthNavigate` (`:547`)
+- **Recommended contract:** every open grid picker returns to `view === 'days'` after any of the four triggers
+- **Contract status:** confirmed
+- **Why it matters:** Task 48f (three call sites) + Task 48h (the fourth)
+- **Covered by:** `bds-date-picker.quickpicker.spec.ts::'returns an open quick-picker to the day view when a sidebar preset is clicked'`, `bds-date-picker.quickpicker.spec.ts::'returns an open quick-picker to the day view when the footer Clear action runs'`, `bds-date-picker.quickpicker.spec.ts::"returns the other grid's open quick-picker to the day view when a day is picked on the other grid"`, `bds-date-picker.quickpicker.spec.ts::"returns both grids' open quick-pickers to the day view when a month navigation completes"`, `bds-date-picker.quickpicker.spec.ts::'returns an open quick-picker to the day view when the footer Clear action runs on a single-date picker'`, `bds-date-picker.quickpicker.spec.ts::'returns an open quick-picker to the day view when a day is picked on a single-date picker'`
+
+### FM-108 | The picked month lands in the calendar the user actually clicked (slot-aware anchor)
+
+- **ID:** FM-108
+- **Category:** boundary
+- **Risk:** with a host-level listener the orchestrator cannot tell which grid emitted the navigation; a secondary-grid pick would anchor the wrong calendar (GC)
+- **Input that reveals it:** `expanded`+range, pick a month from the right (secondary) grid's month view
+- **Observed current behavior:** `renderCalendarPanel` binds a per-instance `onBdsMonthNavigate` (`renderCalendarPanel.tsx:65`) closing over the slot; `handleMonthNavigate` (`bds-date-picker.tsx:542-548`) sets the anchor to the picked month for primary, picked − 1 for secondary
+- **Recommended contract:** primary pick → that grid shows the picked month (secondary = picked + 1); secondary pick → left = picked − 1, right = picked
+- **Contract status:** confirmed
+- **Why it matters:** Task 48 GC / C2, confirmed with the user
+- **Covered by:** `bds-date-picker.quickpicker.spec.ts::'anchors the primary grid at the picked month, with the secondary showing the following month'`, `bds-date-picker.quickpicker.spec.ts::'anchors the secondary grid one month before the picked month, with the secondary showing the picked month'`
+
+### FM-109 | The `grid-navigation.ts` `onActivate` wrapper re-triggers native activation exactly once for non-cell focus
+
+- **ID:** FM-109
+- **Category:** component-contract-bypass
+- **Risk:** `KeyboardController._dispatchKeyEvent` calls `preventDefault()` for any matching binding before the handler runs, so a header/label `<button>` focused inside the grid root would never receive its native Enter/Space activation — the quick-picker's only keyboard entry point would be dead. Calling `.click()` more than once would double-open
+- **Input that reveals it:** focus a non-cell descendant of the grid root (e.g. the header label), then Enter/Space
+- **Observed current behavior:** `grid-navigation.ts:233-243` — when `isNonCellFocusWithinRoot(resolveItems(), ctrl.root)` is true, it calls `document.activeElement.click()` once and returns without invoking `onActivate`; otherwise `onActivate` runs normally
+- **Recommended contract:** non-cell focus → native activation exactly once, `onActivate` skipped; cell focus → `onActivate` runs, no synthetic native activation
+- **Contract status:** confirmed
+- **Why it matters:** the shared-utility fix for the Task 48e keyboard-open bug, applying to every grid consumer
+- **Covered by:** `src/utils/a11y/keyboard/__test__/navigation.spec.ts::'re-triggers native activation once and skips onActivate when a non-cell element inside the root has focus'`, `src/utils/a11y/keyboard/__test__/navigation.spec.ts::'runs onActivate on a focused grid cell without re-triggering its native activation'`, `bds-calendar-grid.quickpicker.spec.ts::'opens the month picker exactly once from Enter on the focused header label'`
+
+## Reconciliation against Task 50's stated unit-test list
+
+Task 50's list — view-switch/selection transitions, dual-instance independence, the Task 48a table markup, Task 48b overlay, Task 48c nested header, Task 48d/48g `--selected`, Task 48e keyboard/ARIA (label activation, arrow/Home/End traversal, Escape, backdrop dismissal, live-region), Task 48f/48h resets, Task 48i paging, Task 48j year-window focus, and the `grid-navigation.ts` `onActivate` guard — maps onto FM-91 through FM-109. The audit found no plan item resting on an unsettled contract, and no additional uncovered failure mode beyond the rows above.
+
+**Deliberately left uncovered (with reason):** Task 48d's "active-ring consistency" criterion is CSS-only (`:active` outer-ring parity with day cells). `newSpecPage` never loads or evaluates stylesheets (no CSSOM), so this is not Jest-assertable; the DOM-observable half (`--selected` class + `aria-selected`) is covered by FM-97/FM-98 and the ring parity itself was verified live by `@qa-subagent` (Task 48d). The plan's own note says month/year cells carry no persisted-selection state distinct from `isCurrentMonth`/`isCurrentYear`, so no `aria-selected` is expected on the *current* (unselected) cell.
+
+## Pending-decision rows requiring a ruling before any test is written for them
+
+None. FM-91 through FM-109 are all `confirmed` and carry a `Covered by` entry; FM-85/FM-86 remain deferred pending their `frontend-subagent` fix (unchanged from the Task 43 section above).
