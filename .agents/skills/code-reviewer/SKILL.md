@@ -86,10 +86,12 @@ Each category uses this exact table structure:
 ```markdown
 ### 🔴 Blocking - Frontend
 
-| #   | File                    | Line(s) | Issue                                                                                                                     | Fix                                                          |
-| --- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 1   | `bds-file-uploader.tsx` | 36-55   | **Missing `@Watch('multiple')`** — Prop delegation only happens in `componentWillLoad()`. Runtime changes have no effect. | Add `@Watch('multiple')` handler that calls `preloadAttrs()` |
+| #   | File                    | Line(s) | Issue                                                                                                                     | Fix                                                          | PR comment                                                                |
+| --- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 1   | `bds-file-uploader.tsx` | 36-55   | **Missing `@Watch('multiple')`** — Prop delegation only happens in `componentWillLoad()`. Runtime changes have no effect. | Add `@Watch('multiple')` handler that calls `preloadAttrs()` | Runtime `multiple` changes may not apply to the children — can you check? |
 ```
+
+**`PR comment` column**: One plain-language sentence the reviewer can paste onto the PR. State the concern only — no root-cause detail and no suggested fix. Do not use `|` inside the cell (reword or escape it) so the table keeps its columns. Applies to the severity × scope findings tables only, not to Out of Scope or Confirmed Correct.
 
 **Numbering**: Sequential within each category (1, 2, 3...)
 
@@ -99,7 +101,7 @@ Each category uses this exact table structure:
 2. By line number (ascending)
 3. By severity within same file
 
-**Source attribution**: Add source in parentheses at end of Issue column:
+**Source attribution**: Add source in parentheses at the end of the **Issue** column (the `PR comment` column carries no source tag):
 
 - `(automated)` — from `code_quality_checker.py`
 - `(memory)` — from Phase 3 memory-guided review
@@ -112,10 +114,12 @@ Each category uses this exact table structure:
 
 Only include sections that have findings. Order by severity (Blocking → Should Fix → Nice to Have), then by scope (Frontend → Documentation → Testing).
 
+The severity × scope findings tables include the `PR comment` column; Out of Scope and Confirmed Correct do not.
+
 **Always include** (even if empty):
 
 - **Out of Scope** — Pre-existing issues on unrelated components
-- **Confirmed Correct** — Aspects verified as working (two-column table: Aspect | Assessment)
+- **Confirmed Correct** — Aspects verified as working (two-column table: Aspect | Assessment — no `PR comment` column)
 
 **Omit if empty**:
 
@@ -292,21 +296,21 @@ The final report must follow this structure:
 
 ### 🔴 Blocking - Frontend
 
-<table>
+<table — findings table, includes the PR comment column>
 
 ### 🔴 Blocking - Documentation
 
-<table>
+<table — findings table, includes the PR comment column>
 
 ... (other severity × scope sections as needed)
 
 ### ℹ️ Out of Scope
 
-<table>
+<table — no PR comment column>
 
 ### ✅ Confirmed Correct
 
-<table>
+<table — no PR comment column>
 
 ---
 

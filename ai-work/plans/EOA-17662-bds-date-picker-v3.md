@@ -1,9 +1,9 @@
 ---
 ticket: EOA-17662
 component: bds-date-picker
-status: in progress
+status: done
 created: 2026-09-02
-updated: 2026-09-24 — Phases 5-8 complete (through Task 45) and Phase 9 quick-picker implemented through Task 50 (46 decisions; 47 generators; 48 + 48a-48j table markup, overlay, nested header, selected/range flagging, keyboard/ARIA, auto-close/resync, PageUp/PageDown paging, year-window focus; 49 styling; 50 unit tests). Task 51 docs done. A post-Task-51 docs review corrected the range-end coverage-shift wording (manual `expanded` is not "taken exactly as set" — the shift is data-driven on equal time-of-day) across `bds-date-picker.mdx`/`.stories.ts` (incl. a `bds-calendar-grid` per-story argTypes override), ADRs 0015/0016, the failure-mode catalog, and this plan. Phase 10 cleanup complete (Task 54 JSDoc, Task 55 import consolidation incl. a user-approved new `helpers/index.ts` barrel, Task 55a `CALENDAR_GRID_VIEW` constants). Remaining: Task 52 wrapper parity (in progress in another session) and Tasks 53/53a mutation testing. 2026-09-25 — Tasks 53/53a execution strategy finalized with the user and recorded in Testing and QA policy ("Mutation-testing execution strategy"): one consolidated Stryker pass with survivors bucketed by phase via `git blame` (not two phase-scoped runs — Stryker can't scope mutants by phase), ≥90% floor with documented equivalents, configs kept local-only (commits carry spec fixes only — reports stay in gitignored `ai-work/`), and `grid-navigation.ts` folded into the `bds-calendar-grid` target.
+updated: 2026-09-24 — Phases 5-8 complete (through Task 45) and Phase 9 quick-picker implemented through Task 50 (46 decisions; 47 generators; 48 + 48a-48j table markup, overlay, nested header, selected/range flagging, keyboard/ARIA, auto-close/resync, PageUp/PageDown paging, year-window focus; 49 styling; 50 unit tests). Task 51 docs done. A post-Task-51 docs review corrected the range-end coverage-shift wording (manual `expanded` is not "taken exactly as set" — the shift is data-driven on equal time-of-day) across `bds-date-picker.mdx`/`.stories.ts` (incl. a `bds-calendar-grid` per-story argTypes override), ADRs 0015/0016, the failure-mode catalog, and this plan. Phase 10 cleanup complete (Task 54 JSDoc, Task 55 import consolidation incl. a user-approved new `helpers/index.ts` barrel, Task 55a `CALENDAR_GRID_VIEW` constants). Remaining: Task 52 wrapper parity (in progress in another session) and Tasks 53/53a mutation testing. 2026-09-25 — Tasks 53/53a execution strategy finalized with the user and recorded in Testing and QA policy ("Mutation-testing execution strategy"): one consolidated Stryker pass with survivors bucketed by phase via `git blame` (not two phase-scoped runs — Stryker can't scope mutants by phase), ≥90% floor with documented equivalents, configs kept local-only (commits carry spec fixes only — reports stay in gitignored `ai-work/`), and `grid-navigation.ts` folded into the `bds-calendar-grid` target. 2026-09-25 (wrap-up) — Tasks 53/53a executed as one consolidated pass. `date-engine` verified at 94.71%; `bds-calendar-grid` in-scope fixes mutation-confirmed (75.97% → 77.43%, every targeted real-gap line killed, residuals are documented equivalents). Test fixes committed as `ffa91f97`. The `bds-date-picker` pass was deferred (897 mutants ≈ 7h and memory-exhausting on the 11-core/18GB machine, even after retunes). The three large deferred gaps were re-scoped into local tickets (`ai-work/tickets/EOA-17662-53b` quick-picker, `-53c` EOA-10530 `grid-navigation.ts` debt, `-53d` `bds-date-picker` pass), so the plan is complete.
 revision: 3 — reconciled against v2's actual implementation history and the spike's node references (2026-09-08)
 ---
 
@@ -2770,6 +2770,8 @@ Repeat Task 48's Scenarios 1-2, Task 48e's Scenario 3 (keyboard-only drill-down)
 
 ### Task 53: consolidated mutation testing — Phases 3, 3.5, 4 (carried over from v2)
 
+**Status:** 🟡 closed for this task's scope (2026-09-25) — the consolidated pass ran; its v2 bucket is closed: `date-engine` verified at **94.71%** (v2 range-flag gaps killed in `date-engine/__test__/grid.spec.ts`; 12 documented equivalent mutants, 0 no-coverage). `bds-calendar-grid.tsx` had **zero v2 survivors** — the v2 Phase 4 range logic is fully covered — so no Task-53-side grid test work was required. Large v3 gaps the same run surfaced are tracked in Tasks 53b/53c; the `bds-date-picker` pass is deferred (impractical runtime — see Testing and QA policy notes).
+
 **Split from a single combined task, confirmed with user 2026-09-23** — running the entire v2+v3 mutation debt (Phases 3 through 9) in one sitting risked an excessively long run with no incremental caching, and mixed old/stable code's survivors with new/actively-changing code's survivors in one hard-to-triage report. This task now owns only the v2 carried-over debt; Task 53a (below) owns v3's own Phases 5-9.
 
 **Carried-over scope context (read before dispatching):** v2's "Testing and QA policy" section stated explicitly: _"coverage-phase tests are consolidated at the end of each covered phase block. Later-phase mutation consolidation now lives in version 3 scope."_ v2 only ran a mutation-testing pass once, immediately after Phase 2 (its own Task 8) — Phases 3, 3.5, and 4 shipped and the v2 plan closed `done` with **no mutation-testing pass ever run against that code**. This task inherits that debt, scoped to Phase 3 (min/max), Phase 3.5 (`calendarType`), and Phase 4 (range) code only — Phase 5-9 code is explicitly out of scope here (see Task 53a).
@@ -2801,6 +2803,8 @@ Repeat Task 48's Scenarios 1-2, Task 48e's Scenario 3 (keyboard-only drill-down)
 
 ### Task 53a: consolidated mutation testing — Phases 5-9 (this plan's own scope)
 
+**Status:** ✅ done for its in-scope portion (2026-09-25) — Phase 8 keyboard/a11y survivors and the Phase 9 `onActivate` guard killed by new tests in `bds-calendar-grid.keyboard.spec.ts` and `utils/a11y/keyboard/__test__/navigation.spec.ts`; **mutation-confirmed** by the `bds-calendar-grid` re-run (75.97% → 77.43%; every targeted real-gap line killed, residual survivors at those lines are the documented equivalents; +21 killed / −14 survived). Full Jest suite 3,816 green. The area remains below the 90% floor solely because of the two deferred buckets: Phase 9 quick-picker survivors → Task 53b, EOA-10530 `grid-navigation.ts` survivors → Task 53c. The `bds-date-picker` pass is deferred (impractical runtime on this 11-core/18GB machine — the retuned run still projected ~7h and exhausted memory).
+
 **Execution note (2026-09-25):** this is the **second phase-bucket of the same consolidated pass** Task 53 runs, not a second Stryker run — see "Mutation-testing execution strategy" in Testing and QA policy. It owns the Phase 5-9 (+ Phase 10 cleanup) portion of the triage, including the `grid-navigation.ts` survivors folded into the `bds-calendar-grid` target.
 
 **Executor:** @testing-subagent
@@ -2820,6 +2824,35 @@ Repeat Task 48's Scenarios 1-2, Task 48e's Scenario 3 (keyboard-only drill-down)
 **Manual test (required):** confirm the bucketed Phase 5-9 (+ Phase 10 cleanup) survivors are each killed or documented, and the overall per-area scores are >=90%.
 
 **Commit:** `git commit -m "test: EOA-17662 run consolidated mutation testing across v3 phases (5-9)"`
+
+---
+
+### Task 53b (new — discovered executing Task 53a's mutation run, 2026-09-25): `bds-calendar-grid` quick-picker mutation-test coverage remediation — deferred to its own ticket
+
+**Status:** ⏳ deferred (user decision 2026-09-25) — not part of Tasks 53/53a. **Filed as local ticket:** `ai-work/tickets/EOA-17662-53b-calendar-grid-quickpicker-mutation.md`.
+
+**Context:** the consolidated Stryker pass scored `bds-calendar-grid` **75.97% total / 78.69% covered** (227 survivors, 38 no-cov, 10 timeouts). `git blame` buckets **every** `bds-calendar-grid.tsx` survivor to Phase 8/9/10 — there are **no v2 (`b4cdb986`) survivors**, so the v2 range logic is fully covered. Of those, **67 unique survivor lines** come from the Phase 9 quick-picker commits (`49d25ed6`, incl. the ~65-mutant `getPriority*Cell` cluster at lines 611-636; `aa1f1ad2`; `39c3fae4`; `21be7773`; `f255e94b`; `95c3704a`; `29a5dd9d`; `b87e9ec4`). These are real weak-assertion gaps in the quick-picker focus/priority/selected-state logic, too large to absorb into Tasks 53/53a without an unbounded test-writing session.
+
+**Scope:** kill or document each Phase 9 picker survivor; bring `bds-calendar-grid.tsx` to ≥90%.
+**Exact survivor list:** `ai-work/qa/mutation-reports/TRIAGE-NOTES-eoa17662.md` (bucketed table) and `run-bds-calendar-grid-2026-09-25.log`.
+**Files:** `bds-calendar-grid/__test__/bds-calendar-grid.quickpicker.spec.ts` (extend — the phase-owning spec).
+
+---
+
+### Task 53c (new — discovered executing Task 53a's mutation run, 2026-09-25): `grid-navigation.ts` pre-existing mutation debt (EOA-10530) — separate ticket, out of this plan's scope
+
+**Status:** ⏳ deferred (user decision 2026-09-25) — to be filed under EOA-10530 (or a new ticket), not this plan. **Filed as local ticket:** `ai-work/tickets/EOA-17662-53c-grid-navigation-mutation-debt.md`.
+
+**Context:** 50 of the 52 `grid-navigation.ts` survivor lines blame to `ea4d3d76` (2026-05-20, EOA-10530) — pre-existing shared keyboard-navigation utility code, never mutation-tested before and not introduced by Phases 5-9. Only lines 233/236 (the Phase 9 `onActivate` guard, `49d25ed6`) belong to this plan and remain in Task 53a's scope.
+**Scope:** bring the EOA-10530-owned `grid-navigation.ts` code to ≥90% under a `bds-calendar-grid`-style config.
+
+---
+
+### Task 53d (new — deferred 2026-09-25): `bds-date-picker` consolidated mutation pass
+
+**Status:** ⏳ deferred (user decision 2026-09-25). **Filed as local ticket:** `ai-work/tickets/EOA-17662-53d-bds-date-picker-mutation.md` — includes the exact `stryker.bds-date-picker.config.mjs` + `jest.stryker.bds-date-picker.cjs` to recreate (configs are local-only and were discarded with the worktree).
+
+**Context:** the last remaining Stryker run for this plan. The full pass is 897 mutants and projects ~7h on the 11-core/18GB dev machine, exhausting memory; retunes (`mutator.excludedMutations` 1300→897; `enableFindRelatedTests: false`) did not reduce the per-mutant cost, because each mutant runs a large share of the component's 523 tests. Run when the machine is free, then triage with the same `git blame` phase-bucketing method used for Tasks 53/53a.
 
 ---
 

@@ -1,0 +1,2964 @@
+Using Node v22.21.1
+[32m11:02:55 (55739) INFO ProjectReader[39m No incremental result file found at reports/stryker-incremental.bds-calendar-grid.json, a full mutation testing run will be performed.
+[32m11:02:55 (55739) INFO ProjectReader[39m Found 2 of 1108 file(s) to be mutated.
+Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[32m11:02:55 (55739) INFO Instrumenter[39m Instrumented 2 source file(s) with 1103 mutant(s)
+[33m11:02:55 (55739) WARN DisableTypeChecksPreprocessor[39m Unable to disable type checking for file "/Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/src/index.html". Shouldn't type checking be disabled for this file? Consider configuring a more restrictive "disableTypeChecks" settings (or turn it completely off with `false`) ParseError: Parse error in /Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/src/index.html (92:6) Unexpected closing tag "p". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags
+    at ngHtmlParser (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/parsers/html-parser.js:32:15)
+    at async parse (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/parsers/html-parser.js:16:18)
+    at async DisableTypeChecksPreprocessor.disableTypeChecks [as impl] (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/disable-type-checks.js:28:17)
+    at async file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/disable-type-checks-preprocessor.js:27:41
+    at async Promise.all (index 987)
+    at async DisableTypeChecksPreprocessor.preprocess (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/disable-type-checks-preprocessor.js:24:9)
+    at async MultiPreprocessor.preprocess (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/multi-preprocessor.js:8:13)
+    at async MutantInstrumenterExecutor.execute (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/process/2-mutant-instrumenter-executor.js:30:9)
+    at async Stryker.run (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker.js:49:48)
+    at async Stryker.runMutationTest (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker.js:27:20)
+    at async Command.<anonymous> (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker-cli.js:51:13)
+[33m11:02:55 (55739) WARN DisableTypeChecksPreprocessor[39m (disable "warnings.preprocessorErrors" to ignore this warning
+[32m11:02:55 (55739) INFO ConcurrencyTokenProvider[39m Creating 2 test runner process(es).
+[32m11:02:56 (55739) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m11:02:57 (55739) INFO DryRunExecutor[39m Starting initial test run (jest test runner with "perTest" coverage analysis). This may take a while.
+[32m11:03:00 (55739) INFO DryRunExecutor[39m Initial test run succeeded. Ran 144 tests in 3 seconds (net 532 ms, overhead 2535 ms).
+Mutation testing 1% (elapsed: <1m, remaining: ~11m) 51/1103 tested (3 survived, 0 timed out)
+Mutation testing 2% (elapsed: <1m, remaining: ~13m) 67/1103 tested (8 survived, 0 timed out)
+Mutation testing 4% (elapsed: <1m, remaining: ~10m) 81/1103 tested (11 survived, 0 timed out)
+Mutation testing 5% (elapsed: <1m, remaining: ~11m) 96/1103 tested (14 survived, 0 timed out)
+Mutation testing 6% (elapsed: <1m, remaining: ~11m) 112/1103 tested (19 survived, 0 timed out)
+Mutation testing 6% (elapsed: ~1m, remaining: ~13m) 130/1103 tested (22 survived, 0 timed out)
+Mutation testing 6% (elapsed: ~1m, remaining: ~15m) 148/1103 tested (23 survived, 0 timed out)
+Mutation testing 6% (elapsed: ~1m, remaining: ~18m) 167/1103 tested (29 survived, 0 timed out)
+Mutation testing 7% (elapsed: ~1m, remaining: ~19m) 184/1103 tested (33 survived, 0 timed out)
+Mutation testing 7% (elapsed: ~1m, remaining: ~21m) 201/1103 tested (37 survived, 0 timed out)
+Mutation testing 7% (elapsed: ~1m, remaining: ~22m) 217/1103 tested (37 survived, 0 timed out)
+Mutation testing 7% (elapsed: ~2m, remaining: ~23m) 235/1103 tested (37 survived, 0 timed out)
+Mutation testing 8% (elapsed: ~2m, remaining: ~24m) 253/1103 tested (37 survived, 0 timed out)
+Mutation testing 8% (elapsed: ~2m, remaining: ~25m) 271/1103 tested (41 survived, 0 timed out)
+Mutation testing 8% (elapsed: ~2m, remaining: ~26m) 288/1103 tested (42 survived, 0 timed out)
+Mutation testing 9% (elapsed: ~2m, remaining: ~24m) 304/1103 tested (43 survived, 1 timed out)
+Mutation testing 12% (elapsed: ~2m, remaining: ~19m) 315/1103 tested (43 survived, 1 timed out)
+Mutation testing 14% (elapsed: ~3m, remaining: ~17m) 325/1103 tested (43 survived, 1 timed out)
+Mutation testing 15% (elapsed: ~3m, remaining: ~17m) 341/1103 tested (47 survived, 1 timed out)
+Mutation testing 16% (elapsed: ~3m, remaining: ~16m) 357/1103 tested (52 survived, 1 timed out)
+Mutation testing 17% (elapsed: ~3m, remaining: ~16m) 372/1103 tested (56 survived, 1 timed out)
+Mutation testing 18% (elapsed: ~3m, remaining: ~15m) 388/1103 tested (61 survived, 1 timed out)
+Mutation testing 19% (elapsed: ~3m, remaining: ~15m) 404/1103 tested (64 survived, 1 timed out)
+Mutation testing 21% (elapsed: ~4m, remaining: ~14m) 415/1103 tested (65 survived, 1 timed out)
+Mutation testing 23% (elapsed: ~4m, remaining: ~13m) 424/1103 tested (65 survived, 1 timed out)
+Mutation testing 26% (elapsed: ~4m, remaining: ~12m) 436/1103 tested (65 survived, 1 timed out)
+Mutation testing 27% (elapsed: ~4m, remaining: ~11m) 447/1103 tested (67 survived, 1 timed out)
+Mutation testing 30% (elapsed: ~4m, remaining: ~10m) 456/1103 tested (67 survived, 1 timed out)
+Mutation testing 32% (elapsed: ~4m, remaining: ~10m) 463/1103 tested (67 survived, 1 timed out)
+Mutation testing 34% (elapsed: ~5m, remaining: ~9m) 472/1103 tested (68 survived, 1 timed out)
+Mutation testing 35% (elapsed: ~5m, remaining: ~9m) 485/1103 tested (81 survived, 1 timed out)
+Mutation testing 36% (elapsed: ~5m, remaining: ~9m) 499/1103 tested (95 survived, 1 timed out)
+Mutation testing 38% (elapsed: ~5m, remaining: ~8m) 511/1103 tested (107 survived, 1 timed out)
+Mutation testing 39% (elapsed: ~5m, remaining: ~8m) 526/1103 tested (118 survived, 1 timed out)
+Mutation testing 40% (elapsed: ~5m, remaining: ~8m) 541/1103 tested (133 survived, 1 timed out)
+Mutation testing 41% (elapsed: ~6m, remaining: ~8m) 556/1103 tested (138 survived, 1 timed out)
+Mutation testing 42% (elapsed: ~6m, remaining: ~8m) 568/1103 tested (139 survived, 1 timed out)
+Mutation testing 43% (elapsed: ~6m, remaining: ~8m) 582/1103 tested (140 survived, 1 timed out)
+Mutation testing 44% (elapsed: ~6m, remaining: ~8m) 596/1103 tested (140 survived, 1 timed out)
+Mutation testing 45% (elapsed: ~6m, remaining: ~7m) 607/1103 tested (141 survived, 1 timed out)
+Mutation testing 47% (elapsed: ~6m, remaining: ~7m) 619/1103 tested (144 survived, 1 timed out)
+Mutation testing 48% (elapsed: ~7m, remaining: ~7m) 634/1103 tested (145 survived, 1 timed out)
+Mutation testing 48% (elapsed: ~7m, remaining: ~7m) 650/1103 tested (147 survived, 1 timed out)
+Mutation testing 49% (elapsed: ~7m, remaining: ~7m) 664/1103 tested (148 survived, 1 timed out)
+Mutation testing 51% (elapsed: ~7m, remaining: ~7m) 673/1103 tested (148 survived, 1 timed out)
+Mutation testing 52% (elapsed: ~7m, remaining: ~6m) 687/1103 tested (155 survived, 1 timed out)
+Mutation testing 53% (elapsed: ~7m, remaining: ~6m) 696/1103 tested (157 survived, 1 timed out)
+Mutation testing 55% (elapsed: ~8m, remaining: ~6m) 704/1103 tested (157 survived, 1 timed out)
+Mutation testing 57% (elapsed: ~8m, remaining: ~5m) 711/1103 tested (157 survived, 1 timed out)
+Mutation testing 59% (elapsed: ~8m, remaining: ~5m) 720/1103 tested (157 survived, 1 timed out)
+Mutation testing 61% (elapsed: ~8m, remaining: ~5m) 728/1103 tested (157 survived, 1 timed out)
+Mutation testing 62% (elapsed: ~8m, remaining: ~5m) 736/1103 tested (157 survived, 1 timed out)
+Mutation testing 64% (elapsed: ~8m, remaining: ~4m) 748/1103 tested (158 survived, 1 timed out)
+Mutation testing 65% (elapsed: ~9m, remaining: ~4m) 757/1103 tested (159 survived, 1 timed out)
+Mutation testing 67% (elapsed: ~9m, remaining: ~4m) 765/1103 tested (160 survived, 1 timed out)
+Mutation testing 68% (elapsed: ~9m, remaining: ~4m) 779/1103 tested (163 survived, 1 timed out)
+Mutation testing 69% (elapsed: ~9m, remaining: ~4m) 789/1103 tested (165 survived, 1 timed out)
+Mutation testing 71% (elapsed: ~9m, remaining: ~3m) 796/1103 tested (166 survived, 1 timed out)
+Mutation testing 73% (elapsed: ~9m, remaining: ~3m) 806/1103 tested (166 survived, 1 timed out)
+Mutation testing 74% (elapsed: ~10m, remaining: ~3m) 813/1103 tested (166 survived, 1 timed out)
+Mutation testing 76% (elapsed: ~10m, remaining: ~3m) 819/1103 tested (166 survived, 1 timed out)
+Mutation testing 76% (elapsed: ~10m, remaining: ~3m) 830/1103 tested (167 survived, 1 timed out)
+Mutation testing 77% (elapsed: ~10m, remaining: ~3m) 845/1103 tested (171 survived, 1 timed out)
+Mutation testing 77% (elapsed: ~10m, remaining: ~3m) 859/1103 tested (174 survived, 1 timed out)
+Mutation testing 77% (elapsed: ~10m, remaining: ~3m) 874/1103 tested (177 survived, 1 timed out)
+Mutation testing 78% (elapsed: ~11m, remaining: ~3m) 885/1103 tested (179 survived, 1 timed out)
+Mutation testing 79% (elapsed: ~11m, remaining: ~2m) 891/1103 tested (181 survived, 1 timed out)
+Mutation testing 80% (elapsed: ~11m, remaining: ~2m) 900/1103 tested (183 survived, 1 timed out)
+Mutation testing 81% (elapsed: ~11m, remaining: ~2m) 914/1103 tested (185 survived, 1 timed out)
+Mutation testing 81% (elapsed: ~11m, remaining: ~2m) 926/1103 tested (185 survived, 1 timed out)
+Mutation testing 81% (elapsed: ~28m, remaining: ~6m) 928/1103 tested (185 survived, 1 timed out)
+Mutation testing 81% (elapsed: ~28m, remaining: ~6m) 942/1103 tested (187 survived, 2 timed out)
+Mutation testing 81% (elapsed: ~29m, remaining: ~6m) 945/1103 tested (187 survived, 2 timed out)
+Mutation testing 81% (elapsed: ~29m, remaining: ~6m) 956/1103 tested (189 survived, 2 timed out)
+Mutation testing 81% (elapsed: ~29m, remaining: ~6m) 972/1103 tested (195 survived, 2 timed out)
+Mutation testing 81% (elapsed: ~30m, remaining: ~6m) 973/1103 tested (195 survived, 2 timed out)
+Mutation testing 81% (elapsed: ~30m, remaining: ~6m) 989/1103 tested (200 survived, 3 timed out)
+Mutation testing 81% (elapsed: ~31m, remaining: ~6m) 998/1103 tested (202 survived, 3 timed out)
+Mutation testing 81% (elapsed: ~36m, remaining: ~8m) 1009/1103 tested (202 survived, 3 timed out)
+Mutation testing 82% (elapsed: ~36m, remaining: ~7m) 1013/1103 tested (202 survived, 5 timed out)
+Mutation testing 83% (elapsed: ~43m, remaining: ~8m) 1024/1103 tested (207 survived, 5 timed out)
+Mutation testing 85% (elapsed: ~45m, remaining: ~7m) 1035/1103 tested (211 survived, 7 timed out)
+Mutation testing 88% (elapsed: ~45m, remaining: ~5m) 1046/1103 tested (212 survived, 8 timed out)
+Mutation testing 90% (elapsed: ~45m, remaining: ~4m) 1060/1103 tested (217 survived, 8 timed out)
+Mutation testing 91% (elapsed: ~55m, remaining: ~5m) 1065/1103 tested (218 survived, 8 timed out)
+Mutation testing 94% (elapsed: ~55m, remaining: ~3m) 1076/1103 tested (221 survived, 9 timed out)
+Mutation testing 95% (elapsed: ~56m, remaining: ~2m) 1079/1103 tested (223 survived, 9 timed out)
+Mutation testing 97% (elapsed: ~56m, remaining: ~1m) 1088/1103 tested (224 survived, 10 timed out)
+Mutation testing 99% (elapsed: ~57m, remaining: <1m) 1097/1103 tested (224 survived, 10 timed out)
+
+All tests
+  components/forms/bds-date-picker/bds-calendar-grid/__test__
+    bds-calendar-grid.a11y.spec.ts
+      ✓ bds-calendar-grid a11y exposes the day grid to assistive technology as a grid role, with column-scoped weekday headers [line 29] (killed 2)
+      ✓ bds-calendar-grid a11y gives each day cell an accessible name matching the full display date, not just the visible day number [line 42] (killed 3)
+      ~ bds-calendar-grid a11y gives the previous/next month navigation controls a descriptive accessible name via the label prop, not icon-only [line 51] (covered 228)
+      ~ bds-calendar-grid a11y announces today's cell distinctly from other cells via aria-current [line 60] (covered 227)
+      ✓ bds-calendar-grid a11y announces the selected cell distinctly from other cells via aria-selected [line 73] (killed 4)
+      ~ bds-calendar-grid a11y does not announce a leading filler cell as selected via aria-selected when its date matches selectedDate but belongs to the adjacent month [line 85] (covered 228)
+      ✓ bds-calendar-grid a11y marks a disabled cell with aria-disabled="true", distinct from an enabled cell [line 96] (killed 1)
+      ~ bds-calendar-grid a11y does not set aria-disabled on any cell when the grid has no disabled bounds [line 112] (covered 228)
+      ~ bds-calendar-grid a11y disables the previous/next nav buttons via the disabled attribute when prevDisabled/nextDisabled are set [line 119] (covered 252)
+      ✓ bds-calendar-grid a11y leaves both nav buttons enabled by default [line 131] (killed 2)
+      ✓ bds-calendar-grid a11y exposes exactly one day cell as the roving-tabindex stop, keeping out-of-month cells untabbable [line 140] (killed 1)
+    bds-calendar-grid.basics.spec.ts
+      ~ bds-calendar-grid basics renders the day grid as a native table with role="grid" [line 18] (covered 228)
+      ✓ bds-calendar-grid basics renders a thead and a tbody inside the grid table [line 24] (killed 1)
+      ~ bds-calendar-grid basics renders exactly 42 day cells in the tbody [line 33] (covered 228)
+      ~ bds-calendar-grid basics renders weekday header cells as th scope="col" in the expected order [line 40] (covered 228)
+      ~ bds-calendar-grid basics renders the month/year label matching the given year and month [line 52] (covered 228)
+      ~ bds-calendar-grid basics renders the header container with its expected class [line 60] (covered 228)
+      ✓ bds-calendar-grid basics renders exactly one day cell as the roving tabindex stop, all others untabbable [line 67] (killed 2)
+      ~ bds-calendar-grid basics marks a cell disabled via its dedicated class when the grid flags it as such [line 80] (covered 266)
+      ~ bds-calendar-grid basics renders no internal state, so identical props produce identical output [line 93] (covered 265)
+    bds-calendar-grid.events.spec.ts
+      ✓ bds-calendar-grid events emits bdsDayClick with the clicked cell's ISO date [line 28] (killed 5)
+      ~ bds-calendar-grid events emits bdsMonthNavigate with the rolled-over year/month/direction across the December to January boundary [line 43] (covered 231)
+      ~ bds-calendar-grid events emits bdsMonthNavigate with the rolled-over year/month/direction across the January to December boundary [line 58] (covered 231)
+      ~ bds-calendar-grid events does not change its own year/month props after a nav click, since it is controlled by its parent [line 73] (covered 231)
+      ✓ bds-calendar-grid events emits bdsDayHover with the hovered cell's ISO date [line 85] (killed 5)
+      ✓ bds-calendar-grid events does not emit bdsDayHover when an outside-month cell is hovered [line 100] (killed 3)
+      ~ bds-calendar-grid events does not emit bdsDayHover when a disabled current-month cell is hovered [line 113] (covered 235)
+      ✓ bds-calendar-grid events emits bdsGridLeave when the pointer leaves the day grid table [line 128] (killed 2)
+      ✓ bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date [line 141] (killed 14)
+      ~ bds-calendar-grid events does not emit bdsDayFocus when a header navigation control receives focus [line 156] (covered 228)
+      ✓ bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells [line 169] (killed 2)
+      ✓ bds-calendar-grid events emits bdsGridFocusLeave when focus moves to an element outside the day grid table [line 187] (killed 4)
+      ~ bds-calendar-grid events emits bdsGridFocusLeave when focus leaves the day grid table with no related target [line 203] (covered 235)
+    bds-calendar-grid.keyboard.spec.ts
+      ✓ bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month [line 66] (killed 79)
+      ~ bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal [line 86] (covered 340)
+      ✓ bds-calendar-grid keyboard moves focus to the current row start and end with Home and End [line 98] (killed 3)
+      ✓ bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End [line 110] (killed 7)
+      ~ bds-calendar-grid keyboard emits bdsMonthNavigate with the previous month on PageUp [line 122] (covered 239)
+      ✓ bds-calendar-grid keyboard emits bdsMonthNavigate with the next month on PageDown [line 136] (killed 1)
+      ✓ bds-calendar-grid keyboard skips disabled cells so they are never a focus stop [line 150] (killed 40)
+      ~ bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop [line 165] (covered 339)
+      ✓ bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row [line 178] (killed 4)
+      ✓ bds-calendar-grid keyboard wraps focus from the start of a row to the end of the previous row [line 186] (killed 1)
+      ✓ bds-calendar-grid keyboard wraps focus vertically from the last row to the first row and back [line 194] (killed 6)
+      ✓ bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes [line 205] (killed 20)
+      ✓ bds-calendar-grid keyboard starts on today when no date is selected [line 218] (killed 17)
+      ~ bds-calendar-grid keyboard starts on the first enabled cell when neither a selection nor today falls in the month [line 227] (covered 228)
+      ✓ bds-calendar-grid keyboard anchors to the first enabled cell, not a disabled today, after a re-render when today falls outside min/max [line 235] (killed 6)
+      ✓ bds-calendar-grid keyboard does not anchor to a disabled selected date after a re-render [line 252] (killed 2)
+      ~ bds-calendar-grid keyboard prefers the selected date over today when both fall in the displayed month [line 264] (covered 269)
+      ✓ bds-calendar-grid keyboard renders aria-selected as the string "true" on the selected in-month cell only [line 277] (killed 6)
+      ✓ bds-calendar-grid keyboard makes the selected date the single roving-tabindex stop on initial render [line 287] (killed 3)
+      ✓ bds-calendar-grid keyboard keeps exactly one roving-tabindex stop after a prop-only re-render [line 293] (killed 2)
+      ~ bds-calendar-grid keyboard keeps focus state independent between two grid instances [line 303] (covered 296)
+      ~ bds-calendar-grid keyboard re-establishes a single roving-tabindex stop after the displayed month changes [line 325] (covered 267)
+      ✓ bds-calendar-grid keyboard keeps focus on the same day of month after the displayed month changes [line 337] (killed 41)
+      ✓ bds-calendar-grid keyboard activates the focused cell with Enter and Space, emitting bdsDayClick [line 349] (killed 18)
+    bds-calendar-grid.quickpicker.spec.ts
+      ✓ bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated [line 158] (killed 44)
+      ✓ bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated [line 168] (killed 12)
+      ✓ bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay [line 183] (killed 28)
+      ✓ bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid [line 196] (killed 4)
+      ✓ bds-calendar-grid quick-picker grid markup renders the month picker as a role="grid" table of row/gridcell cells [line 211] (killed 2)
+      ✓ bds-calendar-grid quick-picker grid markup marks the current month cell with aria-current and leaves the other months unmarked [line 221] (killed 2)
+      ✓ bds-calendar-grid quick-picker grid markup marks out-of-range month cells as aria-disabled and ignores their activation [line 229] (killed 4)
+      ✓ bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells [line 243] (killed 1)
+      ✓ bds-calendar-grid quick-picker grid markup marks the current year cell with aria-current and leaves the other years unmarked [line 253] (killed 2)
+      ✓ bds-calendar-grid quick-picker grid markup marks year cells whose whole span falls outside min/max as aria-disabled [line 261] (killed 3)
+      ✓ bds-calendar-grid quick-picker overlay keeps the day grid mounted but hidden from assistive tech and the tab order while a picker view is open [line 274] (killed 11)
+      ✓ bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view [line 291] (killed 10)
+      ~ bds-calendar-grid quick-picker nested header keeps the outer header reflecting the displayed year/month and gives the picker its own year header [line 311] (covered 430)
+      ✓ bds-calendar-grid quick-picker nested header steps the picker year from its own header without changing the outer header [line 319] (killed 6)
+      ✓ bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header [line 334] (killed 6)
+      ✓ bds-calendar-grid quick-picker nested header disables a picker year control when its target year is fully outside min/max [line 347] (killed 6)
+      ✓ bds-calendar-grid quick-picker nested header no-ops a picker year step when its target year is fully outside min/max [line 359] (killed 3)
+      ✓ bds-calendar-grid quick-picker selection state flags the selected date month with --selected and aria-selected, and no other month [line 374] (killed 24)
+      ✓ bds-calendar-grid quick-picker selection state flags no month when the selected date falls in a different year than the displayed picker [line 387] (killed 1)
+      ✓ bds-calendar-grid quick-picker selection state flags both range boundary months independently with no spanning highlight [line 396] (killed 26)
+      ~ bds-calendar-grid quick-picker selection state flags no month when neither a selected date nor range boundaries are set [line 414] (covered 430)
+      ✓ bds-calendar-grid quick-picker selection state flags the selected date year with aria-selected in the year picker [line 423] (killed 12)
+      ✓ bds-calendar-grid quick-picker selection state flags both range boundary years independently in the year picker [line 435] (killed 2)
+      ✓ bds-calendar-grid quick-picker keyboard and aria renders the header month/year label as a button with a choose-month accessible name [line 449] (killed 1)
+      ✓ bds-calendar-grid quick-picker keyboard and aria opens the month picker exactly once from Enter on the focused header label [line 457] (killed 9)
+      ~ bds-calendar-grid quick-picker keyboard and aria opens the month picker exactly once from Space on the focused header label [line 471] (covered 438)
+      ✓ bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop [line 485] (killed 61)
+      ✓ bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End [line 501] (killed 36)
+      ✓ bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view [line 519] (killed 23)
+      ~ bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Space, emitting bdsMonthNavigate [line 535] (covered 494)
+      ~ bds-calendar-grid quick-picker keyboard and aria returns to the day view on Escape without emitting a navigation event [line 550] (covered 458)
+      ✓ bds-calendar-grid quick-picker keyboard and aria dismisses on a backdrop click but not on a click originating inside the picker card [line 563] (killed 4)
+      ✓ bds-calendar-grid quick-picker keyboard and aria announces each view transition once through the local live region [line 578] (killed 5)
+      ~ bds-calendar-grid quick-picker keyboard and aria does not re-announce through the local live region on a selection-driven return to the day view [line 592] (covered 471)
+      ✓ bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year [line 606] (killed 19)
+      ✓ bds-calendar-grid quick-picker keyboard activation edges ignores keyboard activation of a disabled year cell [line 619] (killed 2)
+      ~ bds-calendar-grid quick-picker keyboard activation edges ignores activation in the month view when no picker cell holds focus [line 636] (covered 449)
+      ~ bds-calendar-grid quick-picker keyboard activation edges ignores activation in the year view when no picker cell holds focus [line 650] (covered 548)
+      ~ bds-calendar-grid quick-picker keyboard activation edges ignores day-view activation when no day cell is focused [line 661] (covered 254)
+      ~ bds-calendar-grid quick-picker keyboard activation edges does not leave the day view or emit navigation on Escape from the day view [line 673] (covered 233)
+      ✓ bds-calendar-grid quick-picker keyboard activation edges returns to the day view and clears the picker year when resetView is called [line 685] (killed 1)
+      ~ bds-calendar-grid quick-picker keyboard activation edges detaches its keyboard wiring when removed from the document [line 698] (covered 230)
+      ✓ bds-calendar-grid quick-picker day-grid cell guards leaves the day grid with no tabbable cell when every in-month cell is disabled [line 706] (killed 7)
+      ✓ bds-calendar-grid quick-picker paging pages the day grid by month with PageUp and PageDown, emitting bdsMonthNavigate [line 720] (killed 22)
+      ✓ bds-calendar-grid quick-picker paging pages the month picker by year with PageUp and PageDown [line 743] (killed 6)
+      ✓ bds-calendar-grid quick-picker paging pages the year picker window by a decade with PageUp and PageDown [line 758] (killed 6)
+      ~ bds-calendar-grid quick-picker paging does not emit bdsMonthNavigate from picker paging [line 773] (covered 441)
+      ✓ bds-calendar-grid quick-picker paging no-ops paging the month picker when the target year is entirely outside min/max [line 785] (killed 3)
+      ✓ bds-calendar-grid quick-picker paging no-ops paging the year picker window when the target window is entirely outside min/max [line 797] (killed 7)
+      ✓ bds-calendar-grid quick-picker year-window focus keeps real focus on the equivalent year cell after a year-window shift [line 815] (killed 30)
+      ~ bds-calendar-grid quick-picker year-window focus applies two consecutive year-window shifts [line 828] (covered 573)
+      ✓ bds-calendar-grid quick-picker year-window focus falls back to the priority enabled year cell when the equivalent year is out of range [line 842] (killed 7)
+      ~ bds-calendar-grid quick-picker year-window focus falls back to a priority year cell when the window shifts with no picker cell focused [line 858] (covered 560)
+      ~ bds-calendar-grid quick-picker year-window focus falls back to a priority year cell when a non-cell element holds focus during a window shift [line 870] (covered 563)
+      ~ bds-calendar-grid quick-picker dual-instance independence keeps the view state independent between two grid instances [line 884] (covered 430)
+    bds-calendar-grid.variants.spec.ts
+      ✓ bds-calendar-grid variants marks exactly one cell as selected when selectedDate matches a cell in the grid [line 29] (killed 6)
+      ~ bds-calendar-grid variants marks no cell as selected when selectedDate is not set [line 37] (covered 228)
+      ~ bds-calendar-grid variants does not mark a leading filler cell as selected when its date matches selectedDate but belongs to the adjacent month [line 44] (covered 228)
+      ✓ bds-calendar-grid variants marks exactly the current-date cell as today [line 55] (killed 1)
+      ~ bds-calendar-grid variants marks no cell as today when the mocked current date falls outside the displayed month [line 64] (covered 228)
+      ~ bds-calendar-grid variants renders leading/trailing adjacent-month cells with the outside class [line 72] (covered 228)
+      ✓ bds-calendar-grid variants does not emit bdsDayClick when an outside-month cell is clicked [line 79] (killed 4)
+      ✓ bds-calendar-grid variants does not emit bdsDayClick when a disabled current-month cell is clicked [line 92] (killed 1)
+      ✓ bds-calendar-grid variants marks the hover-preview start/interior/end cells with their own partial-* classes [line 108] (killed 3)
+      ~ bds-calendar-grid variants renders no partial-* classes when previewEnd is not supplied [line 124] (covered 228)
+      ✓ bds-calendar-grid variants marks the range-start/interior/end cells with their own range-* classes [line 133] (killed 3)
+      ~ bds-calendar-grid variants renders no range-* classes when neither rangeStart nor rangeEnd is supplied [line 153] (covered 228)
+      ✓ bds-calendar-grid variants renders a lone rangeStart cell with no directional overlay elements when no rangeEnd or preview is active [line 162] (killed 4)
+      ✓ bds-calendar-grid variants renders the directional overlay elements on a same-day rangeStart/rangeEnd cell [line 172] (killed 7)
+      ✓ bds-calendar-grid variants renders the directional overlay elements on every participating cell of a real completed range [line 185] (killed 10)
+  utils/a11y/keyboard/__test__/navigation.spec.ts
+    ✘ setupLinearNavigation registers only horizontal arrow keys when orientation is horizontal [line 127] (covered 0)
+    ✘ setupLinearNavigation initializes roving tabindex from initialActiveSelector [line 141] (covered 0)
+    ✘ setupLinearNavigation runs onNavigate instead of applying default roving focus [line 154] (covered 0)
+    ✘ setupLinearNavigation applies aria-activedescendant and onItemActive on movement [line 171] (covered 0)
+    ✘ setupLinearNavigation registers activation and escape handlers [line 201] (covered 0)
+    ✓ setupGridNavigation registers grid keys and resolves strategy metadata [line 218] (killed 7)
+    ✓ setupGridNavigation initializes from the first valid grid cell when earlier cells are empty [line 234] (killed 1)
+    ✓ setupGridNavigation moves through irregular rows and skips empty cells [line 246] (killed 3)
+    ✓ setupGridNavigation no-ops arrow traversal when a non-cell element inside the root has focus [line 271] (killed 1)
+    ✓ setupGridNavigation no-ops Home and End when a non-cell element inside the root has focus [line 288] (killed 1)
+    ✓ setupGridNavigation re-triggers native activation once and skips onActivate when a non-cell element inside the root has focus [line 303] (killed 1)
+    ✓ setupGridNavigation runs onActivate on a focused grid cell without re-triggering its native activation [line 322] (killed 1)
+    ✓ setupGridNavigation keeps the first-cell fallback when nothing inside the root is focused [line 340] (killed 3)
+    ~ setupGridNavigation keeps the fallback when the grid root itself has focus [line 352] (covered 146)
+    ✓ setupGridNavigation delegates row and column through onNavigate [line 365] (killed 3)
+    ✓ setupGridNavigation applies aria-activedescendant to the selected initial grid cell [line 382] (killed 3)
+    ~ setupGridNavigation registers page, activation, and escape handlers [line 403] (covered 92)
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:227:26
+-       if (isoDate == null) {
+-         return;
+-       }
++       if (isoDate == null) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:66
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
+-         return;
+-       }
++       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:502:23
+-       if (cell == null) {
+-         return;
+-       }
++       if (cell == null) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:507:21
+-       if (el == null) {
+-         return;
+-       }
++       if (el == null) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:515:23
+-       if (index === -1) {
+-         return;
+-       }
++       if (index === -1) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:528:21
+-       if (el == null) {
+-         return;
+-       }
++       if (el == null) {}
+
+[NoCoverage] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:536:23
+-       if (index === -1) {
+-         return;
+-       }
++       if (index === -1) {}
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:50:37
+-     private _pendingYearWindowFocus = false;
++     private _pendingYearWindowFocus = true;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 124 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:56:49
+-     @State() private pickerAnnouncement: string = '';
++     @State() private pickerAnnouncement: string = "Stryker was here!";
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 124 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:101:25
+-       const focusedCell = isoDate != null ? oldGrid.weeks.flat().find(cell => cell.isoDate === isoDate) : undefined;
++       const focusedCell = true ? oldGrid.weeks.flat().find(cell => cell.isoDate === isoDate) : undefined;
+Tests ran:
+    bds-calendar-grid quick-picker day-grid cell guards leaves the day grid with no tabbable cell when every in-month cell is disabled
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+    bds-calendar-grid keyboard anchors to the first enabled cell, not a disabled today, after a re-render when today falls outside min/max
+  and 6 more tests!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:103:5
+-       this._cellRefs.clear();
++       ;
+Tests ran:
+    bds-calendar-grid quick-picker day-grid cell guards leaves the day grid with no tabbable cell when every in-month cell is disabled
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+    bds-calendar-grid keyboard anchors to the first enabled cell, not a disabled today, after a re-render when today falls outside min/max
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:108:9
+-       if (this.view !== CALENDAR_GRID_VIEW.YEARS) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:108:49
+-       if (this.view !== CALENDAR_GRID_VIEW.YEARS) {
+-         return;
+-       }
++       if (this.view !== CALENDAR_GRID_VIEW.YEARS) {}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:113:5
+-       this._pickerCellRefs.clear();
++       ;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:115:42
+-       this._pendingYearWindowFocusTarget = focusedYear != null ? focusedYear + (newYear - oldYear) : null;
++       this._pendingYearWindowFocusTarget = true ? focusedYear + (newYear - oldYear) : null;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+  and 6 more tests!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:120:5
+-       this._pickerCellRefs.clear();
++       ;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:122:36
+-       this._pendingYearWindowFocus = false;
++       this._pendingYearWindowFocus = true;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:163:7
+-         targetDay != null
++         true
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 57 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:164:34
+-           ? flatCells.find(cell => cell.isCurrentMonth && !cell.isDisabled && cell.date.getDate() === targetDay)
++           ? flatCells.find(cell => true && cell.date.getDate() === targetDay)
+Tests ran:
+    bds-calendar-grid keyboard keeps focus on the same day of month after the displayed month changes
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:164:34
+-           ? flatCells.find(cell => cell.isCurrentMonth && !cell.isDisabled && cell.date.getDate() === targetDay)
++           ? flatCells.find(cell => cell.isCurrentMonth || !cell.isDisabled && cell.date.getDate() === targetDay)
+Tests ran:
+    bds-calendar-grid keyboard keeps focus on the same day of month after the displayed month changes
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:168:9
+-       if (targetDay != null) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 57 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:175:32
+-         this._pendingViewFocus = false;
++         this._pendingViewFocus = true;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:179:9
+-       if (this._pendingYearWindowFocus) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 57 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:180:38
+-         this._pendingYearWindowFocus = false;
++         this._pendingYearWindowFocus = true;
+Tests ran:
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker paging pages the year picker window by a decade with PageUp and PageDown
+    bds-calendar-grid quick-picker year-window focus keeps real focus on the equivalent year cell after a year-window shift
+  and 4 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:187:32
+-     disconnectedCallback(): void {
+-       this._keyboard.detach();
+-     }
++     disconnectedCallback(): void {}
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges detaches its keyboard wiring when removed from the document
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:188:5
+-       this._keyboard.detach();
++       ;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges detaches its keyboard wiring when removed from the document
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:207:9
+-       if (isoDate == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges ignores day-view activation when no day cell is focused
+    bds-calendar-grid keyboard activates the focused cell with Enter and Space, emitting bdsDayClick
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:207:26
+-       if (isoDate == null) {
+-         return;
+-       }
++       if (isoDate == null) {}
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges ignores day-view activation when no day cell is focused
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:212:9
+-       if (cell != null) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid keyboard activates the focused cell with Enter and Space, emitting bdsDayClick
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:227:9
+-       if (isoDate == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:9
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:9
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
++       if ((cell == null || !cell.isCurrentMonth) && cell.isDisabled) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:9
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
++       if (false || cell.isDisabled) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:9
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
++       if (cell == null && !cell.isCurrentMonth || cell.isDisabled) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:232:9
+-       if (cell == null || !cell.isCurrentMonth || cell.isDisabled) {
++       if (false || !cell.isCurrentMonth || cell.isDisabled) {
+Tests ran:
+    bds-calendar-grid events emits bdsDayFocus with the focused cell's ISO date
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:248:9
+-       if (this.view === CALENDAR_GRID_VIEW.DAYS) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria returns to the day view on Escape without emitting a navigation event
+    bds-calendar-grid quick-picker keyboard and aria announces each view transition once through the local live region
+  and 1 more test!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:248:48
+-       if (this.view === CALENDAR_GRID_VIEW.DAYS) {
+-         return;
+-       }
++       if (this.view === CALENDAR_GRID_VIEW.DAYS) {}
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges does not leave the day view or emit navigation on Escape from the day view
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:252:5
+-       event.stopPropagation();
++       ;
+Tests ran:
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria returns to the day view on Escape without emitting a navigation event
+    bds-calendar-grid quick-picker keyboard and aria announces each view transition once through the local live region
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:259:9
+-       if (table instanceof Node && relatedTarget instanceof Node && table.contains(relatedTarget)) {
++       if (true && table.contains(relatedTarget)) {
+Tests ran:
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+    bds-calendar-grid events emits bdsGridFocusLeave when focus moves to an element outside the day grid table
+    bds-calendar-grid events emits bdsGridFocusLeave when focus leaves the day grid table with no related target
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:259:9
+-       if (table instanceof Node && relatedTarget instanceof Node && table.contains(relatedTarget)) {
++       if (table instanceof Node || relatedTarget instanceof Node && table.contains(relatedTarget)) {
+Tests ran:
+    bds-calendar-grid events does not emit bdsGridFocusLeave when focus moves between two day cells
+    bds-calendar-grid events emits bdsGridFocusLeave when focus moves to an element outside the day grid table
+    bds-calendar-grid events emits bdsGridFocusLeave when focus leaves the day grid table with no related target
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:279:9
+-       if (focusedEntry == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Space, emitting bdsMonthNavigate
+    bds-calendar-grid quick-picker keyboard activation edges ignores activation in the month view when no picker cell holds focus
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:279:31
+-       if (focusedEntry == null) {
+-         return;
+-       }
++       if (focusedEntry == null) {}
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges ignores activation in the month view when no picker cell holds focus
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:283:64
+-       const { cells } = generateMonthPickerGrid(this.pickerYear, {
+-         locale: this.locale,
+-         min: this.min,
+-         max: this.max,
+-         now: this.now,
+-       });
++       const { cells } = generateMonthPickerGrid(this.pickerYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Space, emitting bdsMonthNavigate
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:290:9
+-       if (cell != null) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Space, emitting bdsMonthNavigate
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:370:9
+-       if (focusedEntry == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+    bds-calendar-grid quick-picker keyboard activation edges ignores activation in the year view when no picker cell holds focus
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:370:31
+-       if (focusedEntry == null) {
+-         return;
+-       }
++       if (focusedEntry == null) {}
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges ignores activation in the year view when no picker cell holds focus
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:374:68
+-       const { cells } = generateYearPickerGrid(this.pickerStartYear, { min: this.min, max: this.max, now: this.now });
++       const { cells } = generateYearPickerGrid(this.pickerStartYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:376:9
+-       if (cell != null) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:392:31
+-       this.pickerAnnouncement = 'Month view';
++       this.pickerAnnouncement = "";
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+
+
+[Survived] ArithmeticOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:405:40
+-       if (this.isYearWindowFullyDisabled(this.pickerStartYear - 10)) {
++       if (this.isYearWindowFullyDisabled(this.pickerStartYear + 10)) {
+Tests ran:
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker paging pages the year picker window by a decade with PageUp and PageDown
+    bds-calendar-grid quick-picker paging no-ops paging the year picker window when the target window is entirely outside min/max
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:453:9
+-       if (focused == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker keyboard activation edges selects the focused year cell with Enter, returning to the month view for that year
+  and 6 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:453:26
+-       if (focused == null) {
+-         return undefined;
+-       }
++       if (focused == null) {}
+Tests ran:
+    bds-calendar-grid quick-picker year-window focus falls back to a priority year cell when the window shifts with no picker cell focused
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:467:9
+-       if (!(target instanceof HTMLElement)) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard activation edges ignores day-view activation when no day cell is focused
+    bds-calendar-grid quick-picker day-grid cell guards leaves the day grid with no tabbable cell when every in-month cell is disabled
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+  and 10 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:467:43
+-       if (!(target instanceof HTMLElement)) {
+-         return undefined;
+-       }
++       if (!(target instanceof HTMLElement)) {}
+Tests ran:
+    bds-calendar-grid quick-picker day-grid cell guards leaves the day grid with no tabbable cell when every in-month cell is disabled
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+    bds-calendar-grid keyboard anchors to the first enabled cell, not a disabled today, after a re-render when today falls outside min/max
+  and 5 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:481:9
+-       if (this.view === CALENDAR_GRID_VIEW.DAYS) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:481:48
+-       if (this.view === CALENDAR_GRID_VIEW.DAYS) {
+-         this.focusCell(this.getPriorityFocusCell());
+-         return;
+-       }
++       if (this.view === CALENDAR_GRID_VIEW.DAYS) {}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 6 more tests!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:482:7
+-         this.focusCell(this.getPriorityFocusCell());
++         ;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:486:9
+-       if (this.view === CALENDAR_GRID_VIEW.MONTHS) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:487:66
+-         const { cells } = generateMonthPickerGrid(this.pickerYear, {
+-           locale: this.locale,
+-           min: this.min,
+-           max: this.max,
+-           now: this.now,
+-         });
++         const { cells } = generateMonthPickerGrid(this.pickerYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:497:68
+-       const { cells } = generateYearPickerGrid(this.pickerStartYear, { min: this.min, max: this.max, now: this.now });
++       const { cells } = generateYearPickerGrid(this.pickerStartYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] OptionalChaining
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:498:31
+-       this.focusPickerCellByKey(this.getPriorityYearCell(cells)?.year);
++       this.focusPickerCellByKey(this.getPriorityYearCell(cells).year);
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:502:9
+-       if (cell == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 7 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:507:9
+-       if (el == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 7 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:515:9
+-       if (index === -1) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 7 more tests!
+
+
+[Survived] UnaryOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:515:19
+-       if (index === -1) {
++       if (index === +1) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker overlay restores the day grid and outer header to their interactive state on returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+  and 7 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:523:9
+-       if (key == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:523:22
+-       if (key == null) {
+-         return;
+-       }
++       if (key == null) {}
+Tests ran:
+    bds-calendar-grid quick-picker grid markup marks out-of-range month cells as aria-disabled and ignores their activation
+    bds-calendar-grid quick-picker grid markup marks year cells whose whole span falls outside min/max as aria-disabled
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:528:9
+-       if (el == null) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 45 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:536:9
+-       if (index === -1) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 45 more tests!
+
+
+[Survived] UnaryOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:536:19
+-       if (index === -1) {
++       if (index === +1) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 45 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:546:7
+-         preferredYear != null ? cells.find(cell => cell.year === preferredYear && !cell.isDisabled) : undefined;
++         true ? cells.find(cell => cell.year === preferredYear && !cell.isDisabled) : undefined;
+Tests ran:
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker paging pages the year picker window by a decade with PageUp and PageDown
+    bds-calendar-grid quick-picker year-window focus keeps real focus on the equivalent year cell after a year-window shift
+  and 4 more tests!
+
+
+[Survived] OptionalChaining
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:548:31
+-       this.focusPickerCellByKey(target?.year);
++       this.focusPickerCellByKey(target.year);
+Tests ran:
+    bds-calendar-grid quick-picker nested header steps the year picker window by a decade from its own header
+    bds-calendar-grid quick-picker paging pages the year picker window by a decade with PageUp and PageDown
+    bds-calendar-grid quick-picker year-window focus keeps real focus on the equivalent year cell after a year-window shift
+  and 4 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:579:9
+-       if (cell.isToday) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 117 more tests!
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:587:64
+-       const { cells } = generateMonthPickerGrid(this.pickerYear, {
+-         locale: this.locale,
+-         min: this.min,
+-         max: this.max,
+-         now: this.now,
+-       });
++       const { cells } = generateMonthPickerGrid(this.pickerYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:611:7
+-         cells.find(
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
+-         ) ??
+-         cells.find(
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
+-         ) ??
+-         cells.find(
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
+-         ) ??
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         (cells.find(cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month) ?? cells.find(cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month) ?? cells.find(cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month)) && cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:611:7
+-         cells.find(
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
+-         ) ??
+-         cells.find(
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
+-         ) ??
+-         cells.find(
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
+-         ) ??
++         (cells.find(cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month) ?? cells.find(cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month)) && cells.find(cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:611:7
+-         cells.find(
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
+-         ) ??
+-         cells.find(
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
+-         ) ??
++         cells.find(cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month) && cells.find(cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:9
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           () => undefined,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => true,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => false,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled && this.selectedYear === this.pickerYear || this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => true && this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled || this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:17
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:37
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled && true && this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:78
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && true,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags the selected date month with --selected and aria-selected, and no other month
+    bds-calendar-grid quick-picker selection state flags the selected date year with aria-selected in the year picker
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:37
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled && this.selectedYear !== this.pickerYear && this.selectedMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:612:78
+-           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth === cell.month,
++           cell => !cell.isDisabled && this.selectedYear === this.pickerYear && this.selectedMonth !== cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags the selected date month with --selected and aria-selected, and no other month
+    bds-calendar-grid quick-picker selection state flags the selected date year with aria-selected in the year picker
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:9
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           () => undefined,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => true,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => false,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear || this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => true && this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled || this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:17
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 44 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:37
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled && true && this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:37
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeEndYear !== this.pickerYear && this.rangeEndMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:78
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && true,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary months independently with no spanning highlight
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:615:78
+-           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeEndYear === this.pickerYear && this.rangeEndMonth !== cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary months independently with no spanning highlight
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:9
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           () => undefined,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => true,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => false,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear || this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => true && this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled || this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:17
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 43 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:37
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled && true && this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 41 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:37
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeStartYear !== this.pickerYear && this.rangeStartMonth === cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 41 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:80
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && true,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary years independently in the year picker
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:618:80
+-           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month,
++           cell => !cell.isDisabled && this.rangeStartYear === this.pickerYear && this.rangeStartMonth !== cell.month,
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary years independently in the year picker
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:620:18
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         cells.find(() => undefined) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:620:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         cells.find(cell => true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:620:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         cells.find(cell => !cell.isDisabled || cell.isCurrentMonth) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:620:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         cells.find(cell => false) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:620:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentMonth) ??
++         cells.find(cell => cell.isDisabled && cell.isCurrentMonth) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 42 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:7
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         (cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ?? cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ?? cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year)) && cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:7
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         (cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ?? cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year)) && cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:7
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) && cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:18
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(() => undefined) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:26
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:26
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => false) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:26
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled || this.selectedYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:26
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => cell.isDisabled && this.selectedYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:46
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:627:46
+-         cells.find(cell => !cell.isDisabled && this.selectedYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && this.selectedYear !== cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:18
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(() => undefined) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:26
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:26
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => false) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:26
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled || this.rangeEndYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:26
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => cell.isDisabled && this.rangeEndYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:46
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:628:46
+-         cells.find(cell => !cell.isDisabled && this.rangeEndYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && this.rangeEndYear !== cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 16 more tests!
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:18
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(() => undefined) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:26
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:26
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => false) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:26
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled || this.rangeStartYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:26
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => cell.isDisabled && this.rangeStartYear === cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:46
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:629:46
+-         cells.find(cell => !cell.isDisabled && this.rangeStartYear === cell.year) ??
++         cells.find(cell => !cell.isDisabled && this.rangeStartYear !== cell.year) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ArrowFunction
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:630:18
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         cells.find(() => undefined) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:630:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         cells.find(cell => true) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:630:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         cells.find(cell => false) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] LogicalOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:630:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         cells.find(cell => !cell.isDisabled || cell.isCurrentYear) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:630:26
+-         cells.find(cell => !cell.isDisabled && cell.isCurrentYear) ??
++         cells.find(cell => cell.isDisabled && cell.isCurrentYear) ??
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 15 more tests!
+
+
+[Survived] ObjectLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:636:68
+-       const { cells } = generateYearPickerGrid(this.pickerStartYear, { min: this.min, max: this.max, now: this.now });
++       const { cells } = generateYearPickerGrid(this.pickerStartYear, {});
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:645:31
+-       const matchesRangeStart = this.rangeStartYear === this.pickerYear && this.rangeStartMonth === cell.month;
++       const matchesRangeStart = true && this.rangeStartMonth === cell.month;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:646:29
+-       const matchesRangeEnd = this.rangeEndYear === this.pickerYear && this.rangeEndMonth === cell.month;
++       const matchesRangeEnd = true && this.rangeEndMonth === cell.month;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:664:39
+-         cellEl.setAttribute('tabindex', '-1');
++         cellEl.setAttribute('tabindex', "");
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 56 more tests!
+
+
+[Survived] OptionalChaining
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:671:5
+-       this._cellRefs.get(cell.isoDate)?.setAttribute('tabindex', '0');
++       this._cellRefs.get(cell.isoDate).setAttribute('tabindex', '0');
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 55 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:678:8
+-         [`${PREFIX}__picker-cell--current`]: cell.isCurrentMonth,
++         [``]: cell.isCurrentMonth,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:680:8
+-         [`${PREFIX}__picker-cell--disabled`]: cell.isDisabled,
++         [``]: cell.isDisabled,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:689:12
+-       return this.rangeEnd != null ? Number(this.rangeEnd.slice(5, 7)) - 1 : undefined;
++       return true ? Number(this.rangeEnd.slice(5, 7)) - 1 : undefined;
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary months independently with no spanning highlight
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:697:12
+-       return this.rangeStart != null ? Number(this.rangeStart.slice(5, 7)) - 1 : undefined;
++       return true ? Number(this.rangeStart.slice(5, 7)) - 1 : undefined;
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags both range boundary months independently with no spanning highlight
+    bds-calendar-grid quick-picker selection state flags both range boundary years independently in the year picker
+
+
+[Survived] EqualityOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:706:12
+-       return target.year * 12 + target.month >= current ? 'next' : 'prev';
++       return target.year * 12 + target.month > current ? 'next' : 'prev';
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Enter, emitting bdsMonthNavigate and returning to the day view
+    bds-calendar-grid quick-picker keyboard and aria selects the focused month cell with Space, emitting bdsMonthNavigate
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:715:12
+-       return this.selectedDate != null ? Number(this.selectedDate.slice(5, 7)) - 1 : undefined;
++       return true ? Number(this.selectedDate.slice(5, 7)) - 1 : undefined;
+Tests ran:
+    bds-calendar-grid quick-picker selection state flags the selected date month with --selected and aria-selected, and no other month
+    bds-calendar-grid quick-picker selection state flags the selected date year with aria-selected in the year picker
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:725:12
+-       } else {
+-         this._cellRefs.delete(isoDate);
+-       }
++       } else {}
+Tests ran:
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+    bds-calendar-grid keyboard prefers the selected date over today when both fall in the displayed month
+    bds-calendar-grid keyboard re-establishes a single roving-tabindex stop after the displayed month changes
+  and 1 more test!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:726:7
+-         this._cellRefs.delete(isoDate);
++         ;
+Tests ran:
+    bds-calendar-grid keyboard moves the roving-tabindex stop to the selected date when the displayed month changes
+    bds-calendar-grid keyboard prefers the selected date over today when both fall in the displayed month
+    bds-calendar-grid keyboard re-establishes a single roving-tabindex stop after the displayed month changes
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:731:9
+-       if (el != null) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] BlockStatement
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:733:12
+-       } else {
+-         this._pickerCellRefs.delete(key);
+-       }
++       } else {}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+  and 25 more tests!
+
+
+[Survived] CallExpression
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:734:7
+-         this._pickerCellRefs.delete(key);
++         ;
+Tests ran:
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+  and 25 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:740:8
+-         [`${PREFIX}__picker-cell`]: true,
++         [``]: true,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] BooleanLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:740:35
+-         [`${PREFIX}__picker-cell`]: true,
++         [`${PREFIX}__picker-cell`]: false,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:742:8
+-         [`${PREFIX}__picker-cell--current`]: cell.isCurrentYear,
++         [``]: cell.isCurrentYear,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:744:8
+-         [`${PREFIX}__picker-cell--disabled`]: cell.isDisabled,
++         [``]: cell.isDisabled,
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] UnaryOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:812:19
+-           tabIndex={-1}
++           tabIndex={+1}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:838:35
+-                 <tr role="row" key={`month-row-${rowIndex}`}>
++                 <tr role="row" key={``}>
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 46 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:898:31
+-             <tr role="row" key={`week-${weekIndex}`}>
++             <tr role="row" key={``}>
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 124 more tests!
+
+
+[Survived] UnaryOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:912:19
+-           tabIndex={-1}
++           tabIndex={+1}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:928:19
+-         <div class={`${PREFIX}__picker-card`}>
++         <div class={``}>
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:933:35
+-                 <tr role="row" key={`year-row-${rowIndex}`}>
++                 <tr role="row" key={``}>
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ArithmeticOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:950:52
+-             disabled={this.isYearWindowFullyDisabled(startYear - 10)}
++             disabled={this.isYearWindowFullyDisabled(startYear + 10)}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] ArithmeticOperator
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:960:52
+-             disabled={this.isYearWindowFullyDisabled(startYear + 10)}
++             disabled={this.isYearWindowFullyDisabled(startYear - 10)}
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+    bds-calendar-grid quick-picker view state machine returns to the month picker for the chosen year when a year is activated, not the day grid
+    bds-calendar-grid quick-picker grid markup renders the year picker as a role="grid" table of row/gridcell cells
+  and 17 more tests!
+
+
+[Survived] StringLiteral
+src/components/forms/bds-date-picker/bds-calendar-grid/bds-calendar-grid.tsx:976:21
+-           <div class={`${PREFIX}__grid-area`}>
++           <div class={``}>
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 124 more tests!
+
+
+[NoCoverage] ArrayDeclaration
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:45:61
+-         .filter((pos): pos is GridPosition => pos != null) ?? []
++         .filter((pos): pos is GridPosition => pos != null) ?? ["Stryker was here"]
+
+[NoCoverage] UnaryOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:68:25
+-         if (!wrap) return -1;
++         if (!wrap) return +1;
+
+[NoCoverage] UnaryOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:76:10
+-     return -1;
++     return +1;
+
+[NoCoverage] StringLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:36
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix ?? ``)
+
+[NoCoverage] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:39
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() && 'bds-grid'}-item`)
+
+[NoCoverage] MethodExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:39
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toUpperCase() ?? 'bds-grid'}-item`)
+
+[NoCoverage] OptionalChaining
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:39
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix ?? `${ctrl.root.tagName.toLowerCase() ?? 'bds-grid'}-item`)
+
+[NoCoverage] StringLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:75
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? ""}-item`)
+
+[NoCoverage] BlockStatement
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:113:65
+-       if (strategyType === FOCUS_STRATEGY.ARIA_ACTIVE_DESCENDANT) {
+-         if (ctrl.root != null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
+-       } else {
++       if (strategyType === FOCUS_STRATEGY.ARIA_ACTIVE_DESCENDANT) {} else {
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:114:11
+-         if (ctrl.root != null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
++         if (true) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:114:11
+-         if (ctrl.root != null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
++         if (false) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:114:11
+-         if (ctrl.root != null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
++         if (ctrl.root == null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
+
+[NoCoverage] CallExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:114:30
+-         if (ctrl.root != null) applyGridAriaActiveDescendant(items, row, col, ctrl.root, idPrefix);
++         if (ctrl.root != null) ;
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:162:22
+-       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
++       const edgeCell = true ? rowPositions[rowPositions.length - 1] : rowPositions[0];
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:162:22
+-       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
++       const edgeCell = false ? rowPositions[rowPositions.length - 1] : rowPositions[0];
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:162:22
+-       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
++       const edgeCell = dCol >= 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:162:22
+-       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
++       const edgeCell = dCol <= 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
+
+[NoCoverage] ArithmeticOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:162:46
+-       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length - 1] : rowPositions[0];
++       const edgeCell = dCol > 0 ? rowPositions[rowPositions.length + 1] : rowPositions[0];
+
+[NoCoverage] CallExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:163:5
+-       applyFocus(items, edgeCell.row, edgeCell.col);
++       ;
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:200:21
+-       if (e.repeat && repeatThrottleMs > 0) {
++       if (e.repeat && true) {
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:200:21
+-       if (e.repeat && repeatThrottleMs > 0) {
++       if (e.repeat && repeatThrottleMs >= 0) {
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:200:21
+-       if (e.repeat && repeatThrottleMs > 0) {
++       if (e.repeat && repeatThrottleMs <= 0) {
+
+[NoCoverage] BlockStatement
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:200:43
+-       if (e.repeat && repeatThrottleMs > 0) {
+-         const now = Date.now();
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
+-         lastRepeatTime = now;
+-       }
++       if (e.repeat && repeatThrottleMs > 0) {}
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:202:11
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
++         if (true) return;
+
+[NoCoverage] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:202:11
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
++         if (false) return;
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:202:11
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
++         if (now - lastRepeatTime <= repeatThrottleMs) return;
+
+[NoCoverage] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:202:11
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
++         if (now - lastRepeatTime >= repeatThrottleMs) return;
+
+[NoCoverage] ArithmeticOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:202:11
+-         if (now - lastRepeatTime < repeatThrottleMs) return;
++         if (now + lastRepeatTime < repeatThrottleMs) return;
+
+[NoCoverage] BlockStatement
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:265:30
+-             (e: MouseEvent) => {
+-               e.preventDefault();
+-               root.focus();
+-             },
++             (e: MouseEvent) => {},
+
+[NoCoverage] CallExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:266:13
+-               e.preventDefault();
++               ;
+
+[NoCoverage] CallExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:267:13
+-               root.focus();
++               ;
+
+[Survived] OptionalChaining
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:43:5
+-       items[row]
+-         ?.map((cell, col) => (isHTMLElement(cell) ? { row, col, cell } : null))
++       items[row].map((cell, col) => (isHTMLElement(cell) ? { row, col, cell } : null))
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+  and 14 more tests!
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:50:7
+-     if (row < 0 || col < 0) return null;
++     if (row < 0 && col < 0) return null;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 11 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:50:7
+-     if (row < 0 || col < 0) return null;
++     if (false || col < 0) return null;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 11 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:50:18
+-     if (row < 0 || col < 0) return null;
++     if (row < 0 || false) return null;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 9 more tests!
+
+
+[Survived] OptionalChaining
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:51:16
+-     const cell = items.at(row)?.at(col);
++     const cell = items.at(row).at(col);
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 9 more tests!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:58:12
+-       return Math.abs(position.col - col) < Math.abs(closest.col - col) ? position : closest;
++       return Math.abs(position.col - col) <= Math.abs(closest.col - col) ? position : closest;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 2 more tests!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:66:25
+-     for (let checked = 0; checked < rowCount; checked++) {
++     for (let checked = 0; checked <= rowCount; checked++) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 7 more tests!
+
+
+[Survived] UpdateOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:66:45
+-     for (let checked = 0; checked < rowCount; checked++) {
++     for (let checked = 0; checked < rowCount; checked--) {
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus vertically from the last row to the first row and back
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:67:9
+-       if (row < 0 || row >= rowCount) {
++       if (row <= 0 || row >= rowCount) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 7 more tests!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:67:20
+-       if (row < 0 || row >= rowCount) {
++       if (row < 0 || row > rowCount) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 6 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:68:11
+-         if (!wrap) return -1;
++         if (false) return -1;
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus vertically from the last row to the first row and back
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:69:13
+-         row = row < 0 ? rowCount - 1 : 0;
++         row = row <= 0 ? rowCount - 1 : 0;
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus vertically from the last row to the first row and back
+
+
+[Survived] BooleanLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:81:12
+-       wrap = false,
++       wrap = true,
+Tests ran:
+    setupGridNavigation registers grid keys and resolves strategy metadata
+    setupGridNavigation initializes from the first valid grid cell when earlier cells are empty
+    setupGridNavigation moves through irregular rows and skips empty cells
+  and 9 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:95:5
+-       focusStrategy.type === FOCUS_STRATEGY.ARIA_ACTIVE_DESCENDANT
++       false
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:96:10
+-         ? (focusStrategy.idPrefix ?? `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
++         ? (focusStrategy.idPrefix && `${ctrl.root?.tagName.toLowerCase() ?? 'bds-grid'}-item`)
+Tests ran:
+    setupGridNavigation applies aria-activedescendant to the selected initial grid cell
+
+
+[Survived] OptionalChaining
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:105:18
+-       const cell = items[row]?.[col];
++       const cell = items[row][col];
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+  and 14 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:106:9
+-       if (cell == null) return;
++       if (false) return;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+  and 14 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:113:9
+-       if (strategyType === FOCUS_STRATEGY.ARIA_ACTIVE_DESCENDANT) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+  and 13 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:123:9
+-       if (positions.length === 0) return;
++       if (false) return;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 12 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:135:11
+-         if (nextRow === -1) return;
++         if (false) return;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 3 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:138:11
+-         if (nextCell != null) applyFocus(items, nextCell.row, nextCell.col);
++         if (true) applyFocus(items, nextCell.row, nextCell.col);
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 3 more tests!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:146:9
+-       if (nextRowIndex >= 0 && nextRowIndex < rowPositions.length) {
++       if (nextRowIndex > 0 && nextRowIndex < rowPositions.length) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 9 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:152:9
+-       if (wrap && items.length > 1) {
++       if (true) {
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:152:9
+-       if (wrap && items.length > 1) {
++       if (wrap || items.length > 1) {
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:152:17
+-       if (wrap && items.length > 1) {
++       if (wrap && true) {
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:152:17
+-       if (wrap && items.length > 1) {
++       if (wrap && items.length >= 1) {
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:153:59
+-         const nextRow = findRowWithCells(items, row + dCol, dCol > 0 ? 1 : -1, true);
++         const nextRow = findRowWithCells(items, row + dCol, false ? 1 : -1, true);
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:153:59
+-         const nextRow = findRowWithCells(items, row + dCol, dCol > 0 ? 1 : -1, true);
++         const nextRow = findRowWithCells(items, row + dCol, dCol >= 0 ? 1 : -1, true);
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:154:11
+-         if (nextRow === -1) return;
++         if (false) return;
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:157:24
+-         const nextCell = dCol > 0 ? nextRowPositions[0] : nextRowPositions[nextRowPositions.length - 1];
++         const nextCell = dCol >= 0 ? nextRowPositions[0] : nextRowPositions[nextRowPositions.length - 1];
+Tests ran:
+    bds-calendar-grid keyboard skips disabled cells so they are never a focus stop
+    bds-calendar-grid keyboard skips out-of-month filler cells so they are never a focus stop
+    bds-calendar-grid keyboard wraps focus from the end of a row to the start of the next row
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:169:9
+-       if (positions.length === 0) return;
++       if (false) return;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:173:9
+-       if (row === -1 || getRowPositions(items, row).length === 0) row = positions[0].row;
++       if (false) row = positions[0].row;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:173:9
+-       if (row === -1 || getRowPositions(items, row).length === 0) row = positions[0].row;
++       if (row === -1 && getRowPositions(items, row).length === 0) row = positions[0].row;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:173:9
+-       if (row === -1 || getRowPositions(items, row).length === 0) row = positions[0].row;
++       if (false || getRowPositions(items, row).length === 0) row = positions[0].row;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+
+
+[Survived] UnaryOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:173:17
+-       if (row === -1 || getRowPositions(items, row).length === 0) row = positions[0].row;
++       if (row === +1 || getRowPositions(items, row).length === 0) row = positions[0].row;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:173:23
+-       if (row === -1 || getRowPositions(items, row).length === 0) row = positions[0].row;
++       if (row === -1 || false) row = positions[0].row;
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria moves within the current year row and to the window edges with Home/End
+    bds-calendar-grid keyboard moves focus to the current row start and end with Home and End
+    bds-calendar-grid keyboard moves focus to the grid start and end with Ctrl+Home and Ctrl+End
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:200:9
+-       if (e.repeat && repeatThrottleMs > 0) {
++       if (false) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria traverses month cells with the arrow keys keeping exactly one roving-tabindex stop
+    bds-calendar-grid keyboard moves DOM focus cell-to-cell with the arrow keys across the visible month
+    bds-calendar-grid keyboard keeps exactly one roving-tabindex stop on the focused cell after arrow traversal
+  and 12 more tests!
+
+
+[Survived] ObjectLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:211:5
+-       { repeat: true },
++       {},
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] BooleanLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:211:15
+-       { repeat: true },
++       { repeat: false },
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ObjectLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:216:5
+-       { repeat: true },
++       {},
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] BooleanLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:216:15
+-       { repeat: true },
++       { repeat: false },
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] BooleanLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:221:15
+-       { repeat: true },
++       { repeat: false },
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ObjectLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:221:5
+-       { repeat: true },
++       {},
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ObjectLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:226:5
+-       { repeat: true },
++       {},
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] BooleanLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:226:15
+-       { repeat: true },
++       { repeat: false },
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:233:7
+-     if (onActivate != null && activateKeys.length > 0) {
++     if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:233:7
+-     if (onActivate != null && activateKeys.length > 0) {
++     if (onActivate != null || activateKeys.length > 0) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:233:7
+-     if (onActivate != null && activateKeys.length > 0) {
++     if (true && activateKeys.length > 0) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:233:29
+-     if (onActivate != null && activateKeys.length > 0) {
++     if (onActivate != null && true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 127 more tests!
+
+
+[Survived] EqualityOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:233:29
+-     if (onActivate != null && activateKeys.length > 0) {
++     if (onActivate != null && activateKeys.length >= 0) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 127 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:236:13
+-           if (document.activeElement instanceof HTMLElement) {
++           if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker keyboard and aria opens the month picker exactly once from Enter on the focused header label
+    bds-calendar-grid quick-picker keyboard and aria opens the month picker exactly once from Space on the focused header label
+    bds-calendar-grid quick-picker keyboard activation edges ignores keyboard activation of a disabled year cell
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:244:7
+-     if (onPageUp != null) ctrl.register(KEYBOARD.PageUp, onPageUp);
++     if (true) ctrl.register(KEYBOARD.PageUp, onPageUp);
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:245:7
+-     if (onPageDown != null) ctrl.register(KEYBOARD.PageDown, onPageDown);
++     if (true) ctrl.register(KEYBOARD.PageDown, onPageDown);
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:246:7
+-     if (onEscape != null) ctrl.register(KEYBOARD.Escape, onEscape);
++     if (true) ctrl.register(KEYBOARD.Escape, onEscape);
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:248:7
+-     if (ctrl.root != null && ctrl.abortController != null) {
++     if (true) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] LogicalOperator
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:248:7
+-     if (ctrl.root != null && ctrl.abortController != null) {
++     if (ctrl.root != null || ctrl.abortController != null) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:248:7
+-     if (ctrl.root != null && ctrl.abortController != null) {
++     if (true && ctrl.abortController != null) {
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 136 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:254:9
+-           initialActiveSelector != null
++           true
+Tests ran:
+    bds-calendar-grid quick-picker view state machine opens the month picker when the header month/year label is activated
+    bds-calendar-grid quick-picker view state machine returns to the day view and emits bdsMonthNavigate with the picked absolute month when a month is activated
+    bds-calendar-grid quick-picker view state machine opens the year picker from the month view year control without leaving the overlay
+  and 135 more tests!
+
+
+[Survived] CallExpression
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:263:9
+-           root.addEventListener(
+-             'mousedown',
+-             (e: MouseEvent) => {
+-               e.preventDefault();
+-               root.focus();
+-             },
+-             { signal },
+-           );
++           ;
+Tests ran:
+    setupGridNavigation applies aria-activedescendant to the selected initial grid cell
+
+
+[Survived] StringLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:264:11
+-             'mousedown',
++             "",
+Tests ran:
+    setupGridNavigation applies aria-activedescendant to the selected initial grid cell
+
+
+[Survived] ObjectLiteral
+src/utils/a11y/keyboard/navigation/grid-navigation.ts:269:11
+-             { signal },
++             {},
+Tests ran:
+    setupGridNavigation applies aria-activedescendant to the selected initial grid cell
+
+
+Ran 39.98 tests per mutant on average.
+---------------------------|------------------|----------|-----------|------------|----------|----------|
+                           | % Mutation score |          |           |            |          |          |
+File                       |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+---------------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files                  |  75.97 |   78.69 |      828 |        10 |        227 |       38 |        0 |
+ components                |  77.82 |   78.53 |      606 |         1 |        166 |        7 |        0 |
+  forms                    |  77.82 |   78.53 |      606 |         1 |        166 |        7 |        0 |
+   bds-date-picker         |  77.82 |   78.53 |      606 |         1 |        166 |        7 |        0 |
+    bds-calendar-grid      |  77.82 |   78.53 |      606 |         1 |        166 |        7 |        0 |
+     bds-calendar-grid.tsx |  77.82 |   78.53 |      606 |         1 |        166 |        7 |        0 |
+ utils                     |  71.52 |   79.11 |      222 |         9 |         61 |       31 |        0 |
+  a11y                     |  71.52 |   79.11 |      222 |         9 |         61 |       31 |        0 |
+   keyboard                |  71.52 |   79.11 |      222 |         9 |         61 |       31 |        0 |
+    navigation             |  71.52 |   79.11 |      222 |         9 |         61 |       31 |        0 |
+     grid-navigation.ts    |  71.52 |   79.11 |      222 |         9 |         61 |       31 |        0 |
+---------------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m12:00:06 (55739) INFO HtmlReporter[39m Your report can be found at: file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/reports/mutation/mutation-bds-calendar-grid.html
+[32m12:00:06 (55739) INFO MutationTestExecutor[39m Done in 57 minutes and 11 seconds.

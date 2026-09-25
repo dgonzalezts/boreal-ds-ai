@@ -217,3 +217,50 @@ naming collision — `Mixin()` builds a real ES6 `extends` chain (`mixins.reduce
 => mixin(acc), baseClass)`), not a proxy. Use `super.x()` freely for non-colliding overrides
 (e.g. `componentDidLoad()`); only same-named-but-incompatible-signature cases need the
 rename-and-delegate pattern above.
+
+---
+
+## Triage: the incremental JSON is the authoritative mutant record, not the clear-text log
+
+The Stryker clear-text console output is lossy for `LogicalOperator` mutants on **chained**
+expressions. For `A && B && C` the log prints a replacement like
+`A || B && C` with **no parentheses**, which reads as `A || (B && C)`. The real AST-preserving
+mutant is `(A || B) && C` — verified empirically (2026-09-25, EOA-17662) by reproducing both
+forms and observing different behaviour. Always read `replacement` (and the full
+`location.start`/`location.end` columns) from `reports/stryker-incremental.<config>.json`, not the
+console diff, before deciding whether a survivor is a real gap or an equivalent.
+
+That JSON also carries per-mutant `status`, `killedBy`, and `coveredBy` test IDs, and
+`testFiles[].tests[]` maps IDs to test names — enough to reason precisely about a survivor
+without re-running Stryker. Counting `status` values in the JSON reproduces the console summary
+table exactly.
+
+## `KeyboardController.detach()` is unobservable under `newSpecPage` (mock-doc ignores AbortSignal)
+
+`KeyboardController.attach()` registers listeners with `{ signal }` from an `AbortController`;
+`detach()` removes them via `abort()`. `@stencil/core/mock-doc` does **not** honour an
+`AbortSignal`'s abort — a listener added with `{ signal }` keeps firing after `controller.abort()`
+(verified: spy call count stays 2 after abort). Consequently a mutant that deletes a
+`disconnectedCallback() { this._keyboard.detach(); }` call is indistinguishable by dispatching
+keys after `element.remove()` — the original emits too. To kill such a mutant, spy on the
+controller's own method instead:
+
+```typescript
+const instance = page.rootInstance as unknown as { _keyboard: { detach: () => void } };
+const detach = jest.spyOn(instance._keyboard, 'detach');
+element.remove();
+expect(detach).toHaveBeenCalledTimes(1);
+```
+
+`element.remove()` *does* invoke `disconnectedCallback` in the spec page (verified), so the spy
+observes the lifecycle wiring even though the listener teardown itself is a no-op in mock-doc.
+
+## `date-fns` undefined coercion makes `x !== undefined && …` guards equivalent in `date-engine/grid.ts`
+
+`compareAsc(validDate, undefined)` returns `NaN`; the project's `compareDates` wrapper narrows
+that to `0` (`if (result > 0) … if (result < 0) … return 0`). `isSameDay(validDate, undefined)`
+returns `false`. So in `grid.ts` the mutants that replace `weekStartsOn !== undefined`,
+`min !== undefined`, `max !== undefined`, `rangeStart !== undefined`, `rangeEnd !== undefined`,
+`previewEnd !== undefined` with `true` all evaluate to the same result as the original when the
+value is `undefined` — they are equivalents, not gaps. (`compareAsc` returning `NaN` rather than
+`0` in date-fns v4 is the trap: the raw date-fns call is not the narrowed contract.)

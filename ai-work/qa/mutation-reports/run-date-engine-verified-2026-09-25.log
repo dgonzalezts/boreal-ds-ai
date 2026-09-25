@@ -1,0 +1,317 @@
+Using Node v22.21.1
+[32m12:48:34 (73412) INFO ProjectReader[39m Found 4 of 1108 file(s) to be mutated using incremental report with 227 mutant(s), and 105 test(s).
+Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[32m12:48:34 (73412) INFO Instrumenter[39m Instrumented 4 source file(s) with 227 mutant(s)
+[33m12:48:34 (73412) WARN DisableTypeChecksPreprocessor[39m Unable to disable type checking for file "/Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/src/index.html". Shouldn't type checking be disabled for this file? Consider configuring a more restrictive "disableTypeChecks" settings (or turn it completely off with `false`) ParseError: Parse error in /Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/src/index.html (92:6) Unexpected closing tag "p". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags
+    at ngHtmlParser (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/parsers/html-parser.js:32:15)
+    at async parse (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/parsers/html-parser.js:16:18)
+    at async DisableTypeChecksPreprocessor.disableTypeChecks [as impl] (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+instrumenter@10.0.0/node_modules/@stryker-mutator/instrumenter/dist/src/disable-type-checks.js:28:17)
+    at async file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/disable-type-checks-preprocessor.js:27:41
+    at async Promise.all (index 987)
+    at async DisableTypeChecksPreprocessor.preprocess (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/disable-type-checks-preprocessor.js:24:9)
+    at async MultiPreprocessor.preprocess (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/sandbox/multi-preprocessor.js:8:13)
+    at async MutantInstrumenterExecutor.execute (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/process/2-mutant-instrumenter-executor.js:30:9)
+    at async Stryker.run (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker.js:49:48)
+    at async Stryker.runMutationTest (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker.js:27:20)
+    at async Command.<anonymous> (file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/node_modules/.pnpm/@stryker-mutator+core@10.0.0_@types+node@22.19.11/node_modules/@stryker-mutator/core/dist/src/stryker-cli.js:51:13)
+[33m12:48:34 (73412) WARN DisableTypeChecksPreprocessor[39m (disable "warnings.preprocessorErrors" to ignore this warning
+[32m12:48:35 (73412) INFO ConcurrencyTokenProvider[39m Creating 2 test runner process(es).
+[32m12:48:35 (73412) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m12:48:37 (73412) INFO DryRunExecutor[39m Starting initial test run (jest test runner with "perTest" coverage analysis). This may take a while.
+[32m12:48:40 (73412) INFO DryRunExecutor[39m Initial test run succeeded. Ran 133 tests in 3 seconds (net 114 ms, overhead 3565 ms).
+[32m12:48:41 (73412) INFO IncrementalDiffer[39m Incremental report:
+	Mutants:	0 files changed (+0 -0)
+	Tests:		2 files changed (+32 -4)
+	Result:		189 of 227 mutant result(s) are reused.
+Mutation testing 39% (elapsed: <1m, remaining: <1m) 19/38 tested (10 survived, 0 timed out)
+
+All tests
+  components/forms/bds-date-picker/bds-date-picker/utils/__test__/presets.spec.ts
+    ✘ computePresetRange — per-preset day arithmetic Today resolves to a single-day range covering only today [line 9] (covered 0)
+    ✓ computePresetRange — per-preset day arithmetic Yesterday resolves to a single-day range covering only yesterday [line 17] (killed 1)
+    ~ computePresetRange — per-preset day arithmetic Last 7 days resolves to a 7-day range inclusive of today, not 7 days before today [line 25] (covered 1)
+    ~ computePresetRange — per-preset day arithmetic Last 30 days resolves to a 30-day range inclusive of today, not 30 days before today [line 33] (covered 1)
+    ✓ computePresetRange — per-preset day arithmetic This month resolves to month-to-date (the 1st through today), not the full calendar month [line 41] (killed 1)
+    ✓ computePresetRange — per-preset day arithmetic Last month resolves to the full previous calendar month, start to end [line 49] (killed 1)
+    ✘ computePresetRange — per-preset day arithmetic never returns a with-time-shifted end for any preset, regardless of the caller [line 57] (covered 0)
+    ✘ computePresetRange — timezone-driven "today", not the device clock computes distinct "today" values for two different timezones given the same instant [line 68] (covered 0)
+    ✘ computePresetRange — timezone-driven "today", not the device clock re-derives "today" fresh on every call rather than caching the first computed value [line 78] (covered 0)
+    ~ computePresetCoverageEnd — with-time end-boundary shift returns range.end unchanged when with-time is off, for every preset [line 92] (covered 4)
+    ✓ computePresetCoverageEnd — with-time end-boundary shift shifts range.end forward by exactly one day when with-time is on, for a mid-range preset (Today) [line 102] (killed 1)
+    ~ computePresetCoverageEnd — with-time end-boundary shift shifts Last 7 days and Last 30 days forward by exactly one day past today [line 109] (covered 3)
+    ~ computePresetCoverageEnd — with-time end-boundary shift shifts Yesterday's end to exactly today, with no double-shift beyond the natural next-period boundary [line 121] (covered 2)
+    ~ computePresetCoverageEnd — with-time end-boundary shift shifts Last month's end to exactly the first day of the current month, with no double-shift [line 128] (covered 4)
+    ~ isPresetWithinBounds — inclusion against min/max returns true for a range fully inside min and max [line 139] (covered 12)
+    ~ isPresetWithinBounds — inclusion against min/max returns false for a range fully outside the bounds (entirely before min) [line 143] (covered 11)
+    ~ isPresetWithinBounds — inclusion against min/max returns false for a range only partially outside the bounds, never clamping to true [line 147] (covered 12)
+    ~ isPresetWithinBounds — inclusion against min/max treats each of min/max as independently optional, and both unset as unbounded [line 152] (covered 12)
+    ~ isPresetWithinBounds — inclusion against min/max treats an exact-equality boundary (range touching min/max precisely) as inside, inclusive on both ends [line 158] (covered 12)
+    ~ isPresetWithinBounds — inclusion against min/max operates on the real range, never a with-time-shifted coverage end [line 162] (covered 13)
+    ~ matchPreset — reverse lookup from a committed range back to its preset returns the matching key for a with-time-off preset given its own computed range [line 172] (covered 2)
+    ~ matchPreset — reverse lookup from a committed range back to its preset returns the matching key for another built-in preset, catching per-preset arithmetic off-by-ones [line 182] (covered 6)
+    ~ matchPreset — reverse lookup from a committed range back to its preset returns the matching key for a with-time preset given the coverage-shifted end, not the raw end [line 192] (covered 4)
+    ~ matchPreset — reverse lookup from a committed range back to its preset returns null for a manually-constructed range matching no built-in preset [line 204] (covered 6)
+    ~ matchPreset — reverse lookup from a committed range back to its preset returns null immediately when either bound is null, without evaluating any candidate [line 210] (covered 2)
+  services/date-engine/__test__
+    date-math.spec.ts
+      ✓ addMonths advances the date by the given number of months and returns a Date with the expected fields [line 14] (killed 1)
+      ✓ subMonths retreats the date by the given number of months and returns a Date with the expected fields [line 24] (killed 1)
+      ✓ isSameDay treats two timestamps on the same calendar day as equal, regardless of time-of-day [line 34] (killed 1)
+      ✓ isSameMonth treats two dates in the same calendar month as equal, regardless of day or time-of-day [line 43] (killed 1)
+      ✓ toNaiveISODate formats a local date as zero-padded yyyy-MM-dd [line 52] (killed 2)
+      ~ toNaiveISODate does not shift the date across a UTC day boundary [line 56] (covered 2)
+      ~ toNaiveISODate does not shift the date near the opposite end of the local day [line 62] (covered 2)
+      ✓ fromNaiveISODate round-trips with toNaiveISODate for a regular date [line 70] (killed 2)
+      ~ fromNaiveISODate round-trips with toNaiveISODate for a leap day [line 76] (covered 4)
+      ~ fromNaiveISODate parses the ISO string into the matching local calendar date fields [line 82] (covered 2)
+      ✓ isValidNaiveISODate returns true for a valid naive-ISO date [line 92] (killed 1)
+      ~ isValidNaiveISODate returns false for a malformed string [line 96] (covered 3)
+      ~ isValidNaiveISODate returns false for an out-of-range month/day [line 100] (covered 3)
+      ~ isValidNaiveISODate returns false for a nonsensical calendar date [line 104] (covered 3)
+      ~ isValidNaiveISODate returns false for an empty string [line 108] (covered 3)
+      ✓ isWithinRange translates the positional (date, start, end) arguments into the { start, end } interval shape [line 114] (killed 1)
+      ~ isWithinRange is inclusive of the start boundary [line 121] (covered 2)
+      ~ isWithinRange is inclusive of the end boundary [line 128] (covered 2)
+      ~ isWithinRange returns false for a date before the start boundary [line 135] (covered 2)
+      ~ isWithinRange returns false for a date after the end boundary [line 142] (covered 2)
+      ~ compareDates returns exactly -1 when the first date is earlier than the second [line 151] (covered 11)
+      ~ compareDates returns exactly 0 when the dates represent the same instant [line 155] (covered 9)
+      ~ compareDates returns exactly 1 when the first date is later than the second [line 159] (covered 6)
+    format.spec.ts
+      ✓ formatDisplayDate respects a custom format string [line 5] (killed 1)
+      ✓ formatDisplayDate produces locale-correct output for a non-English locale [line 9] (killed 1)
+      ~ formatDisplayDate does not throw and produces a sensible default-locale result when no locale is given [line 13] (covered 2)
+      ✓ getMonthYearLabel formats a normal month with the English default locale [line 20] (killed 2)
+      ~ getMonthYearLabel reads the December label from a December month index without rolling over to January [line 24] (covered 2)
+      ✓ getMonthYearLabel produces a locale-correct month name for a non-English locale [line 28] (killed 1)
+      ~ getMonthYearLabel does not throw and produces a sensible default-locale label when no locale is given [line 32] (covered 2)
+    grid.spec.ts
+      ✓ generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0 [line 18] (killed 19)
+      ~ generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1 [line 18] (covered 85)
+      ~ generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1 [line 18] (covered 85)
+      ~ generateMonthGrid produces a fixed 6x7 matrix for year 2023 month 1 [line 18] (covered 85)
+      ~ generateMonthGrid produces a fixed 6x7 matrix for year 2025 month 11 [line 18] (covered 85)
+      ✓ generateMonthGrid never flags an adjacent-month filler cell as in-range/range-start/range-end, even when its real date falls within the supplied range bounds [line 27] (killed 6)
+      ✓ generateMonthGrid marks the range end cell only as a range end, never also as in-range [line 46] (killed 1)
+      ✓ generateMonthGrid sets hasRangeCompanion only when a range end or a preview end is present [line 58] (killed 7)
+      ✓ generateMonthGrid flags leading days from the previous month as not current, with the correct calendar date [line 72] (killed 1)
+      ~ generateMonthGrid flags trailing days from the next month as not current, with the correct calendar date [line 83] (covered 85)
+      ~ generateMonthGrid flags every day belonging to the requested month as current [line 95] (covered 85)
+      ~ generateMonthGrid places the month's first day in the top-left cell when it already falls on the grid's start weekday [line 104] (covered 85)
+      ✓ generateMonthGrid produces a fully-shaped DayCell for every position in the grid [line 112] (killed 4)
+      ~ generateMonthGrid echoes the requested year and month and formats a matching English month label [line 123] (covered 85)
+      ✓ generateMonthGrid formats the month label using the supplied locale [line 131] (killed 1)
+      ~ generateMonthGrid marks the injected current date as today and no other cell [line 137] (covered 85)
+      ~ generateMonthGrid marks no cell as today when the mocked current date falls outside the grid [line 145] (covered 85)
+      ~ generateMonthGrid uses an explicitly passed `now` option to decide isToday, independent of the device clock [line 152] (covered 85)
+      ~ generateMonthGrid produces 29 current-month days for February in a leap year [line 160] (covered 85)
+      ~ generateMonthGrid produces 28 current-month days for February in a non-leap year [line 168] (covered 85)
+      ~ generateMonthGrid defaults to a Sunday-start grid when no locale or weekStartsOn is given [line 176] (covered 85)
+      ✓ generateMonthGrid shifts the first column to Monday when weekStartsOn is explicitly 1 [line 182] (killed 5)
+      ✓ generateMonthGrid defaults weekStartsOn to the supplied locale's own convention [line 188] (killed 1)
+      ~ generateMonthGrid lets an explicit weekStartsOn override the locale default [line 194] (covered 83)
+      ✓ generateMonthGrid falls back to Sunday without throwing when a locale has no options object [line 200] (killed 1)
+      ~ generateMonthGrid does not mutate the passed-in locale option object [line 208] (covered 85)
+      ~ generateMonthGrid leaves every cell enabled when neither min nor max is supplied [line 216] (covered 85)
+      ✓ generateMonthGrid disables cells before the min bound and enables cells on or after it [line 222] (killed 19)
+      ✓ generateMonthGrid disables cells after the max bound and enables cells on or before it [line 235] (killed 13)
+      ✓ generateMonthGrid disables cells outside both bounds and enables cells within them, inclusive of both boundaries [line 248] (killed 4)
+      ~ generateMonthGrid does not change the fixed 6x7 grid shape when min/max bounds are supplied [line 261] (covered 84)
+      ✓ generateMonthGrid leaves every cell with preview flags strictly false when previewEnd is not supplied [line 270] (killed 9)
+      ✓ generateMonthGrid flags the preview start/interior/end cells when both rangeStart and previewEnd are supplied [line 280] (killed 24)
+      ~ generateMonthGrid does not flag a preview end cell as a committed range flag, keeping preview and committed state independent [line 296] (covered 105)
+      ✓ generateMonthGrid flags the chronologically-earlier previewEnd as the preview start and rangeStart as the preview end when previewEnd falls before rangeStart [line 310] (killed 1)
+      ~ generateMonthGrid flags only the shared day itself, with no in-range cells, when previewEnd equals rangeStart [line 329] (covered 107)
+      ✓ generateMonthGrid returns all-false preview flags without throwing when previewEnd is supplied but rangeStart is not [line 343] (killed 1)
+      ✓ isMonthFullyDisabled returns false when neither min nor max is supplied [line 358] (killed 2)
+      ✓ isMonthFullyDisabled returns false when only some current-month days fall outside the bounds [line 364] (killed 1)
+      ✓ isMonthFullyDisabled returns true when every current-month day falls before the min bound [line 370] (killed 2)
+      ~ isMonthFullyDisabled returns true when every current-month day falls after the max bound [line 376] (covered 100)
+      ~ isMonthFullyDisabled ignores leading/trailing adjacent-month cells when deciding the result [line 382] (covered 89)
+      ✓ getWeekdayLabels returns 7 labels in Sunday-start display order by default [line 394] (killed 9)
+      ✓ getWeekdayLabels returns 7 labels in Monday-start display order when weekStartsOn is 1 [line 402] (killed 1)
+      ✓ getWeekdayLabels reflects a custom locale's day names [line 410] (killed 2)
+      ~ getWeekdayLabels defaults to English day names without a locale [line 426] (covered 20)
+      ✓ generateMonthPickerGrid returns exactly 12 cells with month 0..11 in order and echoes the year [line 442] (killed 14)
+      ~ generateMonthPickerGrid produces the English short month labels by default [line 450] (covered 29)
+      ✓ generateMonthPickerGrid produces a non-English locale's short month labels [line 469] (killed 1)
+      ~ generateMonthPickerGrid labels every cell with a non-empty string [line 476] (covered 29)
+      ✓ generateMonthPickerGrid flags only the `now` month as current when the year matches now's year [line 484] (killed 5)
+      ✓ generateMonthPickerGrid flags no month as current when the year differs from now's year [line 492] (killed 1)
+      ~ generateMonthPickerGrid flags no month as current when now is omitted [line 498] (covered 29)
+      ✓ generateMonthPickerGrid leaves every month enabled when neither min nor max is supplied [line 504] (killed 2)
+      ✓ generateMonthPickerGrid disables only months whose entire span falls before min [line 510] (killed 8)
+      ✓ generateMonthPickerGrid disables only months whose entire span falls after max [line 519] (killed 5)
+      ~ generateMonthPickerGrid keeps a month enabled when min/max only partially overlaps its span [line 528] (covered 49)
+      ~ generateMonthPickerGrid enables a month whose very last day equals min and disables the one before it [line 536] (covered 46)
+      ✓ generateMonthPickerGrid keeps a month enabled when the min bound falls exactly on its last instant [line 543] (killed 1)
+      ✓ generateMonthPickerGrid enables a month whose very first day equals max and disables the one after it [line 551] (killed 1)
+      ~ generateMonthPickerGrid returns a fresh array each call [line 558] (covered 29)
+      ✓ generateYearPickerGrid returns exactly 12 consecutive years from startYear and echoes startYear [line 569] (killed 12)
+      ~ generateYearPickerGrid returns 12 years for any start year, including the first of a decade [line 579] (covered 26)
+      ✓ generateYearPickerGrid flags only now's year as current [line 587] (killed 4)
+      ~ generateYearPickerGrid flags no year as current when now is omitted [line 595] (covered 26)
+      ~ generateYearPickerGrid flags no year as current when now falls outside the window [line 601] (covered 28)
+      ~ generateYearPickerGrid leaves every year enabled when neither min nor max is supplied [line 607] (covered 26)
+      ~ generateYearPickerGrid disables only years whose entire span falls before min [line 613] (covered 43)
+      ~ generateYearPickerGrid disables only years whose entire span falls after max [line 621] (covered 41)
+      ~ generateYearPickerGrid keeps a year enabled when min/max only partially overlaps its span [line 629] (covered 46)
+      ~ generateYearPickerGrid enables a year whose Dec 31 equals min and disables the prior year [line 637] (covered 43)
+      ~ generateYearPickerGrid enables a year whose Jan 1 equals max and disables the following year [line 644] (covered 41)
+      ~ generateYearPickerGrid returns a fresh array each call [line 651] (covered 26)
+    value.spec.ts
+      ✓ combineDateTimeToUTC round-trips with extractDateTimeFromUTC for a timezone with no DST (Asia/Tokyo) [line 4] (killed 3)
+      ~ combineDateTimeToUTC round-trips with extractDateTimeFromUTC for a timezone observing DST (America/Los_Angeles) [line 17] (covered 3)
+      ~ combineDateTimeToUTC produces different UTC offsets for the same wall-clock time in Los Angeles across the DST boundary [line 30] (covered 1)
+      ~ combineDateTimeToUTC produces the same UTC offset for the same wall-clock time in Tokyo year-round, since Japan does not observe DST [line 38] (covered 1)
+      ~ combineDateTimeToUTC resolves a wall-clock time that falls inside the America/Los_Angeles spring-forward gap without an off-by-one-hour result [line 46] (covered 3)
+
+[Survived] EqualityOperator
+src/services/date-engine/grid.ts:135:31
+-     const previewEndIsEarlier = compareDates(previewEnd, rangeStart) < 0;
++     const previewEndIsEarlier = compareDates(previewEnd, rangeStart) <= 0;
+Tests ran:
+    generateMonthGrid flags the preview start/interior/end cells when both rangeStart and previewEnd are supplied
+    generateMonthGrid does not flag a preview end cell as a committed range flag, keeping preview and committed state independent
+    generateMonthGrid flags the chronologically-earlier previewEnd as the preview start and rangeStart as the preview end when previewEnd falls before rangeStart
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:62:7
+-     if (weekStartsOn !== undefined) {
++     if (true) {
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 43 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:78:7
+-     if (max !== undefined) {
++     if (true) {
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 33 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:94:7
+-     if (min !== undefined && compareDates(cellEnd, min) < 0) {
++     if (true && compareDates(cellEnd, min) < 0) {
+Tests ran:
+    generateMonthPickerGrid returns exactly 12 cells with month 0..11 in order and echoes the year
+    generateMonthPickerGrid produces the English short month labels by default
+    generateMonthPickerGrid produces a non-English locale's short month labels
+  and 24 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:98:10
+-     return max !== undefined && compareDates(cellStart, max) > 0;
++     return true && compareDates(cellStart, max) > 0;
+Tests ran:
+    generateMonthPickerGrid returns exactly 12 cells with month 0..11 in order and echoes the year
+    generateMonthPickerGrid produces the English short month labels by default
+    generateMonthPickerGrid produces a non-English locale's short month labels
+  and 24 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:106:24
+-     const isRangeStart = rangeStart !== undefined && isSameDay(date, rangeStart);
++     const isRangeStart = true && isSameDay(date, rangeStart);
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:107:22
+-     const isRangeEnd = rangeEnd !== undefined && isSameDay(date, rangeEnd);
++     const isRangeEnd = true && isSameDay(date, rangeEnd);
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:109:5
+-       rangeStart !== undefined &&
+-       rangeEnd !== undefined &&
++       true &&
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+[Survived] LogicalOperator
+src/services/date-engine/grid.ts:109:5
+-       rangeStart !== undefined &&
+-       rangeEnd !== undefined &&
++       rangeStart !== undefined || rangeEnd !== undefined &&
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:109:5
+-       rangeStart !== undefined &&
++       true &&
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+[Survived] ConditionalExpression
+src/services/date-engine/grid.ts:110:5
+-       rangeEnd !== undefined &&
++       true &&
+Tests ran:
+    generateMonthGrid never flags an adjacent-month filler cell as in-range/range-start/range-end, even when its real date falls within the supplied range bounds
+    generateMonthGrid marks the range end cell only as a range end, never also as in-range
+    generateMonthGrid sets hasRangeCompanion only when a range end or a preview end is present
+  and 5 more tests!
+
+
+[Survived] EqualityOperator
+src/services/date-engine/grid.ts:207:23
+-     for (let index = 0; index < GRID_CELL_COUNT; index += 1) {
++     for (let index = 0; index <= GRID_CELL_COUNT; index += 1) {
+Tests ran:
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 0
+    generateMonthGrid produces a fixed 6x7 matrix for year 2026 month 1
+    generateMonthGrid produces a fixed 6x7 matrix for year 2024 month 1
+  and 39 more tests!
+
+
+Ran 20.78 tests per mutant on average.
+--------------|------------------|----------|-----------|------------|----------|----------|
+              | % Mutation score |          |           |            |          |          |
+File          |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+--------------|--------|---------|----------|-----------|------------|----------|----------|
+All files     |  94.71 |   94.71 |      210 |         5 |         12 |        0 |        0 |
+ date-math.ts | 100.00 |  100.00 |       27 |         0 |          0 |        0 |        0 |
+ format.ts    | 100.00 |  100.00 |        5 |         0 |          0 |        0 |        0 |
+ grid.ts      |  93.75 |   93.75 |      175 |         5 |         12 |        0 |        0 |
+ value.ts     | 100.00 |  100.00 |        3 |         0 |          0 |        0 |        0 |
+--------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m12:48:59 (73412) INFO HtmlReporter[39m Your report can be found at: file:///Users/dgonzalez/projects/src/boreal-ds/.worktrees/mutation-eoa17662/packages/boreal-web-components/reports/mutation/mutation-date-engine.html
+[32m12:48:59 (73412) INFO MutationTestExecutor[39m Done in 25 seconds.
