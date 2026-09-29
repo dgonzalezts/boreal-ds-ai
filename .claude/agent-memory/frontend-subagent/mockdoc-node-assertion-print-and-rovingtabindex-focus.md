@@ -27,3 +27,39 @@ then set the target. `bds-calendar-grid.markTabbableCell` (called from `componen
 Related: Stencil serializes a boolean `true` on an `aria-*` attribute as `""`, not `"true"` — so a
 selector like `[aria-selected="true"]` never matches. Always stringify ARIA state booleans
 (`cond ? 'true' : undefined`), matching the `aria-disabled`/`aria-current` convention.
+
+## 3. `applyRovingTabindex` only demotes cells that are IN the `items` list (FM-CG-21)
+
+`applyRovingTabindex(items, activeIndex)` finds the current stop via
+`items.findIndex(item => item.getAttribute('tabindex') === '0')` and only demotes *that* item. So if
+the caller builds `items` with disabled cells filtered out (`cell.isDisabled ? null : …` — as
+`getMonthPickerGridItems`/`getYearPickerGridItems` do), a stale `tabindex="0"` sitting on a
+**now-disabled** cell is invisible to it and is **never demoted** → two cells claim the tab stop,
+one dead.
+
+How a stale stop on a disabled cell arises: picker cells are keyed by `month`/`year`, so the same
+`<td>` DOM node persists across a `pickerYear` change while its `isDisabled` flips. Stencil's vdom
+diff skips re-writing `tabIndex={-1}` because the *vnode* value is unchanged (it never knew about
+the imperative `0`), so the DOM keeps the stale `0`.
+
+Fix (`focusPickerCellByKey`): explicitly `setAttribute('tabindex','-1')` on **every rendered picker
+cell** — `this.el.querySelectorAll('td.bds-calendar-grid__picker-cell')` — before calling
+`this._keyboard.rovingTabindex(flatItems, index)`. Demote from the **rendered DOM**, not just
+`_pickerCellRefs.values()`: the map is normally complete at `componentDidUpdate` time (traced live:
+`refsKeys=0..11`), but the DOM query is robust regardless of ref-callback timing. Doing it in the
+shared `focusPickerCellByKey` covers both the month and year picker focus-restoration paths.
+
+**Live-verification gotcha (FM-CG-21 false alarm):** the first "the fix does not work in a real
+browser" report was a **stale dev-server chunk**, not a logic failure. `pnpm dev:components`
+(`stencil build --dev --watch --serve`) served a pre-fix content-hashed chunk
+(`p-<hex>.entry.js`, old mtime) while the watcher only rewrote a friendly-named
+`bds-calendar-grid.entry.js` that the browser never loaded — the stale-lazy-chunk issue. After
+`rm -rf .stencil www dist` + restart, the fresh build emitted **friendly-named** `*.entry.js` chunks
+(which the browser loads directly), and the invariant held immediately (`stopCount:1`,
+`anyDisabledStop:false`). Before trusting any live repro of a component change here, confirm the
+served chunk is fresh via `performance.getEntriesByType('resource')` and a full clean rebuild.
+
+Year picker: **no reachable leak** — a year cell's `isDisabled` depends only on `min`/`max`, which a
+±10 window shift doesn't change, so a cell that was enabled when focused can't flip to disabled while
+its key persists; a non-persistent key's node is removed entirely. (The shared demote hardens it
+anyway.) Day grid already avoided this via `markTabbableCell`/`applyGridRovingTabindex` demote-all.

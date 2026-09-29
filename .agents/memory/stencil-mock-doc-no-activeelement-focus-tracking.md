@@ -2,9 +2,13 @@
 
 ## The Gap
 
-Stencil's `@stencil/core/mock-doc` (verified on `4.42.1`) implements `HTMLElement.prototype.focus()` as nothing more than dispatching a bubbling `MockFocusEvent('focus')` — it never updates any notion of "the focused element". `MockDocument` has **no `activeElement` getter at all** (only `MockShadowRoot` does, returning `null`), so `document.activeElement` is `undefined` in a `newSpecPage()` spec. Same for `blur()` and `document.body`.
+Stencil's `@stencil/core/mock-doc` (verified on `4.42.1`) implements `HTMLElement.prototype.focus()` as nothing more than dispatching a bubbling `MockFocusEvent('focus')` (mock-doc `index.js`, `MockElement.focus()`) — it never updates any notion of "the focused element". `MockDocument` has **no `activeElement` getter at all** (only `MockShadowRoot` does, returning `null`), so `document.activeElement` is `undefined` in a `newSpecPage()` spec.
+
+**Correction (2026-09-28):** an earlier revision of this entry also claimed `document.body` is undefined under mock-doc. That is wrong. `document.body` **is** defined — `MockDocument` builds the document element with `head`/`body` eagerly and exposes a real `get body()`; specs freely use `document.body.appendChild(...)`, `document.body.innerHTML = ''`, and compare `document.activeElement === document.body`. Only the *focus-tracking* surface (`document.activeElement`) is absent/`undefined`.
 
 Consequence: `expect(document.activeElement).toBe(someInput)` is meaningless/dead in a spec and will never reflect a real focus move. `element.focus()` is also a no-op for focus state — the only observable side effect is the `focus` event it dispatches.
+
+**Practical trap.** `document.activeElement` is `undefined`, not `null`. A guard written as `active !== null` therefore does **not** catch the mock-doc case (`undefined !== null` is `true`), and a follow-on `active.contains(...)` throws. Focus-restoration and focus-containment code paths must tolerate an `undefined` `activeElement` in spec environments; the established patterns are a local `document.activeElement` installed via `Object.defineProperty` for the duration of the assertion (see `bds-popover-events.spec.ts`'s `focus containment` block), or an instance-level `jest.spyOn(el, 'focus')`. Corollary: with no tracker installed, `document.activeElement !== target` is always `true` after `target.focus()`, so a "focus the target, else focus its first focusable descendant" routine always enters the descendant fallback — which is why a global `activeElement`-updating tracker masks that branch (see `stencil-focus-spy-recursion-and-global-tracker-masking.md`).
 
 ## The Workaround
 

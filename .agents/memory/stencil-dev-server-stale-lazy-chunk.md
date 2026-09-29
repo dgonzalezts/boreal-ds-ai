@@ -17,6 +17,25 @@ The browser's `<script type="module">` entry actually resolves to the stale hash
 - The live browser (including a freshly-navigated Playwright page, not just a stale tab) still exhibits the pre-fix behavior, repeatedly, across multiple reload attempts.
 - `playwright-cli -s=<name> requests` (filtered to the component name) shows the actual `<script>`/dynamic-import request resolves to a **different filename** than the one being checked (a `p-[hash].entry.js` chunk, not the component's own `.entry.js`).
 
+## Why It Matters: A Stale Chunk Invalidates a Live Repro (False Negative)
+
+A stale chunk does not merely show old UI — it can make a **correct fix look broken**, because the browser is genuinely executing pre-fix code. Observed again in the `bds-calendar-grid` roving-tabindex session (2026-09-28): after the source fix, an incremental `--watch` rebuild rewrote only the friendly-named `bds-calendar-grid.entry.js`, while the live page kept loading an older `p-<hash>.entry.js` chunk. The already-fixed "two roving-tabindex stops" regression therefore still appeared in the browser and was reported as still broken. It was not — see `roving-tabindex-demotes-only-provided-items.md` for the actual fix, which was already correct.
+
+Two epistemic rules follow:
+
+- A **green unit suite is not evidence a fix works in the browser.** Passing specs run against source + mock-doc, never against the served chunk.
+- A **failing live repro against the dev server is not evidence the fix failed.** Rule out the stale chunk before opening a new investigation.
+
+## Confirm the Served Bundle Reflects Current Source
+
+Before trusting any live repro, screenshot, or DevTools inspection on `dev:components`, confirm the browser actually loaded the current build:
+
+- In the page console, list loaded module/script URLs, e.g. `performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('.entry.js'))`. Compare each against the on-disk build output (e.g. `packages/boreal-web-components/www/build/`): the served `p-<hash>.entry.js` must correspond to a file whose mtime is at/after your last edit. A `p-[hash]` chunk older than the edit is the stale-chunk signature.
+- `playwright-cli -s=<name> requests` gives the same answer when driving the page through the CLI.
+- When in doubt, do not reason about it — rebuild cleanly (see **Fix** below).
+
+After a clean rebuild, entry chunks are emitted under their friendly names (`<component-name>.entry.js`), which the browser loads directly, so the watcher serves subsequent edits fresh. That is the state to be in before treating any browser observation as authoritative.
+
 ## Fix
 
 A plain server restart is not sufficient once this happens. Clear both Stencil caches and do a full rebuild:
@@ -36,4 +55,4 @@ After a clean rebuild, lazy chunks are regenerated (in this codebase's config, w
 
 Only after ruling out the simpler explanations first, in order: (1) confirm the source file actually has the fix, (2) confirm the *actually-loaded* network resource (not a same-purpose but differently-named file) contains the fix, (3) try a plain dev-server restart. Only escalate to a full `.stencil`/`www` clear if the server has been running `--watch` for a long session with many prior rebuilds and a plain restart didn't resolve it — this is what happened in the originating session (dozens of rebuilds across several hours before the stale chunk appeared).
 
-Source: bds-table formatter-cache flash-bug session, 2026-07-27. Cost several rounds of "the fix still doesn't work" investigation before being correctly diagnosed and ruled out as the cause of a real, separate code bug (see `stencil-non-shadow-slot-relocation-timing.md`).
+Source: bds-table formatter-cache flash-bug session, 2026-07-27. Cost several rounds of "the fix still doesn't work" investigation before being correctly diagnosed and ruled out as the cause of a real, separate code bug (see `stencil-non-shadow-slot-relocation-timing.md`). Confirmed again 2026-09-28 in the `bds-calendar-grid` roving-tabindex session, where it produced a false-negative verification of an already-correct fix. Note `pnpm dev:components` resolves to `pnpm --filter=@telesign/boreal-web-components dev` → `stencil build --dev --watch --serve` (plus a `boreal-style-guidelines` prebuild); invoking that `stencil` command directly is equivalent for this failure mode.

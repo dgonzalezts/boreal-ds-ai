@@ -1503,3 +1503,110 @@ Task 50's list — view-switch/selection transitions, dual-instance independence
 ## Pending-decision rows requiring a ruling before any test is written for them
 
 None. FM-91 through FM-109 are all `confirmed` and carry a `Covered by` entry; FM-85/FM-86 remain deferred pending their `frontend-subagent` fix (unchanged from the Task 43 section above).
+
+---
+
+## Extension — 2026-09-28, cross-month arrow traversal + `expanded` focus hand-off (EOA-17662)
+
+Audit scope: `bds-calendar-grid.tsx`'s new `handleGridOutOfBounds`/`focusDate`/`getClampedFocusCell` and the
+`bds-date-picker.tsx` orchestration around them (`tryHandOffFocus`, `applyMonthNavigate`, `handleMonthNavigate`,
+`renderCalendarPanel`'s per-slot `onBdsMonthNavigate`). The generic util rows (FM-78 – FM-84) and the grid's
+own boundary/`focusDate` rows (the new `bds-calendar-grid.md`, FM-CG-01 – FM-CG-16) are separate; these rows
+cover only the cross-component integration, matching TC-33's scenarios 1-6.
+
+### FM-110 | A single-calendar arrow crossing a month boundary advances the displayed month and lands focus on the exact target day
+
+- **ID:** FM-110
+- **Category:** boundary
+- **Risk:** the grid emits `bdsMonthNavigate` correctly but the picker never follows it, or follows it without
+  restoring the pending `focusDate`, leaving focus stranded on the old month's dead cell
+- **Input that reveals it:** `basic` picker on February 2026; ArrowRight on day 28
+- **Observed current behavior:** `handleMonthNavigate` (`bds-date-picker.tsx:585-591`) calls `tryHandOffFocus`,
+  which returns `false` for a non-`expanded` picker, so `applyMonthNavigate(PRIMARY, detail)` (`:442-448`) sets
+  `displayYear`/`displayMonth`; the grid's `componentDidUpdate` then consumes `_pendingFocusIsoDate`
+- **Recommended contract:** `displayMonth` advances to the target month; DOM focus lands on the exact
+  `focusDate` in the re-rendered grid; the live region announces the new month
+- **Contract status:** confirmed — TC-33 scenario 1
+- **Why it matters:** the headline behavior of the feature
+- **Covered by:** `bds-date-picker.keyboard.spec.ts::'advances the displayed month and focuses the target day when an arrow crosses a month boundary'`
+
+### FM-111 | In `expanded` mode, a crossing arrow that lands in the sibling's displayed month hands focus off without shifting the window
+
+- **ID:** FM-111
+- **Category:** equivalence
+- **Risk:** the picker could shift the whole window even though the target month is already visible in the other
+  calendar, producing a jarring double-advance and breaking the "consecutive months" invariant
+- **Input that reveals it:** `expanded` picker, left = February 2026 / right = March; ArrowRight on the left
+  calendar's day 28 (target March 1, visible on the right); symetrically ArrowLeft on the right calendar's day 1
+- **Observed current behavior:** `tryHandOffFocus` (`bds-date-picker.tsx:471-501`) resolves the sibling's
+  displayed month, and when the target matches it calls `sibling.focusDate(detail.focusDate)` then
+  `origin.focusDate(null)`, returning `true` so `handleMonthNavigate` skips `applyMonthNavigate`
+- **Recommended contract:** `displayYear`/`displayMonth` unchanged; DOM focus moves into the sibling calendar
+- **Contract status:** confirmed — TC-33 scenario 2
+- **Why it matters:** the hand-off is what makes the two calendars feel like one continuous surface
+- **Covered by:** `bds-date-picker.keyboard.spec.ts::"hands focus to the right calendar without shifting the window when an arrow crosses the left calendar's edge"`, `"hands focus to the left calendar without shifting the window when an arrow crosses the right calendar's leading edge"`
+
+### FM-112 | In `expanded` mode, a crossing arrow off the window's outer edges shifts both calendars by one month
+
+- **ID:** FM-112
+- **Category:** boundary
+- **Risk:** the target month is not visible in either calendar; if the window did not shift, focus would be
+  stranded (or the sibling hand-off would fire spuriously)
+- **Input that reveals it:** `expanded` picker, left = February / right = March; ArrowDown on the right
+  calendar's last day (target April, past the right calendar); symetrically ArrowUp on the left calendar's first
+  week (target January, before the left calendar)
+- **Observed current behavior:** `tryHandOffFocus` returns `false` when the target's month is neither the
+  sibling's displayed month nor reachable, so `handleMonthNavigate` calls `applyMonthNavigate`
+- **Recommended contract:** both calendars advance one month (left Mar / right Apr, or left Jan / right Feb);
+  focus lands on the target in the calendar that owned the origin
+- **Contract status:** confirmed — TC-33 scenario 3
+- **Why it matters:** without it, an outer-edge arrow is a dead end
+- **Covered by:** `bds-date-picker.keyboard.spec.ts::'shifts both calendars forward when an arrow leaves the right calendar beyond the window'`, `'shifts both calendars back when an arrow leaves the left calendar before the window'`
+
+### FM-113 | `expanded` hardened fallback: when the sibling cannot take focus, the parent shifts the window instead of stranding focus
+
+- **ID:** FM-113
+- **Category:** race-timing / component-contract-bypass
+- **Risk:** the sibling's month matches (so the hand-off path is chosen) but the sibling is showing its
+  quick-picker, so `focusDate` resolves `false`; without the `.then(moved => ...)` fallback focus would be left
+  on the origin with no month change — the exact dead-end TC-33 scenario 6 guards
+- **Input that reveals it:** `expanded` picker, the right calendar's quick-picker open, ArrowRight on the left
+  calendar's day 28 (target March 1, nominally the right calendar's displayed month)
+- **Observed current behavior:** `tryHandOffFocus` (`bds-date-picker.tsx:493-499`) resolves
+  `sibling.focusDate(...)`; when it resolves `false` it calls `applyMonthNavigate(slot, detail)` instead of
+  `origin.focusDate(null)`, and `resetCalendarViews()` (inside `applyMonthNavigate`) returns every grid to
+  `days`
+- **Recommended contract:** the window shifts forward, the sibling's quick-picker closes, and focus lands on the
+  target date — never stranded
+- **Contract status:** confirmed — TC-33 scenario 6
+- **Why it matters:** the hardening this feature explicitly added
+- **Covered by:** `bds-date-picker.keyboard.spec.ts::"shifts the window and closes the sibling picker when the sibling cannot take focus"`
+
+### FM-114 | PageUp/PageDown are no-ops at a fully-disabled adjacent month on the single-calendar path
+
+- **ID:** FM-114
+- **Category:** boundary
+- **Risk:** the keyboard month-paging path bypasses the disabled header buttons and could enter a month where
+  every day is unselectable
+- **Input that reveals it:** `default` picker bounded `min="2026-09-10" max="2026-09-20"`, focused on a September
+  day; PageUp (August is fully before `min`) then PageDown (October is fully after `max`)
+- **Observed current behavior:** `handlePageUp`/`handlePageDown` (`bds-calendar-grid.tsx:370-396`) delegate to
+  `handlePrevClick`/`handleNextClick`, each guarded by `prevDisabled`/`nextDisabled` (`:361-368`, `:422-429`),
+  whose values come from `computeNavGuard`'s `isMonthFullyDisabled` check
+- **Recommended contract:** the displayed month is unchanged and no `bdsMonthNavigate` fires
+- **Contract status:** confirmed — TC-33 scenario 5
+- **Why it matters:** parity between the keyboard and the disabled header buttons
+- **Covered by:** `bds-date-picker.keyboard.spec.ts::'does not page into a fully-disabled adjacent month with PageUp or PageDown'`
+
+## Reconciliation against this task's stated unit-test list
+
+The task's list — util `onBoundary`, controller passthrough, grid `bdsMonthNavigate`/`focusDate`/guards, and
+the picker-level single-calendar crossing, `expanded` hand-off, window shift, hardened fallback, and min/max
+paging — maps onto FM-110 – FM-114 here plus FM-CG-01 – FM-CG-15 in the new `bds-calendar-grid.md`. No listed
+item rests on an unsettled contract. FM-CG-16 (an out-of-month, unbounded `focusDate` target) is the one
+`pending-decision` row surfaced by the audit and is deliberately not tested.
+
+## Pending-decision rows requiring a ruling before any test is written for them
+
+None new in this section. FM-CG-16 (in `bds-calendar-grid.md`) is the sole open row for the feature and is
+listed as an open question in the session report rather than tested.

@@ -17,3 +17,13 @@ awk '/SF:.*<path-to-file>$/{flag=1} flag{print} /end_of_record/{if(flag){exit}}'
 ```
 
 If the touched lines all show a non-zero hit-count, the diff itself is fully exercised even though the file-wide score is low — report both facts distinctly (file-wide score vs. touched-lines coverage) rather than blocking on the aggregate number. Only treat the aggregate gate as blocking when the task is "write/complete tests for this component" rather than "confirm this specific change didn't regress anything."
+
+**Scoped-command gotcha (2026-09-28, `bds-calendar-grid`):** with a *narrow* positional path
+(`.../bds-calendar-grid`) and a *broad* `--collectCoverageFrom` glob (`.../bds-date-picker/**/*.tsx`),
+`test:coverage` exits non-zero (`ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`) because the **global 80%
+threshold** in `testing.config.ts` is evaluated against the aggregate, which now includes untested
+sibling component files (`bds-date-picker.tsx` + its `helpers/render*.tsx` at 0%). The component
+under test can be at 98.37% stmts / 94.98% branches and the command still fails. Fix: point
+`--collectCoverageFrom` at the component's own directory
+(`.../bds-calendar-grid/**/*.tsx`) so the aggregate == the component — then the command is green
+(`EXIT=0`). Report both runs when the task prescribes the broad glob.
