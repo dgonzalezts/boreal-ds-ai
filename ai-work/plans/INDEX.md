@@ -5,8 +5,8 @@
 | [AI-001-ai-scaffold-restructure.md](./AI-001-ai-scaffold-restructure.md) | done | AI Scaffold Restructure Implementation Plan |
 | [AI-001-bds-button-accessibility-docs.md](./AI-001-bds-button-accessibility-docs.md) | done | bds-button Accessibility & Documentation Improvements |
 | [AI-002-ai-scaffold-knowledge-consolidation.md](./AI-002-ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
-| [AI-003-release-process-remediation-patch-release-it.md](./AI-003-release-process-remediation-patch-release-it.md) | pending | Release Process Remediation — Option A: Patch `release-it` in place |
-| [AI-003-release-process-remediation-migrate-changesets.md](./AI-003-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
+| [EOA-18749-release-process-remediation-patch-release-it.md](./EOA-18749-release-process-remediation-patch-release-it.md) | in progress | Release Process Remediation (Option A: patch `release-it`) Implementation Plan |
+| [EOA-18749-release-process-remediation-migrate-changesets.md](./EOA-18749-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
 | [AI-004-utils-file-naming-cleanup.md](./AI-004-utils-file-naming-cleanup.md) | pending | `src/utils/` file naming cleanup — dead duplicate mock removal + kebab-case standardization |
 | [AI-005-opencode-facade.md](./AI-005-opencode-facade.md) | done | OpenCode Facade — add OpenCode as a fourth supported AI tool surface via the existing symlink facade pattern |
 | [bds-popover-coverage-backfill.md](./bds-popover-coverage-backfill.md) | pending | bds-popover Coverage Backfill — Watch reactivity, focus/click-outside, activation-mode listeners, arrow positioning |

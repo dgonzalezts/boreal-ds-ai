@@ -1,0 +1,1 @@
+../../.agents/memory/newspecpage-root-is-first-registered-component.md

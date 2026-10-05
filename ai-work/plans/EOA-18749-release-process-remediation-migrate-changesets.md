@@ -1,12 +1,50 @@
 ---
-ticket: AI-003
+ticket: EOA-18749
 status: pending
 created: 2026-08-12
+updated: 2026-10-01
 ---
 
 # Release Process Remediation — Option B: Migrate to `changesets`
 
-**Note:** `AI-003` is a placeholder ticket prefix — rename this file (and the `ticket:` field above) to the real Jira ticket ID once one is assigned. See the sibling plan `AI-003-release-process-remediation-patch-release-it.md` for the alternative (Option A: patch `release-it` in place) and `ai-docs/decisions/0013-release-tooling-release-it-vs-changesets.md` for the ADR comparing both.
+**Jira:** [EOA-18749](https://telesign.atlassian.net/browse/EOA-18749) — *SPIKE - Release pipeline hardening — wrapper-generation validation & release automation* (parent epic [EOA-18400](https://telesign.atlassian.net/browse/EOA-18400), PI9). Previously tracked under the internal placeholder `AI-003`. See the sibling plan `EOA-18749-release-process-remediation-patch-release-it.md` for the alternative (Option A: patch `release-it` in place) and `ai-docs/decisions/0013-release-tooling-release-it-vs-changesets.md` for the ADR comparing both.
+
+---
+
+## Jira Alignment (EOA-18749)
+
+Boreal stays in **alpha** for PI9 (no beta/RC per the epic); the ticket targets pipeline trustworthiness. Its own scope note adds: *"Lets focus on AWS Deployment, and Pipelines"* and *"Prioritize Public NPM registry"*.
+
+### Acceptance criteria → plan coverage
+
+| EOA-18749 acceptance criterion | Covered by | Notes |
+|---|---|---|
+| Meeting with DevOps (Branislav) to review PI9 commitments | Task 8 (EOA-18870) | Outcome may lift the "no CI/pipeline access" constraint (see below). |
+| Prioritize public NPM registry | Tasks 9–10 (EOA-18864, EOA-18865) | Not covered by the original audit — new scope. |
+| CI fails if React/Vue wrappers cannot generate from Stencil output-targets | Task 11 (deferred) | Blocked on pipeline access. Today only local `validate:all` exists. |
+| Wrapper-generation smoke test in CI detects drift | Task 11 (deferred) | Same blocker as above. |
+| Release automation reviewed: commitlint + changesets/release-it consistent across all four packages | ADR 0013 + this plan (B2–B5) | Decision between Option A / B still pending. |
+| Release order (`release:styles` → `release:wc` → `validate:all` → `release:react` → `release:vue`) documented or automated end-to-end | B4 + B6 | B4 **replaces** the per-package order with `changeset version` + `changeset publish`; `validate:all` must still run between version and publish. |
+| Dry-run release validated (`pnpm --filter @telesign/boreal-web-components run release -- --dry-run`) | Task 4 + Task 12 (EOA-18866) | The `release-it --dry-run` command is retired by B5; the changesets equivalent is `changeset version` on a scratch branch + `changeset publish --dry-run`-style inspection without publishing. |
+| Alpha versioning policy documented (minor vs patch in alpha) | B3 + B6 (CONTRIBUTING.md) | Bump level is chosen explicitly per changeset (`minor` for features, `patch` for fixes). |
+
+### Sub-task → plan mapping
+
+| Sub-task | Status (2026-10-01) | Plan task |
+|---|---|---|
+| EOA-18863 — 01-Initial Review | Closed | Audit + ADR 0013 (B1 / Task 1) |
+| EOA-18864 — 02-Create Proximus NPM Organization & Users | In Progress | Task 9 |
+| EOA-18865 — 03-Rename the NPM Scope in the Codebase | Open | Task 10 |
+| EOA-18866 — 04-Test Current Release & Deployment Process with One User | Open | Task 12 |
+| EOA-18867 — 05-Decide Package Strategy for Stable Version | Open | Task 13 (feeds ADR 0013 Decision, B2 `fixed`/`linked` groups, alpha-graduation policy) |
+| EOA-18868 — 06-Perform CHANGELOG cleanup | Open | B7 / Task 6, plus backfill in B6 |
+| EOA-18869 — 07-Create CONTRIBUTING.md file and Document Policies | Open | B6 / Task 7 |
+| EOA-18870 — 08-Meet with Branislav from DevOps Team to Review Commitments for PI9 | Open | Task 8 |
+
+### Constraints that the ticket may change
+
+- **CI/pipeline access.** This plan assumes no CI/pipeline access (confirmed 2026-08-13), so the "changeset included" gate is a PR-template + reviewer convention. EOA-18749 now names "AWS Deployment, and Pipelines" as the focus and schedules a DevOps meeting (EOA-18870). If pipeline access is granted, `pnpm changeset status --since=release/current` becomes a natural CI check — re-evaluate after Task 8.
+- **NPM scope.** Every `@telesign/*` package name in this plan (B2 config, CONTRIBUTING.md draft, dependent auto-bump examples) is provisional until EOA-18865 settles the new Proximus scope. Do Task 10 before B2/B4, or in the same pass, so `.changeset/config.json` and the pre-release state are created with the final package names.
 
 ---
 
@@ -134,6 +172,12 @@ Split into three tiers so effort is visible up front; tiers 1–2 are required f
 5. Implement B5 (retire release-it) — manual test: `check-cem-changes.ts` still runs correctly against the new version source.
 6. Implement B7 (CHANGELOG cleanup, tiers 1–2 required) — manual test: spot-check rewritten links resolve in a browser; confirm de-duplicated sections still contain every original entry.
 7. Implement B6 (backfill, rename, CONTRIBUTING.md, PR template update) — manual test: `pnpm install` and a full build succeed from the new path; PR template renders the new checklist item; `pnpm changeset status --since=release/current` correctly flags an intentionally-changeset-less test PR when run manually.
+8. **(EOA-18870, pending)** Meet with DevOps (Branislav) to confirm PI9 commitments: CI/pipeline availability, AWS deployment target, public NPM publishing support. Record the outcome in ADR 0013's Context and re-check whether `changeset status` can become a CI gate and whether Task 11 is unblocked.
+9. **(EOA-18864, in progress)** Create the Proximus NPM organization and publishing users on the public NPM registry. Prerequisite for any real `changeset publish`. Out of code scope; tracked here so the dependency is visible.
+10. **(EOA-18865, pending)** Rename the NPM scope from `@telesign/*` to the new organization scope across all four `package.json` files, wrapper `workspace:*` dependencies, `.changeset/config.json`, `check-cem-changes.ts`, Storybook/docs imports, and the CONTRIBUTING.md draft — manual test: `pnpm install`, full build, `validate:all`, and `pnpm changeset status` all succeed under the new scope.
+11. **(deferred — blocked on Task 8)** Wrapper-generation CI gate and drift smoke test (EOA-18749 acceptance criteria 3–4): fail the pipeline when React/Vue wrappers cannot generate from Stencil output-targets. Re-scope into its own plan once pipeline access is confirmed.
+12. **(EOA-18866, pending)** Run the full release and deployment process end-to-end with one user against the target registry, after Tasks 2–5 and 10 — manual test: one alpha release publishes, `boreal-react`/`boreal-vue` are auto-included as dependents, and tags/changelogs are correct.
+13. **(EOA-18867, pending)** Decide the package strategy for the stable version (graduation path to `1.0.0`, independent vs `fixed`/`linked` groups). Feed the result into ADR 0013's Decision, B2's config, and the CONTRIBUTING.md Release & Versioning section.
 
 ## Verification
 

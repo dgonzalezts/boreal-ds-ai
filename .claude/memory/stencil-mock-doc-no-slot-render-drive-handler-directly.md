@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-mock-doc-no-slot-render-drive-handler-directly.md

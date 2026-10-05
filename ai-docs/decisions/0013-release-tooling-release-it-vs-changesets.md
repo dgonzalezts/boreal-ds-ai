@@ -1,7 +1,7 @@
 # ADR 0013 — Release tooling: release-it vs. changesets
 
 **Date:** 2026-08-12
-**Status:** Proposed
+**Status:** Accepted (2026-10-01)
 
 ---
 
@@ -28,14 +28,18 @@ Two suspected issues were ruled out: `boreal-styleguidelines`'s "staleness" (zer
 ## Options Considered
 
 ### Option A — Patch `release-it` in place
-See `ai-work/plans/AI-003-release-process-remediation-patch-release-it.md`. Keep the current tool; add a version-bump-escalation config flag (`strictSemVer: true`, native), path-scoped changelog + bump config (native), a Bitbucket Server URL formatter override, and an orchestrated release topology for the WC product stack (`boreal-web-components` -> `boreal-react` -> `boreal-vue`) so wrapper repin drift is prevented by flow, not inferred detection. `boreal-style-guidelines` remains independent and only releases when changed. Selective per-package release remains available only as an exception path for wrapper-only maintenance. PR-title enforcement (originally proposed as task A1) is **not viable** given the no-CI/pipeline-access constraint — defect #1 is only partially addressed (a `headerPattern` regex fix tolerates Bitbucket's squash-merge prefix, but title-format compliance itself has no automated backstop).
+See `ai-work/plans/EOA-18749-release-process-remediation-patch-release-it.md`. Keep the current tool; add a version-bump-escalation config flag (`strictSemVer: true`, native), path-scoped changelog + bump config (native), a Bitbucket Server URL formatter override, and an orchestrated release topology for the WC product stack (`boreal-web-components` -> `boreal-react` -> `boreal-vue`) so wrapper repin drift is prevented by flow, not inferred detection. `boreal-style-guidelines` remains independent and only releases when changed. Selective per-package release remains available only as an exception path for wrapper-only maintenance. PR-title enforcement (originally proposed as task A1) is **not viable** given the no-CI/pipeline-access constraint — defect #1 is only partially addressed (a `headerPattern` regex fix tolerates Bitbucket's squash-merge prefix, but title-format compliance itself has no automated backstop).
 
 ### Option B — Migrate to `changesets`
-See `ai-work/plans/AI-003-release-process-remediation-migrate-changesets.md`. Matches TurboRepo's own documented recommendation. A human explicitly authors a small file per change stating affected package(s) and bump level — nothing inferred from commit messages or git history. Four of the five defects (#1, #2, #3, #5) become structurally not-applicable rather than requiring a patch. Only #4 (broken links) still needs a custom fix, same as Option A. Requires a workflow shift (a changeset file per PR) enforced via PR-template checklist + reviewer responsibility, not CI (no pipeline access available), and a full rewrite of the release configuration.
+See `ai-work/plans/EOA-18749-release-process-remediation-migrate-changesets.md`. Matches TurboRepo's own documented recommendation. A human explicitly authors a small file per change stating affected package(s) and bump level — nothing inferred from commit messages or git history. Four of the five defects (#1, #2, #3, #5) become structurally not-applicable rather than requiring a patch. Only #4 (broken links) still needs a custom fix, same as Option A. Requires a workflow shift (a changeset file per PR) enforced via PR-template checklist + reviewer responsibility, not CI (no pipeline access available), and a full rewrite of the release configuration.
 
 ## Decision
 
-Pending — see both linked plans for fully-speced task lists. Update this ADR's Status to `Accepted` and fill in the chosen option once decided.
+**Option A — patch `release-it` in place** (decided 2026-10-01, Jira [EOA-18749](https://telesign.atlassian.net/browse/EOA-18749)). Plan: `ai-work/plans/EOA-18749-release-process-remediation-patch-release-it.md`.
+
+Rationale, scored in `ai-work/research/2026-10-01-EOA-18749-release-tooling-rubric.md` (A 73 / B 68 with the default weights): minimal friction for a team already used to `release-it`, near-1:1 alignment with `ai-docs/guidelines/release-process.md`, and lowest delivery risk within PI9. Option B's structural advantages are acknowledged; the result flips toward B if guideline alignment is weighted down.
+
+Revisit triggers: (1) a merged `feat`/`fix` PR is missing from a generated changelog more than once in a PI; (2) EOA-18870 grants CI/pipeline access; (3) the npm scope migration / `1.0.0` graduation is scheduled (EOA-18867) — the cheapest point to adopt changesets, since new package names start fresh changelogs.
 
 ## Consequences
 
