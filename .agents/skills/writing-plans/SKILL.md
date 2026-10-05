@@ -279,9 +279,20 @@ created: YYYY-MM-DD # date this plan was written
 | `exact/path/to/existing.ts` | Modify — [brief description] |
 
 ---
+
+## Progress
+
+| Task                               | Status  |
+| ---------------------------------- | ------- |
+| T1 [Deliverable Layer Name]        | pending |
+| T2 [Deliverable Layer Name]        | pending |
+
+---
 ```
 
 The file table is a living checklist. It gives the implementer full orientation before reading any task.
+
+The **Progress** table has one row per task (group closely related tasks on one row only when the plan itself treats them as one unit), all `pending` at creation. `executing-plans` keeps it current, so it must list every task the plan defines, including follow-up tasks.
 
 ## Executor Mapping
 
@@ -315,6 +326,7 @@ Implementation and its unit tests are always **separate tasks** — matching `Ta
 ```markdown
 ### Task N: [Deliverable Layer Name]
 
+**Status:** pending
 **Executor:** @frontend-subagent
 **Files:**
 
@@ -362,6 +374,7 @@ git commit -m "feat(scope): TICKET-ID description"
 ```markdown
 ### Task N: [Component] unit tests
 
+**Status:** pending
 **Executor:** @testing-subagent
 **Files:**
 
@@ -432,6 +445,7 @@ If a mutant survivor reveals a genuine gap in an earlier task's test coverage, c
 - Acceptance criteria and behavior descriptions — not code blocks
 - Token names, mixin names, and pattern references by name (not by example)
 - Every implementation task has a manual test section
+- Every plan carries a **Progress** table (one row per task, all `pending`) and every task a `**Status:** pending` line — `executing-plans` updates both and ticks the task's `- [ ]` items as it goes
 - For pre-documentation tasks, manual tests must use `pnpm dev:components` + `packages/boreal-web-components/src/index.html`; reserve `pnpm dev:docs` for Storybook/MDX validation tasks.
 - Keep manual tests scoped to the current task only
 - Prefer the smallest set of scenarios that proves behavior

@@ -33,15 +33,15 @@
 
 ## Acceptance Criteria
 
-- [ ] While below 1.0 (`preMajor`): a breaking change produces a `preminor` bump; `feat`/`fix`/`perf`/`revert` produce `prepatch` (e.g. `0.1.0-alpha.12` → `0.1.1-alpha.0`); no commit moves the library to `1.0.0` on its own
+- [x] While below 1.0 (`preMajor`): a breaking change produces a `preminor` bump; `feat`/`fix`/`perf`/`revert` produce `prepatch` (e.g. `0.1.0-alpha.12` → `0.1.1-alpha.0`); no commit moves the library to `1.0.0` on its own
 - [ ] The first `@pxglobal` release publishes all four packages at `0.14.0` (plain `0.x`, alpha status stated in READMEs, Storybook, and CONTRIBUTING.md); `@telesign` history stays in the CHANGELOGs, git tags, and deprecation messages
-- [ ] Each package's version bump only reflects commits touching its own folder (web-components also counts style-guidelines)
-- [ ] Only web-components and style-guidelines write a changelog; web-components' changelog includes token and wrapper-only changes
-- [ ] A package with no releasable commits (`feat`, `fix`, `perf`, `revert`, breaking) since its last tag is skipped without failing the release chain; `docs`/`test`/`chore`-only changes never publish
+- [x] Each package's version bump only reflects commits touching its own folder (web-components also counts style-guidelines)
+- [x] Only web-components and style-guidelines write a changelog; web-components' changelog includes token and wrapper-only changes
+- [x] A package with no releasable commits (`feat`, `fix`, `perf`, `revert`, breaking) since its last tag is skipped without failing the release chain; `docs`/`test`/`chore`-only changes never publish
 - [ ] Every web-components release is followed by React and Vue releases that pin the new web-components version
-- [ ] A PR title of the form `Pull request #N: feat(scope): …` is parsed into the changelog
+- [x] A PR title of the form `Pull request #N: feat(scope): …` is parsed into the changelog
 - [ ] Generated and historical commit/compare links resolve on Bitbucket Server (`/projects/DEV/repos/boreal-ds/...`)
-- [ ] Squash-merged PRs missing from published changelogs are backfilled
+- [x] Squash-merged PRs missing from published changelogs are backfilled
 - [ ] All four packages build, validate, and dry-run under `@pxglobal/*`
 - [ ] `CONTRIBUTING.md` documents branching, commits, PR rules, and the release/versioning policy (including minor vs. patch in alpha)
 - [ ] Every change is validated with `release-it --dry-run`; nothing is published or tagged remotely

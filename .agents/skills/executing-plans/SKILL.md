@@ -26,7 +26,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 For each task:
 
-1. Mark as in_progress
+1. Mark as in_progress — in the plan file too: set the task's `**Status:**` line to `in progress` and its row in the plan's **Progress** table (if the plan has none, add one with a row per task before starting)
 2. Read the `**Executor:**` field on the task
 3. **Grounding check (safety net, not a substitute for the plan's own research):** if the task modifies existing behavior — a function/file with real callers, a public prop/event's accepted shape, a draft-state or controlled-value pattern other code paths depend on — read the actual current source of the files it touches before dispatching, even if the plan already carries an Integration & Edge-Case Gate pass from `writing-plans` for it. Plans go stale: earlier tasks in the same execution can shift the code a later task assumed. Fold any real gap found (a missed call site, an undefined default/empty state, a public-API boundary case) into the dispatch message's acceptance criteria and manual-test scenarios before sending it, and propagate the same finding to any later task in the plan sharing the same root cause. Skip this step for tasks with no executor, no code surface (parity checks, mutation-testing re-runs), or brand-new files with no existing callers.
 4. If `@<subagent>` is declared: compose a dispatch message containing the task title, files, acceptance criteria (amended per the grounding check above), unit tests, manual test checklist, and commit message; invoke `@<subagent>: <message>`
@@ -35,6 +35,11 @@ For each task:
 6. Wait for subagent output; review it against acceptance criteria
 7. Run the task's manual test checklist yourself (or confirm with your human partner it was run) — manual tests are required, not waiveable; a failing or skipped manual test is a blocker, not a pass
 8. Mark as completed only when acceptance criteria are met AND the manual test checklist passes
+9. **Close out the task in the plan files — required before you report the task to your human partner, and the task is not done until it is finished:**
+   - **Tick the checkboxes:** change each `- [ ]` item of the task (Integration research pass, Manual test, and any other checklist) to `- [x]` only if it was actually run or confirmed in this task. If an item was verified only partly or by a different method than written, tick it and annotate the line in place with what was done; if it was not verified, leave it `- [ ]` with a short note saying why. Never tick an item from expectation.
+   - **Status line and Progress table:** set the task's `**Status:**` line and its Progress-table row to `done`, or leave `in progress` (with the open items named) when any checkbox, acceptance criterion or unit test is still open.
+   - **Ticket brief:** if the plan references a ticket brief (`ai-work/tickets/…`), tick the acceptance criteria the task now satisfies.
+   - **Report from the files:** when you report the task, the numbers you quote (items ticked, items left open) must match what the plan now says.
 
 ### Step 3: Complete Development
 
@@ -71,6 +76,7 @@ After all tasks complete and verified:
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
+- Keep the plan current as you go: a task reported as done while its `- [ ]` items, `**Status:**` line or Progress row are stale is not done
 - Never start implementation on main/master branch without explicit user consent
 - Ground integration-shaped tasks against current source before dispatch, even when the plan already did this research at write time — a live safety net for drift, not a replacement for `writing-plans`' Integration & Edge-Case Gate
 
@@ -79,5 +85,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 
 - **using-git-worktrees** — REQUIRED: Set up isolated workspace before starting
-- **writing-plans** — Creates the plan this skill executes; produces tasks with `**Executor:**` fields
+- **writing-plans** — Creates the plan this skill executes; produces tasks with `**Executor:**` and `**Status:**` fields and a Progress table
 - **finishing-a-development-branch** — Complete development after all tasks

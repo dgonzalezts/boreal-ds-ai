@@ -188,10 +188,10 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Versions: fetch `https://registry.npmjs.org/release-it/latest` and `https://registry.npmjs.org/@release-it%2fconventional-changelog/latest` before installing (2026-10-01: `21.1.0` / `12.0.2`); both require Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Latest Node 22 LTS: `22.23.3` (2026-09-23).
-- [ ] Breaking changes: `release-it` 20/21 — Node 22.21+ required, strict CLI argument parsing, GitLab certificate checks (not used), `semver` replaced by `verkit` in 21.1. Plugin 11/12 — release-it 20+ peer, "skip prereleases without a recommended bump", "use resolved tag as recommended bump boundary", tag prefix derived from the resolved tag.
-- [ ] Call sites: the four `.release-it.json` configs (unchanged in this task), the root `release:*` scripts, `check-cem-changes.ts` (reads `.release-it.json` only — unaffected).
-- [ ] Preset resolution (found 2026-10-02): plugin 12 needs `conventional-changelog-conventionalcommits@10.x`, but `@commitlint/config-conventional@20` hoists `9.1.0`, and the preset loader resolves the hoisted one → every dry run fails with `headerPartial is not a function`. Fix: upgrade commitlint to 21 (`@commitlint/cli`, `config-conventional`, `cz-commitlint`; requires Node ≥ 22.12), whose config depends on preset `^10`. Verify a single preset version is installed and the `commit-msg` hook + `pnpm commit` still work.
+- [x] Versions: fetch `https://registry.npmjs.org/release-it/latest` and `https://registry.npmjs.org/@release-it%2fconventional-changelog/latest` before installing (2026-10-01: `21.1.0` / `12.0.2`); both require Node `^22.22.2 || ^24.15.0 || >=26.0.0`. Latest Node 22 LTS: `22.23.3` (2026-09-23).
+- [x] Breaking changes: `release-it` 20/21 — Node 22.21+ required, strict CLI argument parsing, GitLab certificate checks (not used), `semver` replaced by `verkit` in 21.1. Plugin 11/12 — release-it 20+ peer, "skip prereleases without a recommended bump", "use resolved tag as recommended bump boundary", tag prefix derived from the resolved tag.
+- [x] Call sites: the four `.release-it.json` configs (unchanged in this task), the root `release:*` scripts, `check-cem-changes.ts` (reads `.release-it.json` only — unaffected).
+- [x] Preset resolution (found 2026-10-02): plugin 12 needs `conventional-changelog-conventionalcommits@10.x`, but `@commitlint/config-conventional@20` hoists `9.1.0`, and the preset loader resolves the hoisted one → every dry run fails with `headerPartial is not a function`. Fix: upgrade commitlint to 21 (`@commitlint/cli`, `config-conventional`, `cz-commitlint`; requires Node ≥ 22.12), whose config depends on preset `^10`. Verify a single preset version is installed and the `commit-msg` hook + `pnpm commit` still work.
 
 **Acceptance criteria:**
 
@@ -201,9 +201,9 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given `fnm use` (installing `22.23.3`) and a fresh `pnpm install`, when running `pnpm build`, `pnpm test`, and `pnpm validate:all`, then all pass. Pass: green.
-- [ ] Given the dry-run recipe for each of the four packages (recipe corrected to add `--no-git.requireUpstream --no-npm.publish` on a feature branch without upstream or npm login), then each completes without config or CLI errors. Pass: 4/4 previews, no publish/tag/commit.
-- [ ] Given a throwaway commit attempt with an invalid message and then a valid one on a scratch branch, then `commit-msg` rejects the first and accepts the second; `pnpm commit` starts its prompt. Pass: commitlint 21 works with the repo's custom rules and scope list.
+- [x] Given `fnm use` (installing `22.23.3`) and a fresh `pnpm install`, when running `pnpm build`, `pnpm test`, and `pnpm validate:all`, then all pass. Pass: green.
+- [x] Given the dry-run recipe for each of the four packages (recipe corrected to add `--no-git.requireUpstream --no-npm.publish` on a feature branch without upstream or npm login), then each completes without config or CLI errors. Pass: 4/4 previews, no publish/tag/commit.
+- [x] Given a throwaway commit attempt with an invalid message and then a valid one on a scratch branch, then `commit-msg` rejects the first and accepts the second; `pnpm commit` starts its prompt. Pass: commitlint 21 works with the repo's custom rules and scope list. _(verified through commitlint on stdin; nothing was committed; `pnpm commit` prompt started)_
 
 **Commit:** `build(release): EOA-18749 upgrade Node to 22.23.3, release-it and commitlint to latest`
 
@@ -218,9 +218,9 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Version: fetch `https://registry.npmjs.org/pnpm` and use the `latest-11` dist-tag (2026-10-02: `11.28.2`; `latest` is 12.x — out of scope, see T24). Pin with `corepack use pnpm@latest-11` (writes `packageManager` with the hash).
-- [ ] Context7 (pnpm docs): pnpm 11 keeps `.npmrc` for registry/auth only and pnpm settings in `pnpm-workspace.yaml`; no `pnpm` field in `package.json`; `npm_config_*` env vars are no longer read — confirm none of the repo scripts rely on them.
-- [ ] Call sites: README mentions pnpm 11 and `corepack use pnpm@latest-11`; `ai-docs/guidelines/cicd-dependency-installation.md` says v10.7.1 (stale, fixed in T21).
+- [x] Version: fetch `https://registry.npmjs.org/pnpm` and use the `latest-11` dist-tag (2026-10-02: `11.28.2`; `latest` is 12.x — out of scope, see T24). Pin with `corepack use pnpm@latest-11` (writes `packageManager` with the hash).
+- [x] Context7 (pnpm docs): pnpm 11 keeps `.npmrc` for registry/auth only and pnpm settings in `pnpm-workspace.yaml`; no `pnpm` field in `package.json`; `npm_config_*` env vars are no longer read — confirm none of the repo scripts rely on them.
+- [x] Call sites: README mentions pnpm 11 and `corepack use pnpm@latest-11`; `ai-docs/guidelines/cicd-dependency-installation.md` says v10.7.1 (stale, fixed in T21). _(README needed no edit; the stale v10.7.1 guideline is deferred to T21)_
 
 **Acceptance criteria:**
 
@@ -229,8 +229,8 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given `corepack enable` and a clean `rm -rf node_modules && pnpm install --frozen-lockfile`, when running `pnpm -v`, `pnpm build`, `pnpm test`, `pnpm validate:all`, then all pass. Pass: green.
-- [ ] Given the dry-run recipe for each of the four packages, then results match Task 3's table (style-guidelines "No new version to release"; web-components/react/vue `0.1.1-alpha.0`). Pass: unchanged.
+- [x] Given `corepack enable` and a clean `rm -rf node_modules && pnpm install --frozen-lockfile`, when running `pnpm -v`, `pnpm build`, `pnpm test`, `pnpm validate:all`, then all pass. Pass: green.
+- [x] Given the dry-run recipe for each of the four packages, then results match Task 3's table (style-guidelines "No new version to release"; web-components/react/vue `0.1.1-alpha.0`). Pass: unchanged.
 
 **Commit:** `build(workspace): EOA-18749 update pnpm to the latest 11.x`
 
@@ -247,10 +247,10 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Call sites: the plugin only prepends new sections above existing ones — editing older sections by hand is safe for future runs.
-- [ ] Boundary case: `fae7c6fd` (#183 tree-menu, `feat(...)` title) is not yet released — it must **not** be backfilled; T3's header-prefix fix picks it up in the next release.
-- [ ] Default: non-user-facing squashes (`e0f480f9` #148 chore, `dcf35283` #26 docs) get no entry, matching the preset's hidden types.
-- [ ] Two-changelog model: #112 also touched React/Vue, but wrapper changelogs become pointers (T7) — web-components only.
+- [x] Call sites: the plugin only prepends new sections above existing ones — editing older sections by hand is safe for future runs. _(premise from plugin behaviour; confirm in the first real release)_
+- [x] Boundary case: `fae7c6fd` (#183 tree-menu, `feat(...)` title) is not yet released — it must **not** be backfilled; T3's header-prefix fix picks it up in the next release.
+- [x] Default: non-user-facing squashes (`e0f480f9` #148 chore, `dcf35283` #26 docs) get no entry, matching the preset's hidden types.
+- [x] Two-changelog model: #112 also touched React/Vue, but wrapper changelogs become pointers (T7) — web-components only.
 
 **Acceptance criteria:**
 
@@ -271,8 +271,8 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:** non-visual; validate by inspection.
 
-- [ ] Given each backfilled hash, when running `git tag --contains <hash>` for the package, then the earliest tag matches the section the entry was placed in. Pass: all 6 entries placed correctly.
-- [ ] Given the edited files, when previewed as Markdown, then lists and links render without breaking neighbouring entries. Pass: no formatting regressions.
+- [x] Given each backfilled hash, when running `git tag --contains <hash>` for the package, then the earliest tag matches the section the entry was placed in. Pass: all 6 entries placed correctly.
+- [ ] Given the edited files, when previewed as Markdown, then lists and links render without breaking neighbouring entries. Pass: no formatting regressions. — **open**: structural check only (same list format and link style as neighbouring entries); confirm the rendered view on Bitbucket during PR review.
 
 **Commit:** `docs(release): EOA-18749 backfill changelog entries lost to squash-merge titles`
 
@@ -292,11 +292,11 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Call sites: the bump decision is made once, inside the plugin (escalates only when `strictSemVer` is set or the latest version isn't a prerelease — re-check the line in plugin 12 after T0). All four configs need the flag.
-- [ ] Boundary case: a history with only hidden types — handled in T3 by the preset's default type effects; record the current behaviour here for comparison.
-- [ ] Default: the alpha counter resets to `.0` on each base escalation (e.g. `0.1.0-alpha.12` → `0.1.1-alpha.0`) — expected.
-- [ ] `preMajor` is a preset option, so this task switches the `preset` field to the object form `{ "name": "conventionalcommits", "preMajor": true }`; T3 keeps this object unchanged (no `bumpStrict`/`types`). Re-check `preMajor` handling in the preset version installed by T0 (`whatBump.js`: level shifts down one when `preMajor` is set).
-- [ ] Pending commits measured 2026-10-02 against `origin/release/current`: web-components, React and Vue each have 8 `feat` commits and 0 breaking in their bump paths; style-guidelines has none.
+- [x] Call sites: the bump decision is made once, inside the plugin (escalates only when `strictSemVer` is set or the latest version isn't a prerelease — re-check the line in plugin 12 after T0). All four configs need the flag.
+- [x] Boundary case: a history with only hidden types — handled in T3 by the preset's default type effects; record the current behaviour here for comparison.
+- [x] Default: the alpha counter resets to `.0` on each base escalation (e.g. `0.1.0-alpha.12` → `0.1.1-alpha.0`) — expected.
+- [x] `preMajor` is a preset option, so this task switches the `preset` field to the object form `{ "name": "conventionalcommits", "preMajor": true }`; T3 keeps this object unchanged (no `bumpStrict`/`types`). Re-check `preMajor` handling in the preset version installed by T0 (`whatBump.js`: level shifts down one when `preMajor` is set).
+- [x] Pending commits measured 2026-10-02 against `origin/release/current`: web-components, React and Vue each have 8 `feat` commits and 0 breaking in their bump paths; style-guidelines has none.
 
 **Acceptance criteria:**
 
@@ -306,9 +306,9 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:** dry-run only.
 
-- [ ] Given web-components at `0.1.0-alpha.12` with 8 `feat` commits and no breaking ones since its tag, when running the dry-run recipe, then the proposed version is `0.1.1-alpha.0`. Pass: base escalates (patch, per `preMajor`); no plain `alpha.13`.
-- [ ] Given a throwaway local commit with a `BREAKING CHANGE:` footer in web-components (scratch branch, deleted afterwards), when dry-running, then the proposed version is `0.2.0-alpha.0`. Pass: breaking → minor; never `1.0.0-alpha.0`. This also confirms the custom `parserOpts` keep the preset's `BREAKING CHANGE` note keyword.
-- [ ] Given each of the other three packages, when dry-run, then the proposed version matches the highest commit type since its tag. Pass: no publish, no tag, no commit.
+- [x] Given web-components at `0.1.0-alpha.12` with 8 `feat` commits and no breaking ones since its tag, when running the dry-run recipe, then the proposed version is `0.1.1-alpha.0`. Pass: base escalates (patch, per `preMajor`); no plain `alpha.13`.
+- [x] Given a throwaway local commit with a `BREAKING CHANGE:` footer in web-components (scratch branch, deleted afterwards), when dry-running, then the proposed version is `0.2.0-alpha.0`. Pass: breaking → minor; never `1.0.0-alpha.0`. This also confirms the custom `parserOpts` keep the preset's `BREAKING CHANGE` note keyword.
+- [x] Given each of the other three packages, when dry-run, then the proposed version matches the highest commit type since its tag. Pass: no publish, no tag, no commit.
 
 **Commit:** `build(release): EOA-18749 escalate prerelease versions with strictSemVer and 0.x preMajor policy` (committed)
 
@@ -325,14 +325,14 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Call sites: both commit readers need the path — `commitsOpts.path` (bump recommendation, `GetCommitsParams`) and `gitRawCommitsOpts.path` (changelog text, `GitLogParams`); both accept `string | string[]` (installed `@conventional-changelog/git-client` types). Setting only one leaves the other reading the whole repo.
-- [ ] Paths per package — bump (`commitsOpts.path`, which is also the release trigger) / changelog (`gitRawCommitsOpts.path`): style-guidelines `.` / `.`; web-components `.` + `../boreal-styleguidelines` / `.` + `../boreal-styleguidelines` + `../boreal-react` + `../boreal-vue` (wrapper-only changes are listed but never bump web-components); React/Vue `.` + `../boreal-web-components` + `../boreal-styleguidelines` / no changelog (`infile: false`).
-- [ ] Boundary case: with the preset's default types (no override) a window with only hidden types (or no commits) yields a null bump → "No new version to release", exit 0.
-- [ ] Breaking-change header (T2 finding, 2026-10-02): `feat(scope)!: …` IS recognised as breaking (the preset's own `breakingHeaderPattern` still applies, bump `0.2.0-alpha.0` under `preMajor`), but the custom `headerPattern`'s ticket-ID prefix group is not used for `!` headers, so the changelog subject keeps the ticket ID (e.g. `EOA-18749 scratch bang change`). Task 3 keeps the `!` handling and makes the ticket ID strip for `!` headers too (extend `headerPattern` with an optional `!`, or drop the custom `parserOpts` in favour of the preset's parser plus only the optional `Pull request #N: ` prefix and ticket-ID stripping).
-- [ ] Boundary case: with `infile: false`, confirm the wrapper release still runs (version, tag, publish) and nothing is written to its `CHANGELOG.md`.
-- [ ] Boundary case: the header prefix is optional — plain conventional commits and `Pull request #N: type(scope): …` must both parse; branch-name titles (`Pull request #159: Feature/EOA-15507 …`) still don't parse (accepted gap).
-- [ ] Coupling: `check-cem-changes.ts` reads `npm.tag` only — unaffected.
-- [ ] Forward note: T9 renames the style-guidelines folder — every path added here is updated there.
+- [x] Call sites: both commit readers need the path — `commitsOpts.path` (bump recommendation, `GetCommitsParams`) and `gitRawCommitsOpts.path` (changelog text, `GitLogParams`); both accept `string | string[]` (installed `@conventional-changelog/git-client` types). Setting only one leaves the other reading the whole repo.
+- [x] Paths per package — bump (`commitsOpts.path`, which is also the release trigger) / changelog (`gitRawCommitsOpts.path`): style-guidelines `.` / `.`; web-components `.` + `../boreal-styleguidelines` / `.` + `../boreal-styleguidelines` + `../boreal-react` + `../boreal-vue` (wrapper-only changes are listed but never bump web-components); React/Vue `.` + `../boreal-web-components` + `../boreal-styleguidelines` / no changelog (`infile: false`).
+- [x] Boundary case: with the preset's default types (no override) a window with only hidden types (or no commits) yields a null bump → "No new version to release", exit 0.
+- [x] Breaking-change header (T2 finding, 2026-10-02): `feat(scope)!: …` IS recognised as breaking (the preset's own `breakingHeaderPattern` still applies, bump `0.2.0-alpha.0` under `preMajor`), but the custom `headerPattern`'s ticket-ID prefix group is not used for `!` headers, so the changelog subject keeps the ticket ID (e.g. `EOA-18749 scratch bang change`). Task 3 keeps the `!` handling and makes the ticket ID strip for `!` headers too (extend `headerPattern` with an optional `!`, or drop the custom `parserOpts` in favour of the preset's parser plus only the optional `Pull request #N: ` prefix and ticket-ID stripping).
+- [x] Boundary case: with `infile: false`, confirm the wrapper release still runs (version, tag, publish) and nothing is written to its `CHANGELOG.md`.
+- [x] Boundary case: the header prefix is optional — plain conventional commits and `Pull request #N: type(scope): …` must both parse; branch-name titles (`Pull request #159: Feature/EOA-15507 …`) still don't parse (accepted gap).
+- [x] Coupling: `check-cem-changes.ts` reads `npm.tag` only — unaffected.
+- [ ] Forward note: T9 renames the style-guidelines folder — every path added here is updated there. — **open**: applies when T9 runs.
 
 **Acceptance criteria:**
 
@@ -343,14 +343,14 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:** dry-run only.
 
-- [ ] Given the dry-run recipe for React, when it completes, then a version and tag are proposed and no changelog write is planned. Pass: `CHANGELOG.md` untouched.
-- [ ] Given the dry-run for web-components, when inspecting the preview, then it contains only commits that touched web-components, style-guidelines, or a wrapper folder. Pass: no docs-app-only or tooling-only entries.
-- [ ] Given the dry-run for web-components, when inspecting the preview, then `fae7c6fd` (#183 tree-menu) appears as a feature. Pass: squash prefix parsed.
-- [ ] Given the dry-run for style-guidelines, when inspecting the preview, then it is empty or contains only style-guidelines commits. Pass: no cross-package leakage.
-- [ ] Given the web-components preview, then only the sections Features / Bug Fixes / Performance Improvements / Reverts appear, with those exact titles. Pass: no hidden types listed.
-- [ ] Given a scratch `feat(web-components)!: EOA-18749 …` commit, then it is breaking (minor bump under `preMajor`) AND its changelog subject has no ticket ID. Pass: `!` handled cleanly.
-- [ ] Given style-guidelines (no releasable commits since `alpha.3` in its folder — only valid when no `fix`/`feat` commit on the branch touches `packages/boreal-styleguidelines`, so release-tooling commits on this branch must be typed `build`/`chore`), when dry-running, then it reports "No new version to release" and exits 0. Pass: native skip works.
-- [ ] Given React, when dry-running, then the proposed bump follows web-components' commits (`0.1.0-alpha.14` → `0.1.1-alpha.0` from the pending `feat` commits). Pass: wrapper picks up web-components changes.
+- [x] Given the dry-run recipe for React, when it completes, then a version and tag are proposed and no changelog write is planned. Pass: `CHANGELOG.md` untouched.
+- [x] Given the dry-run for web-components, when inspecting the preview, then it contains only commits that touched web-components, style-guidelines, or a wrapper folder. Pass: no docs-app-only or tooling-only entries.
+- [x] Given the dry-run for web-components, when inspecting the preview, then `fae7c6fd` (#183 tree-menu) appears as a feature. Pass: squash prefix parsed.
+- [x] Given the dry-run for style-guidelines, when inspecting the preview, then it is empty or contains only style-guidelines commits. Pass: no cross-package leakage.
+- [x] Given the web-components preview, then only the sections Features / Bug Fixes / Performance Improvements / Reverts appear, with those exact titles. Pass: no hidden types listed. _(Features and Bug Fixes observed; no pending Performance/Reverts entries to show)_
+- [x] Given a scratch `feat(web-components)!: EOA-18749 …` commit, then it is breaking (minor bump under `preMajor`) AND its changelog subject has no ticket ID. Pass: `!` handled cleanly.
+- [x] Given style-guidelines (no releasable commits since `alpha.3` in its folder — only valid when no `fix`/`feat` commit on the branch touches `packages/boreal-styleguidelines`, so release-tooling commits on this branch must be typed `build`/`chore`), when dry-running, then it reports "No new version to release" and exits 0. Pass: native skip works.
+- [x] Given React, when dry-running, then the proposed bump follows web-components' commits (`0.1.0-alpha.14` → `0.1.1-alpha.0` from the pending `feat` commits). Pass: wrapper picks up web-components changes.
 
 **Commit:** `build(release): EOA-18749 scope changelogs and bumps per package, parse squash-merge titles` (committed; header ≤ 100 characters is enforced by commitlint)
 
@@ -370,12 +370,12 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Integration research pass:**
 
-- [ ] Selectors: `release:all` → `--filter "./packages/*"` (all four); `release:wc-stack` → `--filter "...@telesign/boreal-web-components" --filter "!./apps/*" --filter "!./examples/*"`. pnpm semantics (verified in T4 with Context7 and by listing the selection): `name...` = the package and its **dependencies**, `...name` = the package and its **dependents**; `...web-components` alone also matched `boreal-docs` and the example apps (they depend on it), hence the two exclusions. Result: exactly web-components, react, vue (style-guidelines excluded).
-- [ ] Order: topological from `workspace:*` dependencies, including the devDependency edge style-guidelines → web-components; react and vue are independent of each other (order between them not guaranteed on newer pnpm — acceptable).
-- [ ] Gates: react and vue each get `"prerelease": "pnpm -w run validate:pack:react"` / `"…:vue"` (pnpm pre-script hooks; cross-platform). Replaces the `validate:all` step in the chain and also protects a standalone `release:react` / `release:vue`. Trade-off accepted: each wrapper validates just before its own release; the gate runs even when release-it would skip.
-- [ ] `validate:pack` restores, with `git checkout HEAD --` on exit, exactly three paths (verified in T4): the framework wrapper's `package.json`, the framework test app's `package.json`, and the root `pnpm-lock.yaml` — it does NOT touch the root `package.json`. It cannot undo a release bump (release-it commits the bump before the next package's gate runs) but it discards uncommitted edits to those files, so commit edits to wrapper `package.json`/lockfile before running a gate (follow-up T23). Residual risk: if a gate fails after web-components was published, web-components stays released and the wrappers do not; rerunning is safe because web-components then skips.
-- [ ] `release:publish` stays `release:all` + `deploy:docs` (inspect only; do not run).
-- [ ] Usage: flags are passed WITHOUT `--` (`pnpm run release:all --dry-run --ci …`); with `--` pnpm forwards a literal `--` and release-it fails with "Unexpected positional argument". Document in CONTRIBUTING.md and the release guideline.
+- [x] Selectors: `release:all` → `--filter "./packages/*"` (all four); `release:wc-stack` → `--filter "...@telesign/boreal-web-components" --filter "!./apps/*" --filter "!./examples/*"`. pnpm semantics (verified in T4 with Context7 and by listing the selection): `name...` = the package and its **dependencies**, `...name` = the package and its **dependents**; `...web-components` alone also matched `boreal-docs` and the example apps (they depend on it), hence the two exclusions. Result: exactly web-components, react, vue (style-guidelines excluded).
+- [x] Order: topological from `workspace:*` dependencies, including the devDependency edge style-guidelines → web-components; react and vue are independent of each other (order between them not guaranteed on newer pnpm — acceptable).
+- [x] Gates: react and vue each get `"prerelease": "pnpm -w run validate:pack:react"` / `"…:vue"` (pnpm pre-script hooks; cross-platform). Replaces the `validate:all` step in the chain and also protects a standalone `release:react` / `release:vue`. Trade-off accepted: each wrapper validates just before its own release; the gate runs even when release-it would skip.
+- [x] `validate:pack` restores, with `git checkout HEAD --` on exit, exactly three paths (verified in T4): the framework wrapper's `package.json`, the framework test app's `package.json`, and the root `pnpm-lock.yaml` — it does NOT touch the root `package.json`. It cannot undo a release bump (release-it commits the bump before the next package's gate runs) but it discards uncommitted edits to those files, so commit edits to wrapper `package.json`/lockfile before running a gate (follow-up T23). Residual risk: if a gate fails after web-components was published, web-components stays released and the wrappers do not; rerunning is safe because web-components then skips.
+- [x] `release:publish` stays `release:all` + `deploy:docs` (inspect only; do not run).
+- [x] Usage: flags are passed WITHOUT `--` (`pnpm run release:all --dry-run --ci …`); with `--` pnpm forwards a literal `--` and release-it fails with "Unexpected positional argument". Document in CONTRIBUTING.md and the release guideline.
 
 **Acceptance criteria:**
 
@@ -385,13 +385,13 @@ Branch `chore/EOA-18749_release-tooling-hardening` (PR 1), local only, not pushe
 
 **Manual test _(required — not waiveable)_:** dry-run only on a scratch branch (commits touch a real file inside the relevant package; delete branch and any local scratch tags afterwards). Flags: `--dry-run --ci --no-git.requireBranch --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-npm.publish`.
 
-- [ ] Baseline: style-guidelines "No new version to release"; web-components, react, vue `0.1.1-alpha.0`; the react and vue `prerelease` gates ran; order styles → web-components → react → vue.
-- [ ] Nothing pending (local scratch tags `…@0.1.0-alpha.99` at HEAD): all four skip, exit 0.
-- [ ] `test(web-components)` only: nothing releases.
-- [ ] `fix(web-components)`: web-components, react, vue release; styles skips.
-- [ ] `fix(styles)`: all four release.
-- [ ] `fix(react)` touching only react: only react releases; `pnpm run release:react <flags>` alone also runs its gate.
-- [ ] Failure path: a failing `prerelease` gate (temporary scratch change, not committed) stops before that wrapper's release and exits non-zero.
+- [x] Baseline: style-guidelines "No new version to release"; web-components, react, vue `0.1.1-alpha.0`; the react and vue `prerelease` gates ran; order styles → web-components → react → vue.
+- [x] Nothing pending (local scratch tags `…@0.1.0-alpha.99` at HEAD): all four skip, exit 0.
+- [x] `test(web-components)` only: nothing releases.
+- [x] `fix(web-components)`: web-components, react, vue release; styles skips.
+- [x] `fix(styles)`: all four release.
+- [x] `fix(react)` touching only react: only react releases; `pnpm run release:react <flags>` alone also runs its gate.
+- [x] Failure path: a failing `prerelease` gate (temporary scratch change, not committed) stops before that wrapper's release and exits non-zero.
 
 **Commit:** `build(release): EOA-18749 orchestrate web-components stack release`
 
