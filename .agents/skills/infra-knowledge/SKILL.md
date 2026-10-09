@@ -34,7 +34,7 @@ Also read before working on build/CI/release:
 2. Bypass Turbo for primary dev workflows in root `package.json`:
 
 ```json
-"dev:components": "pnpm --filter=@telesign/boreal-style-guidelines build && pnpm --filter=@telesign/boreal-web-components dev"
+"dev:components": "pnpm --filter=@pxglobal/boreal-style-guidelines build && pnpm --filter=@pxglobal/boreal-web-components dev"
 ```
 
 **Race condition:** If a package's `dev` script is just an alias for `build` (e.g. `"dev": "rimraf dist && build"`), running `pnpm dev` in parallel causes the `rimraf dist` to run while another package's dev watcher reads from that dist. Remove the `dev` script from packages without a real watch process.
@@ -61,7 +61,7 @@ Run after every component is complete and before any release.
 # React
 pnpm dev:pack:react
 # Add the component to examples/react-testapp/src/App.tsx
-# Import from @telesign/boreal-react; render with default, all variants, disabled, event binding, slot usage
+# Import from @pxglobal/boreal-react; render with default, all variants, disabled, event binding, slot usage
 # Verify in browser under all four themes: data-theme = connect | engage | protect | proximus
 
 # Vue (once available)
@@ -83,9 +83,9 @@ Both must exit 0. These commands pack built artefacts into `.tgz` files, install
 
 ### Turborepo task graph
 
-`validate:pack:react` has `"dependsOn": ["@telesign/boreal-web-components#build"]` in `turbo.json` — Turbo ensures the build runs first. The cache means only one actual build runs even when `validate:all` invokes all three framework validations.
+`validate:pack:react` has `"dependsOn": ["@pxglobal/boreal-web-components#build"]` in `turbo.json` — Turbo ensures the build runs first. The cache means only one actual build runs even when `validate:all` invokes all three framework validations.
 
-`release:all` sequence: `release:styles → release:wc → validate:all → release:react → release:vue`
+`release:all` runs every package in `packages/*` in dependency order (`pnpm --filter "./packages/*" --workspace-concurrency=1 run release`); `release:wc-stack` runs web-components and the wrappers built from it. React and Vue each run `validate:pack:react|vue` as a `prerelease` script (pnpm runs it before `release`), so a wrapper is only released against a validated pack. A package with no releasable commit is skipped.
 
 ---
 
@@ -117,13 +117,23 @@ Also: `require.resolve()` is unreliable in pnpm workspaces on Windows/Linux CI �
 "npm": {
   "publish": true,
   "publishPath": ".",
-  "tag": "alpha",
+  "tag": "latest",
   "publishPackageManager": "pnpm",
   "publishArgs": ["--no-git-checks"]
 }
 ```
 
 `workspace:*` is resolved by pnpm at tarball creation time only — the `package.json` on disk is never modified. If `npm publish` runs instead, the raw `workspace:*` string leaks into the published tarball and the registry rejects it with a 400 error.
+
+### Lessons from the first real release (2026-10-09)
+
+- **Hook names:** `after:<plugin>:<step>`, where the plugin namespace is the full package name. The changelog is written in the plugin's `beforeRelease` step, so a hook that edits it is `after:@release-it/conventional-changelog:beforeRelease` (before git stages the file); `after:bump` runs too early. Hooks do not run in a dry run, so test them in a rehearsal.
+- **Order:** the npm plugin runs before the git plugin: publish first, then commit, tag and push. A failed publish leaves nothing committed; a failed push leaves the package published.
+- **Compare links:** `linkCompare: true` builds `…/compare/<old>...<new>` with encoded slashes, which Bitbucket Server rejects (400). The accepted form is `compare/commits?sourceBranch=refs%2Ftags%2F<new>&targetBranch=refs%2Ftags%2F<old>`; `scripts-boreal/bin/link-changelog-heading.js` writes it.
+- **Release pushes:** `git.pushArgs` is `["--follow-tags", "--no-verify"]` so the slow `pre-push` hook does not run after the publish.
+- **Tag continuity across scopes:** `git.tagMatch` (`@*/boreal-<pkg>@*`) finds the last tag under any npm scope.
+- **Squash messages:** Bitbucket indents the squashed commits, so a `BREAKING CHANGE:` footer there is ignored; the `!` in the PR title marks a breaking change. A bare `@name` in a title becomes a link to a non-existent page; wrap handles in backticks.
+- **npm staged publishing:** the registry may hold a publish for approval and create a `0.0.0-stage` placeholder for a new package name; release-it does not wait. Full procedure: `RELEASING.md`.
 
 ---
 
@@ -132,7 +142,7 @@ Also: `require.resolve()` is unreliable in pnpm workspaces on Windows/Linux CI �
 pnpm does not auto-load `.env` files. Prefix the deploy script with `dotenv --` via `dotenv-cli`:
 
 ```json
-"deploy:docs": "turbo run build --filter=@telesign/boreal-docs... && dotenv -- pnpm --filter @telesign/boreal-docs run chromatic"
+"deploy:docs": "turbo run build --filter=@pxglobal/boreal-docs... && dotenv -- pnpm --filter @pxglobal/boreal-docs run chromatic"
 ```
 
 Use `--storybook-build-dir=storybook-static` (not `--build-script-name`) — Turborepo owns the build step, enforcing the correct dependency order (`style-guidelines → web-components → boreal-docs`). Chromatic only uploads the pre-built output.

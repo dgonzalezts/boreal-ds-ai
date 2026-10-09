@@ -26,10 +26,10 @@ This pattern applies to `injectGlobalPaths`, `includePaths`, and any other Stenc
 
 ## The Problem — `require.resolve` in pnpm Workspaces
 
-`require.resolve('@telesign/boreal-style-guidelines/stencil')` is unreliable for locating package files in a pnpm workspace. On macOS, it resolves to a symlink path that Sass can follow. On Windows and Linux CI with a cold installation, `require.resolve` follows pnpm's virtual store symlinks to the real path deep inside `.pnpm/`, such as:
+`require.resolve('@pxglobal/boreal-style-guidelines/stencil')` is unreliable for locating package files in a pnpm workspace. On macOS, it resolves to a symlink path that Sass can follow. On Windows and Linux CI with a cold installation, `require.resolve` follows pnpm's virtual store symlinks to the real path deep inside `.pnpm/`, such as:
 
 ```
-node_modules/.pnpm/@telesign+boreal-style-guidelines@0.x.y/node_modules/@telesign/boreal-style-guidelines/stencil/_index.scss
+node_modules/.pnpm/@pxglobal+boreal-style-guidelines@0.x.y/node_modules/@pxglobal/boreal-style-guidelines/stencil/_index.scss
 ```
 
 When Sass tries to resolve relative `@import` statements from that deeply-nested real path, it cannot find sibling files, so all imports in the injected file fail.
@@ -40,7 +40,7 @@ Construct paths from a known variable already resolved at config-load time inste
 
 ```typescript
 // Unreliable: follows virtual store symlinks on pnpm+Windows
-require.resolve('@telesign/boreal-style-guidelines/stencil')
+require.resolve('@pxglobal/boreal-style-guidelines/stencil')
 
 // Reliable: resolves from the known package directory variable
 resolve(styleGuidelinesDir, 'stencil/_index.scss')

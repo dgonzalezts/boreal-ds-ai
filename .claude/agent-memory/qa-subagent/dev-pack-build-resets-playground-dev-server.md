@@ -19,7 +19,7 @@ reorder, form state, etc.) reads back correctly in a `browser_evaluate` call mad
 triggering it, but a *later* `browser_evaluate` call (even by the same tool, same tab) shows the
 original/reverted state, with the header/body HTML looking freshly re-mounted.
 
-**Why:** `dev:pack:react`/`dev:pack:vue` runs a full `turbo run build --filter=...@telesign/boreal-web-components`,
+**Why:** `dev:pack:react`/`dev:pack:vue` runs a full `turbo run build --filter=...@pxglobal/boreal-web-components`,
 which invokes its own Stencil build pipeline against the identical `boreal-web-components` package.
 Something in that build's output/cache-write path (exact file not yet isolated — worth investigating
 if this resurfaces) is visible to the separate dev-watch process's file watcher, triggering it to

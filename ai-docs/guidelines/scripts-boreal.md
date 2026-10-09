@@ -93,19 +93,19 @@ Turborepo replaces the build orchestration entirely. `scripts-boreal` is only ne
 
 `scripts-boreal` (headless — without `npm run dev`) should run as a **pre-publish gate in Job 5d** of the CD pipeline, before `pnpm release` pushes anything to npm.
 
-See [`.ai/diagrams/pxg-cd-diagram-v2.md`](../diagrams/pxg-cd-diagram-v2.md) → Job 5d.
+See [`ai-docs/diagrams/pxg-cd-diagram-v3.md`](../diagrams/pxg-cd-diagram-v3.md) (release job) and [`ai-docs/diagrams/release-it-publish-flow.md`](../diagrams/release-it-publish-flow.md).
 
 ```
-Job 5d sequence:
-  1. pnpm version-packages
-  2. git commit version bump
-  3. scripts-boreal validate (pack → install → build react-testapp)  ← pre-publish gate
-  4. Generate SBOM
-  5. pnpm release  (build + changeset publish)
-  6. git push --follow-tags
+Job 5d sequence (target state):
+  1. pnpm install --frozen-lockfile
+  2. pnpm release:all --ci
+       per package: build → bump + changelog → publish → commit → tag → push
+       React and Vue first run scripts-boreal validate (pack → install → build the test app)
+       as their `prerelease` hook  ← pre-publish gate
+  3. Generate SBOM
 ```
 
-If step 3 fails, the publish is aborted — broken artifacts never reach the registry.
+If a wrapper's validation fails, its publish is aborted — broken artifacts never reach the registry.
 
 ---
 

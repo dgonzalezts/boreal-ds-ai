@@ -1,6 +1,6 @@
 # validate:pack Pipeline Diagrams
 
-Diagrams documenting the `pnpm validate:pack` pipeline for `@telesign/boreal-web-components`, covering the full build sequence and the critical `postbuild.js` promotion step.
+Diagrams documenting the `pnpm validate:pack` pipeline for `@pxglobal/boreal-web-components`, covering the full build sequence and the critical `postbuild.js` promotion step.
 
 ---
 
@@ -20,7 +20,7 @@ sequenceDiagram
     Dev->>Root: pnpm validate:pack
     Root->>Turbo: turbo run validate:pack --filter=scripts-boreal
     Note over Turbo: dependsOn triggers upstream build first
-    Turbo->>Stencil: @telesign/boreal-web-components#build
+    Turbo->>Stencil: @pxglobal/boreal-web-components#build
     Stencil->>Stencil: Compile components + run copy tasks
     Note over Stencil: css/ and scss/ land at<br/>dist/boreal-web-components/ (namespaced)
     Stencil->>Post: npm lifecycle: postbuild
@@ -58,7 +58,7 @@ flowchart TD
     H --> I
 
     I --> J{"existsSync\ndist/css/"}
-    J -->|true ✅| K[Copy from @telesign/boreal-web-components\nStyles copied correctly]
+    J -->|true ✅| K[Copy from @pxglobal/boreal-web-components\nStyles copied correctly]
     J -->|false ❌| L[Fallback: boreal-style-guidelines/dist\nbut it is a devDep — absent from tgz]
     L --> M[💥 ENOENT crash — pipeline fails]
 

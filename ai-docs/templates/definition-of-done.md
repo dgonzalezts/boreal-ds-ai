@@ -57,6 +57,7 @@
 - [ ] Code reviewed by peer developer
 - [ ] UX/UI team validation completed
 - [ ] Commit message follows `type(scope): TICKET-ID description` convention via `pnpm commit`
+- [ ] PR title follows the same convention (squash and merge makes it the changelog entry), with a `!` when the change is breaking
 - [ ] CEM (`custom-elements.json`) integrity verified — JSDoc changes do not break generation
 - [ ] Bundle size impact documented and acceptable
 - [ ] Performance verified (component renders in <100ms on average hardware)

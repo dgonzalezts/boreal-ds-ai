@@ -11,8 +11,8 @@ Plain `pnpm run lint` at the package level also fails for a targeted file list â
 
 **Working invocation** for a scoped file check:
 ```
-.agents/scripts/with-node.sh pnpm --filter @telesign/boreal-web-components exec eslint <path/relative/to/package> [...]
-.agents/scripts/with-node.sh pnpm --filter @telesign/boreal-web-components exec tsc --noEmit
+.agents/scripts/with-node.sh pnpm --filter @pxglobal/boreal-web-components exec eslint <path/relative/to/package> [...]
+.agents/scripts/with-node.sh pnpm --filter @pxglobal/boreal-web-components exec tsc --noEmit
 ```
 `pnpm --filter <package>` runs the command with that package as the effective root, sidestepping both the with-node.sh cwd reset and turbo's repo-wide fan-out. Paths passed to eslint must be relative to the package directory (e.g. `src/components/forms/...`), not the repo root.
 

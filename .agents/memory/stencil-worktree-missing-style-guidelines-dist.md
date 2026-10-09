@@ -1,16 +1,16 @@
-# Fresh Git Worktrees Need `@telesign/boreal-style-guidelines` Built First
+# Fresh Git Worktrees Need `@pxglobal/boreal-style-guidelines` Built First
 
 ## The Constraint
 
-`pnpm install` in a freshly created git worktree (`git worktree add`) links `node_modules/@telesign/boreal-style-guidelines` as a symlink into the workspace package `packages/boreal-styleguidelines`, but that package's `dist/` is a gitignored build artifact — never checked into git and never built in the new worktree.
+`pnpm install` in a freshly created git worktree (`git worktree add`) links `node_modules/@pxglobal/boreal-style-guidelines` as a symlink into the workspace package `packages/boreal-style-guidelines`, but that package's `dist/` is a gitignored build artifact — never checked into git and never built in the new worktree.
 
-Any subsequent `stencil build` (or `pnpm --filter @telesign/boreal-web-components build`) on a package that consumes the style guidelines fails with unrelated-looking Sass errors such as:
+Any subsequent `stencil build` (or `pnpm --filter @pxglobal/boreal-web-components build`) on a package that consumes the style guidelines fails with unrelated-looking Sass errors such as:
 
 ```
 [ ERROR ] sass error: src/components/.../bds-x.scss:1:1
           Can't find stylesheet to import.
 [ ERROR ] ENOENT: no such file or directory, stat
-          '.../packages/boreal-web-components/node_modules/@telesign/boreal-style-guidelines/dist/css'
+          '.../packages/boreal-web-components/node_modules/@pxglobal/boreal-style-guidelines/dist/css'
 ```
 
 The error surfaces per-component-SCSS-file and looks like a Sass path/config regression, but the root cause is upstream: the style guidelines package has never been built in this checkout.
@@ -20,7 +20,7 @@ The error surfaces per-component-SCSS-file and looks like a Sass path/config reg
 Before trusting a `stencil build` failure inside a fresh worktree as a real compile error, run the style guidelines build once first:
 
 ```
-pnpm --filter @telesign/boreal-style-guidelines build
+pnpm --filter @pxglobal/boreal-style-guidelines build
 ```
 
 This populates `dist/css`, `dist/scss`, and `dist/stencil`. Re-run the dependent package build afterward.

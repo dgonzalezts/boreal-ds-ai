@@ -13,7 +13,7 @@ pnpm is a package manager only — it has no built-in `.env` loading for script 
 **Fix:** Prefix any script that requires env vars from `.env` with `dotenv --` via `dotenv-cli` (already installed at workspace root as `dotenv-cli`).
 
 ```json
-"deploy:docs": "turbo run build --filter=@telesign/boreal-docs... && dotenv -- pnpm --filter @telesign/boreal-docs run chromatic"
+"deploy:docs": "turbo run build --filter=@pxglobal/boreal-docs... && dotenv -- pnpm --filter @pxglobal/boreal-docs run chromatic"
 ```
 
 The `dotenv --` only wraps the command it immediately precedes. The Turborepo build step before the `&&` runs without `.env` loading, which is correct — it does not need the token.

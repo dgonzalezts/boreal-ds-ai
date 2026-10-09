@@ -14,7 +14,7 @@ type-check pass/fail signal after editing source is a false positive.
 
 **How to apply:** to actually re-verify a source change (e.g. as the "run `tsc
 --noEmit`" manual-test step in a plan, since this package has no standalone `tsc`
-script), bypass the cache with `pnpm --filter @telesign/boreal-web-components build`
+script), bypass the cache with `pnpm --filter @pxglobal/boreal-web-components build`
 run via `with-node.sh`, or watch for `cache hit, replaying logs` in the output of a
 plain `pnpm build` and re-run with `--force` / the `--filter` form if seen.
 

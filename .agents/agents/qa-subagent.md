@@ -53,8 +53,8 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 Every manual-test checklist that says "confirm behavior is identical across web components, React, and Vue" means running the scenario on all three of these:
 
 1. **Raw web components** — `packages/boreal-web-components/src/index.html` (the dev-only scratch playground). Serve with `pnpm --filter boreal-web-components exec stencil build --dev --watch --serve --port <port>`.
-2. **React wrapper** — `examples/react-testapp` (imports from `@telesign/boreal-react`). Requires the full pack pipeline below, not a standalone `vite` dev server against a plain workspace build — plain `pnpm --filter boreal-web-components build` does not produce a dist shape `@telesign/boreal-web-components` subpath imports (e.g. `@telesign/boreal-web-components/components/bds-avatar.js`) can resolve; the app will fail with Vite "Failed to resolve import" errors.
-3. **Vue wrapper** — `examples/vue-testapp` (imports from `@telesign/boreal-vue`). Same pipeline requirement as React, via the vue variant.
+2. **React wrapper** — `examples/react-testapp` (imports from `@pxglobal/boreal-react`). Requires the full pack pipeline below, not a standalone `vite` dev server against a plain workspace build — plain `pnpm --filter boreal-web-components build` does not produce a dist shape `@pxglobal/boreal-web-components` subpath imports (e.g. `@pxglobal/boreal-web-components/components/bds-avatar.js`) can resolve; the app will fail with Vite "Failed to resolve import" errors.
+3. **Vue wrapper** — `examples/vue-testapp` (imports from `@pxglobal/boreal-vue`). Same pipeline requirement as React, via the vue variant.
 
 **Pipeline for React/Vue verification (run from repo root):**
 
@@ -63,7 +63,7 @@ pnpm run dev:pack:react   # builds boreal-web-components (+ downstream deps) and
 pnpm run dev:pack:vue     # same, for examples/vue-testapp
 ```
 
-These are full `turbo run build --filter=...@telesign/boreal-web-components` invocations — they rebuild downstream dependents too (`boreal-react`, `boreal-vue`, and `boreal-docs` via Turborepo's dependency graph), so budget a couple of minutes, not seconds. Run in the background and wait for completion rather than polling with short sleeps.
+These are full `turbo run build --filter=...@pxglobal/boreal-web-components` invocations — they rebuild downstream dependents too (`boreal-react`, `boreal-vue`, and `boreal-docs` via Turborepo's dependency graph), so budget a couple of minutes, not seconds. Run in the background and wait for completion rather than polling with short sleeps.
 
 ## Dev Server Lifecycle
 

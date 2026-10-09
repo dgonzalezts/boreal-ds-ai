@@ -24,10 +24,10 @@ UI-state check after a `checkValidity()` eval call on the same page instance.
 Found during EOA-17138 Task 15 (React/Vue parity check, Phase 3 min/max).
 
 ## Symptom
-Loading `<bds-date-picker min="2026-08-10" value="2026-08-05">` through `@telesign/boreal-react`
+Loading `<bds-date-picker min="2026-08-10" value="2026-08-05">` through `@pxglobal/boreal-react`
 does **not** mark the field invalid or block native form submission, even though the identical
 prop combination correctly blocks submission and shows `errorMessage="Date is not allowed."`
-in raw web components (`src/index.html`) and in `@telesign/boreal-vue`.
+in raw web components (`src/index.html`) and in `@pxglobal/boreal-vue`.
 
 Confirmed via `dp.checkValidity()` (awaited): returns `true` in React on initial load, `false` in
 web components and Vue for the exact same `min`/`value` pair.

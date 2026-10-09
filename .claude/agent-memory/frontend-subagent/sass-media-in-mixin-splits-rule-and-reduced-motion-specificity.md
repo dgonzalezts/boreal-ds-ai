@@ -31,6 +31,6 @@ It does **not** work when the transition is declared on higher-specificity state
 
 ## Verification technique
 
-Build the package (`pnpm --filter @telesign/boreal-web-components build`) and read the **unminified** compiled artifact at `dist/collection/components/<path>/<component>.css` — far easier to audit than the minified hashed `www/build/p-*.entry.js` chunk (which still works via `grep -o 'transition:[^;}]*'`). Grep for `outline-width` in transitions and count `transition:` values to confirm which rules still animate.
+Build the package (`pnpm --filter @pxglobal/boreal-web-components build`) and read the **unminified** compiled artifact at `dist/collection/components/<path>/<component>.css` — far easier to audit than the minified hashed `www/build/p-*.entry.js` chunk (which still works via `grep -o 'transition:[^;}]*'`). Grep for `outline-width` in transitions and count `transition:` values to confirm which rules still animate.
 
 Related: `scss-placeholder-refactor-verification-technique.md` (compiled-output inspection over raw-SCSS diff).

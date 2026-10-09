@@ -1,6 +1,6 @@
 # release-it + pnpm publish — Mechanics and Gotchas
 
-Source: First alpha release session (2026-03-10). release-it version: `19.2.4`.
+Source: First alpha release session (2026-03-10), release-it `19.2.4`. Re-verified in the first `@pxglobal` release (2026-10-09), release-it `21.1.0`: same mechanics. The published React and Vue tarballs pin `@pxglobal/boreal-web-components` at the exact version (`0.14.0`). The publish step shows as `npm publish` in release-it's output but runs `pnpm publish` because of `publishPackageManager`.
 
 ---
 
@@ -25,7 +25,7 @@ The only supported field for overriding the publish executable is `publishPackag
 "npm": {
   "publish": true,
   "publishPath": ".",
-  "tag": "alpha",
+  "tag": "latest",
   "publishPackageManager": "pnpm",
   "publishArgs": ["--no-git-checks"]
 }
@@ -35,7 +35,7 @@ The only supported field for overriding the publish executable is `publishPackag
 |---|---|
 | `publishPackageManager` | Swaps the publish executable (default: `npm`). Setting `"pnpm"` triggers workspace protocol replacement. |
 | `publishArgs` | Extra flags appended to the publish command. `--no-git-checks` is pnpm-specific. |
-| `tag` | npm dist-tag (equivalent to `--tag alpha`). |
+| `tag` | npm dist-tag (equivalent to `--tag latest`; it was `alpha` until the move to `@pxglobal`, when the alpha suffix and dist-tag were dropped). |
 
 When `publishPackageManager` is not `npm`, release-it automatically omits the `--workspaces=false` flag it would otherwise append for npm.
 
@@ -45,22 +45,22 @@ When `publishPackageManager` is not `npm`, release-it automatically omits the `-
 
 `workspace:*` in `dependencies` is resolved by pnpm **at tarball creation time only**. The `package.json` on disk is never modified. The tarball's `package.json` receives the resolved version string.
 
-| Protocol in `package.json` | Published as (if referenced package is at `0.1.0-alpha.0`) |
+| Protocol in `package.json` | Published as (if referenced package is at `0.14.0`) |
 |---|---|
-| `workspace:*` | `0.1.0-alpha.0` (exact pin) |
-| `workspace:^` | `^0.1.0-alpha.0` (caret range) |
-| `workspace:~` | `~0.1.0-alpha.0` (tilde range) |
+| `workspace:*` | `0.14.0` (exact pin) |
+| `workspace:^` | `^0.14.0` (caret range) |
+| `workspace:~` | `~0.14.0` (tilde range) |
 
 Workspace replacement only occurs when pnpm is the publish executor. If `npm publish` runs instead (e.g. because `publishCommand` was used or `publishPackageManager` was omitted), the raw `workspace:*` string leaks into the published tarball and the registry rejects it with a 400 error.
 
 ---
 
-## `workspace:*` (exact pin) is correct for alpha phase
+## `workspace:*` (exact pin) is the policy while below 1.0
 
-`workspace:^` (caret range) mirrors the Beeq reference project pattern, but caret ranges only make sense once semver guarantees are in force. During alpha:
+`workspace:^` (caret range) mirrors the Beeq reference project pattern, but caret ranges only make sense once semver guarantees are in force. While the library is below 1.0 (alpha, `preMajor`):
 
-- Exact pin ensures consumers receive the specific tested combination of packages.
-- A caret range over pre-release versions has unintuitive scoping: `^0.1.0-alpha.0` covers `0.1.0-alpha.1` and `0.1.0-alpha.2` but not `0.2.0-alpha.0` (semver excludes cross-tuple pre-releases from range resolution).
+- Exact pin ensures consumers receive the specific tested combination of packages; the wrappers are always released after web-components, so they never lag behind.
+- Below 1.0 a caret range only spans patch versions (`^0.14.0` covers `0.14.x`), and breaking changes bump the minor version, so a range would add little.
 
 Use `workspace:^` only when the package reaches a stable release baseline.
 
@@ -68,52 +68,25 @@ Use `workspace:^` only when the package reaches a stable release baseline.
 
 ## Why `dependencies` (not `peerDependencies`) for internal packages
 
-Placing `@telesign/boreal-web-components` in `peerDependencies` of `@telesign/boreal-react` shifts the installation burden to the consumer. They must install the peer explicitly. The correct pattern keeps it in `dependencies` so pnpm includes it automatically when the consumer installs `@telesign/boreal-react`.
+Placing `@pxglobal/boreal-web-components` in `peerDependencies` of `@pxglobal/boreal-react` shifts the installation burden to the consumer. They must install the peer explicitly. The correct pattern keeps it in `dependencies` so pnpm includes it automatically when the consumer installs `@pxglobal/boreal-react`.
 
 The `peerDependencies` approach was explored as a workaround for the `workspace:*` leak, but the root fix was ensuring pnpm executes the publish step (via `publishPackageManager: "pnpm"`).
 
 ---
 
-## Full publish flow — sequence diagram
+## Full publish flow
 
-```mermaid
-sequenceDiagram
-    participant RI as release-it
-    participant FS as Local filesystem
-    participant pnpm
-    participant WS as pnpm-workspace.yaml
-    participant REG as npm registry
-
-    RI->>FS: bump version in package.json (e.g. 0.1.0-alpha.2)
-    RI->>pnpm: exec ["pnpm", "publish", "--no-git-checks", "--tag", "alpha"]
-
-    pnpm->>WS: read workspace root & packages globs
-    pnpm->>FS: read boreal-react/package.json
-    note over pnpm: finds dependencies:<br/>"@telesign/boreal-web-components": "workspace:*"
-
-    pnpm->>FS: read boreal-web-components/package.json
-    note over pnpm: resolves version: "0.1.0-alpha.0"
-
-    pnpm->>pnpm: replace workspace:* → "0.1.0-alpha.0"<br/>in tarball package.json only<br/>(local file unchanged)
-
-    pnpm->>pnpm: pack tarball (.tgz)
-    note over pnpm: tarball package.json shows:<br/>"@telesign/boreal-web-components": "0.1.0-alpha.0"
-
-    pnpm->>REG: publish tarball with --tag alpha
-    REG-->>pnpm: 200 OK
-    pnpm-->>RI: exit 0
-    RI->>FS: git commit + tag + push
-```
+The sequence (prerelease validation, path-scoped bump, changelog, `pnpm publish` with the pin replacement, npm's approval step, commit/tag/push) is in `ai-docs/diagrams/release-it-publish-flow.md`. The procedure is in `RELEASING.md`.
 
 ---
 
 ## Affected files
 
-| File | Change made in this session |
+| File | Change made in the first alpha release session |
 |---|---|
 | `packages/boreal-react/.release-it.json` | Replaced invalid `publishCommand` with `publishPackageManager: "pnpm"` and `publishArgs: ["--no-git-checks"]` |
 | `packages/boreal-vue/.release-it.json` | Same fix |
-| `packages/boreal-react/package.json` | Kept `@telesign/boreal-web-components: "workspace:*"` in `dependencies` (not `peerDependencies`) |
+| `packages/boreal-react/package.json` | Kept `@pxglobal/boreal-web-components: "workspace:*"` in `dependencies` (not `peerDependencies`) |
 
 ---
 

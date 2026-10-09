@@ -119,7 +119,7 @@ fix(web-components): EOA-10099 sanitize HTML in bds-tooltip content prop
 
 **Immediate Action Required:**
 
-1. Upgrade to latest patch version: `pnpm update @telesign/boreal-web-components`
+1. Upgrade to latest patch version: `pnpm update @pxglobal/boreal-web-components`
 2. Review all usage of `bds-tooltip` with user-generated content
 3. Audit other components for similar XSS vectors
 

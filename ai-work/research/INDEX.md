@@ -23,6 +23,7 @@
 
 | File | Date | Ticket | Component | Title |
 | ---- | ---- | ------ | --------- | ----- |
+| [2026-10-07-tree-shaking-review.md](./2026-10-07-tree-shaking-review.md) | 2026-10-07 | — | — | Tree-shaking review — `boreal-web-components` and the React/Vue wrappers |
 | [2026-07-06-shared-virtualization-utility.md](./2026-07-06-shared-virtualization-utility.md) | 2026-07-06 | — | — | Research Spike: Shared Virtualization Utility for bds-table + bds-search-bar |
 | [2026-05-27-bds-slider-nativeui-vs-nouislider.md](./2026-05-27-bds-slider-nativeui-vs-nouislider.md) | 2026-05-27 | — | `bds-slider` | bds-slider: Native UI vs noUISlider |
 | [2026-05-19-directives-system.md](./2026-05-19-directives-system.md) | 2026-05-19 | — | — | Directive Systems in Stencil-Based Component Libraries |

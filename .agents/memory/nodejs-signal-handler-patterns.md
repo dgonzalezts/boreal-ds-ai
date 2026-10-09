@@ -41,7 +41,7 @@ Applied in `scripts-boreal/bin/publish.js` (EOA-10230).
 
 ## `pnpm install` Recovery After a Force-Killed Pipeline
 
-`git checkout HEAD -- <paths>` restores `package.json` file content but does not repair `node_modules` symlinks. If the `scripts-boreal/bin/publish.js` pipeline is killed with SIGKILL (`kill -9`) — which is not catchable by any userland handler — the workspace may be left with `node_modules/@telesign/boreal-web-components` in `boreal-react` still pointing at a tgz store entry rather than the workspace symlink.
+`git checkout HEAD -- <paths>` restores `package.json` file content but does not repair `node_modules` symlinks. If the `scripts-boreal/bin/publish.js` pipeline is killed with SIGKILL (`kill -9`) — which is not catchable by any userland handler — the workspace may be left with `node_modules/@pxglobal/boreal-web-components` in `boreal-react` still pointing at a tgz store entry rather than the workspace symlink.
 
 Symptom: `dist/css` is missing from the resolved package path, causing import errors.
 

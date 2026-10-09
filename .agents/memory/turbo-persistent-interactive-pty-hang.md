@@ -30,8 +30,8 @@ This is sufficient for bare `pnpm dev` (all packages) and any direct `turbo run 
 For the named dev scripts in the root `package.json` (`dev:components`, `dev:docs`), bypassing Turbo entirely is safer and eliminates the PTY issue entirely for those paths. The pattern is to build prerequisites sequentially via pnpm filter, then delegate the watch step directly to the package:
 
 ```json
-"dev:components": "pnpm --filter=@telesign/boreal-style-guidelines build && pnpm --filter=@telesign/boreal-web-components dev",
-"dev:docs": "pnpm --filter=@telesign/boreal-style-guidelines build && pnpm --filter=@telesign/boreal-web-components build && pnpm --filter=@telesign/boreal-docs dev"
+"dev:components": "pnpm --filter=@pxglobal/boreal-style-guidelines build && pnpm --filter=@pxglobal/boreal-web-components dev",
+"dev:docs": "pnpm --filter=@pxglobal/boreal-style-guidelines build && pnpm --filter=@pxglobal/boreal-web-components build && pnpm --filter=@pxglobal/boreal-docs dev"
 ```
 
 The two fixes are complementary, not redundant:

@@ -12,7 +12,7 @@ The source of truth for Vue v-model wiring is `packages/boreal-web-components/ta
 To regenerate after editing `vue-output-target.ts`, build `boreal-web-components` (not `boreal-vue`) — the Vue output target runs as a Stencil output target during that package's `stencil build`, and `stencil.config.ts` imports it at line 5 (`import vueOutputTarget from './targets/vue-output-target'`) and registers it in `outputTargets` (line 62, `vueOutputTarget()`):
 
 ```bash
-.agents/scripts/with-node.sh pnpm --filter @telesign/boreal-web-components build
+.agents/scripts/with-node.sh pnpm --filter @pxglobal/boreal-web-components build
 ```
 
 This regenerates `../boreal-vue/lib/components.ts` as a side effect (`proxiesFile` points there). Confirm the new wiring by grepping the exported const, e.g. `grep -n "BdsTable\b" packages/boreal-vue/lib/components.ts` — a component with `componentModels` wiring gets a second generic param (`JSX.BdsTable, JSX.BdsTable["selectedRows"]>`) and two trailing string args on `defineContainer(...)` (`'selectedRows', 'selectedRowsChange', undefined`), matching the existing `BdsTextField` (`'value', 'valueChange', undefined`) pattern.
@@ -20,7 +20,7 @@ This regenerates `../boreal-vue/lib/components.ts` as a side effect (`proxiesFil
 After regenerating, optionally verify the proxy type-checks standalone:
 
 ```bash
-.agents/scripts/with-node.sh pnpm --filter @telesign/boreal-vue build
+.agents/scripts/with-node.sh pnpm --filter @pxglobal/boreal-vue build
 ```
 
 This runs `tsc -p . --outDir ./dist` against the freshly generated `components.ts` and will surface any type mismatch between the new `componentModels` entry and the underlying Stencil `@Prop`/`@Event` types.

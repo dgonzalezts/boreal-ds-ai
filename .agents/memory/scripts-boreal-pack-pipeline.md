@@ -6,13 +6,13 @@
 
 ```json
 "validate:pack:react": {
-  "dependsOn": ["@telesign/boreal-web-components#build"]
+  "dependsOn": ["@pxglobal/boreal-web-components#build"]
 }
 ```
 
-This tells Turbo to run the `build` task in `@telesign/boreal-web-components` before executing `validate:pack:react` in `scripts-boreal`. The same `dependsOn` is declared for `validate:pack:vue` and `validate:pack:angular`. Turbo's cache means only one actual build runs even when `validate:all` invokes all three framework validations in sequence.
+This tells Turbo to run the `build` task in `@pxglobal/boreal-web-components` before executing `validate:pack:react` in `scripts-boreal`. The same `dependsOn` is declared for `validate:pack:vue` and `validate:pack:angular`. Turbo's cache means only one actual build runs even when `validate:all` invokes all three framework validations in sequence.
 
-The root `package.json` script `dev:pack:react` handles the development variant differently — it explicitly invokes `turbo run build --filter=...@telesign/boreal-web-components` before delegating to `scripts-boreal`. Both approaches are correct; the Turbo `dependsOn` path is preferred for CI and `release:all` because it uses the task graph cache.
+The root `package.json` script `dev:pack:react` handles the development variant differently — it explicitly invokes `turbo run build --filter=...@pxglobal/boreal-web-components` before delegating to `scripts-boreal`. Both approaches are correct; the Turbo `dependsOn` path is preferred for CI and `release:all` because it uses the task graph cache.
 
 ## Per-Framework Script Suffix Convention
 
@@ -33,7 +33,7 @@ Layer mapping after the EOA-10230 refactor:
 `release:all` was updated to use `validate:all` instead of the former `validate:pack`. The full sequence is:
 
 ```
-release:styles → release:wc → validate:all → release:react → release:vue
+release:styles → release:wc → release:react → release:vue   (React and Vue run validate:pack:react|vue as a `prerelease` script before their own release)
 ```
 
 ## Files Owning This Architecture

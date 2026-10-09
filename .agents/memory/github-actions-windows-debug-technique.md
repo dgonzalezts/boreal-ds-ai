@@ -1,5 +1,7 @@
 # GitHub Actions as a Reproducible Windows/Linux Debug Environment
 
+> **Warning (2026-10-09):** the Boreal DS product code lives only in Bitbucket and must not be pushed to GitHub. The `github` and `ai` remotes of this checkout point to public repositories, so a debug workflow pushed there exposes the code. Reproduce platform bugs on a local Windows or Linux VM, or on a company CI runner, or with a minimal repro that contains no product code. Release commands are not supported on Windows (use WSL2 or CI).
+
 ## When to Use
 
 When a bug is reported on Windows or Linux CI but no matching local machine is available, a temporary `workflow_dispatch` workflow on GitHub Actions is the fastest way to get a reproducible environment. This technique is preferable to attempting to install and configure a virtual machine locally.

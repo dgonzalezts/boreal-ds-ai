@@ -1,0 +1,1 @@
+../../.agents/memory/bitbucket-squash-message-breaking-and-mentions.md

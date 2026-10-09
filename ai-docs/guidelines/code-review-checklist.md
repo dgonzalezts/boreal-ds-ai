@@ -8,7 +8,9 @@ This checklist is a shared baseline for reviewing changes across the Boreal desi
 
 - [ ] **Scope clarity**: The PR description lists affected packages and user-facing impact.
 - [ ] **Branch hygiene**: Work is on a feature branch and scoped to the intended changes.
-- [ ] **Compatibility intent**: The author states whether the change is additive, breaking, or behavior-changing.
+- [ ] **Compatibility intent**: The author states whether the change is additive, breaking, or behavior-changing (see "What counts as a breaking change" in `CONTRIBUTING.md`; below 1.0, when in doubt, mark it breaking).
+- [ ] **PR title**: Follows `type(scope): TICKET-ID description` (it becomes the changelog entry and version bump after the squash merge), has a `!` if the change is breaking, and writes handles such as `@pxglobal` in backticks.
+- [ ] **Commit type matches consumer impact**: Anything consumers can observe (output, runtime dependencies, behaviour) is `fix` or `feat`; tooling, release config, CI, tests and docs are `build`, `ci`, `chore`, `test` or `docs`.
 
 ---
 
@@ -110,7 +112,7 @@ Apply the sections below only when the change touches the corresponding package.
 ### B) React and Vue Wrappers (`packages/boreal-react`, `packages/boreal-vue`)
 
 - [ ] **Wrapper outputs updated**: Generated outputs or types are rebuilt when web components change.
-- [ ] **Internal dependency location**: `@telesign/boreal-web-components` remains in `dependencies` (not `peerDependencies`).
+- [ ] **Internal dependency location**: `@pxglobal/boreal-web-components` remains in `dependencies` (not `peerDependencies`).
 - [ ] **release-it config**: Uses `publishPackageManager: "pnpm"` with `publishArgs`, not `publishCommand`.
 
 #### Vue-Specific
@@ -131,7 +133,7 @@ Apply the sections below only when the change touches the corresponding package.
 ### D) Docs and Storybook (`apps/boreal-docs`)
 
 - [ ] **Stories updated**: Component behavior changes are reflected in stories and MDX.
-- [ ] **Vite CSS aliasing**: Storybook aliasing remains intact for `@telesign/boreal-web-components/css/*`.
+- [ ] **Vite CSS aliasing**: Storybook aliasing remains intact for `@pxglobal/boreal-web-components/css/*`.
 - [ ] **Chromatic workflow**: Uses `dotenv --` and `--storybook-build-dir` (not `--build-script-name`).
 - [ ] **Turbo outputs**: `storybook-static/**` is declared when Chromatic uploads are expected.
 

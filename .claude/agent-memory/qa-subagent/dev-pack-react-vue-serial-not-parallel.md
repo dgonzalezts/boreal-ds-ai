@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Root `pnpm run dev:pack:react` / `dev:pack:vue` scripts are `turbo run build --filter=...@telesign/boreal-web-components && pnpm --filter scripts-boreal run dev:pack:<framework>`. The `scripts-boreal` half packs+installs the wrapper AND then runs `vite` in the target testapp as its final step — that `vite` process is long-running and never exits on its own.
+Root `pnpm run dev:pack:react` / `dev:pack:vue` scripts are `turbo run build --filter=...@pxglobal/boreal-web-components && pnpm --filter scripts-boreal run dev:pack:<framework>`. The `scripts-boreal` half packs+installs the wrapper AND then runs `vite` in the target testapp as its final step — that `vite` process is long-running and never exits on its own.
 
 **Why:** Chaining `dev:pack:react && dev:pack:vue` in one shell command hangs forever after react's step: the `&&` never proceeds past react's own persistent dev server. Running both scripts truly in parallel (two backgrounded commands started at the same instant) risks a race on the shared `boreal-web-components` turbo build/dist output since both scripts run the same `turbo run build --filter=...` step independently.
 

@@ -26,7 +26,7 @@ Determine:
 
 - The primary intent (feature, bug fix, refactor, docs, chore, test, performance, hotfix, security, breaking change)
 - The Jira ticket reference (e.g. `EOA-10099`)
-- The affected package scope (`web-components`, `boreal-docs`, `boreal-styleguidelines`, `boreal-react`, `boreal-vue`)
+- The commitlint scope (`web-components`, `react`, `vue`, `styles`, `docs`, `examples`, `scripts`, `workspace`, `ci`, `deps`, `release`, `multiple`)
 - Whether any alternatives were considered that reviewers should know about
 - Whether this is a breaking change (requires `!` in commit format)
 
@@ -62,11 +62,18 @@ For **breaking changes**, add `!` after the scope:
 <type>(<scope>)!: <TICKET> <imperative description>
 ```
 
-- **type:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `style`, `perf`
-- **scope:** affected package short-name (e.g. `web-components`, `boreal-docs`, `boreal-react`)
+- **type:** `feat`, `fix`, `perf`, `revert`, `docs`, `refactor`, `chore`, `test`, `style`, `build`, `ci`
+- **scope:** one of the allowed commitlint scopes (`react`, `vue`, `web-components`, `styles`, `docs`, `examples`, `scripts`, `workspace`, `ci`, `deps`, `release`, `multiple`); the title is rejected by commitlint otherwise
 - **TICKET:** always present, always before the description (e.g. `EOA-10099`)
 - **`!`:** signals breaking change (breaking-change-template.md only)
 - **Max length:** 100 characters total, matching `header-max-length` in `commitlint.config.js`
+
+**The title becomes the changelog entry and the version bump.** PRs are merged with Squash and merge, and the squash commit is what `release-it` reads, so:
+
+- Pick the type by consumer impact: anything consumers can observe (output, runtime dependencies, behaviour) is `fix` or `feat`; tooling, release config, CI, tests and docs are `build`, `ci`, `chore`, `test` or `docs`. A `feat`/`fix` that touches a package folder releases that package.
+- A breaking change needs the `!` in the title. Bitbucket lists the squashed commits indented in the merge message, and a `BREAKING CHANGE:` footer inside that list is ignored. The definition of breaking is in `CONTRIBUTING.md`; below 1.0, when in doubt, mark it breaking.
+- Write handles and scopes such as `@pxglobal` in backticks: a bare `@name` in a title becomes a link to a page that does not exist in the changelog.
+- Remind the reviewer to set the merge message the same way (keep the title; an optional `BREAKING CHANGE:` footer goes in the last lines of the message).
 
 ## Step 4: Fill in the Template
 

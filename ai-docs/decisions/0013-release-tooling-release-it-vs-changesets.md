@@ -1,7 +1,7 @@
 # ADR 0013 — Release tooling: release-it vs. changesets
 
 **Date:** 2026-08-12
-**Status:** Accepted (2026-10-01)
+**Status:** Accepted (2026-10-01); implemented 2026-10-08 (PR 1 `c5d5dedb` merged, PR 2 pending); first real release pending (plan Task 12d)
 
 ---
 
@@ -47,3 +47,31 @@ Revisit triggers: (1) a merged `feat`/`fix` PR is missing from a generated chang
 - Whichever option is chosen, enforcement of the PR-level convention (title format for A, changeset-file presence for B) has **no automated backstop** — no CI/pipeline access or release-team support is available to build one, and Option A's title-format check cannot be done client-side regardless (the squash commit is server-generated, after local hooks run). Both options rely on PR-template checklist + reviewer discipline. BEEQ has the same gap for its own PR-title convention (confirmed directly in `ai-docs/lib/beeq.txt`: only two GitHub Actions workflows exist, neither validates PR titles; `semanticCommits: "enabled"` in its Renovate config only governs Renovate's own automated PRs).
 - If Option A: wrapper dependency-pin drift is controlled operationally by making WC-stack orchestration the default (`boreal-web-components` release always followed by both wrapper releases). If teams bypass that default and use selective per-package release outside documented exceptions, drift risk returns and requires additional manual safeguards.
 - If Option B: the retired `.release-it.json` files, custom `headerPattern`, and `check-cem-changes.ts`'s coupling to `.release-it.json` must be fully removed, not left as dead config.
+
+---
+
+## Implementation outcome (2026-10-08)
+
+**Corrections to the Context above (re-verified against `release/current`):**
+
+- Defect 1: there are **8** `Pull request #N:` squash commits, 5 of them carrying user-facing changes missing from the changelogs (6 entries backfilled). The cited `d3bb6f51` (`bds-table` v4) is not on `release/current`; v4 landed as conventional commit `7a1e4a53` and is in the changelog, so "19+ commits invisible" overstated the loss. The other 103 `Pull request #` commits are true merges whose branch commits parse normally.
+- The Bitbucket Server project key is `DEV`: commits live at `/projects/DEV/repos/boreal-ds/commits/<hash>`.
+
+**What Option A became in practice:**
+
+| Defect | Resolution |
+|---|---|
+| 1 Squash titles | Custom `parserOpts` (`headerPattern`, `breakingHeaderPattern`) accept the `Pull request #N:` prefix and strip ticket IDs |
+| 2 No path scoping | `commitsOpts.path` (bump) and `gitRawCommitsOpts.path` (changelog) per package; web-components also counts style-guidelines, wrappers also count web-components |
+| 3 Version never escalates | `preMajor` (breaking → minor, no commit reaches 1.0 alone). `strictSemVer` was used while on `-alpha.N` and removed with the suffix |
+| 4 Broken links | `context` block (the preset dropped `commitUrlFormat`), `repository` field removed from the four manifests, ~2,560 historical links rewritten |
+| 5 Wrapper pin drift | pnpm-native orchestration (`release:wc-stack`, `release:all`) plus a `prerelease` hook on each wrapper running `validate:pack:*`; no new dependency (Turborepo and `npm-run-all2` were compared and rejected) |
+| New: empty releases | A package is skipped when it has no releasable commit since its last tag |
+
+Also done: Node 22.23.3, pnpm 11.28.2, `release-it` 21.1.0, `@release-it/conventional-changelog` 12.0.2, commitlint 21; two maintained changelogs (web-components, style-guidelines) with React/Vue pointers and a Storybook "What's new" page; `CONTRIBUTING.md`; folder renamed `boreal-style-guidelines`.
+
+**Scope move:** packages move to `@pxglobal` (`@proximus` was taken), starting at plain `0.14.0`, `latest` dist-tag, alpha stated in docs instead of a version suffix. `@telesign/*` is deprecated (not unpublished), its tags are kept and `git.tagMatch` makes the first `@pxglobal` changelog start at the last `@telesign` tag. Revisit trigger 3 was evaluated when the move was planned (2026-10-02): Option A was kept; changesets remains the documented alternative.
+
+**Accepted risks:** release commands are unsupported on Windows (verification bypassed 2026-10-08, risk accepted); PR-title format remains unenforced (no server-side hook access).
+
+**First real release (2026-10-09):** the four packages were published at `0.14.0` under `@pxglobal` with `latest`, tagged and pushed, and verified (wrapper pins, changelogs, tarballs, default install). npm's staged publishing held each publish for a browser approval and created a `0.0.0-stage` placeholder per new package; release-it did not wait for the approval, so the tags were pushed up to about two minutes before the versions were installable. The procedure now covers this in `RELEASING.md`. Pending: Storybook deploy and deprecation of the `@telesign` packages and the placeholders.

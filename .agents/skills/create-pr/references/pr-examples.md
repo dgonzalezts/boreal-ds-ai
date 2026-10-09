@@ -23,7 +23,7 @@ this while keeping @AttachInternals() on each component class directly, which
 Stencil's static analysis requires.
 
 Shared SCSS partial and additional behavioral mixins (textInputMixin,
-selectableMixin) are deferred to Phase 2 pending boreal-styleguidelines
+selectableMixin) are deferred to Phase 2 pending boreal-style-guidelines
 token integration. See .ai/plans/EOA-10099-form-foundation.md for the full
 three-phase roadmap.
 

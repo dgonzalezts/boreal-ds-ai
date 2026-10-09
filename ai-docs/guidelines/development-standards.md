@@ -305,7 +305,7 @@ export class BdsExample implements IExample {
 #### Component & Story Scaffolding
 
 - **Components:** `pnpm generate:component` (workspace root) runs Stencil's built-in `stencil generate` in `boreal-web-components` and scaffolds the component file structure.
-- **Stories/MDX:** the Plop generator in `apps/boreal-docs` (`pnpm --filter @telesign/boreal-docs run generate`) scaffolds story and documentation files. Implementation notes and troubleshooting: [plop-generator-learnings.md](./plop-generator-learnings.md).
+- **Stories/MDX:** the Plop generator in `apps/boreal-docs` (`pnpm --filter @pxglobal/boreal-docs run generate`) scaffolds story and documentation files. Implementation notes and troubleshooting: [plop-generator-learnings.md](./plop-generator-learnings.md).
 
 > JSDoc/CEM authoring standards for the generated files live in §5.2.
 
@@ -543,9 +543,9 @@ Boreal DS ships framework output targets — **Vue** (`@stencil/vue-output-targe
 
 ```mermaid
 flowchart LR
-    A["Stencil source<br/>packages/boreal-web-components"] --> B["@telesign/boreal-web-components<br/>(custom elements + loader)"]
-    B --> C["@telesign/boreal-react<br/>(generated wrappers)"]
-    B --> D["@telesign/boreal-vue<br/>(generated wrappers + v-model)"]
+    A["Stencil source<br/>packages/boreal-web-components"] --> B["@pxglobal/boreal-web-components<br/>(custom elements + loader)"]
+    B --> C["@pxglobal/boreal-react<br/>(generated wrappers)"]
+    B --> D["@pxglobal/boreal-vue<br/>(generated wrappers + v-model)"]
     C --> E[React consumers]
     D --> F[Vue consumers]
     B --> G[Vanilla JS consumers]
@@ -664,7 +664,7 @@ Linting also runs automatically on staged files before every commit via Husky + 
 The Custom Elements Manifest doubles as a documentation quality gate — it fails when public API metadata is missing or malformed (missing JSDoc on `@Prop`/`@Event`/`@Method`, malformed tags, TS compilation errors):
 
 ```bash
-pnpm --filter @telesign/boreal-web-components check:cem
+pnpm --filter @pxglobal/boreal-web-components check:cem
 ```
 
 See §5.6 for CEM configuration and setup.
@@ -793,7 +793,7 @@ The real `exports` map in [`packages/boreal-web-components/package.json`](../../
 - **The `types` condition on `./components/*.js` is mandatory** — without it, `moduleResolution: bundler` cannot locate the `.d.ts` for subpath imports and wrapper builds fail (see Appendix A.2 and [ADR 0005](../decisions/0005-exports-map-types-condition-component-subpaths.md)).
 
 ```typescript
-import { defineCustomElements } from "@telesign/boreal-web-components/loader";
+import { defineCustomElements } from "@pxglobal/boreal-web-components/loader";
 ```
 
 ---
@@ -868,7 +868,7 @@ it("should emit event when button clicked", async () => {
 
 ### 4.3 Integration Testing
 
-The package exposes `pnpm --filter @telesign/boreal-web-components e2e` (`stencil test --e2e`, Puppeteer-based). **No E2E tests are currently written** — unit tests plus Chromatic cover today's needs. Reach for E2E tests when verifying multi-component flows that `newSpecPage` cannot express: real form submission across components, focus trapping, keyboard navigation across a composite widget.
+The package exposes `pnpm --filter @pxglobal/boreal-web-components e2e` (`stencil test --e2e`, Puppeteer-based). **No E2E tests are currently written** — unit tests plus Chromatic cover today's needs. Reach for E2E tests when verifying multi-component flows that `newSpecPage` cannot express: real form submission across components, focus trapping, keyboard navigation across a composite widget.
 
 ### 4.4 Visual Regression Testing
 
@@ -929,10 +929,10 @@ it("should support keyboard navigation", async () => {
 
 ```bash
 pnpm test                                                          # all unit tests (workspace root)
-pnpm --filter @telesign/boreal-web-components test:watch           # watch mode
-pnpm --filter @telesign/boreal-web-components test:coverage        # coverage report
-pnpm --filter @telesign/boreal-web-components test -- --testPathPattern=bds-button   # single component
-pnpm --filter @telesign/boreal-web-components e2e                  # E2E (stencil test --e2e)
+pnpm --filter @pxglobal/boreal-web-components test:watch           # watch mode
+pnpm --filter @pxglobal/boreal-web-components test:coverage        # coverage report
+pnpm --filter @pxglobal/boreal-web-components test -- --testPathPattern=bds-button   # single component
+pnpm --filter @pxglobal/boreal-web-components e2e                  # E2E (stencil test --e2e)
 ```
 
 All tests must pass before merging (§8.2).
@@ -1251,7 +1251,7 @@ Accessibility is documented in both tiers:
 
 | Consumer            | Mechanism                                                                                                     |
 | ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **API change gate** | `pnpm --filter @telesign/boreal-web-components check:cem` diffs the manifest against the published package (`@wc-toolkit/changelog`) and surfaces breaking/feature changes before release |
+| **API change gate** | `pnpm --filter @pxglobal/boreal-web-components check:cem` diffs the manifest against the published package (`@wc-toolkit/changelog`) and surfaces breaking/feature changes before release |
 | **Storybook**       | Manifest metadata feeds ArgTypes documentation (§5.3)                                                          |
 | **Wrappers**        | React/Vue output targets generate typed wrappers from the same component metadata (§1.6)                       |
 
@@ -1259,16 +1259,19 @@ Accessibility is documented in both tiers:
 
 ### 5.7 Changelog Conventions
 
-Changelogs are **auto-generated per package** — there is no manually maintained changelog. `release-it` with `@release-it/conventional-changelog` (preset: `conventionalcommits`) derives each package's `CHANGELOG.md` and the SemVer bump from commit messages (§6.2). This is why commit discipline matters: the commit type you choose is the changelog category and version impact consumers see.
+Changelogs are **auto-generated** — there is no hand-written changelog. `release-it` with `@release-it/conventional-changelog` (preset: `conventionalcommits`) derives the changelog and the SemVer bump from commit messages (§6.2). Only two changelogs are maintained: `packages/boreal-web-components/CHANGELOG.md` (components, plus token and React/Vue wrapper changes) and `packages/boreal-style-guidelines/CHANGELOG.md` (design tokens). The React and Vue packages have a pointer file. Both changelogs are shown on the Storybook "What's new" page and are not shipped in the npm tarballs. This is why commit discipline matters: the commit type you choose is the changelog category and the version impact consumers see.
 
-| Commit type → Changelog impact | Example                                       |
-| ------------------------------ | ---------------------------------------------- |
-| `feat` → Features (MINOR)      | New `size` prop added                         |
-| `fix` → Bug Fixes (PATCH)      | Focus ring now visible in high contrast mode  |
-| `BREAKING CHANGE` → (MAJOR)    | `theme` prop removed (use `variant`)          |
-| `docs`, `chore`, `ci`, …       | No changelog entry, no version impact         |
+While the library is below 1.0 (alpha, `preMajor`), the impact is:
 
-Release sequencing and the full release workflow: [`release-process.md`](./release-process.md).
+| Commit type → Changelog impact | Version bump (below 1.0) | Example                                      |
+| ------------------------------ | ------------------------ | -------------------------------------------- |
+| `feat` → Features              | patch                    | New `size` prop added                        |
+| `fix` → Bug Fixes              | patch                    | Focus ring now visible in high contrast mode |
+| `perf`, `revert`               | patch                    | Faster virtual scrolling                     |
+| `BREAKING CHANGE` / `!`        | minor                    | `theme` prop removed (use `variant`)         |
+| `docs`, `chore`, `ci`, …       | none, no release         | No changelog entry                           |
+
+From `1.0.0` the mapping becomes the usual one: breaking → major, `feat` → minor, `fix` → patch. Each package gets one bump from all its commits since its last release, set by the highest level among them. What counts as breaking, and the release procedure: `CONTRIBUTING.md` (Release & Versioning) and `RELEASING.md` at the repository root; background: [`release-process.md`](./release-process.md).
 
 ---
 
@@ -1311,12 +1314,15 @@ Keep PRs small and short-lived; merge promptly so branches do not diverge from `
 
 All commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) in the project format **`type(scope): TICKET-ID description`**. Use the guided prompt: `pnpm commit` (commitizen + `@commitlint/cz-commitlint`); commitlint validates every message in the `commit-msg` hook (§8.1). The machine-readable history drives changelog generation and SemVer bumping (§5.7).
 
-| Type                                                                | Changelog / SemVer impact |
-| ------------------------------------------------------------------- | -------------------------- |
-| `feat`                                                              | New feature → **MINOR**   |
-| `fix`                                                               | Bug fix → **PATCH**       |
-| `BREAKING CHANGE:` footer or `!` suffix                             | → **MAJOR**               |
-| `build`, `chore`, `ci`, `docs`, `style`, `refactor`, `perf`, `test` | No SemVer impact          |
+| Type                                                                | SemVer impact (below 1.0 / from 1.0)                     |
+| ------------------------------------------------------------------- | -------------------------------------------------------- |
+| `feat`                                                              | New feature → patch / **MINOR**                          |
+| `fix`                                                               | Bug fix → patch / **PATCH**                              |
+| `perf`, `revert`                                                    | patch / patch                                            |
+| `BREAKING CHANGE:` footer or `!` suffix                             | → **minor** / **MAJOR**                                  |
+| `build`, `chore`, `ci`, `docs`, `style`, `refactor`, `test`         | No SemVer impact, no release by themselves               |
+
+Two rules follow from path-scoped releases (a `feat` or `fix` touching a package folder releases that package): tooling, release-config, CI, test and docs changes must use `build`, `ci`, `chore`, `test` or `docs`; a change consumers can observe (output, runtime dependencies, behaviour) must be `fix` or `feat`, even if the work is a refactor. For a breaking change put the `!` in the **PR title** too: Bitbucket's squash message lists the squashed commits indented, and a `BREAKING CHANGE:` footer inside that list is ignored. Write handles such as `@pxglobal` in backticks in titles. The definition of a breaking change is in `CONTRIBUTING.md`.
 
 ```
 feat(web-components): EOA-12345 add bds-tag-field component
@@ -1420,7 +1426,7 @@ Rules for `boreal-react` and `boreal-vue` (the Stencil output-target wrapper pac
 
 **Symptom:** After modifying `boreal-web-components` source or `package.json`, builds in `boreal-react` or `boreal-vue` continue to fail as if the changes were not applied. TypeScript errors reference a module shape that should no longer exist.
 
-**Cause:** pnpm's virtual store may have `boreal-react/node_modules/@telesign/boreal-web-components` resolved from a cached `.tgz` snapshot rather than the live workspace symlink. This can happen after branch switches, cherry-picks, or install failures.
+**Cause:** pnpm's virtual store may have `boreal-react/node_modules/@pxglobal/boreal-web-components` resolved from a cached `.tgz` snapshot rather than the live workspace symlink. This can happen after branch switches, cherry-picks, or install failures.
 
 **Fix:**
 
@@ -1433,7 +1439,7 @@ This reconciles all workspace symlinks and flushes stale virtual store entries. 
 
 ---
 
-#### A.2 Wrapper package build fails: `Cannot find module '@telesign/boreal-web-components/components/bds-X.js'`
+#### A.2 Wrapper package build fails: `Cannot find module '@pxglobal/boreal-web-components/components/bds-X.js'`
 
 **Symptom:** TypeScript emits `Cannot find module` errors for component subpath imports when building `boreal-react` or `boreal-vue`.
 

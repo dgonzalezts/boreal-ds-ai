@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Launching `pnpm run dev:pack:react` and `pnpm run dev:pack:vue` at the same time (e.g. both backgrounded in one turn) causes both to trigger `turbo run build --filter=...@telesign/boreal-web-components` concurrently. Both write to the same `dist/`, `components-build/`, and `dist/types/components.d.ts` output at once, corrupting it mid-write.
+Launching `pnpm run dev:pack:react` and `pnpm run dev:pack:vue` at the same time (e.g. both backgrounded in one turn) causes both to trigger `turbo run build --filter=...@pxglobal/boreal-web-components` concurrently. Both write to the same `dist/`, `components-build/`, and `dist/types/components.d.ts` output at once, corrupting it mid-write.
 
 Symptom observed: `boreal-react`'s `tsc` build failed with dozens of `TS2306: File '.../components-build/bds-*.d.ts' is not a module` errors plus `TS2552: Cannot find name 'HTMLBdsTreeMenuItemElement'` — even though each individual `.d.ts` file, inspected afterward, was well-formed. Re-running `dev:pack:react` alone (with no concurrent `boreal-web-components` build in flight) succeeded immediately with the same source.
 

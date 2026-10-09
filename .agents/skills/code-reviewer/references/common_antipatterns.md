@@ -62,7 +62,7 @@ This reference captures recurring review failures in the Boreal DS monorepo, wit
 - **Disabling `postbuild` for web-components**: Breaks `dist/css` and `dist/scss` export paths.
 - **Testing dist without cleaning**: Stale `dist/` masks missing files.
 - **Using `publishCommand` in release-it**: Silently ignored, falls back to `npm publish`.
-- **Moving internal deps to `peerDependencies`**: Forces consumers to install manually and breaks alpha flow.
+- **Moving internal deps to `peerDependencies`**: Forces consumers to install manually and breaks the wrapper flow (the React and Vue packages pin an exact web-components version).
 - **Bypassing Turbo build graph in packaging scripts**: Produces incomplete artifacts.
 
 ---

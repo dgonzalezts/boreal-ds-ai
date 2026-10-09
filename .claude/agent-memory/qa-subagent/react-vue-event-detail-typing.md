@@ -8,15 +8,15 @@ Type '(e: CustomEvent<{ row: OrderRow }>) => void' is not assignable to type '(e
     Type 'RowData' is missing the following properties from type 'OrderRow': id, name, tier, history
 ```
 
-## Neither `@telesign/boreal-react` nor `@telesign/boreal-vue` re-export the underlying event-detail types
+## Neither `@pxglobal/boreal-react` nor `@pxglobal/boreal-vue` re-export the underlying event-detail types
 
-`BdsExpandEventDetail`, `BdsTableCustomEvent`, etc. are NOT exported from either wrapper package's top level — only their own generated `BdsTableEvents`-style aggregate types are. Importing them directly (`import { BdsExpandEventDetail } from '@telesign/boreal-react'`) fails with `TS2614`/`TS2724`.
+`BdsExpandEventDetail`, `BdsTableCustomEvent`, etc. are NOT exported from either wrapper package's top level — only their own generated `BdsTableEvents`-style aggregate types are. Importing them directly (`import { BdsExpandEventDetail } from '@pxglobal/boreal-react'`) fails with `TS2614`/`TS2724`.
 
 ## React fix — derive the handler type from the component's own prop signature
 
 ```tsx
 import { type ComponentProps } from 'react';
-import { BdsTable } from '@telesign/boreal-react';
+import { BdsTable } from '@pxglobal/boreal-react';
 
 type BdsExpandEvent = Parameters<NonNullable<ComponentProps<typeof BdsTable>['onBdsExpand']>>[0];
 type BdsExpandEventDetail = BdsExpandEvent['detail'];

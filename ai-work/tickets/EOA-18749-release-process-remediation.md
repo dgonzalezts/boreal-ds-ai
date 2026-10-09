@@ -19,11 +19,11 @@
 - Folder rename `packages/boreal-styleguidelines` → `packages/boreal-style-guidelines`
 - npm scope rename `@telesign/*` → `@pxglobal/*` starting at `0.14.0` with no prerelease suffix (alpha stated in docs), `git.tagMatch`/anchor tags, a changelog "moved" notice, and `latest` tracking the newest version
 - Workspace-root `CONTRIBUTING.md` and an updated `ai-docs/guidelines/release-process.md`
+- First real `@pxglobal` release (decided 2026-10-08): runbook, rehearsal on a local registry and git remote, then the real publish of all four packages at `0.14.0`, the Storybook deploy and `npm deprecate` of the `@telesign` packages — each real step only after explicit approval
 - Final documentation sync after the first `@pxglobal` release: internal guidelines, diagrams, agent/skill docs, and Boreal-owned Confluence pages (Publishing & Deployment Guide, ADR-0011 amendment, ADR 0013 publication); owners of consumer pages notified
 
 **Out:**
 
-- Any real publish, tag push, or npm deprecation — performed later, by the single admin npm user, during the end-to-end test (EOA-18866)
 - Migration to `changesets` (ADR 0013 Option B — revisit triggers recorded in the ADR)
 - Automated PR-title enforcement (no server-side hook access)
 - CI wrapper-generation gate and drift smoke test — deferred until the DevOps meeting (EOA-18870) confirms pipeline access
@@ -34,22 +34,23 @@
 ## Acceptance Criteria
 
 - [x] While below 1.0 (`preMajor`): a breaking change produces a `preminor` bump; `feat`/`fix`/`perf`/`revert` produce `prepatch` (e.g. `0.1.0-alpha.12` → `0.1.1-alpha.0`); no commit moves the library to `1.0.0` on its own
-- [ ] The first `@pxglobal` release publishes all four packages at `0.14.0` (plain `0.x`, alpha status stated in READMEs, Storybook, and CONTRIBUTING.md); `@telesign` history stays in the CHANGELOGs, git tags, and deprecation messages
+- [x] The first `@pxglobal` release publishes all four packages at `0.14.0` (plain `0.x`, alpha status stated in READMEs, Storybook, and CONTRIBUTING.md); `@telesign` history stays in the CHANGELOGs, git tags, and deprecation messages
 - [x] Each package's version bump only reflects commits touching its own folder (web-components also counts style-guidelines)
 - [x] Only web-components and style-guidelines write a changelog; web-components' changelog includes token and wrapper-only changes
 - [x] A package with no releasable commits (`feat`, `fix`, `perf`, `revert`, breaking) since its last tag is skipped without failing the release chain; `docs`/`test`/`chore`-only changes never publish
-- [ ] Every web-components release is followed by React and Vue releases that pin the new web-components version
+- [x] Every web-components release is followed by React and Vue releases that pin the new web-components version
 - [x] A PR title of the form `Pull request #N: feat(scope): …` is parsed into the changelog
 - [ ] Generated and historical commit/compare links resolve on Bitbucket Server (`/projects/DEV/repos/boreal-ds/...`)
 - [x] Squash-merged PRs missing from published changelogs are backfilled
-- [ ] All four packages build, validate, and dry-run under `@pxglobal/*`
-- [ ] `CONTRIBUTING.md` documents branching, commits, PR rules, and the release/versioning policy (including minor vs. patch in alpha)
-- [ ] Every change is validated with `release-it --dry-run`; nothing is published or tagged remotely
+- [x] All four packages build, validate, and dry-run under `@pxglobal/*`
+- [x] `CONTRIBUTING.md` documents branching, commits, PR rules, and the release/versioning policy (including minor vs. patch in alpha)
+- [ ] Every change is validated with `release-it --dry-run`; the full flow is rehearsed on a local registry before the real release
+- [ ] The first real release publishes all four `@pxglobal` packages at `0.14.0`, deploys Storybook and deprecates the `@telesign` packages, with every verification-checklist item green
 
 ## Dependencies
 
-- EOA-18864 — `@pxglobal` npm org and publishing user (prerequisite for the end-to-end test, not for implementation)
-- EOA-18866 — end-to-end release test, run after the teammate returns from PTO
+- EOA-18864 — `@pxglobal` npm org and publishing user (prerequisite for the real release, Task 12d, not for implementation)
+- EOA-18866 — end-to-end release test; run by this effort (decided 2026-10-08), no teammate needed
 - EOA-18870 — DevOps meeting; may unblock CI gates and a non-personal publish token
 - Only one admin npm user can publish; credentials cannot be shared
 
@@ -58,5 +59,4 @@
 - A7 tier 3 (editorial noise cleanup, ~3,100 changelog lines): invest or skip?
 - Who runs `npm deprecate` on the four `@telesign` packages, and when (after the first `@pxglobal` publish)?
 - Single-publisher risk: raise a CI/automation publish token with DevOps (EOA-18870)?
-- Confirm with the epic owner that "remains in alpha this PI" (EOA-18400) means stated status, not a `-alpha` version suffix — before Task 10
 - Restrict the repository's merge methods to squash-only in Bitbucket (admin setting, EOA-18870)?

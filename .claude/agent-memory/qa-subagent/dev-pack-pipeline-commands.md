@@ -1,6 +1,6 @@
 # dev:pack:react / dev:pack:vue — pipeline behavior and exact commands
 
-**Never** start a plain `vite` dev server against a workspace-built `boreal-web-components` for a React/Vue testapp. `pnpm --filter boreal-web-components build` alone does not produce a dist shape that `@telesign/boreal-web-components` subpath imports (e.g. `@telesign/boreal-web-components/components/bds-avatar.js`) can resolve — Vite fails immediately with "Failed to resolve import" errors for every generated component import in the wrapper's `components.js`.
+**Never** start a plain `vite` dev server against a workspace-built `boreal-web-components` for a React/Vue testapp. `pnpm --filter boreal-web-components build` alone does not produce a dist shape that `@pxglobal/boreal-web-components` subpath imports (e.g. `@pxglobal/boreal-web-components/components/bds-avatar.js`) can resolve — Vite fails immediately with "Failed to resolve import" errors for every generated component import in the wrapper's `components.js`.
 
 ## The correct commands (run from repo root)
 
@@ -9,7 +9,7 @@ pnpm run dev:pack:react   # builds boreal-web-components + downstream deps, pack
 pnpm run dev:pack:vue     # same, for examples/vue-testapp
 ```
 
-Both are full `turbo run build --filter=...@telesign/boreal-web-components` invocations — they rebuild every downstream dependent (`boreal-react`, `boreal-vue`, `boreal-docs` via the Turborepo graph), so budget **1-2 minutes**, not seconds. Run in the background (`run_in_background: true`) and wait for the completion notification rather than polling with short sleeps.
+Both are full `turbo run build --filter=...@pxglobal/boreal-web-components` invocations — they rebuild every downstream dependent (`boreal-react`, `boreal-vue`, `boreal-docs` via the Turborepo graph), so budget **1-2 minutes**, not seconds. Run in the background (`run_in_background: true`) and wait for the completion notification rather than polling with short sleeps.
 
 Each pipeline ends by starting its own `vite` dev server automatically — no separate `vite` command needed afterward. React defaults to `5173`; if already taken (e.g. by a leftover Vue instance), Vite auto-falls-back to the next port (`5174` etc.) and prints it in the pipeline's own log tail.
 
@@ -44,6 +44,6 @@ npx eslint .
 
 ## Never launch `dev:pack:react` and `dev:pack:vue` concurrently
 
-Both scripts run `turbo run build --filter=...@telesign/boreal-web-components`, which builds every downstream dependent including `boreal-docs` (Storybook). `boreal-docs`'s build writes to the single shared `apps/boreal-docs/storybook-static` directory regardless of which pipeline triggered it. Launching both pipelines at the same time (e.g. two backgrounded Bash calls in the same turn) races both Storybook builds against that one directory — observed failure: `Error: EEXIST: file already exists, mkdir` inside the Storybook build step, aborting that pipeline's turbo run entirely before it ever reaches the `vite` server-start step for the testapp. The other pipeline (whichever wins the race) completes normally.
+Both scripts run `turbo run build --filter=...@pxglobal/boreal-web-components`, which builds every downstream dependent including `boreal-docs` (Storybook). `boreal-docs`'s build writes to the single shared `apps/boreal-docs/storybook-static` directory regardless of which pipeline triggered it. Launching both pipelines at the same time (e.g. two backgrounded Bash calls in the same turn) races both Storybook builds against that one directory — observed failure: `Error: EEXIST: file already exists, mkdir` inside the Storybook build step, aborting that pipeline's turbo run entirely before it ever reaches the `vite` server-start step for the testapp. The other pipeline (whichever wins the race) completes normally.
 
 **Fix:** run them sequentially — start one, wait for its `vite ... Local: http://localhost:...` line to appear in the log, then start the other. If one fails with this EEXIST error, just re-run that one pipeline alone; no need to touch the other (its dev server is unaffected once already running). Once both are up, both dev servers can be left running for the remainder of a multi-task QA session — no need to re-run either pipeline unless the underlying `boreal-web-components` source changes (see the tarball-snapshot note above).

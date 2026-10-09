@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-`stencil build` (via `pnpm --filter @telesign/boreal-web-components build`) reported:
+`stencil build` (via `pnpm --filter @pxglobal/boreal-web-components build`) reported:
 
 ```
 TypeScript: .../bds-calendar-grid.tsx:93:10

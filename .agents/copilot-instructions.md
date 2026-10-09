@@ -6,7 +6,7 @@ Boreal DS is a multi-brand design system monorepo for Proximus Group (brands: Pr
 
 - `boreal-web-components` — Stencil 4.x web components (TypeScript, SCSS)
 - `boreal-react` / `boreal-vue` — auto-generated framework wrappers
-- `boreal-styleguidelines` — Style Dictionary design tokens
+- `boreal-style-guidelines` — Style Dictionary design tokens
 - `boreal-docs` (app) — Storybook 10.x documentation
 
 **Tooling constraints:**

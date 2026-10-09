@@ -2,7 +2,7 @@
 
 `$boreal-*` Sass variables referenced inside a Stencil component's SCSS do **not** hold literal
 values at Sass compile time. `stencil.config.ts`'s `sass({ injectGlobalPaths: [...] })` injects
-`packages/boreal-styleguidelines/dist/stencil/_index.scss` — the variant that wraps every token as
+`packages/boreal-style-guidelines/dist/stencil/_index.scss` — the variant that wraps every token as
 `var(--boreal-*)` (for runtime theming) — not the literal-value variant
 (`dist/scss/variables/_primitives.scss`).
 

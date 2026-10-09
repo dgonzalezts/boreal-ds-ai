@@ -266,7 +266,7 @@ When hover applies to multiple child elements, nest them under a single `&:hover
 
 ```scss
 // _selectable-button.scss (shared partial) — CORRECT
-@use "@telesign/boreal-style-guidelines/dist/stencil/_index" as *;
+@use "@pxglobal/boreal-style-guidelines/dist/stencil/_index" as *;
 @use "../../../styles/_interactions" as *;
 ```
 
@@ -276,7 +276,7 @@ When hover applies to multiple child elements, nest them under a single `&:hover
 @include selectable-button("bds-radio-button");
 ```
 
-**Rule 3 — Injected files must be self-contained.** Stencil compiles each injected file standalone during watch cycles. Any `$boreal-*` reference inside an injected partial will fail with "Undefined variable" unless the token file is also loaded by that partial via `@use '@telesign/boreal-style-guidelines/dist/stencil/_index' as *;`. Sass `@use` is idempotent — no double-definition errors.
+**Rule 3 — Injected files must be self-contained.** Stencil compiles each injected file standalone during watch cycles. Any `$boreal-*` reference inside an injected partial will fail with "Undefined variable" unless the token file is also loaded by that partial via `@use '@pxglobal/boreal-style-guidelines/dist/stencil/_index' as *;`. Sass `@use` is idempotent — no double-definition errors.
 
 ---
 

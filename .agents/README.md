@@ -129,7 +129,7 @@ Reference documents consulted by the **Frontend Developer** agent and specialist
 
 | File                 | Purpose                                          |
 | -------------------- | ------------------------------------------------ |
-| `release-process.md` | Release runbook executed by the Engineering Lead |
+| `release-process.md` | Release design background; the procedure lives in the tracked `RELEASING.md` at the repository root |
 
 > **Coding conventions** (component architecture, token rules, naming) are defined in `.github/copilot-instructions.md` and the linked skill files, not in this folder.
 

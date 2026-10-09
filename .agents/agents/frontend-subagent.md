@@ -48,7 +48,7 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 - Load `stencil-component-knowledge` before writing any implementation code — it contains the authoritative Boreal DS patterns for FACE, composite event boundaries, prop validation, and interface contracts.
 - Consult `ai-docs/guidelines/stencil-best-practices.md` for mixin architecture, `IFormControl<T>` interface layering, light DOM patterns, SCSS `@use` rules, and accessor conventions.
 - All props must have explicit TypeScript types. No `any`. No inferred prop types.
-- All tokens from `@telesign/boreal-style-guidelines/stencil` — no hard-coded colours, spacing, or radii.
+- All tokens from `@pxglobal/boreal-style-guidelines/stencil` — no hard-coded colours, spacing, or radii.
 - Use bare `@Event()` — no `bubbles` or `composed` options unless the event must bubble to a parent `@Listen()` handler (see ADR 0003).
 - Any `@Prop()` whose type is a closed set of string literals must be declared in `types/enum.ts` as a `const`-object + derived type (e.g. `CALENDAR_TYPE`/`CalendarType`), paired with a `validatePropValue(...)` call in `componentWillLoad` — never an inline union on the `@Prop()` line. See `.agents/memory/component-enum-prop-const-object-pattern.md` for the worked example (`bds-dialog`'s `size`/`variant`/`layout`, `bds-date-picker`'s `calendarType`).
 - Any edit to a `types/` interface must keep required members (no `?`) grouped before optional members (`?`) — never interleaved. See `ai-docs/guidelines/stencil-best-practices.md` → "`IComponent.ts` Interface Contract" for the worked example (`ICalendarGrid`'s `selectedDate?`/`locale?` fix). Applies to every interface in the directory, not only the consumer-facing `IComponent.ts`.

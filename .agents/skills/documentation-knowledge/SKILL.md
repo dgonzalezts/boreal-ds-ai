@@ -170,7 +170,7 @@ When a single `.stories.ts` file's shared `meta` documents several related custo
 
 ### Vite glob patterns in package exports
 
-Vite does not support glob patterns in `package.json` exports. `@telesign/boreal-web-components/css/*` cannot be resolved automatically. Two aliases are registered in `viteFinal` in `apps/boreal-docs/.storybook/main.ts` to work around this — do not remove them.
+Vite does not support glob patterns in `package.json` exports. `@pxglobal/boreal-web-components/css/*` cannot be resolved automatically. Two aliases are registered in `viteFinal` in `apps/boreal-docs/.storybook/main.ts` to work around this — do not remove them.
 
 ### ESM-ES5 dynamic import warnings
 

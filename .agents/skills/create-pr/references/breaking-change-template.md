@@ -67,14 +67,14 @@ feat(web-components)!: EOA-10099 rename bds-input to bds-text-field
 **Before:**
 
 ```typescript
-import { BdsInput } from '@telesign/boreal-web-components';
+import { BdsInput } from '@pxglobal/boreal-web-components';
 <bds-input value="example" />
 ```
 
 **After:**
 
 ```typescript
-import { BdsTextField } from '@telesign/boreal-web-components';
+import { BdsTextField } from '@pxglobal/boreal-web-components';
 <bds-text-field value="example" />
 ```
 
@@ -83,14 +83,14 @@ import { BdsTextField } from '@telesign/boreal-web-components';
 **Before:**
 
 ```tsx
-import { BdsInput } from "@telesign/boreal-react";
+import { BdsInput } from "@pxglobal/boreal-react";
 <BdsInput value="example" />;
 ```
 
 **After:**
 
 ```tsx
-import { BdsTextField } from "@telesign/boreal-react";
+import { BdsTextField } from "@pxglobal/boreal-react";
 <BdsTextField value="example" />;
 ```
 
@@ -99,14 +99,14 @@ import { BdsTextField } from "@telesign/boreal-react";
 **Before:**
 
 ```vue
-import { BdsInput } from '@telesign/boreal-vue';
+import { BdsInput } from '@pxglobal/boreal-vue';
 <bds-input value="example" />
 ```
 
 **After:**
 
 ```vue
-import { BdsTextField } from '@telesign/boreal-vue';
+import { BdsTextField } from '@pxglobal/boreal-vue';
 <bds-text-field value="example" />
 ```
 
@@ -121,8 +121,8 @@ import { BdsTextField } from '@telesign/boreal-vue';
 **Find/Replace (Regex):**
 
 ```regex
-Find:    import \{ BdsInput \} from '@telesign/boreal-(web-components|react|vue)';
-Replace: import { BdsTextField } from '@telesign/boreal-$1';
+Find:    import \{ BdsInput \} from '@pxglobal/boreal-(web-components|react|vue)';
+Replace: import { BdsTextField } from '@pxglobal/boreal-$1';
 
 Find:    <bds-input
 Replace: <bds-text-field
@@ -140,7 +140,7 @@ Replace: </BdsTextField>
 **Codemod (if provided):**
 
 ```bash
-npx @telesign/boreal-codemod rename-input-to-text-field ./src
+npx @pxglobal/boreal-codemod rename-input-to-text-field ./src
 ```
 
 ---

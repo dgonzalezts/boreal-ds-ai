@@ -12,7 +12,7 @@ feat(<scope>): <TICKET-ID> <imperative description>
 feat(web-components): EOA-10099 add bds-text-field component
 ```
 
-**Scope options:** `web-components`, `boreal-react`, `boreal-vue`, `boreal-docs`, `boreal-styleguidelines`
+**Scope options (commitlint):** `web-components`, `react`, `vue`, `styles`, `docs`, `examples`, `scripts`, `workspace`, `ci`, `deps`, `release`, `multiple`
 
 ---
 
@@ -36,7 +36,7 @@ feat(web-components): EOA-10099 add bds-text-field component
 > - Implements IFormControl<string> interface for consistent API across form components
 > - Built-in valueMissing validator + customValidators prop for consumer-defined rules
 > - Focus delegation via delegatesFocus on shadowRoot for browser focus management
-> - Design tokens from boreal-styleguidelines for spacing, colors, and radii
+> - Design tokens from boreal-style-guidelines for spacing, colors, and radii
 
 ---
 
@@ -80,7 +80,7 @@ feat(web-components): EOA-10099 add bds-text-field component
 
 > - **boreal-docs**: Added Storybook story with usage examples
 > - **boreal-react**: Auto-generated wrapper with React types
-> - **No changes to**: boreal-styleguidelines (reused existing tokens)
+> - **No changes to**: boreal-style-guidelines (reused existing tokens)
 
 ---
 

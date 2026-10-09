@@ -8,7 +8,7 @@ metadata:
 When deduplicating SCSS via `%placeholder` + `@extend` (EOA-17662 Task 36a, `bds-date-picker.scss`), a raw line-by-line `diff` of the before/after compiled CSS is NOT a valid equivalence check — `@extend` merges selectors into shared comma-grouped rules and moves declaration blocks to new source positions, so the diff shows large chunks of churn even when every selector's final computed styles are byte-identical.
 
 **Verification technique that actually works:**
-1. `git stash` the SCSS change, run `pnpm --filter @telesign/boreal-web-components build`, copy `dist/collection/components/.../<component>.css` to a scratch "before" file.
+1. `git stash` the SCSS change, run `pnpm --filter @pxglobal/boreal-web-components build`, copy `dist/collection/components/.../<component>.css` to a scratch "before" file.
 2. `git stash pop`, rebuild, copy the compiled CSS to a scratch "after" file.
 3. Parse both CSS files with a small script that expands comma-separated selectors and computes an *effective declarations map per individual selector* (last-write-wins per property, matching cascade order) — then compare those maps as unordered dicts, not the raw text.
 4. Only if every shared selector's effective-declarations dict is equal (regardless of declaration order or how selectors were grouped in the rule) is the refactor visually/behaviorally equivalent.

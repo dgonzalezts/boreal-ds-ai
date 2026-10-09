@@ -8,22 +8,27 @@ This document outlines the dependency installation strategy for our CI/CD pipeli
 
 ### Package Manager
 
-- **Tool**: pnpm v10.7.1
+- **Tool**: pnpm 11.x, pinned by the `packageManager` field of the root `package.json` and activated by Corepack (`corepack enable`); do not install a different version in CI
+- **Node.js**: the version in `.node-version` at the repo root (22.23.3 at the time of writing)
 - **Workspace**: Monorepo structure with multiple packages
 
 ### Configuration Files
 
-#### `.npmrc` (apps/boreal-docs/)
+#### `pnpm-workspace.yaml` (repo root)
 
-```
-enable-pre-post-scripts=true
-ignore-scripts=false
+```yaml
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  puppeteer: true
 ```
 
 **Purpose**:
 
-- Allows lifecycle scripts (pre/post install) to execute
-- Required for packages like `esbuild` that download platform-specific binaries during postinstall
+- Lists the only dependencies allowed to run install/build scripts (they download or build platform-specific binaries)
+- Any new dependency with an install script is blocked until it is added here, which is intended
+
+Pre/post scripts (for example the `prerelease` hook of the React and Vue packages) run with pnpm's defaults; no `.npmrc` is needed.
 
 ## CI/CD Installation Command
 
@@ -73,8 +78,8 @@ pnpm automatically handles workspace dependencies across all packages.
 
 ### 2. Security
 
-- Current configuration trusts all dependencies to run scripts
-- For enhanced security, consider using `pnpm approve-builds` during development
+- Install scripts are limited to the `allowBuilds` allowlist in `pnpm-workspace.yaml`
+- Review a new entry in that list like a new dependency; `pnpm approve-builds` shows pending ones during development
 - Review dependencies regularly for security concerns
 
 ### 3. Lockfile Management
@@ -97,14 +102,12 @@ pnpm automatically handles workspace dependencies across all packages.
 steps:
   - uses: actions/checkout@v4
 
-  - uses: pnpm/action-setup@v3
-    with:
-      version: 10.7.1
-
   - uses: actions/setup-node@v4
     with:
-      node-version: 22
-      cache: "pnpm"
+      node-version-file: .node-version
+
+  - name: Enable Corepack (activates the pinned pnpm)
+    run: corepack enable
 
   - name: Install dependencies
     run: pnpm install --frozen-lockfile --prefer-offline
@@ -164,12 +167,11 @@ ignore-scripts=false
 
 ## Future Improvements
 
-- [ ] Consider selective script approval using `pnpm.onlyBuiltDependencies` for enhanced security
 - [ ] Implement lockfile verification in pre-commit hooks
 - [ ] Monitor and optimize pnpm store cache size
 - [ ] Document platform-specific dependencies
 
 ---
 
-**Last Updated**: January 19, 2026
+**Last Updated**: October 9, 2026 (pnpm 11, Corepack pin, `allowBuilds`)
 **Related Issue**: Build script warnings during `pnpm install`

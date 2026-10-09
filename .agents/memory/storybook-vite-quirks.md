@@ -2,11 +2,11 @@
 
 ## Vite glob pattern limitation in package exports
 
-Vite does not support glob patterns in `package.json` exports (e.g. `"./css/*": "./dist/css/*"`). This means `@telesign/boreal-web-components/css/*` cannot be resolved automatically.
+Vite does not support glob patterns in `package.json` exports (e.g. `"./css/*": "./dist/css/*"`). This means `@pxglobal/boreal-web-components/css/*` cannot be resolved automatically.
 
 **Workaround:** Two aliases are registered in `viteFinal`:
-1. A variable `wcCssDir` is resolved to `packages/boreal-styleguidelines/dist/css`
-2. A regex alias maps `@telesign/boreal-web-components/css/(.+)` → `${wcCssDir}/$1`
+1. A variable `wcCssDir` is resolved to `packages/boreal-style-guidelines/dist/css`
+2. A regex alias maps `@pxglobal/boreal-web-components/css/(.+)` → `${wcCssDir}/$1`
 
 File: `apps/boreal-docs/.storybook/main.ts`
 

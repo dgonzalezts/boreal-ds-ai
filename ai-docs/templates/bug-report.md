@@ -24,7 +24,7 @@ Use this template to document bugs found in the Boreal Design System or related 
 
 **Boreal Version:**
 
-<!-- e.g., @telesign/boreal v2.1.0 -->
+<!-- e.g., @pxglobal/boreal-web-components 0.14.0 -->
 
 **Framework/Library:**
 

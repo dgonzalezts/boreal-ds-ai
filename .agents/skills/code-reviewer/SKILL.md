@@ -202,7 +202,7 @@ python3 .claude/skills/code-reviewer/scripts/review_report_generator.py . --no-s
 
 ### `pr_analyzer.py` — PR scope and hygiene
 
-Inspects `git diff <base>...HEAD` to detect which packages are touched, which checklist sections (A–E) apply, and whether tests, stories, or a changeset are missing.
+Inspects `git diff <base>...HEAD` to detect which packages are touched, which checklist sections (A–E) apply, and whether tests or stories are missing.
 
 ```bash
 python3 .claude/skills/code-reviewer/scripts/pr_analyzer.py .

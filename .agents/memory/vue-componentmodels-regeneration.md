@@ -6,6 +6,6 @@ The Vue output target is a Stencil output target registered in `boreal-web-compo
 
 `packages/boreal-vue/lib/components.ts` is listed in `boreal-vue/.gitignore` — it is a pure build artifact, never git-tracked, and must never be hand-edited. If you find yourself wanting to add a `modelProp`/`modelUpdateEvent` pair directly in `components.ts`, that's a signal you edited the wrong file; go add the `componentModels` entry in `vue-output-target.ts` instead and rebuild.
 
-**Command:** `pnpm --filter @telesign/boreal-web-components build` (with `fnm use` first, per repo convention) — not any `boreal-vue` script.
+**Command:** `pnpm --filter @pxglobal/boreal-web-components build` (with `fnm use` first, per repo convention) — not any `boreal-vue` script.
 
 Confirmed while wiring `bds-table`'s `selectedRows`/`selectedRowsChange` v-model (EOA-14935 Task 8): the generated `BdsTable` proxy in `components.ts` gained the trailing `'selectedRows', 'selectedRowsChange', undefined` model-wiring args, matching the existing shape used for `BdsTextField`'s `value`/`valueChange` wiring.

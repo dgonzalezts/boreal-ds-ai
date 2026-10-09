@@ -5,8 +5,8 @@ metadata:
   type: project
 ---
 
-`packages/boreal-styleguidelines/src/tokens/primitives/primitives.json` is the token *source* but its JSON shape isn't a quick grep target. The fast, reliable way to check a primitive token's actual resolved value is the generated
-`packages/boreal-styleguidelines/dist/scss/variables/_primitives.scss` (plain `$name: <px-value>;` pairs — trivial to grep). The parallel `dist/stencil/_primitives.scss` instead maps each `$name` to `var(--boreal-name)` (the runtime custom-property form actually consumed by component SCSS via `@use`).
+`packages/boreal-style-guidelines/src/tokens/primitives/primitives.json` is the token *source* but its JSON shape isn't a quick grep target. The fast, reliable way to check a primitive token's actual resolved value is the generated
+`packages/boreal-style-guidelines/dist/scss/variables/_primitives.scss` (plain `$name: <px-value>;` pairs — trivial to grep). The parallel `dist/stencil/_primitives.scss` instead maps each `$name` to `var(--boreal-name)` (the runtime custom-property form actually consumed by component SCSS via `@use`).
 
 Confirmed values relevant to skeleton/placeholder work: `$boreal-radius-xs2: 2px`, `$boreal-radius-xs: 4px`, `$boreal-radius-m: 12px`.
 
