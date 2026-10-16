@@ -40,12 +40,12 @@
 - [x] A package with no releasable commits (`feat`, `fix`, `perf`, `revert`, breaking) since its last tag is skipped without failing the release chain; `docs`/`test`/`chore`-only changes never publish
 - [x] Every web-components release is followed by React and Vue releases that pin the new web-components version
 - [x] A PR title of the form `Pull request #N: feat(scope): …` is parsed into the changelog
-- [ ] Generated and historical commit/compare links resolve on Bitbucket Server (`/projects/DEV/repos/boreal-ds/...`)
+- [x] Generated and historical commit/compare links resolve on Bitbucket Server (`/projects/DEV/repos/boreal-ds/...`) _(verified 2026-10-09 in a signed-in session: the compare pages of both `0.14.0` headings (HTTP 200, right tags), the generated commit link `d304761`, the historical links rewritten in Task 6, and the deployed page (0 raw URLs, every entry link is a `/commits/` link))_
 - [x] Squash-merged PRs missing from published changelogs are backfilled
 - [x] All four packages build, validate, and dry-run under `@pxglobal/*`
 - [x] `CONTRIBUTING.md` documents branching, commits, PR rules, and the release/versioning policy (including minor vs. patch in alpha)
-- [ ] Every change is validated with `release-it --dry-run`; the full flow is rehearsed on a local registry before the real release
-- [ ] The first real release publishes all four `@pxglobal` packages at `0.14.0`, deploys Storybook and deprecates the `@telesign` packages, with every verification-checklist item green
+- [x] Every change is validated with `release-it --dry-run`; the full flow is rehearsed on a local registry before the real release _(dry runs for every config change; full flow rehearsed twice on a local registry and throwaway remote (Task 12c, hook rehearsal); pre-flight dry run before the real release)_
+- [x] The first real release publishes all four `@pxglobal` packages at `0.14.0`, deploys Storybook and deprecates the `@telesign` packages, with every verification-checklist item green _(2026-10-09: all four at `0.14.0` with `latest`, wrapper pins exact, tags and release commits on `release/current`, Storybook redeployed, 44 `@telesign` versions and the 4 placeholders deprecated; verification checklist green)_
 
 ## Dependencies
 
@@ -56,7 +56,8 @@
 
 ## Open Questions
 
-- A7 tier 3 (editorial noise cleanup, ~3,100 changelog lines): invest or skip?
-- Who runs `npm deprecate` on the four `@telesign` packages, and when (after the first `@pxglobal` publish)?
-- Single-publisher risk: raise a CI/automation publish token with DevOps (EOA-18870)?
-- Restrict the repository's merge methods to squash-only in Bitbucket (admin setting, EOA-18870)?
+- A7 tier 3 (editorial noise cleanup of the changelogs): decided 2026-10-09 — remove only the 19 clearest process-only entries (PR-review chatter, `test commitlint`, reverts, playground edits); no full editorial pass. PR pending (follow-up T13).
+- Who runs `npm deprecate` on the `@telesign` packages: answered and done 2026-10-09 by the publishing user (owner of the `@pxglobal` org).
+- Single-publisher risk (one owner, publish needs that person's passkey, npm may also hold publishes for approval): to raise with DevOps (EOA-18870), agenda items on a non-personal publish credential and staged publishing.
+- Restrict the repository's merge methods to squash-only in Bitbucket (admin setting, EOA-18870): open; until then CONTRIBUTING.md documents the rule and reviewers check the PR title.
+- Does npm hold every publish of the account for approval, or only the first publish of a new package? Answered by the second release (recorded in `RELEASING.md`).

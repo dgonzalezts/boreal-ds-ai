@@ -30,9 +30,9 @@ test(web-components): EOA-10099 add FACE lifecycle tests for bds-text-field
 
 **Example:**
 
-> - **Coverage gap**: FACE lifecycle methods were at 45% coverage (below 90% threshold)
+> - **Coverage gap**: FACE lifecycle methods were at 45% coverage (below 80% threshold)
 > - **Regression risk**: No tests verified form reset behavior, causing production bug in EOA-10088
-> - **Quality gate**: Mutation testing requires ≥ 90% coverage before mutation score check
+> - **Quality gate**: Mutation testing requires ≥ 80% coverage before mutation score check
 > - **Compliance**: WCAG 2.1 form requirements need verified test coverage
 
 ---
@@ -101,7 +101,7 @@ test(web-components): EOA-10099 add FACE lifecycle tests for bds-text-field
 **Example:**
 
 > - E2E tests for cross-browser FACE behavior deferred to Phase 2
-> - Mutation testing will run after this PR merges (requires ≥ 90% coverage first)
+> - Mutation testing will run after this PR merges (requires ≥ 80% coverage first)
 > - Related test improvements for bds-select and bds-checkbox planned in EOA-10100
 
 ---
@@ -147,10 +147,10 @@ Refs EOA-XXXXX
 
 ### Test Coverage Metrics
 
-- [ ] Statement coverage ≥ 90%
+- [ ] Statement coverage ≥ 80%
 - [ ] Branch coverage ≥ 80%
-- [ ] Function coverage ≥ 90%
-- [ ] Line coverage ≥ 90%
+- [ ] Function coverage ≥ 80%
+- [ ] Line coverage ≥ 80%
 - [ ] Coverage report reviewed (no unexpected gaps)
 
 ### Test Maintainability

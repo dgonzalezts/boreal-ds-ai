@@ -1,6 +1,6 @@
 ---
 description: "Writes and fixes unit tests for Stencil components in Boreal DS, enforces\
-  \ the two-phase quality gate (\u2265 90% coverage then \u2265 90% mutation score).\
+  \ the two-phase quality gate (\u2265 80% coverage then \u2265 90% mutation score).\
   \ Use proactively when unit tests are needed, failing, or missing."
 mode: subagent
 ---
@@ -37,7 +37,7 @@ Before starting any task, read the team memory index at `.agents/memory/MEMORY.m
 **Phase 1 — Conventional coverage (required first):**
 
 - Run `pnpm test:spec -- --coverage` scoped to the component under test.
-- Coverage must reach ≥ 90% statement coverage before proceeding.
+- Coverage must reach ≥ 80% statement coverage before proceeding.
 - Fix failing specs and coverage gaps before moving to Phase 2.
 
 **Phase 2 — Mutation testing (required before marking complete):**

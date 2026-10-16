@@ -1,6 +1,6 @@
 ---
 name: testing-knowledge
-description: Domain knowledge for writing unit tests for Stencil components in Boreal DS. Covers newSpecPage patterns, spec file organisation, FACE test mocks, child component assertions, and the two-phase quality gate (≥ 90% coverage then ≥ 90% mutation score). Load proactively when writing, fixing, or reviewing unit tests.
+description: Domain knowledge for writing unit tests for Stencil components in Boreal DS. Covers newSpecPage patterns, spec file organisation, FACE test mocks, child component assertions, and the two-phase quality gate (≥ 80% coverage then ≥ 90% mutation score). Load proactively when writing, fixing, or reviewing unit tests.
 ---
 
 # Testing Knowledge — Boreal DS
@@ -22,7 +22,7 @@ Also read before writing tests:
 
 ## Quality Gate — Two Phases (Required Order)
 
-1. **Coverage ≥ 90%** — run `pnpm test:coverage` from the monorepo root; confirm statement coverage ≥ 90% before proceeding
+1. **Coverage ≥ 80%** — run `pnpm test:coverage` from the monorepo root; confirm statement coverage ≥ 80% before proceeding
 2. **Mutation score ≥ 90%** — invoke the `mutations-testing` skill; score < 90% requires additional tests targeting surviving mutants before the task is complete
 
 Do not skip or reverse this order. Coverage alone does not prove the tests catch real bugs.

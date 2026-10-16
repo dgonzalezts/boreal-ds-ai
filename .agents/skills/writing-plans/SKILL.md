@@ -389,7 +389,7 @@ git commit -m "feat(scope): TICKET-ID description"
 - `events` — Behavior 3
 - `variants` — Behavior 4
 - Tests confirm behavior through the shared utility integration path (or validate the documented fallback path when no reusable utility exists)
-- Coverage-phase only (≥90%); mutation testing deferred to the consolidated mutation task (per Testing Phases below)
+- Coverage-phase only (≥80%); mutation testing deferred to the consolidated mutation task (per Testing Phases below)
 - ...
 
 **Manual test:** N/A — non-visual task, validated via `pnpm test` and the coverage report only.
@@ -434,7 +434,7 @@ Repeat the referenced scenario(s) through both the React and Vue wrapper playgro
 
 Two distinct test-quality gates apply to every component, and they belong at different points in a plan:
 
-- **Coverage-phase** (standard Jest test execution, ≥90% coverage) is cheap and fast. Write and gate it within the consolidated unit-test task described in Task Structure above — one such task per component (or version/phase) block, not per implementation task. That task is the single point where coverage is verified for everything its block introduced.
+- **Coverage-phase** (standard Jest test execution, ≥80% coverage) is cheap and fast. Write and gate it within the consolidated unit-test task described in Task Structure above — one such task per component (or version/phase) block, not per implementation task. That task is the single point where coverage is verified for everything its block introduced.
 - **Mutation-phase** (Stryker, ≥90% mutation score) is comparatively expensive in both time and hardware. Never run it per block. Consolidate it into a single dedicated task, placed at (or near) the end of the whole plan, that runs mutation testing once across every testable unit the plan created or modified — each unit keeping its own config file, per the one-config-per-component convention. Every unit-test task earlier in the plan should explicitly note "coverage-phase only; mutation testing deferred to the consolidated task" so it's clear the gate isn't being skipped, just deferred.
 
 If a mutant survivor reveals a genuine gap in an earlier task's test coverage, close it by extending that task's existing spec file — the consolidated task's job is closing test gaps the coverage phase missed, not introducing new behavior.

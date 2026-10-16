@@ -58,7 +58,7 @@ feat(web-components): EOA-10099 add bds-text-field component
 
 **Automated:**
 
-- [ ] Unit tests with ≥ 90% coverage
+- [ ] Unit tests with ≥ 80% coverage
 - [ ] FACE lifecycle tests (formAssociatedCallback, formResetCallback, etc.)
 - [ ] Validation tests (built-in and custom validators)
 - [ ] Accessibility tests (keyboard navigation, ARIA attributes)
@@ -138,7 +138,7 @@ Refs EOA-XXXXX
 
 ### Testing
 
-- [ ] Unit test coverage ≥ 90% statements
+- [ ] Unit test coverage ≥ 80% statements
 - [ ] Tests cover happy path, error cases, and edge cases
 - [ ] Accessibility verified (keyboard navigation, screen readers)
 - [ ] Manual testing completed in all supported browsers

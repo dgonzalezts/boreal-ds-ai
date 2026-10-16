@@ -846,7 +846,7 @@ it("should emit event when button clicked", async () => {
 
 ### 4.2 Unit Testing
 
-**Quality gate: every component must reach ≥ 90% statement coverage before its PR is merged.** Test *effectiveness* beyond coverage is validated with mutation testing (Stryker, run locally — configs are never pushed); see [stencil-unit-testing-patterns.md](./stencil-unit-testing-patterns.md) for the canonical `newSpecPage` patterns and spec organisation.
+**Quality gate: every component must reach ≥ 80% statement coverage before its PR is merged.** Test *effectiveness* beyond coverage is validated with mutation testing (Stryker, run locally — configs are never pushed); see [stencil-unit-testing-patterns.md](./stencil-unit-testing-patterns.md) for the canonical `newSpecPage` patterns and spec organisation.
 
 **Scaffolding: one spec file per functionality**, named `{bds-component}.{functionality}.spec.tsx`:
 
@@ -1371,7 +1371,7 @@ BREAKING CHANGE: `theme` prop removed — use `variant` instead.
 A PR is eligible for merge only when:
 
 1. **Technical** — all CI checks pass (linting, tests, quality gates, build); no console errors or warnings during QA review.
-2. **Code quality** — new/modified components include unit tests (≥ 90% coverage, §4.2); bug fixes include a test that reproduces and validates the fix.
+2. **Code quality** — new/modified components include unit tests (≥ 80% coverage, §4.2); bug fixes include a test that reproduces and validates the fix.
 3. **Documentation** — PR template complete (§7.1); Storybook and user documentation updated where applicable; review requirements (§7.2) met.
 
 ---

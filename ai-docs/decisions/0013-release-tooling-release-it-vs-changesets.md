@@ -1,7 +1,9 @@
 # ADR 0013 — Release tooling: release-it vs. changesets
 
+Published in Confluence as ADR-0015 (the next free number there).
+
 **Date:** 2026-08-12
-**Status:** Accepted (2026-10-01); implemented 2026-10-08 (PR 1 `c5d5dedb` merged, PR 2 pending); first real release pending (plan Task 12d)
+**Status:** Accepted (2026-10-01); implemented 2026-10-08 (PR 1 `c5d5dedb`, PR 2 `d3047612`, PR 3 `c537da54` merged); first real `@pxglobal` release 2026-10-09 (`0.14.0`); second release 2026-10-13 (`0.14.1`)
 
 ---
 
@@ -74,4 +76,4 @@ Also done: Node 22.23.3, pnpm 11.28.2, `release-it` 21.1.0, `@release-it/convent
 
 **Accepted risks:** release commands are unsupported on Windows (verification bypassed 2026-10-08, risk accepted); PR-title format remains unenforced (no server-side hook access).
 
-**First real release (2026-10-09):** the four packages were published at `0.14.0` under `@pxglobal` with `latest`, tagged and pushed, and verified (wrapper pins, changelogs, tarballs, default install). npm's staged publishing held each publish for a browser approval and created a `0.0.0-stage` placeholder per new package; release-it did not wait for the approval, so the tags were pushed up to about two minutes before the versions were installable. The procedure now covers this in `RELEASING.md`. Pending: Storybook deploy and deprecation of the `@telesign` packages and the placeholders.
+**First real release (2026-10-09):** the four packages were published at `0.14.0` under `@pxglobal` with `latest`, tagged and pushed, and verified (wrapper pins, changelogs, tarballs, default install). npm's staged publishing held each publish for a browser approval and created a `0.0.0-stage` placeholder per new package; release-it did not wait for the approval, so the tags were pushed up to about two minutes before the versions were installable. The procedure now covers this in `RELEASING.md`. Afterwards: the placeholders and all 44 `@telesign` versions were deprecated and Storybook was redeployed. Second release 2026-10-13 (`0.14.1`, web-components from a teammate's machine, then React and Vue).

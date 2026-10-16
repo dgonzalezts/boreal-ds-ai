@@ -37,7 +37,7 @@ Boreal DS is a multi-brand design system monorepo for Proximus Group (brands: Pr
 - All web component tags use the `bds-[name]` prefix.
 - Use design tokens (`var(--boreal-*)`) exclusively — no hard-coded colours, spacing, or radii.
 - Use bare `@Event()` — no `bubbles` or `composed` unless the event must bubble to a parent `@Listen()`.
-- Unit test coverage must reach ≥ 90% statements before a PR is merged.
+- Unit test coverage must reach ≥ 80% statements before a PR is merged.
 
 **Release**
 

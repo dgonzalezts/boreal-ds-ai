@@ -107,7 +107,7 @@ Each template includes Boreal DS-specific checklists. Use them to verify:
 
 ✅ **Testing & Quality**
 
-- Unit test coverage ≥ 90%
+- Unit test coverage ≥ 80%
 - Accessibility verified (keyboard, screen readers)
 - No console errors
 

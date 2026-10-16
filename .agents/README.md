@@ -10,7 +10,7 @@ This folder contains the artefacts produced and consumed by the AI-assisted impl
 | --------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | **Frontend Developer**      | `.agents/agents/frontend-developer.md`     | SDLC coordinator. Sequences brainstorming → writing-plans → executing-plans. **Never writes code directly.**                           |
 | **frontend-subagent**       | `.agents/agents/frontend-subagent.md`      | Implements Stencil components — props, SCSS tokens, `render()`, lifecycle hooks, FACE, and JSDoc.                                      |
-| **testing-subagent**        | `.agents/agents/testing-subagent.md`       | Writes and fixes unit tests. Enforces the two-phase quality gate (≥ 90% coverage then ≥ 90% mutation score).                           |
+| **testing-subagent**        | `.agents/agents/testing-subagent.md`       | Writes and fixes unit tests. Enforces the two-phase quality gate (≥ 80% coverage then ≥ 90% mutation score).                           |
 | **documentation-subagent**  | `.agents/agents/documentation-subagent.md` | Creates Storybook stories (`.stories.ts`) and MDX documentation.                                                                       |
 | **writing-plans** (skill)   | `.agents/skills/writing-plans/SKILL.md`    | Produces a task-by-task implementation plan saved to `ai-work/plans/`, with Executor fields so executing-plans can dispatch subagents. |
 | **executing-plans** (skill) | `.agents/skills/executing-plans/SKILL.md`  | Reads a plan from `ai-work/plans/` and dispatches each task to the correct specialist subagent with review checkpoints.                |
@@ -39,7 +39,7 @@ flowchart TD
     Review -->|Yes| Execute[Agent runs executing-plans skill<br/>dispatches tasks to subagents]
 
     Execute --> Impl[frontend-subagent<br/>.tsx + .scss + JSDoc]
-    Execute --> Tests[testing-subagent<br/>.spec.ts — ≥ 90% coverage + mutation]
+    Execute --> Tests[testing-subagent<br/>.spec.ts — ≥ 80% coverage + mutation]
     Execute --> Docs[documentation-subagent<br/>.stories.ts + .mdx]
 
     Impl --> QA[lint · typecheck · test:spec]

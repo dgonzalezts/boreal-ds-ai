@@ -2,7 +2,7 @@
 ticket: EOA-18749
 status: in progress
 created: 2026-08-12
-updated: 2026-10-05
+updated: 2026-10-09
 ---
 
 # Release Process Remediation (Option A: patch `release-it`) Implementation Plan
@@ -72,7 +72,7 @@ updated: 2026-10-05
 - **Public docs** (decided 2026-10-02): Storybook is a public static site and Bitbucket is internal, so release notes are published as a Storybook **Changelog** page (option C) rendering the two maintained changelogs. **Links are kept as they are** (revised 2026-10-08, option B): the expected consumers are internal and signed in to Bitbucket, so commit and compare links stay clickable; accepted trade-off — the internal hostname, project and repo name are visible on the public page, and the links resolve only for signed-in readers. **`CHANGELOG.md` is not shipped inside the npm packages** (an npm publish cannot be retracted, and the file carries the internal links); release notes live on the Storybook Changelog page and, for repo readers, in the two `CHANGELOG.md` files. The welcome page states the alpha status (versioning rules, `@telesign` migration, contact, link to the Changelog page). Company name: **Proximus Global**.
 - Alpha graduation: stay at `0.x` until real-world feedback is addressed; then go straight to `1.0.0` with one deliberate release (`--increment=1.0.0`, optionally preceded by `1.0.0-rc.N`) and remove `preMajor` from all four configs (T17).
 - **History across the scope move** (decided 2026-10-02): old `@telesign` versions are **not** republished under `@pxglobal` (npm cannot move versions between names; rebuilding ~44 old versions would publish new builds, not the shipped code). History is carried by: the repo CHANGELOGs (kept in full, with a "moved" notice), `@telesign/*` git tags (**never deleted** — historical compare links depend on them), the public Storybook Changelog page (`CHANGELOG.md` is not shipped in the tarballs), a "previously published as" note in each README, and the `npm deprecate` message on every `@telesign` version. The move itself is a changelog entry: the rename lands as `feat(release): …` with a `BREAKING CHANGE:` footer, and the first release sets all four packages to `0.14.0` explicitly.
-- CHANGELOG cleanup: tier 1 required, tier 2 recommended, tier 3 open decision (T13).
+- CHANGELOG cleanup: tier 1 required, tier 2 recommended, tier 3 decided 2026-10-09 (T13): only the 19 clearest process-only entries removed; no full editorial pass.
 
 ### Session decisions (2026-10-05)
 
@@ -190,14 +190,14 @@ The last two flags are needed only on a feature branch without upstream and with
 | T11 CONTRIBUTING.md + guideline + README | done (PR 2) | `62f80ef7` |
 | T11b Storybook | done (PR 2) | `e99a4348` |
 | T12 ADR close-out | done (untracked file) | — |
-| T12b First-release runbook (docs) | done (untracked file; awaiting your review) | — |
+| T12b First-release runbook (docs) | done (tracked as `RELEASING.md`; authentication, TLS and manual-release content added in `924cc32e`) | — |
 | T12c Rehearsal on a local registry | done (its CONTRIBUTING.md edit shipped in `f418845e`) | — |
 | T12e Tracked RELEASING.md + hook-free pushes | done (PR 2) | `2586d57b`, `f418845e` |
 | T12f Version-heading compare links | done (PR 3 merged) | `c537da54` |
-| T12d First real `@pxglobal` release + deploy + deprecation | done except the second-release check | release `d3047612`; `5e097600`, `b4e505b0`, `a0456dfe`, `377643ed` |
-| Follow-ups T13–T26 | pending / after first release | — |
-| T21 Docs sync — Confluence strategy page (SENG 1303773297)                             | in progress (started 2026-10-05, ahead of Task 12d) | —          |
-| T21 Docs sync — internal docs (`ai-docs/`, `.agents/`, READMEs)                        | pending — re-verify after Task 12d | —          |
+| T12d First real `@pxglobal` release + deploy + deprecation | done (second-release check closed 2026-10-15) | release `d3047612`; `5e097600`, `b4e505b0`, `a0456dfe`, `377643ed` |
+| Follow-ups T13–T28 | pending (first release done) | — |
+| T21 Docs sync — internal docs (`ai-docs/`, `.agents/`, READMEs) — 21a to 21e | done 2026-10-09 (local, untracked) | — |
+| T21 Docs sync — Confluence pages (21f) | in progress (read-only survey started 2026-10-15) | — |
 
 ## Tasks
 
@@ -299,7 +299,7 @@ The last two flags are needed only on a feature branch without upstream and with
 **Manual test _(required — not waiveable)_:** non-visual; validate by inspection.
 
 - [x] Given each backfilled hash, when running `git tag --contains <hash>` for the package, then the earliest tag matches the section the entry was placed in. Pass: all 6 entries placed correctly.
-- [ ] Given the edited files, when previewed as Markdown, then lists and links render without breaking neighbouring entries. Pass: no formatting regressions. — **open**: structural check only (same list format and link style as neighbouring entries); confirm the rendered view on Bitbucket during PR review.
+- [x] Given the edited files, when previewed as Markdown, then lists and links render without breaking neighbouring entries. Pass: no formatting regressions. — **open**: structural check only (same list format and link style as neighbouring entries); confirm the rendered view on Bitbucket during PR review. _(verified 2026-10-09 on the deployed Storybook page: 620 list items, 0 leaked Markdown, version headings 19, every link in an entry is a commit link)_
 
 **Commit:** `docs(release): EOA-18749 backfill changelog entries lost to squash-merge titles`
 
@@ -359,7 +359,7 @@ The last two flags are needed only on a feature branch without upstream and with
 - [x] Boundary case: with `infile: false`, confirm the wrapper release still runs (version, tag, publish) and nothing is written to its `CHANGELOG.md`.
 - [x] Boundary case: the header prefix is optional — plain conventional commits and `Pull request #N: type(scope): …` must both parse; branch-name titles (`Pull request #159: Feature/EOA-15507 …`) still don't parse (accepted gap).
 - [x] Coupling: `check-cem-changes.ts` reads `npm.tag` only — unaffected.
-- [ ] Forward note: T9 renames the style-guidelines folder — every path added here is updated there. — **open**: applies when T9 runs.
+- [x] Forward note: T9 renames the style-guidelines folder — every path added here is updated there. — **open**: applies when T9 runs. _(done in Task 9; verified 2026-10-09: all bump and changelog paths in the four configs use `../boreal-style-guidelines`, the old name appears nowhere in them and the old folder no longer exists)_
 
 **Acceptance criteria:**
 
@@ -509,7 +509,7 @@ The last two flags are needed only on a feature branch without upstream and with
 
 - [x] Given every commit hash in the React and Vue changelogs before the change, when checked against web-components' changelog before trimming, then all are present. Pass: 0 missing. _(0 of 536 / 699 missing from the web-components changelog)_
 - [x] Given ten sampled remaining entries per maintained changelog, when checking their commits' touched paths, then each matches the ownership rule. Pass: 20/20. _(stronger than sampled: all 581 + 21 remaining entries checked, 0 not owned)_
-- [ ] Given the wrapper pointer files, when rendered, then the relative link opens web-components' changelog. Pass: link resolves on Bitbucket. **Open:** the relative path `../boreal-web-components/CHANGELOG.md` resolves locally from both wrapper folders; rendering on Bitbucket needs the branch pushed (check during PR review).
+- [x] Given the wrapper pointer files, when rendered, then the relative link opens web-components' changelog. Pass: link resolves on Bitbucket. **Open:** the relative path `../boreal-web-components/CHANGELOG.md` resolves locally from both wrapper folders; rendering on Bitbucket needs the branch pushed (check during PR review). _(verified 2026-10-09 in the signed-in Bitbucket session: the React and Vue pointer pages render, and the relative link resolves to `packages/boreal-web-components/CHANGELOG.md` (HTTP 200))_
 
 **Commit:** `docs(release): EOA-18749 trim changelogs to owned entries and point wrapper changelogs to WC`
 
@@ -1042,7 +1042,7 @@ Findings feed Task 12b (runbook corrections) before Task 12d.
 
 ### Task 12d: First real `@pxglobal` release, deploy and deprecation
 
-**Status:** in progress — all steps done 2026-10-09 (release, verification, placeholder deprecations, Storybook deploy, `@telesign` deprecations, `RELEASING.md` cleanup `2f43f987`); only the second-release check below remains open. The publishing user runs the publish and deprecate commands in their own terminal (npm asks for a 2FA one-time password, which an assistant session cannot provide); the assistant prepares the dry runs and does the read-only verification. **Hard gates:** PR 2 merged; EOA-18864 done (the `@pxglobal` org and the publishing user exist); Tasks 12b and 12c complete; **explicit user approval before every step that publishes, pushes tags or deprecates** — those actions cannot be undone and are outward-facing.
+**Status:** done 2026-10-15 — all steps done 2026-10-09 (release, verification, placeholder deprecations, Storybook deploy, `@telesign` deprecations, `RELEASING.md` cleanup `2f43f987`); the second-release check was closed 2026-10-15 (teammate release of `0.14.1`, see the box below). The publishing user runs the publish and deprecate commands in their own terminal (npm asks for a 2FA one-time password, which an assistant session cannot provide); the assistant prepares the dry runs and does the read-only verification. **Hard gates:** PR 2 merged; EOA-18864 done (the `@pxglobal` org and the publishing user exist); Tasks 12b and 12c complete; **explicit user approval before every step that publishes, pushes tags or deprecates** — those actions cannot be undone and are outward-facing.
 
 **Executor:** main thread, or the user runs the commands with the `!` prefix when they need an interactive login or OTP.
 
@@ -1056,7 +1056,7 @@ Findings feed Task 12b (runbook corrections) before Task 12d.
 - [x] [assistant] After the merge: local `release/current` is up to date and clean, `git fetch --tags`, `pnpm install --frozen-lockfile` passes, the last `@telesign` tags are found by `git.tagMatch`. _(done: `release/current` at `d3047612`, clean, tags fetched, frozen install passes; tagMatch finds `@telesign/boreal-web-components@0.1.0-alpha.12`, `-react@0.1.0-alpha.14`, `-vue@0.1.0-alpha.11`, `-style-guidelines@0.1.0-alpha.3`)_
 - [x] [assistant] Names are free: `npm view @pxglobal/boreal-<package>` returns 404 for the four packages. _(all four return E404)_
 - [x] [assistant] Pre-flight dry run of the four packages on `release/current` proposes `0.14.0` and the tags `@pxglobal/<package>@0.14.0`, with a BREAKING CHANGES entry and no `@telesign` links. _(all four exit 0: `0.14.0`, tags `@pxglobal/<package>@0.14.0`, one BREAKING CHANGES entry, no `@telesign` links, no old-style links; web-components and React and Vue list 8 features plus the move; style-guidelines lists the move only)_
-- [ ] [user, optional now] `CHROMATIC_PROJECT_TOKEN` in the root `.env` for the Storybook deploy (step 4); never shared with the assistant.
+- [x] [user, optional now] `CHROMATIC_PROJECT_TOKEN` in the root `.env` for the Storybook deploy (step 4); never shared with the assistant. _(the user ran `pnpm deploy:docs` on 2026-10-09 after PR 3 merged)_
 
 **Steps** (the runbook in Task 12b, verbatim):
 
@@ -1082,7 +1082,7 @@ Findings feed Task 12b (runbook corrections) before Task 12d.
 - [x] Placeholders `0.0.0-stage` deprecated (the user ran the four commands with 2FA; verified from the registry 2026-10-09: all four carry the deprecation message, `0.14.0` is not deprecated and `latest` is still `0.14.0`).
 - [x] Storybook deploy (step 4) done by the user 2026-10-09 after PR 3 merged; verified on the deployed page: both `0.14.0` headings link to the Bitbucket compare pages (same form as the older headings) and both targets return 200 in the signed-in session with the right source and destination tags.
 - [x] The four `@telesign` deprecations (step 5): run by the user 2026-10-09 with 2FA; verified from the registry: all 44 versions deprecated (web-components 13, React 15, Vue 12, style-guidelines 4) with the message `Moved to @pxglobal/boreal-<package> (0.14.0 and later)`; the `@pxglobal` packages untouched (`latest` = `0.14.0`, `0.14.0` not deprecated, placeholders deprecated). The old `latest` dist-tag still points at `0.1.0-alpha.0` and `alpha` at the last alpha (unchanged, harmless).
-- [ ] Second release: record whether npm held the publish for approval. If not, delete the "Approving the publish" section of `RELEASING.md` (decided 2026-10-09: the placeholder and timeline already live in the one-off section, which step 7 deletes); if yes, keep it and fold it into the regular procedure.
+- [x] Second release (2026-10-13, teammate's machine, web-components `0.14.1`): the publish was **not held for approval** because it used a token with bypass 2FA; it showed a "validating" state for some minutes and then became available. The owner's interactive login is held for a browser approval. Decision: the section is kept and rewritten as "Waiting for the publish" covering both cases, instead of deleted (the owner's flow still needs it). Done 2026-10-15.
 
 
 ### Task 21 (final): Documentation sync — internal docs and Confluence
@@ -1100,7 +1100,7 @@ Findings feed Task 12b (runbook corrections) before Task 12d.
 | 21c | `.agents/`: `release-subagent`, `infra-knowledge`, `create-pr`, `README.md`, `qa-subagent` | **done 2026-10-09** (local, untracked) — see notes below |
 | 21d | Memories: `.agents/memory/*`, `.claude/agent-memory/release-subagent/*` (correct or retire outdated entries) + `sync-knowledge` run | **done 2026-10-09 except the `sync-knowledge` run** (local, untracked) — see notes below |
 | 21e | Grep verification (0 hits for `--preRelease=alpha`, the `alpha` dist-tag, `@telesign/boreal-*` outside history notes, `@proximus`) | **done 2026-10-09** — see notes below |
-| 21f | Confluence pages (one approval per page) and the notification text for consumer-page owners | pending |
+| 21f | Confluence pages (one approval per page) and the notification text for consumer-page owners | **survey done 2026-10-15** from exported pages (Confluence API access blocked by company policy): replacement text in `ai-work/confluence/`; the user pastes it. Guide page replaced by the user 2026-10-15. Open: ADR-0011 amendment note (done 2026-10-15) and CI/CD page edits (`other-page-edits.md`); ADR 0013 published as Confluence ADR-0015 (done 2026-10-15); notification to consumer-page owners; CQL search; teammate dry run |
 
 **21a notes (2026-10-09, files are untracked so there is no commit):**
 
@@ -1191,7 +1191,7 @@ Findings feed Task 12b (runbook corrections) before Task 12d.
 
 | #   | Task                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Status                      |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| T13 | CHANGELOG cleanup tier 3 — editorial noise in the two maintained changelogs (mostly web-components' ~570 remaining entries after T7). Decide invest or skip.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | open decision               |
+| T13 | CHANGELOG cleanup tier 3 — editorial noise in the two maintained changelogs (mostly web-components' ~570 remaining entries after T7). Decide invest or skip.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | **decided 2026-10-09: option 2** (remove the clearest process-only entries). 19 entries removed (17 web-components, 2 style-guidelines) on branch `docs/EOA-18749_changelog-noise`, commit `e096fa92`, PR pending merge; the rest of tier 3 is closed as "skip" |
 | T14 | EOA-18870 — DevOps meeting (Branislav). Agenda and asks below ("T14 agenda"). Record outcome in ADR 0013 and feed T21 (CI/CD diagrams + Confluence strategy page).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | pending                     |
 | T15 | CI wrapper-generation gate + drift smoke test (EOA-18749 AC 3–4). Re-scope into its own plan once T14 confirms access.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | deferred — blocked on T14   |
 | T16 | _Moved into Tasks 12b–12d (decided 2026-10-08): the first real release is in scope and no longer waits for a teammate._ | moved to Task 12d |
@@ -1243,6 +1243,84 @@ Context for the meeting: local hooks already run commitlint (`commit-msg`), `esl
 20. **Release trigger and cadence:** today releases are manual batches run by the publishing user (merging a PR releases nothing). Ask which model DevOps prefers for the pipeline: (a) release on every merge that has a releasable commit (frequent small versions, needs a non-personal publish token and trust in the CI), or (b) a scheduled or manually approved release train (same batching as today, the person replaced by a button; the gentler first step). The version logic is identical either way: one bump per package, the highest level in the batch wins.
 
 21. **npm staged publishing:** the first release showed that npm holds publishes for a human approval (passkey or 2FA) and that release-it continues without waiting. Ask DevOps whether the pipeline should stage with a stage-only token (`npm stage publish`, CLI 11.15 or newer) and keep a person as approver, whether the account or organization enforces staging for every publish, and whether the `0.0.0-stage` placeholders and the "tag pushed before the version is installable" window are acceptable. This fits the "release train with an approval gate" option of item 20.
+
+#### Follow-up meeting
+
+Context: DevOps opened ITOPS-72203 (provision CodeArtifact repo and domain in the ops-infra account, us-east-1), ITOPS-72204 (Jenkins job to publish to CodeArtifact) and ITOPS-72205 (Jenkins job to publish to npm). The CI/CD strategy page selects the public npm registry under `@pxglobal` and lists CodeArtifact only as an evaluated option. None of the three tickets covers the other Phase 1 jobs or the S3 bucket. The current icon and flag buckets (`resources-borealds`, `aqua-ds-doc-storybook`) are in an account we do not control, and published package versions hardcode their URLs.
+
+**Decisions (2026-10-16)**
+
+- **CodeArtifact is the internal sharing registry.** It shares the library internally while we solve how to publish to public npm. Public npm publishing is **to be confirmed**: the library is for internal use and limitations may appear; if it goes ahead, it happens once the team confirms that a stable version (the v1.* promotion) is ready. Team session agenda: `ai-work/meetings/2026-10-release-process-team-session.md`. A single backup publisher (a named member of the `@pxglobal` npm organization with 2FA) is the interim answer to the single-publisher risk; no new shared npm users or tokens. Versions in CodeArtifact are the same as the current npm versions (no prerelease scheme, no change to `preMajor`, `strictSemVer` or the changelog rules). The promotion to public npm is out of scope for now.
+- **One Jenkins job with several stages ("gates")** (quality, lint, tests, build, release), aligned with the other projects and pipelines in the company. How much of it fits in Q4 depends on how complex this library turns out to be.
+- **Storybook deployment is not in Q4.** It is a new workflow and DevOps has no capacity to explore it. We keep deploying it manually (`pnpm deploy:docs`, Chromatic).
+- **S3 bucket provisioning for static assets is not in Q4.** The icons and flags stay on the current buckets until it is scheduled.
+
+**Alignment with the strategy**
+
+1. **Why CodeArtifact?** Answered: internal sharing while public npm publishing is solved. Still to confirm: is there also a security or compliance requirement behind ITOPS-72203 and ITOPS-72204, and where is it documented? The strategy page and the Phase 1 plan need updating either way (T21).
+2. **Intended end state:** Answered: CodeArtifact now, public npm later when the team confirms a stable version. Still to confirm: when both registries are used, in which order are they published, and what happens if one publish fails (versions are immutable on both)? Parked until the promotion is planned.
+3. **ITOPS-72205 vs ITOPS-63144 (pending):** is the npm publish job still planned, or is it deferred until the promotion? Are the npm publish job and the manual release and Storybook deploy job the same work?
+
+**Phase 1 coverage**
+
+4. **Remaining Jenkins jobs (partly answered):** the target is one job with several stages. Pending: which stages (ITOPS-63109 code quality, ITOPS-63110 build components, ITOPS-63111 build Storybook, ITOPS-72071 quality gate) can be done in Q4, and in what order? Are the CodeArtifact publish (ITOPS-72204) and these stages part of the same job?
+5. **Chromatic and CDN upload (answered):** Storybook and the Chromatic deploy stay manual and out of Q4. The CDN upload step (ITOPS-63138) depends on the S3 and CloudFront work, so it is out of Q4 too. Nothing pending.
+
+**S3 and CloudFront**
+
+6. **Static assets hosting (partly answered: not in Q4).** Today the icons and flags are served from S3 buckets in an AWS account we do not control. S3 and CloudFront is an approach the team already knows, and because provisioning new AWS resources is currently restricted we want to ask for the resources instead of creating them ourselves. Pending:
+   - **Scope:** is this request in scope for the DevOps team? If not, which team should we ask, and how do we raise it?
+   - **Ticket and timing:** should we track it under ITOPS-63094 or open a new ticket? Which quarter can it be planned for?
+   - **Account:** an existing account (for example ops-infra) or a new one? Who decides?
+   - **Requirements and approvals:** what does DevOps need from us (bucket, CloudFront distribution, custom domain and certificate, Jenkins write role, CORS) and which approvals come first?
+7. **Existing buckets (pending):** who owns `resources-borealds` (icons) and `aqua-ds-doc-storybook` (flags), and who is responsible for copying the data into the new bucket? Not urgent for Q4, but needed to plan the move.
+
+**Additional questions**
+
+8. **Credentials (pending):** which credentials will Jenkins use for CodeArtifact (AWS role, short-lived token) and for git? The npm token and npm staged publishing (item 21) apply only when public publishing is planned.
+9. **CodeArtifact access and origin controls (pending, needed now):** which accounts and roles get read access, and how do developers and consuming apps authenticate? Is there an upstream or external connection to npmjs? How are package origin controls set for `@pxglobal/*`? The packages already exist on public npm, so a default upstream setup could block publishing to CodeArtifact or allow dependency confusion.
+10. **Asset source and retention (deferred with item 6):** if we cannot get access to the old bucket, is there another source such as the Icomoon project? How long will the old buckets stay online?
+11. **Asset URL and layout (deferred with item 6):** will the new URL be a custom domain such as `cdn.<org>.com/icons/`, so a later bucket move needs no code change? Does the layout stay `icons/current/` or move to `/icons/vX.Y.Z/` plus `/latest/`?
+12. **Process (pending):** which IaC tool and repo do the requests go through, who owns each ticket, and what are the target dates? Who handles failed publishes, and what is the rollback expectation?
+13. **`.npmrc` and registry URL (pending, new):** will Jenkins write the `.npmrc` at run time, or do we commit a template with the token as an environment variable? What are the CodeArtifact URLs (domain, account, repository) for a test repository and the real one?
+14. **Test repository (pending, new):** which CodeArtifact repository can we use for a `release-it --dry-run --ci` rehearsal, and who can create it?
+15. **Task 12d (internal, new):** the first real `@pxglobal` release in this plan publishes to public npm. With CodeArtifact as the internal registry, does Task 12d still go ahead on npm, or does the first release go to CodeArtifact and npm waits for the stable version? The team decides.
+
+**Codebase changes to expect (internal, not applied)**
+
+`release-it` 21.1.0 has no hardcoded npm URL. It reads the registry from `publishConfig.registry` in each `package.json` or, if absent, from `.npmrc`. So CodeArtifact needs configuration, not a different tool.
+
+| Area | Today | Needed for CodeArtifact |
+|---|---|---|
+| Registry target | No registry in `.npmrc` or `publishConfig`, so `npm` falls back to npmjs | Map `@pxglobal:registry=<codeartifact-url>` in an `.npmrc` that Jenkins writes at run time, or pass `--registry`. Do not hardcode the URL in the four `package.json` files. |
+| `release-it` pre-checks | `npm ping`, `npm whoami` and a collaborator check (`npm access`) against the registry | Likely to fail or misbehave on CodeArtifact. Set `npm.skipChecks: true` in the four `.release-it.json` files for the CodeArtifact run and verify with `--dry-run`. |
+| Latest-version lookup | `npm show` / `npm view` | Harmless with `skipChecks`. |
+| `publishArgs` | `["--no-git-checks"]`, `publishPackageManager: pnpm` | Probably fine, because `pnpm publish` honors `.npmrc`. Test it. |
+| `publishConfig.access: public` | In all four packages | Ignored by CodeArtifact. Leave it, because it is still needed for the later npm publish. |
+| `tag: latest` | In every `.release-it.json` | Works in CodeArtifact. No change. |
+| Authentication | Personal or automation npm token | Short-lived CodeArtifact token (up to 12 hours) generated in Jenkins from an AWS role. |
+
+**Documents that become outdated**
+
+- `RELEASING.md` and Task 12d: the `npm whoami`, `npm org ls pxglobal` and `npm view` checks, and "Approving the publish" (npm staged publishing does not exist in CodeArtifact; item 21 applies only when public publishing is planned).
+- Task 12c: the Verdaccio rehearsal stays valid locally, but a CodeArtifact test repository is a closer rehearsal.
+- Checklists that say "a scratch project installs the new packages from npm": they now need the CodeArtifact `.npmrc` and AWS credentials.
+- T14, the CONTRIBUTING.md release section, ADR 0013 and the Confluence strategy page (it names public npm as the registry).
+
+**What DevOps has to supply**
+
+1. A Jenkins job that assumes an AWS role, runs `aws codeartifact get-authorization-token` (or `login`), writes the `.npmrc` and runs `pnpm run release:all --ci` (ITOPS-72204).
+2. IAM permissions for publishing (`PublishPackageVersion`, `GetAuthorizationToken`, `sts:GetServiceBearerToken`) on that role.
+3. CodeArtifact settings: upstream connection to npmjs and package origin controls for `@pxglobal/*`.
+4. Bitbucket push rights for the Jenkins service account on `release/current` (item 19).
+5. Network reachability from the agents to the CodeArtifact endpoints, in addition to Chromatic.
+
+**To verify before changing anything**
+
+1. Run `release-it --dry-run --ci` against a CodeArtifact test repository with `skipChecks` and check the version lookup and publish arguments.
+2. Confirm `pnpm publish` rewrites `workspace:*` (in `boreal-vue`) to an exact version, as the current release does.
+3. Confirm the `file:pxglobal-boreal-web-components-0.14.1.tgz` reference in `boreal-react`'s `package.json` does not leak into the published package.
+4. Get the CodeArtifact URLs for the test and real repositories (item 13).
 
 **Later phases (tracked as tickets; decisions 2026-10-05):** self-hosted SonarQube (`ITOPS-63198`), Checkmarx SAST/SCA (`ITOPS-63199`), `pnpm audit` (`ITOPS-63200`), Chromatic visual regression on PRs (`ITOPS-63136`, non-blocking for alpha), accessibility via **axe-core only** (`ITOPS-63135`; Pa11y dropped), Playwright E2E (`ITOPS-63137`, Chromium-first), **Lighthouse deferred** (`ITOPS-63139`), bundle budget **not yet defined**, single-environment deployment (`ITOPS-63138` / `ITOPS-63146`; `ITOPS-63140` closed), SBOM generated in the release job (`ITOPS-63144`).
 

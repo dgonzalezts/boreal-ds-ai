@@ -69,7 +69,7 @@ Decided by maintainers once alpha feedback is addressed. Release with `--increme
 
 ### Lessons from the first real release (2026-10-09)
 
-- npm's staged publishing held each publish for a browser approval and created a `0.0.0-stage` placeholder per new package; release-it did not wait for the approval, so tags were pushed up to about two minutes before the versions were installable (`RELEASING.md`, "Approving the publish").
+- npm's staged publishing held each publish for a browser approval and created a `0.0.0-stage` placeholder per new package; release-it did not wait for the approval, so tags were pushed up to about two minutes before the versions were installable (`RELEASING.md`, "Waiting for the publish").
 - The generator's compare links are rejected by Bitbucket Server; the working format is produced by a hook script.
 - Release pushes skip the slow `pre-push` hook through `git.pushArgs`.
 - A bare `@name` in a title becomes a link to a page that does not exist; a breaking change needs the `!` in the PR title because Bitbucket's squash message hides a footer.

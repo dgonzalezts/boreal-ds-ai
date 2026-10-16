@@ -14,9 +14,9 @@ Source: first `@pxglobal` release (2026-10-09).
 
 The release commit and tag were pushed 4 to 6 seconds after each placeholder, i.e. 49 to 125 seconds before the version was installable, and React started staging before web-components had been approved. Approve in dependency order (style-guidelines, web-components, React, Vue) and verify only afterwards.
 
-## Not known yet
+## Answered by the second release (2026-10-13)
 
-Whether the registry holds **every** publish of this account or only the first publish of a new package. npm's docs do not say. After the second release, record the answer in `RELEASING.md` ("Approving the publish": keep it or delete it).
+The hold depends on how the publisher authenticates. The owner's interactive login (2FA) was held for a browser approval on the first release. A teammate publishing web-components 0.14.1 with a granular token with bypass 2FA saw a "validating" state for some minutes and then the version became available, with no approval. `RELEASING.md` ("Waiting for the publish") describes both cases. Direct publishing with bypass tokens is due to end around January 2027, after which such publishes are staged and need an approval.
 
 ## Rehearsals cannot show it
 

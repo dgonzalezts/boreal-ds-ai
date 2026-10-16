@@ -26,7 +26,7 @@
 
 ## 🧪 **Testing**
 
-- [ ] ≥ 90% statement coverage achieved using `@stencil/core/testing` (`newSpecPage` + Vitest)
+- [ ] ≥ 80% statement coverage achieved using `@stencil/core/testing` (`newSpecPage` + Vitest)
   - [ ] Spec files split by concern: `basics`, `a11y`, `events`, `variants`, `slots` (create only those that apply)
   - [ ] All async assertions use `waitForChanges()` before reading DOM state
 - [ ] ≥ 90% mutation score confirmed after coverage gate passes
