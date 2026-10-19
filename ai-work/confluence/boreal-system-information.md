@@ -16,83 +16,90 @@ Alpha, on plain `0.x` versions (see the package inventory in section 4 for the l
 
 ## 1.3 Owners
 
-| Role | Name |
-| --- | --- |
-| Engineering Manager | `<Name>` - To be confirmed |
-| Tech lead / release owner | `<Name>` - To be confirmed |
-| Core team members | `<Name> - <Role>` (see section 19) |
+| Role                      | Name                               |
+| ------------------------- | ---------------------------------- |
+| Engineering Manager       | `<Name>` - To be confirmed         |
+| Tech lead / release owner | `<Name>` - To be confirmed         |
+| Core team members         | `<Name> - <Role>` (see section 19) |
 
 ## 1.4 Links
 
-| Resource | Link |
-| --- | --- |
-| Source repository (Bitbucket Server) | https://bitbucket.c11.telesign.com/projects/DEV/repos/boreal-ds |
-| Storybook (hosted on Chromatic) | Branch URL for `release/current`; canonical link To be confirmed (the package READMEs contain two different Chromatic hashes) |
-| npm packages | `@pxglobal/boreal-*` on npmjs.com |
-| Publishing & deployment guide (Confluence) | SENG 1692827661 |
-| CI/CD Pipeline Strategy (Confluence) | SENG 1303773297 |
-| ADR-0011 release tooling (Confluence) | SENG 2097872958 |
-| Release procedure | `RELEASING.md` at the repository root (wins over any Confluence page) |
+| Resource                                   | Link                                                                                                                          |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Source repository (Bitbucket Server)       | https://bitbucket.c11.telesign.com/projects/DEV/repos/boreal-ds                                                               |
+| Storybook (hosted on Chromatic)            | Branch URL for `release/current`; canonical link To be confirmed (the package READMEs contain two different Chromatic hashes) |
+| npm packages                               | `@pxglobal/boreal-*` on npmjs.com                                                                                             |
+| Publishing & deployment guide (Confluence) | SENG 1692827661                                                                                                               |
+| CI/CD Pipeline Strategy (Confluence)       | SENG 1303773297                                                                                                               |
+| ADR-0011 release tooling (Confluence)      | SENG 2097872958                                                                                                               |
+| Release procedure                          | `RELEASING.md` at the repository root (wins over any Confluence page)                                                         |
 
 This page links to those pages instead of repeating them.
 
 # 2. General information
 
-| Item | Value |
-| --- | --- |
-| Name | Boreal DS (`boreal-ds` monorepo; root `package.json` is private) |
-| Repository | Bitbucket Server, project `DEV`, repo `boreal-ds`; default branch `release/current` |
-| Monorepo tooling | pnpm workspaces + Turborepo 2 |
-| Components | Stencil 4, Sass, TypeScript 5 |
-| Wrappers | `@stencil/react-output-target`, `@stencil/vue-output-target` |
-| Documentation | Storybook 10 (`@storybook/web-components-vite`), Chromatic |
-| Release tooling | release-it 21 with `@release-it/conventional-changelog` |
-| Commit tooling | commitizen, commitlint, husky, lint-staged |
-| Node.js | 22.23.3 (`.node-version` and `.nvmrc`; `engines.node >=22`) |
-| pnpm | 11.28.2 (`packageManager` field; `engines.pnpm >=11`; activated by Corepack) |
-| Jira project | EOA (ticket IDs such as `EOA-10057`) |
+| Item             | Value                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Name             | Boreal DS (`boreal-ds` monorepo; root `package.json` is private)                    |
+| Repository       | Bitbucket Server, project `DEV`, repo `boreal-ds`; default branch `release/current` |
+| Monorepo tooling | pnpm workspaces + Turborepo 2                                                       |
+| Components       | Stencil 4, Sass, TypeScript 5                                                       |
+| Wrappers         | `@stencil/react-output-target`, `@stencil/vue-output-target`                        |
+| Documentation    | Storybook 10 (`@storybook/web-components-vite`), Chromatic                          |
+| Release tooling  | release-it 21 with `@release-it/conventional-changelog`                             |
+| Commit tooling   | commitizen, commitlint, husky, lint-staged                                          |
+| Node.js          | 22.23.3 (`.node-version` and `.nvmrc`; `engines.node >=22`)                         |
+| pnpm             | 11.28.2 (`packageManager` field; `engines.pnpm >=11`; activated by Corepack)        |
+| Jira project     | EOA (ticket IDs such as `EOA-10057`)                                                |
 
 ## 2.1 License
 
-**To be confirmed with Legal.** The packages declare different licenses today:
+**Intended: proprietary, internal use only. License text pending Legal.** The library is meant to be used only across the company, so an open-source license is not the target. The packages declare different licenses today, which will be aligned once Legal approves the text:
 
-| Package | `license` in `package.json` |
-| --- | --- |
-| `@pxglobal/boreal-web-components` | MIT (README badge also says MIT) |
-| `@pxglobal/boreal-style-guidelines` | ISC |
-| `@pxglobal/boreal-react` | ISC |
-| `@pxglobal/boreal-vue` | none declared |
+| Package                             | `license` in `package.json`      |
+| ----------------------------------- | -------------------------------- |
+| `@pxglobal/boreal-web-components`   | MIT (README badge also says MIT) |
+| `@pxglobal/boreal-style-guidelines` | ISC                              |
+| `@pxglobal/boreal-react`            | ISC                              |
+| `@pxglobal/boreal-vue`              | none declared                    |
 
 # 3. Usage / Consumption
 
 Consumers can use the library in three ways. Install without a tag (`npm install @pxglobal/<package>`); use the caret range (for example `^0.14.0`) to receive fixes without breaking changes, because breaking changes bump the minor version. For step-by-step setup per environment, see the "Framework Integration" guide in Storybook (linked from the Storybook welcome page).
 
-| Environment | Install | Notes |
-| --- | --- | --- |
+| Environment                                | Install                                       | Notes                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Raw web components (any framework or none) | `npm install @pxglobal/boreal-web-components` | Import the stylesheet in the app entry (`@pxglobal/boreal-web-components/dist/boreal-web-components/boreal-web-components.css`, per the package README); set `data-theme` on `<body>` (`proximus`, `engage`, `protect`, `connect`). Component registration steps: see the package README and the Framework Integration guide. |
-| React | `npm install @pxglobal/boreal-react` | Import `@pxglobal/boreal-react/css/boreal.css`. Web components are installed automatically as a dependency. |
-| Vue 3 | `npm install @pxglobal/boreal-vue` | Web components are installed automatically as a dependency. Registration details: see the package README and Framework Integration guide. |
+| React                                      | `npm install @pxglobal/boreal-react`          | Import `@pxglobal/boreal-react/css/boreal.css`. Web components are installed automatically as a dependency.                                                                                                                                                                                                                   |
+| Vue 3                                      | `npm install @pxglobal/boreal-vue`            | Web components are installed automatically as a dependency. Registration details: see the package README and Framework Integration guide.                                                                                                                                                                                     |
 
 The icon font is loaded from a stylesheet URL referenced in the package READMEs; hosting of static assets is outside the scope of this page.
 
 ## 3.1 Peer dependencies
 
-The wrapper packages declare **no `peerDependencies`**. React and Vue appear only as devDependencies (see section 7). The supported consumer versions of React and Vue are therefore To be confirmed.
+The wrapper packages declare the following `peerDependencies` (introduced after `0.14.1`; applies from the release that follows):
+
+| Package                  | Peer dependency                          |
+| ------------------------ | ---------------------------------------- |
+| `@pxglobal/boreal-react` | `react` `^19.0.0`, `react-dom` `^19.0.0` |
+| `@pxglobal/boreal-vue`   | `vue` `^3.5.0`                           |
+
+The ranges are deliberately narrow: they match what the wrappers are built and validated against, and can be widened later without a breaking change. Apps on older versions, including Vue 2, are not supported by the wrappers; they can use `@pxglobal/boreal-web-components` directly (not yet validated in a Vue 2 app). `@pxglobal/boreal-web-components` stays a regular dependency of both wrappers.
 
 # 4. Packages inventory
 
 The "Latest on npm" column is a live badge, so it never goes stale. To check by hand: `npm view <package> version`. Private workspaces are never published and carry no badge.
 
-| Name | Path | Latest on npm | Purpose | Published |
-| --- | --- | --- | --- | --- |
-| `@pxglobal/boreal-style-guidelines` | `packages/boreal-style-guidelines` | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-style-guidelines) | Design tokens, generated CSS/SCSS and Stencil SCSS | Yes (npm, public) |
-| `@pxglobal/boreal-web-components` | `packages/boreal-web-components` | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-web-components) | Stencil web components, custom-elements manifest | Yes |
-| `@pxglobal/boreal-react` | `packages/boreal-react` | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-react) | React wrapper generated from web components | Yes |
-| `@pxglobal/boreal-vue` | `packages/boreal-vue` | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-vue) | Vue 3 wrapper generated from web components | Yes |
-| `@pxglobal/boreal-docs` | `apps/boreal-docs` | private | Storybook documentation site | No (deployed to Chromatic) |
-| `scripts-boreal` | `scripts-boreal` | private | `validate:pack` / `dev:pack` tooling, changelog link script | No |
-| `react-testapp` | `examples/react-testapp` | private | React test app for pack validation | No |
-| `vue-testapp` | `examples/vue-testapp` | private | Vue test app for pack validation | No |
+| Name                                | Path                               | Latest on npm                                                          | Purpose                                                     | Published                  |
+| ----------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------- |
+| `@pxglobal/boreal-style-guidelines` | `packages/boreal-style-guidelines` | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-style-guidelines) | Design tokens, generated CSS/SCSS and Stencil SCSS          | Yes (npm, public)          |
+| `@pxglobal/boreal-web-components`   | `packages/boreal-web-components`   | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-web-components)   | Stencil web components, custom-elements manifest            | Yes                        |
+| `@pxglobal/boreal-react`            | `packages/boreal-react`            | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-react)            | React wrapper generated from web components                 | Yes                        |
+| `@pxglobal/boreal-vue`              | `packages/boreal-vue`              | ![npm](https://img.shields.io/npm/v/@pxglobal/boreal-vue)              | Vue 3 wrapper generated from web components                 | Yes                        |
+| `@pxglobal/boreal-docs`             | `apps/boreal-docs`                 | private                                                                | Storybook documentation site                                | No (deployed to Chromatic) |
+| `scripts-boreal`                    | `scripts-boreal`                   | private                                                                | `validate:pack` / `dev:pack` tooling, changelog link script | No                         |
+| `react-testapp`                     | `examples/react-testapp`           | private                                                                | React test app for pack validation                          | No                         |
+| `vue-testapp`                       | `examples/vue-testapp`             | private                                                                | Vue test app for pack validation                            | No                         |
 
 Packages can have different versions: a package is only released when it, or a package it is built from, has a releasable change (section 12). Release tags follow the format `@pxglobal/<package>@<version>` (`git tag | grep pxglobal`).
 
@@ -122,69 +129,69 @@ Older `@telesign/boreal-*` packages (up to `0.1.0-alpha.N`) are deprecated and p
 
 # 7. Supported environments
 
-| Area | Support | Source |
-| --- | --- | --- |
-| Chrome / Edge | >= 79 | Stencil v4 browser policy |
-| Firefox | >= 70 | Stencil v4 browser policy |
-| Safari | >= 14 | Stencil v4 browser policy |
-| Internet Explorer, legacy Edge | Not supported | Stencil v4 browser policy |
-| React | Built and tested against React 19 (devDependency). Supported consumer range: To be confirmed (no peerDependencies) | `boreal-react` package.json |
-| Vue | Built against Vue 3.5 (devDependency). Supported consumer range: To be confirmed | `boreal-vue` package.json |
-| Node.js (development) | 22.23.3 pinned; `>=22` | `.node-version`, root `package.json` |
-| pnpm | 11.28.2 pinned; `>=11` | root `package.json` |
-| OS for releases | macOS / Linux only (Windows: use WSL2 or CI) | CONTRIBUTING.md |
+| Area                           | Support                                                                                                       | Source                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Chrome / Edge                  | >= 79                                                                                                         | Stencil v4 browser policy            |
+| Firefox                        | >= 70                                                                                                         | Stencil v4 browser policy            |
+| Safari                         | >= 14                                                                                                         | Stencil v4 browser policy            |
+| Internet Explorer, legacy Edge | Not supported                                                                                                 | Stencil v4 browser policy            |
+| React                          | 19 (`react` and `react-dom` `^19.0.0`, peer dependency of the React wrapper)                                  | `boreal-react` package.json          |
+| Vue                            | 3.5 or newer 3.x (`vue` `^3.5.0`, peer dependency of the Vue wrapper). Vue 2: use the web components directly | `boreal-vue` package.json            |
+| Node.js (development)          | 22.23.3 pinned; `>=22`                                                                                        | `.node-version`, root `package.json` |
+| pnpm                           | 11.28.2 pinned; `>=11`                                                                                        | root `package.json`                  |
+| OS for releases                | macOS / Linux only (Windows: use WSL2 or CI)                                                                  | CONTRIBUTING.md                      |
 
 The browser table follows Stencil's published policy; the repository has no project-level browser matrix.
 
 # 8. Hosting & distribution
 
-| Artifact | Where | Status |
-| --- | --- | --- |
-| npm packages | Public npm registry, scope `@pxglobal` (`access: public`) | Live today. Releases are manual (section 12). |
-| Internal registry | AWS CodeArtifact | Confirmed as the internal sharing registry. Domain and repository are tracked in ITOPS-72203. Technical details (URLs, accounts, access, origin controls) are To be confirmed. WIP. |
-| Public npm long term | Public npm | To be confirmed once a stable version exists (promotion to `1.x`). |
-| Storybook | Chromatic, deployed manually with `pnpm deploy:docs`; the `release/current` branch URL is stable across deploys | Live. Deployment is manual. |
+| Artifact             | Where                                                                                                           | Status                                                                                                                                                                              |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm packages         | Public npm registry, scope `@pxglobal` (`access: public`)                                                       | Live today. Releases are manual (section 12).                                                                                                                                       |
+| Internal registry    | AWS CodeArtifact                                                                                                | Confirmed as the internal sharing registry. Domain and repository are tracked in ITOPS-72203. Technical details (URLs, accounts, access, origin controls) are To be confirmed. WIP. |
+| Public npm long term | Public npm                                                                                                      | To be confirmed once a stable version exists (promotion to `1.x`).                                                                                                                  |
+| Storybook            | Chromatic, deployed manually with `pnpm deploy:docs`; the `release/current` branch URL is stable across deploys | Live. Deployment is manual.                                                                                                                                                         |
 
 `pnpm deploy:docs` builds `@pxglobal/boreal-docs` and its dependencies, then runs `chromatic` using the `CHROMATIC_PROJECT_TOKEN` loaded from a local `.env` through `dotenv-cli`. See the Publishing & Deployment Guide (SENG 1692827661) for the account and credential handling.
 
 # 9. Configuration files
 
-| File | Location | Purpose |
-| --- | --- | --- |
-| `package.json` | root | Workspace scripts, `packageManager` pin, engines, dev tooling |
-| `pnpm-workspace.yaml` | root | Workspaces (`packages/*`, `apps/*`, `examples/*`, `scripts-boreal`) and `allowBuilds` (`@parcel/watcher`, `esbuild`, `puppeteer`) |
-| `turbo.json` | root | Task graph: `build`, `test`, `test:coverage`, `lint`, `dev`, `release`, `validate:pack:*` |
-| `tsconfig.json` | root and per package | TypeScript settings; `tsconfig.build.json` for web-components |
-| `.node-version`, `.nvmrc` | root | Node 22.23.3 |
-| `stencil.config.ts` | `packages/boreal-web-components` | Output targets (www, dist, dist-custom-elements, custom elements manifest, React, Vue), Sass plugin, `buildEs5: 'prod'` |
-| `testing.config.ts` | `packages/boreal-web-components` | Jest settings, coverage threshold 80% |
-| `.release-it.json` (x4) | each of the four published packages | Tag format `@pxglobal/<pkg>@<version>`, `requireBranch: release/current`, push with `--follow-tags`, conventional-changelog with `preMajor`, path scoping, hooks |
-| `commitlint.config.js`, `commitlint-custom-rules.js` | root | Commit message rules and allowed scopes |
-| `.husky/` | root | Git hooks: commitlint, lint-staged, Stencil spec tests |
-| `.lintstagedrc.js` | root | Staged-file lint and format |
-| `.storybook/` (`main.ts`, `preview.ts`, `manager.ts`, `theme.ts`) | `apps/boreal-docs` | Storybook config and addons |
-| `scripts-boreal/` | root | Pack validation scripts and `link-changelog-heading.js` |
-| `.env`, `.env.example` | root | Local secrets such as the Chromatic token (never committed; do not copy values into docs) |
+| File                                                              | Location                            | Purpose                                                                                                                                                          |
+| ----------------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`                                                    | root                                | Workspace scripts, `packageManager` pin, engines, dev tooling                                                                                                    |
+| `pnpm-workspace.yaml`                                             | root                                | Workspaces (`packages/*`, `apps/*`, `examples/*`, `scripts-boreal`) and `allowBuilds` (`@parcel/watcher`, `esbuild`, `puppeteer`)                                |
+| `turbo.json`                                                      | root                                | Task graph: `build`, `test`, `test:coverage`, `lint`, `dev`, `release`, `validate:pack:*`                                                                        |
+| `tsconfig.json`                                                   | root and per package                | TypeScript settings; `tsconfig.build.json` for web-components                                                                                                    |
+| `.node-version`, `.nvmrc`                                         | root                                | Node 22.23.3                                                                                                                                                     |
+| `stencil.config.ts`                                               | `packages/boreal-web-components`    | Output targets (www, dist, dist-custom-elements, custom elements manifest, React, Vue), Sass plugin, `buildEs5: 'prod'`                                          |
+| `testing.config.ts`                                               | `packages/boreal-web-components`    | Jest settings, coverage threshold 80%                                                                                                                            |
+| `.release-it.json` (x4)                                           | each of the four published packages | Tag format `@pxglobal/<pkg>@<version>`, `requireBranch: release/current`, push with `--follow-tags`, conventional-changelog with `preMajor`, path scoping, hooks |
+| `commitlint.config.js`, `commitlint-custom-rules.js`              | root                                | Commit message rules and allowed scopes                                                                                                                          |
+| `.husky/`                                                         | root                                | Git hooks: commitlint, lint-staged, Stencil spec tests                                                                                                           |
+| `.lintstagedrc.js`                                                | root                                | Staged-file lint and format                                                                                                                                      |
+| `.storybook/` (`main.ts`, `preview.ts`, `manager.ts`, `theme.ts`) | `apps/boreal-docs`                  | Storybook config and addons                                                                                                                                      |
+| `scripts-boreal/`                                                 | root                                | Pack validation scripts and `link-changelog-heading.js`                                                                                                          |
+| `.env`, `.env.example`                                            | root                                | Local secrets such as the Chromatic token (never committed; do not copy values into docs)                                                                        |
 
 # 10. Local development
 
 Run `eval "$(fnm env)" && fnm use` (or enable `fnm --use-on-cd`) in each terminal session. Always install from the workspace root.
 
-| Task | Command |
-| --- | --- |
-| Select Node version | `fnm use` |
-| Enable pnpm | `corepack enable pnpm` |
-| Install | `pnpm install` (CI: `pnpm install --frozen-lockfile`) |
-| Storybook (builds styles and components first) | `pnpm dev:docs` (served on port 6006) |
-| Components dev server | `pnpm dev:components` |
-| Build everything | `pnpm build` |
-| Tests | `pnpm test` |
-| Coverage | `pnpm --filter @pxglobal/boreal-web-components test:coverage` (root `test:coverage` is not defined; the task exists in `turbo.json`) |
-| Lint / format check | `pnpm lint`, `pnpm format:check` |
-| Guided commit | `pnpm commit` |
-| Pack validation | `pnpm validate:pack:react`, `pnpm validate:pack:vue`, `pnpm validate:all` (`validate:pack:angular` also exists) |
-| Local pack for manual testing | `pnpm dev:pack:react`, `pnpm dev:pack:vue` |
-| Generate a component or story | `pnpm generate:component`, `pnpm generate:story` |
+| Task                                           | Command                                                                                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Select Node version                            | `fnm use`                                                                                                                            |
+| Enable pnpm                                    | `corepack enable pnpm`                                                                                                               |
+| Install                                        | `pnpm install` (CI: `pnpm install --frozen-lockfile`)                                                                                |
+| Storybook (builds styles and components first) | `pnpm dev:docs` (served on port 6006)                                                                                                |
+| Components dev server                          | `pnpm dev:components`                                                                                                                |
+| Build everything                               | `pnpm build`                                                                                                                         |
+| Tests                                          | `pnpm test`                                                                                                                          |
+| Coverage                                       | `pnpm --filter @pxglobal/boreal-web-components test:coverage` (root `test:coverage` is not defined; the task exists in `turbo.json`) |
+| Lint / format check                            | `pnpm lint`, `pnpm format:check`                                                                                                     |
+| Guided commit                                  | `pnpm commit`                                                                                                                        |
+| Pack validation                                | `pnpm validate:pack:react`, `pnpm validate:pack:vue`, `pnpm validate:all` (`validate:pack:angular` also exists)                      |
+| Local pack for manual testing                  | `pnpm dev:pack:react`, `pnpm dev:pack:vue`                                                                                           |
+| Generate a component or story                  | `pnpm generate:component`, `pnpm generate:story`                                                                                     |
 
 # 11. CI/CD pipelines
 
@@ -204,16 +211,16 @@ There is **no automated pipeline**. Releases are manual, run from a maintainer m
 
 Ticket mapping (the order and final scope are To be confirmed):
 
-| Ticket | Scope |
-| --- | --- |
-| ITOPS-63109 | Code quality stage |
-| ITOPS-63110 | Build components stage |
-| ITOPS-63111 | Build Storybook stage |
-| ITOPS-72071 | CI quality gate (blocked by 63109/63110/63111) |
-| ITOPS-72203 | Provision the internal registry |
-| ITOPS-72204 | Jenkins job publishing to the internal registry |
+| Ticket      | Scope                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| ITOPS-63109 | Code quality stage                                                                        |
+| ITOPS-63110 | Build components stage                                                                    |
+| ITOPS-63111 | Build Storybook stage                                                                     |
+| ITOPS-72071 | CI quality gate (blocked by 63109/63110/63111)                                            |
+| ITOPS-72203 | Provision the internal registry                                                           |
+| ITOPS-72204 | Jenkins job publishing to the internal registry                                           |
 | ITOPS-72205 | Jenkins job publishing to npm; whether it is still planned or deferred is To be confirmed |
-| ITOPS-63144 | Manual release and Storybook deploy job; relation to 72205 To be confirmed |
+| ITOPS-63144 | Manual release and Storybook deploy job; relation to 72205 To be confirmed                |
 
 Release trigger and cadence, git credentials for the job, push rights to `release/current` and consumer access are To be confirmed.
 
@@ -236,13 +243,13 @@ The authoritative procedure is `RELEASING.md` at the repository root; the Conflu
 
 ## 12.2 Commands
 
-| Command | Effect |
-| --- | --- |
-| `pnpm release:styles` | Releases style-guidelines |
-| `pnpm release:wc-stack` | Web components, then React and Vue |
-| `pnpm release:all` | All four packages in dependency order (style-guidelines, web-components, react, vue), one at a time |
-| `pnpm release:publish` | `release:all`, then `deploy:docs` |
-| `pnpm release:wc`, `release:react`, `release:vue` | One package each |
+| Command                                           | Effect                                                                                              |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `pnpm release:styles`                             | Releases style-guidelines                                                                           |
+| `pnpm release:wc-stack`                           | Web components, then React and Vue                                                                  |
+| `pnpm release:all`                                | All four packages in dependency order (style-guidelines, web-components, react, vue), one at a time |
+| `pnpm release:publish`                            | `release:all`, then `deploy:docs`                                                                   |
+| `pnpm release:wc`, `release:react`, `release:vue` | One package each                                                                                    |
 
 React and Vue run `pnpm -w run validate:pack:<framework>` as a `prerelease` hook, so a wrapper is only published after its real packed tarball installs and builds in the test app. Publishing uses `pnpm publish` for the wrappers (`publishPackageManager: pnpm`).
 
@@ -262,31 +269,31 @@ React and Vue run `pnpm -w run validate:pack:<framework>` as a `prerelease` hook
 
 There is no central log platform.
 
-| What | Where |
-| --- | --- |
-| Local and manual builds | Terminal output of Turborepo (`pnpm build`); Turbo cache in `.turbo/` |
-| Test and coverage output | `packages/boreal-web-components/coverage/` and jest-junit report |
-| Release output | release-it terminal output on the maintainer machine; the git tags and release commits on `release/current` |
-| Published versions | `npm view @pxglobal/boreal-web-components version dist-tags` |
-| Storybook / visual review | Chromatic build log (link printed by `pnpm deploy:docs`) |
-| Jenkins | WIP; no job exists yet. Log location To be confirmed |
+| What                      | Where                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Local and manual builds   | Terminal output of Turborepo (`pnpm build`); Turbo cache in `.turbo/`                                       |
+| Test and coverage output  | `packages/boreal-web-components/coverage/` and jest-junit report                                            |
+| Release output            | release-it terminal output on the maintainer machine; the git tags and release commits on `release/current` |
+| Published versions        | `npm view @pxglobal/boreal-web-components version dist-tags`                                                |
+| Storybook / visual review | Chromatic build log (link printed by `pnpm deploy:docs`)                                                    |
+| Jenkins                   | WIP; no job exists yet. Log location To be confirmed                                                        |
 
 # 14. Testing & quality gates
 
-| Area | Tooling and gate |
-| --- | --- |
-| Web components unit tests | Stencil + Jest (`stencil test --spec`), run by the pre-commit hook |
-| Coverage | Threshold in `testing.config.ts`: 80% (branches, functions, lines, statements) |
-| Mutation testing | Stryker, run locally per component (configs are never pushed); target >= 90% mutation score |
-| Style-guidelines tests | vitest (`vitest run`, `test:coverage`) |
-| `scripts-boreal` tests | vitest |
-| React / Vue wrappers | No tests (`echo 'No tests configured'`) |
-| Accessibility checks | Storybook `@storybook/addon-a11y` |
-| Component tests in Storybook | `@storybook/addon-vitest` (Playwright browser mode) |
-| Visual regression | Chromatic (`@chromatic-com/storybook`, `chromatic --exit-zero-on-changes`) at manual deploy; PR-level Chromatic is a later phase (ITOPS-63136) |
-| Pack validation | `pnpm validate:pack:*` installs the packed wrappers into the test apps |
-| Lint / format | ESLint 9, Prettier, run via Turbo |
-| Commit rules | commitlint via husky |
+| Area                         | Tooling and gate                                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web components unit tests    | Stencil + Jest (`stencil test --spec`), run by the pre-commit hook                                                                             |
+| Coverage                     | Threshold in `testing.config.ts`: 80% (branches, functions, lines, statements)                                                                 |
+| Mutation testing             | Stryker, run locally per component (configs are never pushed); target >= 90% mutation score                                                    |
+| Style-guidelines tests       | vitest (`vitest run`, `test:coverage`)                                                                                                         |
+| `scripts-boreal` tests       | vitest                                                                                                                                         |
+| React / Vue wrappers         | No tests (`echo 'No tests configured'`)                                                                                                        |
+| Accessibility checks         | Storybook `@storybook/addon-a11y`                                                                                                              |
+| Component tests in Storybook | `@storybook/addon-vitest` (Playwright browser mode)                                                                                            |
+| Visual regression            | Chromatic (`@chromatic-com/storybook`, `chromatic --exit-zero-on-changes`) at manual deploy; PR-level Chromatic is a later phase (ITOPS-63136) |
+| Pack validation              | `pnpm validate:pack:*` installs the packed wrappers into the test apps                                                                         |
+| Lint / format                | ESLint 9, Prettier, run via Turbo                                                                                                              |
+| Commit rules                 | commitlint via husky                                                                                                                           |
 
 # 15. Accessibility
 
@@ -304,22 +311,22 @@ Formal WCAG conformance target (for example WCAG 2.1 or 2.2 AA) for the library:
 
 Declared ranges in `package.json`; the file is the source of truth and these values can drift between reviews.
 
-| Dependency | Version range | Used in |
-| --- | --- | --- |
-| `@stencil/core` | ^4.27.1 | web-components |
-| `@stencil/sass` | ^3.2.3 | web-components |
-| `@stencil/react-output-target` | ^1.3.2 (web-components), ^1.2.0 (react) | wrappers |
-| `@stencil/vue-output-target` | ^0.11.8 (web-components), ^0.13.1 (vue) | wrappers |
-| `typescript` | ^5.9.3 (style-guidelines ^5.8.2) | all |
-| `date-fns`, `@date-fns/tz` | ^4.4.0, ^1.5.0 | web-components runtime |
-| `@floating-ui/dom`, `@tanstack/virtual-core` | ^1.7.5, ^3.17.1 | web-components runtime |
-| `dompurify`, `@braintree/sanitize-url` | ^3.4.8, ^7.1.2 | web-components runtime |
-| `jest` | ^29.7.0 | tests |
-| `vitest` | ^4.0 | style-guidelines, storybook, scripts |
-| `storybook` | ^10.1.11 | docs |
-| `turbo` | ^2.8.7 | root |
-| `release-it` | ^21.1.0 | root |
-| `husky`, `commitlint` | ^9.1.7, ^21.2.3 | root |
+| Dependency                                   | Version range                           | Used in                              |
+| -------------------------------------------- | --------------------------------------- | ------------------------------------ |
+| `@stencil/core`                              | ^4.27.1                                 | web-components                       |
+| `@stencil/sass`                              | ^3.2.3                                  | web-components                       |
+| `@stencil/react-output-target`               | ^1.3.2 (web-components), ^1.2.0 (react) | wrappers                             |
+| `@stencil/vue-output-target`                 | ^0.11.8 (web-components), ^0.13.1 (vue) | wrappers                             |
+| `typescript`                                 | ^5.9.3 (style-guidelines ^5.8.2)        | all                                  |
+| `date-fns`, `@date-fns/tz`                   | ^4.4.0, ^1.5.0                          | web-components runtime               |
+| `@floating-ui/dom`, `@tanstack/virtual-core` | ^1.7.5, ^3.17.1                         | web-components runtime               |
+| `dompurify`, `@braintree/sanitize-url`       | ^3.4.8, ^7.1.2                          | web-components runtime               |
+| `jest`                                       | ^29.7.0                                 | tests                                |
+| `vitest`                                     | ^4.0                                    | style-guidelines, storybook, scripts |
+| `storybook`                                  | ^10.1.11                                | docs                                 |
+| `turbo`                                      | ^2.8.7                                  | root                                 |
+| `release-it`                                 | ^21.1.0                                 | root                                 |
+| `husky`, `commitlint`                        | ^9.1.7, ^21.2.3                         | root                                 |
 
 ## 16.2 pnpm safeguards
 
@@ -344,27 +351,27 @@ Summary of `CONTRIBUTING.md` (the repository file wins):
 
 `RELEASING.md` has the release failure table.
 
-| Symptom | Cause and fix |
-| --- | --- |
-| `pnpm dev` / `dev:components` hangs with no output (headless, CI or Windows cold daemon) | Turbo `persistent: true` implies an interactive PTY. Fixed with `"interactive": false` on the `dev` task; `dev:docs` and `dev:components` bypass Turbo |
-| CSS/SCSS missing at `dist/css` or `dist/scss` | Stencil places `copy` targets under `dist/<namespace>/`; `scripts/postbuild.js` promotes them to `dist/` |
-| npm `E403`, `E404` on publish, `SELF_SIGNED_CERT_IN_CHAIN` on a teammate machine | Account needs real 2FA or a `@pxglobal`-scoped bypass token installed in `~/.npmrc`; behind the company proxy set `NODE_EXTRA_CA_CERTS` to the company root certificate; never disable TLS verification |
-| Version not installable after release-it finishes | npm holds the publish for approval; release-it does not wait; approve in dependency order, deprecate `0.0.0-stage` placeholders |
-| Breaking change not detected after squash | The `!` must be in the PR title; a footer inside Bitbucket's indented squash list is ignored. Wrap `@handles` in backticks in titles |
-| Changelog compare link returns HTTP 400 | Bitbucket Server rejects encoded slashes; compare links are off and the heading is linked by script |
-| Chromatic deploy cannot find the token | pnpm does not load `.env`; the script uses `dotenv --` |
-| Package published but push failed | See the failure table in `RELEASING.md` |
-| New worktree fails to build web-components | Style-guidelines `dist` is missing; build it first |
+| Symptom                                                                                  | Cause and fix                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev` / `dev:components` hangs with no output (headless, CI or Windows cold daemon) | Turbo `persistent: true` implies an interactive PTY. Fixed with `"interactive": false` on the `dev` task; `dev:docs` and `dev:components` bypass Turbo                                                  |
+| CSS/SCSS missing at `dist/css` or `dist/scss`                                            | Stencil places `copy` targets under `dist/<namespace>/`; `scripts/postbuild.js` promotes them to `dist/`                                                                                                |
+| npm `E403`, `E404` on publish, `SELF_SIGNED_CERT_IN_CHAIN` on a teammate machine         | Account needs real 2FA or a `@pxglobal`-scoped bypass token installed in `~/.npmrc`; behind the company proxy set `NODE_EXTRA_CA_CERTS` to the company root certificate; never disable TLS verification |
+| Version not installable after release-it finishes                                        | npm holds the publish for approval; release-it does not wait; approve in dependency order, deprecate `0.0.0-stage` placeholders                                                                         |
+| Breaking change not detected after squash                                                | The `!` must be in the PR title; a footer inside Bitbucket's indented squash list is ignored. Wrap `@handles` in backticks in titles                                                                    |
+| Changelog compare link returns HTTP 400                                                  | Bitbucket Server rejects encoded slashes; compare links are off and the heading is linked by script                                                                                                     |
+| Chromatic deploy cannot find the token                                                   | pnpm does not load `.env`; the script uses `dotenv --`                                                                                                                                                  |
+| Package published but push failed                                                        | See the failure table in `RELEASING.md`                                                                                                                                                                 |
+| New worktree fails to build web-components                                               | Style-guidelines `dist` is missing; build it first                                                                                                                                                      |
 
 # 19. Support & ownership
 
 There is no official support channel yet. A shared alias or Teams channel is pending: **To be defined**. Until then the Storybook welcome page tells users to contact their Boreal component library point of contact.
 
-| Role | Person |
-| --- | --- |
-| Core team member | `<Name> - <Role>` |
-| Core team member | `<Name> - <Role>` |
-| Team lead / escalation | `<Name> - Team Lead` |
+| Role                                                                | Person                     |
+| ------------------------------------------------------------------- | -------------------------- |
+| Core team member                                                    | `<Name> - <Role>`          |
+| Core team member                                                    | `<Name> - <Role>`          |
+| Team lead / escalation                                              | `<Name> - Team Lead`       |
 | Backup publisher (single named `@pxglobal` npm org member with 2FA) | `<Name>` - To be confirmed |
 
 - **Intake:** Jira project EOA (ticket per bug or request); the `CONTRIBUTING.md` "Report a Bug" section describes the format.
@@ -375,13 +382,13 @@ There is no official support channel yet. A shared alias or Teams channel is pen
 
 # 20. Related documentation & references
 
-| Document | Location |
-| --- | --- |
-| Release procedure | `RELEASING.md` |
-| Contribution rules | `CONTRIBUTING.md` |
-| Setup, prerequisites, scripts | `README.md` |
-| Pack validation tool | `scripts-boreal/README.md` |
-| Publishing & deployment guide | Confluence SENG 1692827661 |
-| CI/CD Pipeline Strategy | Confluence SENG 1303773297 |
-| ADR-0011 release tooling | Confluence SENG 2097872958 |
+| Document                      | Location                                                             |
+| ----------------------------- | -------------------------------------------------------------------- |
+| Release procedure             | `RELEASING.md`                                                       |
+| Contribution rules            | `CONTRIBUTING.md`                                                    |
+| Setup, prerequisites, scripts | `README.md`                                                          |
+| Pack validation tool          | `scripts-boreal/README.md`                                           |
+| Publishing & deployment guide | Confluence SENG 1692827661                                           |
+| CI/CD Pipeline Strategy       | Confluence SENG 1303773297                                           |
+| ADR-0011 release tooling      | Confluence SENG 2097872958                                           |
 | Dependency maintenance policy | ADR "Dependency maintenance policy"; Confluence link To be confirmed |

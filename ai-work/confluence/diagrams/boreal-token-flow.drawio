@@ -1,1 +1,102 @@
-<mxfile host="app.diagrams.net"><diagram name="Boreal token flow" id="Boreal token flow"><mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="800"><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="t" value="Design token flow (packages/boreal-style-guidelines)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="20" y="10" width="900" height="30" as="geometry"/></mxCell><mxCell id="p" value="src/tokens/primitives/primitives.json" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="20" y="270" width="230" height="60" as="geometry"/></mxCell><mxCell id="th" value="src/tokens/theme/*.json&lt;br&gt;proximus, engage, protect, connect" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="20" y="370" width="230" height="70" as="geometry"/></mxCell><mxCell id="us" value="src/tokens/usage/colors-themes.json" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="20" y="480" width="230" height="60" as="geometry"/></mxCell><mxCell id="gen" value="pnpm generate&lt;br&gt;tsx src/generators/generate.ts&lt;br&gt;(css / scss / global generators)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="350" y="340" width="260" height="100" as="geometry"/></mxCell><mxCell id="gs" value="src/styles global SCSS (compiled)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="350" y="500" width="260" height="60" as="geometry"/></mxCell><mxCell id="val" value="pnpm validate&lt;br&gt;tsx src/generators/validate.ts" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="700" y="340" width="220" height="100" as="geometry"/></mxCell><mxCell id="css" value="dist/css&lt;br&gt;boreal.css, global.css, theme-*.css" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="1010" y="260" width="260" height="70" as="geometry"/></mxCell><mxCell id="scss" value="dist/scss&lt;br&gt;variables + maps" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="1010" y="360" width="260" height="70" as="geometry"/></mxCell><mxCell id="stn" value="dist/stencil&lt;br&gt;_index.scss (injected into Stencil SCSS)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="1010" y="460" width="260" height="70" as="geometry"/></mxCell><mxCell id="wc" value="Web components (Stencil)&lt;br&gt;use var(--boreal-*)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1360" y="360" width="220" height="70" as="geometry"/></mxCell><mxCell id="cons" value="Consumers&lt;br&gt;boreal.css + data-theme attribute" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1360" y="490" width="220" height="70" as="geometry"/></mxCell><mxCell id="e3" value="read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="p" target="gen"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e4" value="read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="th" target="gen"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e5" value="read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="us" target="gen"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e6" value="compiled into global CSS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="gs" target="gen"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e7" value="pnpm build = clean, generate, validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="gen" target="val"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e8" value="validated" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="val" target="css"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="val" target="scss"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="val" target="stn"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e11" value="injectGlobalPaths" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="stn" target="wc"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e12" value="copied to dist/css by Stencil copy + postbuild" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="css" target="wc"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="e13" value="@pxglobal/boreal-style-guidelines (main)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="css" target="cons"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="fig" value="Figma design file&lt;br&gt;native Export feature" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="20" y="50" width="230" height="60" as="geometry"/></mxCell><mxCell id="man" value="Manual adaptation of the exported JSON&lt;br&gt;to the format the generators expect" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="20" y="150" width="230" height="70" as="geometry"/></mxCell><mxCell id="ef1" value="exports JSON" style="endArrow=classic;html=1;fontSize=11;" edge="1" parent="1" source="fig" target="man"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="ef2" value="commits token JSON files" style="endArrow=classic;html=1;fontSize=11;" edge="1" parent="1" source="man" target="p"><mxGeometry relative="1" as="geometry"/></mxCell></root></mxGraphModel></diagram></mxfile>
+<mxfile host="65bd71144e">
+    <diagram name="Boreal token flow" id="Boreal token flow">
+        <mxGraphModel dx="1338" dy="1288" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" value="Design token flow (packages/boreal-style-guidelines)" vertex="1">
+                    <mxGeometry height="30" width="900" x="20" y="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="p" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="src/tokens/primitives/primitives.json" vertex="1">
+                    <mxGeometry height="60" width="230" x="20" y="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="th" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="src/tokens/theme/*.json&lt;br&gt;proximus, engage, protect, connect" vertex="1">
+                    <mxGeometry height="70" width="230" x="20" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="us" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="src/tokens/usage/colors-themes.json" vertex="1">
+                    <mxGeometry height="60" width="230" x="20" y="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="gen" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="pnpm generate&lt;br&gt;tsx src/generators/generate.ts&lt;br&gt;(css / scss / global generators)" vertex="1">
+                    <mxGeometry height="100" width="260" x="350" y="354" as="geometry"/>
+                </mxCell>
+                <mxCell id="gs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="src/styles global SCSS (compiled)" vertex="1">
+                    <mxGeometry height="60" width="260" x="350" y="640" as="geometry"/>
+                </mxCell>
+                <mxCell id="val" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="pnpm validate&lt;br&gt;tsx src/generators/validate.ts" vertex="1">
+                    <mxGeometry height="100" width="220" x="868" y="354" as="geometry"/>
+                </mxCell>
+                <mxCell id="css" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" value="dist/css&lt;br&gt;boreal.css, global.css, theme-*.css" vertex="1">
+                    <mxGeometry height="70" width="260" x="1208" y="269" as="geometry"/>
+                </mxCell>
+                <mxCell id="scss" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" value="dist/scss&lt;br&gt;variables + maps" vertex="1">
+                    <mxGeometry height="70" width="260" x="1208" y="369" as="geometry"/>
+                </mxCell>
+                <mxCell id="stn" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" value="dist/stencil&lt;br&gt;_index.scss (injected into Stencil SCSS)" vertex="1">
+                    <mxGeometry height="70" width="260" x="1208" y="469" as="geometry"/>
+                </mxCell>
+                <mxCell id="wc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Web components (Stencil)&lt;br&gt;use var(--boreal-*)" vertex="1">
+                    <mxGeometry height="70" width="220" x="1655" y="369" as="geometry"/>
+                </mxCell>
+                <mxCell id="cons" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Consumers&lt;br&gt;boreal.css + data-theme attribute" vertex="1">
+                    <mxGeometry height="70" width="220" x="1655" y="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="p" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="gen" value="read">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="th" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="gen" value="read">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="us" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="gen" value="read">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="gs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="gen" value="compiled into global CSS">
+                    <mxGeometry relative="1" x="-0.3548" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="gen" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="val" value="pnpm build = clean, generate, validate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="val" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="css" value="validated">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="val" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;" target="scss" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="val" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="stn" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="stn" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="wc" value="injectGlobalPaths">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1668" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="css" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="wc" value="copied to dist/css by Stencil copy + postbuild">
+                    <mxGeometry relative="1" x="-0.2171" as="geometry">
+                        <mxPoint x="1668" y="360" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="css" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;fontSize=11;labelBackgroundColor=#ffffff;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="cons" value="@pxglobal/boreal-style-guidelines (main)">
+                    <mxGeometry relative="1" x="0.3781" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1338" y="165"/>
+                        </Array>
+                        <mxPoint x="1668" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="fig" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Figma design file&lt;br&gt;native Export feature" vertex="1">
+                    <mxGeometry height="60" width="230" x="20" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="man" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Manual adaptation of the exported JSON&lt;br&gt;to the format the generators expect" vertex="1">
+                    <mxGeometry height="70" width="230" x="20" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef1" edge="1" parent="1" source="fig" style="endArrow=classic;html=1;fontSize=11;" target="man" value="exports JSON">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef2" edge="1" parent="1" source="man" style="endArrow=classic;html=1;fontSize=11;" target="p" value="commits token JSON files">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

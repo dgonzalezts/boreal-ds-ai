@@ -1,6 +1,4 @@
-Paste notes: paste into Jira (Markdown mode) as the parent ticket; create each sub-task from the "Sub-tasks" section. Ticket key not assigned yet.
-
-# Dependency maintenance baseline
+# EOA-19635 - Dependency maintenance baseline
 
 ## Summary
 
@@ -11,7 +9,7 @@ Establish a dependency maintenance baseline for Boreal DS: clear the current bac
 Boreal DS has no automation for dependency updates (no Renovate, no Dependabot, no `.github/workflows`). Snapshot 2026-10-16:
 
 - `pnpm outdated -r`: 83 entries (30 major, 42 minor, 11 patch).
-- Majors include typescript, vite, vitest and @vitest/*, jest/jest-cli/@types/jest, eslint/@eslint/js, puppeteer, chromatic, @chromatic-com/storybook, jsdom, lint-staged, chalk, execa, npm-run-all2.
+- Majors include typescript, vite, vitest and @vitest/\*, jest/jest-cli/@types/jest, eslint/@eslint/js, puppeteer, chromatic, @chromatic-com/storybook, jsdom, lint-staged, chalk, execa, npm-run-all2.
 - `pnpm audit --prod`: 27 vulnerabilities (3 low, 7 moderate, 17 high), for example dompurify under web-components.
 - Full `pnpm audit`: 155 (14 low, 50 moderate, 82 high, 9 critical), including dev tooling.
 - caniuse-lite 1.0.30001769 is 9 months old; every web-components build prints a Browserslist warning and the repo has no browserslist config.
@@ -46,6 +44,7 @@ Bring the repository to a known, maintained state and put a repeatable monthly p
 - Include the `dompurify` finding under web-components.
 
 Acceptance criteria:
+
 - High and critical findings are fixed, overridden, or documented as accepted with a reason.
 - Moderate and low findings have a recorded decision.
 - `pnpm audit --prod` is re-run and the result is attached.
@@ -56,6 +55,7 @@ Acceptance criteria:
 - Decide whether a browserslist config is needed (To be confirmed).
 
 Acceptance criteria:
+
 - The web-components build no longer prints the Browserslist warning.
 - Lockfile change is committed with the build green.
 
@@ -64,6 +64,7 @@ Acceptance criteria:
 - One PR covering the 42 minor and 11 patch entries from `pnpm outdated -r`.
 
 Acceptance criteria:
+
 - Lint, unit tests (at least 80% coverage), `pnpm validate:all` and Storybook build pass.
 - Product-critical packages (Stencil, Storybook, TypeScript, release-it) have a reviewed changelog and `validate:pack` passes.
 
@@ -71,7 +72,7 @@ Acceptance criteria:
 
 One sub-task per family; each produces a plan and a follow-up ticket, not the upgrade itself.
 
-- (d1) Test tooling: vitest, @vitest/*, jest, jest-cli, @types/jest, jsdom, puppeteer.
+- (d1) Test tooling: vitest, @vitest/\*, jest, jest-cli, @types/jest, jsdom, puppeteer.
 - (d2) Lint: eslint, @eslint/js.
 - (d3) Vite / Storybook: vite.
 - (d4) TypeScript: typescript.
@@ -79,6 +80,7 @@ One sub-task per family; each produces a plan and a follow-up ticket, not the up
 - (d6) Utilities: lint-staged, chalk, execa, npm-run-all2.
 
 Acceptance criteria (each):
+
 - Exact current and target versions are listed, with breaking changes and compatibility notes.
 - An order, effort estimate and gates are defined.
 - A ticket exists for the upgrade.
@@ -88,6 +90,7 @@ Note: the families cover the majors named in the snapshot; the full list of 30 m
 ### (e) Publish the policy
 
 Acceptance criteria:
+
 - ADR 0019 is reviewed and its status updated.
 - The Confluence page is created from `ai-work/confluence/adr-dependency-maintenance-policy.md` and linked.
 - The recurring monthly ticket is created.
@@ -98,6 +101,7 @@ Acceptance criteria:
 - Compare with Mend for Bitbucket Data Center.
 
 Acceptance criteria:
+
 - DevOps has answered on bot account, token and Jenkins hosting.
 - A recommendation is recorded: proceed, defer or reject.
 
