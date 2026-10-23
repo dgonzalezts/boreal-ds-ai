@@ -1,12 +1,12 @@
-# BUG-001: `bds-search-bar`/`bds-select` suggestion-list "virtualization" only repositions DOM nodes — it does not reduce mounted component count
+# BUG-001: `bds-search-bar` suggestion-list "virtualization" only repositions DOM nodes — it does not reduce mounted component count
 
 **Severity:** Medium
 **Priority:** P2
 **Type:** Performance / Correctness
-**Status:** Open
-**Component:** `bds-search-bar` (`mode="list"`), `VirtualScrollController` (shared utility also usable by `bds-select`'s combobox list)
+**Status:** In progress — being fixed by [`EOA-19597`](../../plans/EOA-19597-bds-search-bar-virtual-suggestions.md) (shared `VirtualWindow` + `items` prop; `VirtualScrollController` removed)
+**Component:** `bds-search-bar` (`mode="list"`), `VirtualScrollController` (its only consumer is `bds-search-bar`; `bds-select` does not use it)
 **Discovered during:** Team feedback meeting reviewing `bds-table` large-dataset handling (2026-07-06); traced back to the `LargeSuggestionsList` Storybook story
-**Affects:** Any consumer of `bds-search-bar` (`mode="list"`) or other future consumers of `VirtualScrollController` that render a genuinely large item list (hundreds to thousands of items), plus the Storybook docs/Chromatic build pipeline for the `LargeSuggestionsList` story specifically
+**Affects:** Any consumer of `bds-search-bar` (`mode="list"`) that renders a genuinely large item list (hundreds to thousands of items), plus the Storybook docs/Chromatic build pipeline for the `LargeSuggestionsList` story specifically
 
 ---
 
@@ -68,7 +68,13 @@ Follow-up research (2026-07-06, while scoping whether a shared virtualization ut
 
 - [`TanStack/virtual#823`](https://github.com/TanStack/virtual/issues/823) — *"Redundant repaints, because of ResizeObserver. It send events when when list got hiden with css display property"* — the `ResizeObserver` fires with a size-0 entry for hidden items, which can reset measurements and cause layout shifts when an item is later re-shown.
 
-This means the risk here is not purely "slower than it should be" — there is a plausible **correctness** issue (redundant repaints / layout shifts on items transitioning between hidden and visible) inherited directly from a documented upstream bug class, on top of the DOM-count issue in Finding 1. This does not require the larger rearchitecture discussed in Finding 1's Option 2 to investigate or mitigate — it's a narrower, independent question of whether `VirtualScrollController`'s current `display:none` + `ResizeObserver` combination actually triggers this specific upstream bug in practice, which has not yet been reproduced/profiled in this codebase (see Known Gaps).
+**Verdict (2026-10-21, EOA-19597): not applicable.** Checked against the source and the installed `@tanstack/virtual-core` 3.17.1:
+
+- `VirtualScrollController` never calls `measureElement`. TanStack registers its per-item `ResizeObserver` only through `measureElement` (`virtual-core/src/index.ts`, `measureElement` / `resizeItem`), so hidden (`display: none`) items are never observed and cannot produce the size-0 entries described in `TanStack/virtual#823`.
+- The controller observes only the scroll element's rect (`observeElementRect` / `observeElementOffset`), which is not affected by hiding children.
+- The original reading above was a plausible risk based on an upstream issue match, not a local defect; it is withdrawn.
+
+Remaining controller hazards, now moot because the controller is removed in EOA-19597 Task 13: a fixed 28 px size estimate (`estimateSize` supplied by `bds-search-bar`) and an O(N) `refresh()` that walks every item on each change.
 
 ---
 
@@ -76,29 +82,32 @@ This means the risk here is not purely "slower than it should be" — there is a
 
 Two independent angles, not mutually exclusive:
 
-1. **Fix the story's claim, not necessarily the mechanism** (lowest-effort): if 1,000 real mounted items is an acceptable cost for this specific use case (a doc-only demonstration story), narrow the doc comment's wording so it no longer implies DOM-count reduction — e.g. "only visible items are positioned; all items remain mounted" — and consider whether 1,000 items is even a representative/necessary story size, or whether a smaller count (e.g. 100) would demonstrate the scroll-smoothness benefit without the instantiation cost.
-2. **Fix the mechanism** (higher-effort, needed if real consumers pass genuinely large lists): rework `VirtualScrollController` (or a new sibling utility) to drive conditional creation from a data array rather than repositioning pre-existing light-DOM children — i.e., let `@tanstack/virtual-core`'s `getVirtualItems()` determine which *data* entries are rendered as `bds-list-menu-item` elements at all, recycling a small pool of DOM nodes as the window scrolls, matching the approach independently chosen for `bds-table`'s row virtualization. This is a breaking change to the controller's current "manage existing children" contract and would need its own design pass — it also affects `bds-select`'s combobox list, the only other real (non-story) consumer of this pattern today.
+> **Chosen approach (2026-10-21, EOA-19597):** option 2. A shared `VirtualWindow` utility (extracted from `bds-table`'s TanStack wiring) drives a new data-driven `items` prop on `bds-search-bar`, which mounts only the visible `bds-list-menu-item`s with spacer elements. `VirtualScrollController` is deleted; the slotted `list` path remains for small lists, unvirtualized. `bds-select`, `bds-list-menu` and `bds-list-menu-item` are not modified. See the plan for details.
 
-Recommend option 1 immediately (cheap, removes a misleading claim) and treating option 2 as a separate, scoped follow-up ticket if any real consumer is expected to pass lists in the hundreds-to-thousands range — not clear that one currently exists in this codebase. **Update (2026-07-06):** this follow-up ticket has been explicitly deferred as a future spike, not started now — see "Related" below.
+1. **Fix the story's claim, not necessarily the mechanism** (lowest-effort): if 1,000 real mounted items is an acceptable cost for this specific use case (a doc-only demonstration story), narrow the doc comment's wording so it no longer implies DOM-count reduction — e.g. "only visible items are positioned; all items remain mounted" — and consider whether 1,000 items is even a representative/necessary story size, or whether a smaller count (e.g. 100) would demonstrate the scroll-smoothness benefit without the instantiation cost.
+2. **Fix the mechanism** (higher-effort, needed if real consumers pass genuinely large lists): rework `VirtualScrollController` (or a new sibling utility) to drive conditional creation from a data array rather than repositioning pre-existing light-DOM children — i.e., let `@tanstack/virtual-core`'s `getVirtualItems()` determine which *data* entries are rendered as `bds-list-menu-item` elements at all, recycling a small pool of DOM nodes as the window scrolls, matching the approach independently chosen for `bds-table`'s row virtualization. This is a breaking change to the controller's current "manage existing children" contract. `bds-select` is not affected: it does not use `VirtualScrollController`, and `bds-search-bar` is the controller's only consumer.
+
+**Update (2026-10-21):** the earlier deferral of option 2 is superseded; option 2 is implemented by EOA-19597 (see "Chosen approach" above).
 
 ## Suggested Fix Direction (Finding 2 — correctness risk)
 
-Reproduce first, fix only if confirmed: instrument `VirtualScrollController.positionItem()`/`resetItemStyles()` (or attach a temporary `ResizeObserver` logging wrapper) against the `LargeSuggestionsList` story to check whether hidden (`display:none`) items actually produce the redundant-repaint/size-0 `ResizeObserver` callbacks described in `TanStack/virtual#823`. If confirmed, the fix is likely narrow (e.g. explicitly unobserving elements before setting `display:none`, or wrapping the callback per the workaround pattern other TanStack Virtual users applied in `TanStack/virtual#531`) rather than a full rearchitecture.
+No fix needed — Finding 2 was analysed and is not applicable (see verdict above). Original reproduction proposal, kept for history: instrument `VirtualScrollController.positionItem()`/`resetItemStyles()` (or attach a temporary `ResizeObserver` logging wrapper) against the `LargeSuggestionsList` story to check whether hidden (`display:none`) items actually produce the redundant-repaint/size-0 `ResizeObserver` callbacks described in `TanStack/virtual#823`. If confirmed, the fix is likely narrow (e.g. explicitly unobserving elements before setting `display:none`, or wrapping the callback per the workaround pattern other TanStack Virtual users applied in `TanStack/virtual#531`) rather than a full rearchitecture.
 
 ---
 
 ## Known Gaps (need follow-up before this can be closed)
 
-- The exact Storybook/Chromatic deploy timeout (which step, how long, what threshold) has not been captured directly — this report relies on the team's verbal account from a feedback meeting, not a reproduced CI failure log. Recommend attaching the actual failed build log/link before prioritizing a fix.
-- No profiling data (Performance panel trace, Lighthouse, or `performance.now()` instrumentation) has been captured yet to quantify "slower than expected" — the reproduction steps above describe where to look, but exact timing numbers are not yet in this report.
-- Not yet confirmed whether any real (non-Storybook) product consumer of `bds-search-bar`/`bds-select` currently passes a list in the hundreds-to-thousands range — if none does today, this may be lower priority than P2 suggests until a real use case appears.
-- Finding 2 (correctness risk) has not been reproduced/profiled in this codebase — it is currently a plausible risk based on an upstream issue match, not a confirmed local defect.
+- The exact Storybook/Chromatic deploy timeout (which step, how long, what threshold) has not been captured directly — this report relies on the team's verbal account from a feedback meeting, not a reproduced CI failure log. Recommend attaching the actual failed build log/link before prioritizing a fix. **Open — to be closed in EOA-19597 Task 20** (Storybook build timing before/after, or the failed-build log).
+- No profiling data (Performance panel trace, Lighthouse, or `performance.now()` instrumentation) has been captured yet to quantify "slower than expected" — the reproduction steps above describe where to look, but exact timing numbers are not yet in this report. **Open — to be closed in EOA-19597 Task 17** (before/after mounted item count and initial render time for `LargeSuggestionsList`).
+- Not yet confirmed whether any real (non-Storybook) product consumer of `bds-search-bar` currently passes a list in the hundreds-to-thousands range. EOA-19597 assumes there are no real consumers today, so no deprecation path is provided.
+- ~~Finding 2 (correctness risk) has not been reproduced/profiled~~ — **Closed 2026-10-21:** analysed against source; not applicable (see Finding 2 verdict).
 
 ---
 
 ## Related
 
 - `bds-table` row-virtualization design decision (ticket `EOA-14935`, plan `ai-work/plans/EOA-14935-bds-table-v2.md`, Task 22) — independently identified the same limitation in `VirtualScrollController` and chose not to reuse it for that reason.
-- Shared-virtualization-utility research (2026-07-06): investigated whether one reusable utility could serve both `bds-search-bar` and `bds-table` on top of `@tanstack/virtual-core`. Conclusion: technically possible only via a Vaadin-style windowed-creation model (Vaadin's `@vaadin/component-base/virtualizer.js` shares one class between `vaadin-virtual-list` and `vaadin-grid` via `createElements`/`updateElement` callbacks — built from scratch, no TanStack dependency, cited here as an architectural reference only, not a reusable dependency) — not by generalizing `VirtualScrollController`'s current positional/`MutationObserver` design. **Decision: deferred to a future spike, not scheduled.** Full citations in `/Users/dgonzalez/.claude/plans/let-s-continue-improving-the-calm-balloon.md`.
+- Shared-virtualization-utility research (2026-07-06): investigated whether one reusable utility could serve both `bds-search-bar` and `bds-table` on top of `@tanstack/virtual-core`. Conclusion: technically possible only via a Vaadin-style windowed-creation model (Vaadin's `@vaadin/component-base/virtualizer.js` shares one class between `vaadin-virtual-list` and `vaadin-grid` via `createElements`/`updateElement` callbacks — built from scratch, no TanStack dependency, cited here as an architectural reference only, not a reusable dependency) — not by generalizing `VirtualScrollController`'s current positional/`MutationObserver` design. **Decision (originally deferred, superseded 2026-10-21):** resolved by EOA-19597, which extracts `bds-table`'s TanStack wiring into a shared `VirtualWindow` utility. Full citations in `/Users/dgonzalez/.claude/plans/let-s-continue-improving-the-calm-balloon.md`.
+- Fix plan: `ai-work/plans/EOA-19597-bds-search-bar-virtual-suggestions.md`; ticket brief `ai-work/tickets/EOA-19597-bds-search-bar-virtual-suggestions.md`; research spikes `ai-work/research/2026-10-21-virtual-list-approach-{a-positional,b-shared-util,c-component-owned}.md`.
 - Story source: `apps/boreal-docs/src/stories/forms/bds-search-bar/bds-search-bar.stories.ts:404-442`
 - Utility source: `packages/boreal-web-components/src/utils/dom/virtualScroll/virtual-scroll.ts`

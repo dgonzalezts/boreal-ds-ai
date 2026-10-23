@@ -6,6 +6,7 @@
 | [AI-001-bds-button-accessibility-docs.md](./AI-001-bds-button-accessibility-docs.md) | done | bds-button Accessibility & Documentation Improvements |
 | [AI-002-ai-scaffold-knowledge-consolidation.md](./AI-002-ai-scaffold-knowledge-consolidation.md) | done | AI Scaffold — Knowledge Base Consolidation |
 | [EOA-18749-release-process-remediation-patch-release-it.md](./EOA-18749-release-process-remediation-patch-release-it.md) | in progress | Release Process Remediation (Option A: patch `release-it`) Implementation Plan |
+| [EOA-18870-ci-cd-pipeline-release-automation.md](./EOA-18870-ci-cd-pipeline-release-automation.md) | in progress | CI/CD Pipeline and Release Automation (WIP, split from EOA-18749) |
 | [EOA-18749-release-process-remediation-migrate-changesets.md](./EOA-18749-release-process-remediation-migrate-changesets.md) | pending | Release Process Remediation — Option B: Migrate to `changesets` |
 | [AI-004-utils-file-naming-cleanup.md](./AI-004-utils-file-naming-cleanup.md) | pending | `src/utils/` file naming cleanup — dead duplicate mock removal + kebab-case standardization |
 | [AI-005-opencode-facade.md](./AI-005-opencode-facade.md) | done | OpenCode Facade — add OpenCode as a fourth supported AI tool surface via the existing symlink facade pattern |
@@ -45,3 +46,4 @@
 | [EOA-9609-storybook-chromatic-deployment.md](./EOA-9609-storybook-chromatic-deployment.md) | done | Storybook Deployment — Chromatic |
 | [EOA-9609-storybook-plan.md](./EOA-9609-storybook-plan.md) | done | Storybook Baseline Implementation Plan |
 | [EOA-9609-welcome-page-content-plan.md](./EOA-9609-welcome-page-content-plan.md) | done | Implementation Plan: Welcome Page Content for Boreal DS Storybook |
+| [EOA-19597-bds-search-bar-virtual-suggestions.md](./EOA-19597-bds-search-bar-virtual-suggestions.md) | in progress | bds-search-bar — real windowed suggestions via shared `VirtualWindow`, remove `VirtualScrollController` |
