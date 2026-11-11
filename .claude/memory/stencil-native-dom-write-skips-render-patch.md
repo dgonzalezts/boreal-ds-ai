@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-native-dom-write-skips-render-patch.md

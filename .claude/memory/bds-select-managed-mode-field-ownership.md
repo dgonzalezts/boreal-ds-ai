@@ -1,0 +1,1 @@
+../../.agents/memory/bds-select-managed-mode-field-ownership.md

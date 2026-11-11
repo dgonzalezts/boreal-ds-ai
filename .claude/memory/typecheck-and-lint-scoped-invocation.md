@@ -1,0 +1,1 @@
+../../.agents/memory/typecheck-and-lint-scoped-invocation.md

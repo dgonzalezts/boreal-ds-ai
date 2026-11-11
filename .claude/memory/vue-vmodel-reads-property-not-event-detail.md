@@ -1,0 +1,1 @@
+../../.agents/memory/vue-vmodel-reads-property-not-event-detail.md

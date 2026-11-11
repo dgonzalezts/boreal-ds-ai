@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-parent-componentdidrender-before-lazy-child-render.md

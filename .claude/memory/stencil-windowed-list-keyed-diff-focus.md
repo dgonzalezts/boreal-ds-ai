@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-windowed-list-keyed-diff-focus.md
