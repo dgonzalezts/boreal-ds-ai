@@ -2670,3 +2670,30 @@ Relocated from a top-of-file comment block in `bds-search-bar.methods.spec.ts` �
    Note (found while relocating this entry): the current `waitForSelectWidthTransition` targets `this.el` (the Host) unconditionally, with no `target === undefined` branch visible in `bds-search-bar.tsx` today — this rationale appears to predate the session that consolidated the expand/collapse width transition onto the Host element (see the "moved to Host" notes elsewhere in this file's test descriptions). The `removeEventListener('transitionend', onEnd)` string-literal mutant at line 421/416 still stands. Re-verify this survivor's scope on the next full mutation run rather than trusting this note indefinitely.
 
 See `.agents/skills/testing-knowledge/SKILL.md` "Accepted Mutation Survivors" for the general convention.
+
+---
+
+## Targeted mutant pass — `items`-change scroll guard (EOA-19598, 2026-10-28)
+
+Stryker is not installed on this branch (prior runs installed it inside throwaway worktrees and discarded it), and the last full-file run recorded above scored 36.73% with 193 survivors + 93 no-coverage mutants across the whole component — a pre-existing gap unrelated to this fix. Rather than dirty `package.json`/the lockfile to re-run the full file, the mutants Stryker generates for the new guard were applied one at a time and the `bds-search-bar.items.spec.ts` suite was run against each. Source restored byte-exact after every mutant (`sha256 8752847d…b5e16af39`, `git diff` shows only the guard).
+
+Guard under test (`bds-search-bar.tsx:151`):
+
+```ts
+if (previous?.[0]?.value !== next?.[0]?.value) this.resetItemsScroll();
+```
+
+| Mutant | Result | Killed by |
+| --- | --- | --- |
+| `ConditionalExpression` → `if (true)` (always reset) | killed (2 failed) | both append tests |
+| `ConditionalExpression` → `if (false)` (never reset) | killed (5 failed) | replacement, prepend, unrelated replacement, post-empty assignment, first assignment |
+| `EqualityOperator` `!==` → `===` | killed (7 failed) | all seven reset/append tests |
+| `OptionalChaining` on `previous?.[0]` → `previous[0]` | killed (5 failed) | first items assignment after mount (plus the three mount-retry tests, which share the first-assignment path) |
+| `OptionalChaining` on `previous?.[0]?.value` → `previous?.[0].value` | killed (1 failed) | assignment after an empty list |
+| `OptionalChaining` on `next?.[0]` → `next[0]` | **survived — equivalent** | see below |
+
+### Accepted survivor (equivalent)
+
+**`bds-search-bar.tsx:151`** — the `?.` in `next?.[0]?.value`.
+
+Equivalent: the same watcher returns at `if (!this.isItemsMode) { … return; }` (`bds-search-bar.tsx:146-149`) and `isItemsMode` is `this.items !== undefined && this.mode !== SEARCH_BAR_MODE.SEARCH`, so by the time line 151 runs `next` is always a defined array. `next?.[0]` and `next[0]` therefore cannot diverge, and no test can reach line 151 with `next === undefined` without fixing the early return first. `previous?.[0]` is *not* equivalent — `previous` is genuinely `undefined` on the first assignment and `[]` after an empty list — which is why the two `previous` mutants above are killable.

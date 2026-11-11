@@ -28,7 +28,7 @@
 - Automated PR-title enforcement (no server-side hook access)
 - CI wrapper-generation gate and drift smoke test — deferred until the DevOps meeting (EOA-18870) confirms pipeline access
 - Graduation to `1.0.0` / stable package strategy (EOA-18867)
-- Editorial noise cleanup of historical changelogs (A7 tier 3) — open decision
+- Editorial noise cleanup of historical changelogs beyond the 19 clearest process-only entries (A7 tier 3) — decided 2026-10-09: skip
 - Creating the `@pxglobal` npm org and users (EOA-18864, external)
 
 ## Acceptance Criteria
@@ -56,8 +56,8 @@
 
 ## Open Questions
 
-- A7 tier 3 (editorial noise cleanup of the changelogs): decided 2026-10-09 — remove only the 19 clearest process-only entries (PR-review chatter, `test commitlint`, reverts, playground edits); no full editorial pass. PR pending (follow-up T13).
+- A7 tier 3 (editorial noise cleanup of the changelogs): decided 2026-10-09 — remove only the 19 clearest process-only entries (PR-review chatter, `test commitlint`, reverts, playground edits); no full editorial pass. Merged as `87fa597b` (follow-up T13).
 - Who runs `npm deprecate` on the `@telesign` packages: answered and done 2026-10-09 by the publishing user (owner of the `@pxglobal` org).
 - Single-publisher risk (one owner, publish needs that person's passkey, npm may also hold publishes for approval): to raise with DevOps (EOA-18870), agenda items on a non-personal publish credential and staged publishing.
 - Restrict the repository's merge methods to squash-only in Bitbucket (admin setting, EOA-18870): open; until then CONTRIBUTING.md documents the rule and reviewers check the PR title.
-- Does npm hold every publish of the account for approval, or only the first publish of a new package? Answered by the second release (recorded in `RELEASING.md`).
+- Does npm hold every publish of the account for approval, or only the first publish of a new package? Answered by the second release (2026-10-13): an interactive login is held for a browser approval, while a token with bypass 2FA is not held and stays in a validating state for a few minutes. Recorded in `RELEASING.md` ("Waiting for the publish").

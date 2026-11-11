@@ -42,4 +42,18 @@ Stencil's CLI parses a single `--coverageReporters=text` as a string and forward
 
 Use `pnpm --filter <package>` from the repo root instead of `cd`-ing into the package directory when invoking commands through `with-node.sh`. `--filter` is unaffected by cwd.
 
+**3. The cwd reset also breaks `pnpm exec tsc` and `eslint` for a single package.**
+
+`pnpm --filter <package> exec tsc --noEmit -p tsconfig.json` resolves `tsconfig.json` relative to the wrapper's cwd (repo root), so it type-checks the whole monorepo and reports ~5,000 unrelated errors (`apps/boreal-docs`, `packages/boreal-react`, unresolved `@/utils`). Two working forms:
+
+```bash
+# preferred — pnpm runs the binary inside the package, so -p resolves there
+.agents/scripts/with-node.sh pnpm --filter @pxglobal/boreal-web-components exec tsc --noEmit -p tsconfig.json
+
+# equivalent, and needed when a tool must see the package cwd itself
+.agents/scripts/with-node.sh bash -c 'cd packages/boreal-web-components && ./node_modules/.bin/tsc --noEmit -p tsconfig.json'
+```
+
+The clean baseline for `boreal-web-components` is 5 type errors: 4 in `bds-tooltip/__test__/bds-tooltip-events.spec.ts`, 1 in `bds-dialog/__test__/bds-dialog.behavior.spec.ts`. `eslint` is affected the same way (it lints nothing useful from the root unless given package-relative paths), so prefer `pnpm --filter … exec eslint <package-relative paths>`.
+
 Full command examples and context: `.claude/skills/testing-knowledge/SKILL.md` §"Running the Spec Suite Scoped to One Component".

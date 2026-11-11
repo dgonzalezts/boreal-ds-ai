@@ -93,6 +93,8 @@ Same pack-and-install flow as React. Edit `examples/vue-testapp/src/App.vue` to 
 
 > `validate:pack:*` restores the wrapper and test-app `package.json` files and the root `pnpm-lock.yaml` with `git checkout HEAD --` on exit, which discards uncommitted edits to them. Commit or stash those files first.
 
+> If the run is stopped with Ctrl+C or SIGTERM, it cleans up and exits with a non-zero code (130 or 143). If it is force-killed (`kill -9`) or the terminal is closed, no cleanup runs and the wrapper and test-app `package.json` files still point at `file:` tarballs, with `pnpm-lock.yaml` rewritten. Recover with `git checkout HEAD -- packages/boreal-<react|vue>/package.json examples/<react|vue>-testapp/package.json pnpm-lock.yaml`, then delete any leftover `pxglobal-boreal-*.tgz` files in those folders.
+
 ---
 
 ## Consumer Smoke Test

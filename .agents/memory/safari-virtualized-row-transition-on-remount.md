@@ -12,4 +12,6 @@ Symptom observed on `bds-table`'s virtual-mode row-expand chevron: expanding a r
 
 **Takeaway for any future windowed/virtualized content**: default `transition: none` on elements inside virtualized rows unless smooth animation there is a deliberate requirement, rather than trusting `will-change` to mask a remount-timing quirk.
 
+**Distinct from the move-related blur:** this entry covers rows that are *newly inserted*. A windowed list also has to handle retained nodes being repositioned by Stencil's keyed diff, which blurs the focused element and can scramble order — see `stencil-windowed-list-keyed-diff-focus.md`.
+
 **Source**: EOA-16000 `bds-table` v4 Safari QA session (Task 2 virtual-mode expand/collapse).

@@ -1,7 +1,7 @@
 # ADR 0019 — Dependency maintenance policy
 
 **Date:** 2026-10-16
-**Status:** Proposed
+**Status:** Accepted on 2026-10-30
 
 ---
 
@@ -35,8 +35,8 @@ Adopt a dependency maintenance policy, rolled out in phases.
    - Phase 1: recurring ticket plus manual `pnpm outdated -r` and `pnpm audit --prod`.
    - Phase 2: scheduled Jenkins job, as part of the single multi-stage job, reporting outdated packages and audit results.
    - Phase 3: self-hosted Renovate in Jenkins, subject to DevOps approval.
-7. **Browserslist data.** Run `npx update-browserslist-db@latest` in each window.
-8. **Runtime review.** Review Node and pnpm quarterly. T24 (pnpm 12) and T26 (Node 24) from the EOA-18749 plan are the next ones.
+7. **Browserslist data.** Refresh the data in each window with `pnpm update -r --lockfile-only --depth 9999 caniuse-lite baseline-browser-mapping`; `npx update-browserslist-db@latest` changes nothing under pnpm 11. `minimumReleaseAge` can hold back a release younger than one day. The Browserslist warning printed by the `web-components` build comes from data bundled inside `@stencil/core`, so Stencil updates clear it, not this command.
+8. **Runtime review.** Review Node and pnpm quarterly. The pnpm 12 and Node upgrades (24 or 26) are the next ones.
 9. **Supply-chain safeguards.** Keep `minimumReleaseAge` and `allowBuilds`. Consider `trustPolicy` no-downgrade and `blockExoticSubdeps` as a follow-up, verified against https://pnpm.io/supply-chain-security. To be confirmed.
 
 ## Options Considered
@@ -63,13 +63,15 @@ Adopt a dependency maintenance policy, rolled out in phases.
 
 ## Follow-ups
 
-- Create the "Dependency maintenance baseline" Jira ticket and its sub-tasks (`ai-work/tickets/dependency-maintenance-baseline.md`).
-- Update the `caniuse-lite` database and clear the Browserslist warning.
-- Triage the 27 production audit findings, starting with high and critical.
+- Done (EOA-19635): create the "Dependency maintenance baseline" Jira ticket and its sub-tasks.
+- Done (EOA-20015): update the `caniuse-lite` database and clear the Browserslist warning.
+- Done (EOA-20014): triage the 27 production audit findings, starting with high and critical.
 - Decide on `trustPolicy` and `blockExoticSubdeps`.
 - Evaluate Renovate on Bitbucket Server with DevOps. Owner and date: To be confirmed.
 
 ## Related
 
+- Confluence: ADR-0016 - Dependency Maintenance Policy (https://telesign.atlassian.net/wiki/spaces/SENG/pages/2412085321). The numbering differs between the two copies by decision (2026-10-30: left as is).
+- Monthly ticket template: `ai-docs/templates/dependency-maintenance-ticket.md`
 - `ai-work/plans/EOA-18749-release-process-remediation-patch-release-it.md` (T24 pnpm 12, T26 Node 24)
 - ADR 0013 — Release tooling: release-it vs. changesets

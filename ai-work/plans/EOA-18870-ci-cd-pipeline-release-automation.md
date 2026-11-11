@@ -39,7 +39,7 @@ updated: 2026-10-19
 ## Related tickets
 
 - Jira: EOA-18870 (DevOps meeting), ITOPS-63109, 63110, 63111, 63144, 72071, 72203, 72204, 72205.
-- Separate tickets: dependency baseline EOA-19635; Node 24 and pnpm 12 upgrades; pack cleanup (`validate:pack`); browser build for the Library CDN. Drafts in `ai-work/tickets/EOA-18749-followup-tickets.md`.
+- Separate tickets: dependency baseline EOA-19635; Node 24 and pnpm 12 upgrades; pack cleanup (`validate:pack`); browser build for the Library CDN. Drafts in `ai-work/tickets/EOA-18749-release-process-followup-tickets.md`.
 
 ## Close-out
 

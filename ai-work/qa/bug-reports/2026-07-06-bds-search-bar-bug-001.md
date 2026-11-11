@@ -98,7 +98,14 @@ No fix needed — Finding 2 was analysed and is not applicable (see verdict abov
 ## Known Gaps (need follow-up before this can be closed)
 
 - The exact Storybook/Chromatic deploy timeout (which step, how long, what threshold) has not been captured directly — this report relies on the team's verbal account from a feedback meeting, not a reproduced CI failure log. Recommend attaching the actual failed build log/link before prioritizing a fix. **Open — to be closed in EOA-19597 Task 20** (Storybook build timing before/after, or the failed-build log).
-- No profiling data (Performance panel trace, Lighthouse, or `performance.now()` instrumentation) has been captured yet to quantify "slower than expected" — the reproduction steps above describe where to look, but exact timing numbers are not yet in this report. **Open — to be closed in EOA-19597 Task 17** (before/after mounted item count and initial render time for `LargeSuggestionsList`).
+- ~~No profiling data to quantify "slower than expected".~~ **Closed 2026-10-26 (EOA-19597 Task 17).** Medians of 3 runs in one Chrome session, 1,000 suggestions:
+
+  | Approach | Time until the list is rendered and scrollable | DOM nodes in the list | Mounted `bds-list-menu-item` instances | Heap delta |
+  | --- | --- | --- | --- | --- |
+  | Slotted (pre-change: every item mounted) | 387 ms (creation 115 ms) | 6,004 | 1,000 | +11.2 MB |
+  | `items` (windowed) | 50 ms (creation 0.2 ms) | 93 | 14 | +1.7 MB |
+
+  Both report `scrollHeight` 28,008, so the scroll range is unchanged. That is ~7.7× faster to a scrollable list, ~64× fewer DOM nodes and ~71× fewer component instances. Storybook `LargeSuggestionsList`: search bar connected 228 ms after navigation, open → scrollable 33 ms, 14 mounted of 1,000 (0 while closed), list at 93 nodes when open.
 - Not yet confirmed whether any real (non-Storybook) product consumer of `bds-search-bar` currently passes a list in the hundreds-to-thousands range. EOA-19597 assumes there are no real consumers today, so no deprecation path is provided.
 - ~~Finding 2 (correctness risk) has not been reproduced/profiled~~ — **Closed 2026-10-21:** analysed against source; not applicable (see Finding 2 verdict).
 

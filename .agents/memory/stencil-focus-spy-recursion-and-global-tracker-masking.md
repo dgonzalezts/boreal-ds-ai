@@ -4,7 +4,9 @@ Two related traps when asserting focus moves under `newSpecPage`. Both stem from
 
 ## 1. Instance-level `jest.spyOn(el, 'focus')` calls through and can recurse
 
-`jest.spyOn(el, 'focus')` keeps the original implementation by default, so the call dispatches mock-doc's `focus` event. If the element — or a host ancestor with an `onFocus` — moves focus again in response, the events re-enter and the spy's call count runs away. Confirmed cause: `bds-text-field`'s host `onFocus` re-focuses its inner `<input>` (`bds-text-field.tsx:416`); spying a text field's host/input focus without stubbing produced a runaway call count.
+`jest.spyOn(el, 'focus')` keeps the original implementation by default, so the call dispatches mock-doc's `focus` event. If the element — or a host ancestor with an `onFocus` — moves focus again in response, the events re-enter and the spy's call count runs away. Original confirmed case: `bds-text-field`'s host `onFocus` re-focused its inner `<input>`, so spying a text field's host/input focus without stubbing produced a runaway call count.
+
+**That specific loop is fixed (EOA-19597 T57).** `bds-text-field`'s host forwarder now guards on `e.target === e.currentTarget`, so a bubbled descendant `focus` is ignored — see `stencil-mock-doc-no-activeelement-focus-tracking.md` §"Why the `focus` event bubbles in mock-doc". Keep the stubbing habit (`mockImplementation(() => undefined)`) for any *new* host-level `onFocus` forwarder: the trap is generic, and the guard pattern is now the component-side fix to reach for.
 
 Fix: stub the spy so it only records the call — `jest.spyOn(el, 'focus').mockImplementation(() => undefined)` — when the assertion is "`focus()` was called on this element", not "a real focus event fired". See `bds-popover-a11.spec.ts`'s nested-Escape test for the stub form.
 
