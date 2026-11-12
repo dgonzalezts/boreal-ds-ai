@@ -10,4 +10,4 @@ The Vue output target is a Stencil output target registered in `boreal-web-compo
 
 Confirmed while wiring `bds-table`'s `selectedRows`/`selectedRowsChange` v-model (EOA-14935 Task 8): the generated `BdsTable` proxy in `components.ts` gained the trailing `'selectedRows', 'selectedRowsChange', undefined` model-wiring args, matching the existing shape used for `BdsTextField`'s `value`/`valueChange` wiring.
 
-**Runtime contract, not just regeneration:** the generated directive reads the element *property* named by `targetAttr`, never `event.detail`, so a component that assigns its model prop without emitting the paired event silently breaks Vue `v-model`. See `vue-vmodel-reads-property-not-event-detail.md`.
+**Runtime contract, not just regeneration:** by default the generated directive reads the element *property* named by `targetAttr`; an `eventAttr` on the entry (for example `'detail'`) makes it read a path on the event instead. A component that assigns its model prop without emitting the paired event silently breaks Vue `v-model`, and a state held outside the mapped property needs `eventAttr`. See `vue-vmodel-reads-property-not-event-detail.md`.

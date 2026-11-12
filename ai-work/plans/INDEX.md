@@ -48,4 +48,4 @@
 | [EOA-9609-welcome-page-content-plan.md](./EOA-9609-welcome-page-content-plan.md) | done | Implementation Plan: Welcome Page Content for Boreal DS Storybook |
 | [EOA-19597-bds-search-bar-virtual-suggestions.md](./EOA-19597-bds-search-bar-virtual-suggestions.md) | done | bds-search-bar — real windowed suggestions via shared `VirtualWindow`, remove `VirtualScrollController` |
 | [EOA-19635-dependency-maintenance-baseline.md](./EOA-19635-dependency-maintenance-baseline.md) | done | Dependency Maintenance Baseline Implementation Plan (11 tasks, mapped to EOA-20014 to EOA-20024) |
-| [EOA-20193-dependency-upgrades-followup.md](./EOA-20193-dependency-upgrades-followup.md) | pending | Dependency Upgrades Follow-up Implementation Plan (21 tasks on branch chore/EOA-20193_dependency-upgrades-followup_DG; deadline 2026-11-13) |
+| [EOA-20193-dependency-upgrades-followup.md](./EOA-20193-dependency-upgrades-followup.md) | in progress | Dependency Upgrades Follow-up Implementation Plan (22 tasks on branch chore/EOA-20193_dependency-upgrades-followup_DG; deadline 2026-11-13) |

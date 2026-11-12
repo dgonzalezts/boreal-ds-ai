@@ -1,8 +1,10 @@
 # Vue `v-model` reads the element property, so every silent prop commit breaks it (EOA-19597 T43)
 
-`@stencil/vue-output-target`'s v-model directive resolves `update:modelValue` from `targetAttr`
-(`resolvePath(e, 'target.value')`), i.e. the **element property** — never `e.detail`. React wrappers
-are unaffected because `onValueChange` reads `event.detail`.
+`@stencil/vue-output-target`'s v-model directive resolves `update:modelValue` from `targetAttr` by
+default (`resolvePath(e, 'target.value')`), i.e. the **element property**, not `e.detail`; an
+`eventAttr` on the `componentModels` entry (for example `'detail'`) points it at the event instead, and
+the entries discussed here do not set one. React wrappers are unaffected because `onValueChange` reads
+`event.detail`. Team version of this note: `.agents/memory/vue-vmodel-reads-property-not-event-detail.md`.
 
 Consequence: any component listed in `targets/vue-output-target.ts` → `componentModels` that assigns
 its model prop *without* emitting `valueChange` leaves the consumer's bound ref stale (empty, or one

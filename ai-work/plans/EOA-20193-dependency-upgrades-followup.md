@@ -1,6 +1,6 @@
 ---
 ticket: EOA-20193
-status: pending
+status: in progress
 created: 2026-10-30
 ---
 
@@ -46,7 +46,7 @@ Lockfile edits are formatted with the web-components Prettier. New versions must
 
 The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 branch and stay unreleased until it merges. The policy asks for high and critical findings within 2 weeks, counted from the 2026-10-16 snapshot. A revert of the single squash commit would also revert those fixes. So:
 
-- **Checkpoint on 2026-11-12** (T21): list the tasks done and green and the tasks not started or unfinished.
+- **Checkpoint on 2026-11-12** (T22): list the tasks done and green and the tasks not started or unfinished.
 - **On 2026-11-13** PR 2 is merged into PR 1 with the completed tasks only, and PR 1 is merged to `release/current`. Unfinished tasks are not committed on the branch.
 - **Unfinished tasks** continue on the working branch after PR 1 merges and go in a third PR to `release/current`. The branch is rebased first: `git rebase --onto release/current <PR 1 branch tip before the squash>` drops the already squashed commits.
 - The date moves only if the user decides so in writing in this plan.
@@ -66,12 +66,12 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 
 ## Open assumptions (confirm before dispatching the affected task)
 
-- **A1 — Jenkins job location:** there is no Jenkinsfile in this repository. T6 delivers a script and documentation only; wiring it into the Jenkins job is outside the repository.
-- **A2 — Report exit code (T6):** the script exits 1 only when `pnpm audit --prod` has unresolved high or critical findings, so Jenkins can mark the build unstable. Confirm.
+- **A1 — Jenkins job location:** there is no Jenkinsfile in this repository. T6a delivers documentation only (the commands and the stage rules in the `scripts-boreal` README) and T6b, the script, is deferred; wiring the stage into the Jenkins job is outside the repository.
+- **A2 — Report exit code (T6b):** confirmed by the user, then refined in the T6 review: three states, 0 clean, 1 high or critical production findings, 2 the check could not run or its output could not be parsed.
 - **A3 — Jenkins Node version (T2):** jsdom 30, Chromatic CLI 18 and the utilities need Node 22.22.2 or later. The repository pin is 22.23.3, which meets it. Only the agents' version is unknown.
 - **A4 — TypeScript 7 side by side:** excluded from T8; it is optional in the draft and waits for TypeScript 7.1.
 - **A5 — React wrapper tests (T7):** Part B is dropped if the user decides React is not worth the new tooling.
-- **A6 — Node move and pnpm 12:** not in this plan; they remain drafts R2 and R3.
+- **A6 — Node move and pnpm 12:** the Node move is not in this plan and remains draft R3. The pnpm 11 to 12 upgrade was added as T20 on 2026-11-11 at the user's request (the baseline ticket had left it out of scope); it is late in the order and deferrable to the third PR.
 
 ---
 
@@ -86,11 +86,14 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 | `packages/boreal-style-guidelines/package.json`, `scripts-boreal/package.json` | Modify — TypeScript, vitest, chalk, execa (T8, T10, T19) |
 | `examples/react-testapp/*`, `examples/vue-testapp/*` | Modify — plugins, vite config, vitest, wrapper tests (T4, T7, T10, T11, T19) |
 | `tsconfig` files of the workspaces | Modify — TypeScript 6 settings (T8) |
-| `scripts-boreal/bin/deps-report.js`, `scripts-boreal/lib/deps-report.js`, `scripts-boreal/lib/__tests__/deps-report.spec.js` | New — dependency report (T6) |
+| `scripts-boreal/README.md` | Modify — dependency check commands and stage rules (T6a) |
+| `scripts-boreal/bin/deps-report.js`, `scripts-boreal/lib/deps-report.js`, `scripts-boreal/lib/__tests__/deps-report.spec.js` | New — dependency report (T6b, deferred) |
 | `packages/boreal-web-components/stencil.config.ts`, `vitest.config.ts`, spec files | Modify / New — test runner migration (T15 to T17) |
+| `pnpm-workspace.yaml` | Modify — the scoped peer rule (T4), its replacement by the `:peer` override (T20) |
+| `README.md`, `ai-docs/guidelines/cicd-dependency-installation.md` | Modify — pnpm version prerequisite (T20) |
 | `pnpm-lock.yaml` | Modify — every dependency task |
-| `ai-docs/templates/dependency-maintenance-ticket.md` | Modify — hold register seed list (T20) |
-| `.claude/pr-description.md` | Modify — PR descriptions (T20, T21) |
+| `ai-docs/templates/dependency-maintenance-ticket.md` | Modify — hold register seed list (T21) |
+| `.claude/pr-description.md` | Modify — PR descriptions (T21, T22) |
 
 ---
 
@@ -98,13 +101,16 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 
 | Task | Status |
 | --- | --- |
-| T1 Create the working branch and record the gate baseline | pending |
-| T2 Confirm the Jenkins Node version and record the Node target | pending |
-| T3 Update prettier to 3.9 and reformat the flagged files | pending |
-| T4 Upgrade ESLint to 10 with its companions | pending |
-| T5 Investigate the Stencil 4.45.2 boolean-attribute change and remove the 4.45.1 pin | pending |
-| T6 Add the dependency report script | pending |
-| T7 Add automated wrapper tests for Vue and React | pending |
+| T1 Create the working branch and record the gate baseline | done 2026-11-11, confirmed by the user 2026-11-11 |
+| T2 Confirm the Jenkins Node version and record the Node target | done 2026-11-11, confirmed by the user 2026-11-11 |
+| T3 Update prettier to 3.9 and reformat the flagged files | done 2026-11-11, confirmed by the user (`38a69981`, `46206715`) |
+| T4 Upgrade ESLint to 10 with its companions | done 2026-11-11, confirmed by the user (`9fc3dc40`) |
+| T5 Investigate the Stencil 4.45.2 boolean-attribute change and remove the 4.45.1 pin | done 2026-11-11, confirmed by the user (`6e6530e2`) |
+| T6a Document the dependency check commands and the stage rules | done 2026-11-11, confirmed by the user (`a8d5473e`) |
+| T6b Add the dependency report script | deferred by the user's decision (not before the Jenkins stage is confirmed) |
+| T7 Add automated wrapper tests for Vue (React half dropped) | done 2026-11-11, confirmed by the user (`0e4f072e`) |
+| T7b Fix the `bds-toggle` v-model mapping in the Vue wrapper | done 2026-11-12, confirmed by the user (`3554eda5`) |
+| T7c Document the Vue `v-model` contract | done 2026-11-12, awaiting confirmation (`992dcbf5`) |
 | T8 Upgrade TypeScript to 6.0.3 | pending |
 | T9 Clear the `typescript-eslint` 8.59+ type-assertion errors | pending |
 | T10 Upgrade Vitest to 5 and jsdom to 30 | pending |
@@ -117,8 +123,9 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 | T17 Remove Jest and Puppeteer and update the test documentation | pending |
 | T18 Upgrade the Chromatic CLI to 18 and the addon to 5 | pending |
 | T19 Upgrade lint-staged, chalk, execa and npm-run-all2 | pending |
-| T20 Housekeeping: holds, template, PR descriptions, index | pending |
-| T21 Deadline checkpoint and merge readiness | pending |
+| T20 Upgrade pnpm 11 to 12 | pending |
+| T21 Housekeeping: holds, template, PR descriptions, index | pending |
+| T22 Deadline checkpoint and merge readiness | pending |
 
 ---
 
@@ -126,7 +133,7 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 
 ### Task 1: Create the working branch and record the gate baseline
 
-**Status:** pending
+**Status:** done 2026-11-11, confirmed by the user 2026-11-11. Branch `chore/EOA-20193_dependency-upgrades-followup_DG` cut from `6495b48e` (the PR 1 branch tip, identical locally and on the remote; `release/current` had no new commits) and pushed with upstream tracking. PR 1 (#208) is still open and not merged. Baseline on the working branch: lint 0 errors (warnings docs 9, web-components 50, test apps 0); 375 suites and 4,810 tests; coverage 93.24 / 85.64 / 92.66 / 94.75; build 7/7 with a clean tree; `pnpm peers check` clean; `validate:all` passes (React and Vue) with a clean tree; `scripts-boreal` 45 tests, 98.27% statements. Remaining for the user: open PR 2 (source: the working branch, target: the PR 1 branch)
 **Executor:** main thread (no executor)
 **Files:** none (no code change)
 
@@ -141,14 +148,14 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 
 Non-visual task. Validate with `git log --oneline -3` on both branches and the standard gates.
 
-- [ ] Given the working branch, when compared with the PR 1 branch, then they point to the same commit. Pass: `git rev-parse` outputs match.
-- [ ] Given the standard gates, when run, then all pass. Pass: baseline recorded.
+- [x] Given the working branch, when compared with the PR 1 branch, then they point to the same commit. Pass: `git rev-parse` outputs match. _(both `6495b48e`)_
+- [x] Given the standard gates, when run, then all pass. Pass: baseline recorded.
 
 **Commit:** none.
 
 ### Task 2: Confirm the Jenkins Node version and record the Node target
 
-**Status:** pending
+**Status:** done 2026-11-11, confirmed by the user 2026-11-11. The Jenkins job has not been implemented yet, so there are no agents to check; it will be built on the chosen Node version. Decision: the Node target is **26, with 24 as the fallback** if a short check under 26 (lint, unit suite, builds, `validate:all`, a release dry run, run locally with `fnm`) fails. The published packages declare no `engines`, so the choice only affects contributors and CI. Consequence for the plan: T10 (jsdom 30), T18 and T19 can proceed (the repository pin 22.23.3 already meets their 22.22.2 floor). The Node move itself stays outside this plan (draft R3).
 **Executor:** main thread (no executor)
 **Files:** none (the answer is recorded in this plan)
 
@@ -168,7 +175,7 @@ Non-visual task. Validate with `git log --oneline -3` on both branches and the s
 
 Non-visual task. Validate by reading the recorded answer in this task's status line.
 
-- [ ] Given the recorded answer, when compared with the floors above, then T10, T18 and T19 are marked "can proceed" or "blocked". Pass: each has a marking.
+- [x] Given the recorded answer, when compared with the floors above, then T10, T18 and T19 are marked "can proceed" or "blocked". Pass: each has a marking. _(all three can proceed)_
 
 **Commit:** none.
 
@@ -178,7 +185,7 @@ Non-visual task. Validate by reading the recorded answer in this task's status l
 
 ### Task 3: Update prettier to 3.9 and reformat the flagged files
 
-**Status:** pending
+**Status:** done 2026-11-11, committed and pushed, confirmed by the user 2026-11-11: `38a69981` `build(deps): EOA-20193 update prettier to 3.9` and `46206715` `style(multiple): EOA-20193 reformat files with prettier 3.9`. The second message needed the scope `multiple`: the repository's commit-msg hook has a custom `scope-required` rule that rejects an empty scope, which the earlier `style:` message would have hit. `pnpm validate:all` passes on the committed state (React and Vue) with a clean tree; the pre-push suite passed (375 suites, 4,810 tests). All four `prettier` pins moved to exactly `3.9.10`: it is the newest version older than the 1-day delay, because `3.10.0` was published on 2026-11-11 (age 0.4 days). The lockfile was refreshed and formatted with the new prettier (92-line diff). `format:check` flagged exactly the 14 + 2 files from the baseline finding (docs 14, web-components 2; the React test app keeps its 3 pre-existing flagged files, the Vue test app passes) and the reformat touched only those 16 files (276 insertions, 226 deletions). Gates before commit: `format:check` passes in docs and web-components, lint 0 errors (warnings 9 / 50 / 0), 375 suites and 4,810 tests, coverage 93.24 / 85.64 / 92.66 / 94.75, build 7/7, `pnpm peers check` clean. Remaining after the commits: `pnpm validate:all` and the push
 **Executor:** main thread (no executor)
 **Files:**
 
@@ -198,6 +205,7 @@ Non-visual task. Validate by reading the recorded answer in this task's status l
 - All four `prettier` pins move to the same version, the newest one older than the 1-day delay, keeping the exact-pin style.
 - The flagged files are reformatted in a second commit that contains formatting changes only.
 - Every `format:check` script passes.
+- Re-format step after `release/current` receives other merged PRs: those files were formatted with prettier 3.8 by their authors, so after `release/current` is merged into the branch, run `pnpm format:check` in `apps/boreal-docs` and `packages/boreal-web-components`. If anything is flagged, run `pnpm format` in both and commit the result as one more formatting-only commit. If a merge conflicts on the 16 files above, take the incoming version and re-run the formatter.
 - Standard gates are green.
 
 **Manual test _(required — not waiveable)_:**
@@ -211,16 +219,17 @@ Non-visual task. Validate with each package's `format:check` script and the stan
 
 ```bash
 git commit -m "build(deps): EOA-20193 update prettier to 3.9"
-git commit -m "style: EOA-20193 reformat files with prettier 3.9"
+git commit -m "style(multiple): EOA-20193 reformat files with prettier 3.9"
 ```
 
 ### Task 4: Upgrade ESLint to 10 with its companions
 
-**Status:** pending
+**Status:** done 2026-11-11, committed `9fc3dc40` and pushed, confirmed by the user 2026-11-11. `pnpm validate:all` passes on the committed state (React and Vue) with a clean tree; the pre-push suite passed (375 suites, 4,810 tests). Tested while deciding the peer rule: the `overrides` entry with the `:peer` suffix fails on pnpm 11.28.2 and on the newest pnpm 11 (11.28.11) with `ERR_PNPM_INVALID_SELECTOR`, and works on pnpm 12.19.0, which also accepts the `peerDependencyRules` entry; T20 therefore swaps the rule for the override. Versions applied (registry checked 2026-11-11, all older than the 1-day delay): `eslint` `^10.14.0` in the four workspaces (the planning trial used 10.13.0), `@eslint/js` `^10.0.1` in docs, web-components and the React test app, `globals` `^17.14.0` in the React test app (docs already `^17.0.0`), `eslint-plugin-jsdoc` `^65.4.5` in web-components (Node `^22.22.2 || >=24.15.0`; the repository pin 22.23.3 meets it). `typescript-eslint` stays at `~8.58.2`: that exact version already declares ESLint 10 in its peer range, so T9 is unaffected. Every other ESLint plugin in the four workspaces declares ESLint 10 support (`@stencil/eslint-plugin` 1.4.0, `eslint-plugin-storybook`, `eslint-plugin-vue`, `@vue/eslint-config-typescript` 14.9.0, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `eslint-config-prettier`). Workaround for the one blocker: `eslint-plugin-react` `7.37.5` (exact) added as a devDependency of web-components, and `pnpm-workspace.yaml` gets `peerDependencyRules.allowedVersions` `"eslint-plugin-react>eslint": "10"`, so `pnpm peers check` is clean. The `overrides` entry with the `:peer` suffix that the pnpm docs recommend does not work on the repository's pnpm 11.28.2 (`ERR_PNPM_INVALID_SELECTOR`); `peerDependencyRules` is documented as deprecated but still supported. Remove both once `eslint-plugin-react` or `@stencil/eslint-plugin` declares ESLint 10 (candidate row for the hold register in T20). Gates before commit: lint 0 errors with warnings 9 / 50 / 0 / 0 (same as the baseline), 375 suites and 4,810 tests, coverage 93.24 / 85.64 / 92.66 / 94.75, build 7/7, `pnpm peers check` clean. Remaining after the commit: `pnpm validate:all` and the push
 **Executor:** main thread (no executor)
 **Files:**
 
 - `apps/boreal-docs/package.json`, `packages/boreal-web-components/package.json`, `examples/react-testapp/package.json`, `examples/vue-testapp/package.json` (modify)
+- `pnpm-workspace.yaml` (modify — the scoped peer rule)
 - `pnpm-lock.yaml` (modify)
 
 **Integration research pass (complete before writing acceptance criteria):**
@@ -240,7 +249,7 @@ git commit -m "style: EOA-20193 reformat files with prettier 3.9"
 
 Non-visual task. Validate with lint in each workspace and the standard gates.
 
-- [ ] Given ESLint 10, when `pnpm lint` runs, then error counts are 0 and warning counts equal the baseline. Pass: 9 / 50 / 0 / 0.
+- [x] Given ESLint 10, when `pnpm lint` runs, then error counts are 0 and warning counts equal the baseline. Pass: 9 / 50 / 0 / 0.
 
 **Commit:**
 
@@ -250,7 +259,11 @@ git commit -m "build(deps): EOA-20193 upgrade eslint to 10"
 
 ### Task 5: Investigate the Stencil 4.45.2 boolean-attribute change and remove the 4.45.1 pin
 
-**Status:** pending
+**Status:** done 2026-11-11, committed `6e6530e2` `build(deps): EOA-20193 update @stencil/core to ^4.45.2 and adapt tests and docs` and pushed, confirmed by the user 2026-11-11. `pnpm validate:all` passes on the committed state (React and Vue) with a clean tree; the pre-push suite passed (375 suites, 4,810 tests). Decision by the user 2026-11-11: **accept the new Stencil behavior** and adapt tests and docs; no consumer-facing migration note (the library has no real consumers yet), only this record and a line in the PR descriptions.
+Findings. Cause: Stencil 4.45.2 changed `attributeChangedCallback` on form-associated components so that a present boolean attribute means `true` even for the string `"false"` (`newValue === null || newValue === "false" && !isFormAssociated ? false : true`); non-form-associated components still map `"false"` to `false`. It is deliberate (upstream PR stenciljs/core#6908, issue #6905, release v4.45.2): the browser treats a present attribute as set, so `<x disabled="false">` was natively disabled while the prop said `false`. 4.45.3 keeps the rule, so it is permanent and there is nothing to report upstream. It matches the HTML standard's boolean attribute rule (the values "true" and "false" are not allowed; a false value is expressed by omitting the attribute). Stencil's own Properties page still says the string `"false"` gives `false` and its form-associated page does not mention the change.
+Live check (Chromium, Stencil 4.45.2, raw components and the packed React and Vue wrappers): `bds-file-picker multiple="false"` gives `multiple=true`; `error="false"` adds the error class; `bds-text-field disabled="false"` is `:disabled` and excluded from `FormData`; `bds-checkbox checked="false"` is checked and submitted; non-form-associated components (`bds-dropdown`, `bds-radio-button`) still give `false`; JS properties, React `={false}` and Vue `:prop="false"` still give `false`; the string form through the wrappers (a Vue static attribute, a React string prop) gives `true`.
+Inventory: 14 form-associated components with 66 boolean props, all defaulting to `false`; no source file, test app or wrapper passes `"false"` as an attribute. Applied: `@stencil/core` exact `4.45.1` replaced by `^4.45.2` (resolves 4.45.2; 4.45.3 was 0.1 days old and excluded by the release-age rule) and the lockfile refreshed; five `bds-file-picker` specs rewritten to omit the attribute, or to use `removeAttribute`, instead of the string `"false"` (three failed, two had lost their intent); the date-picker story `with-time=${args.withTime}` changed to `?with-time=${args.withTime}`; `hide="false"` removed from the file-uploader MDX snippet (no new text added). The testing agent also removed four existing inline comments inside two of the edited tests, in line with the no-inline-comments rule. One test remains weak: 'handle alternating between single and multiple modes' only goes from single to multiple (not changed, out of scope).
+Gates before commit: format checks pass (web-components, docs), lint 0 errors with warnings 9 / 50 / 0 / 0, 375 suites and 4,810 tests, coverage 93.24 / 85.64 / 92.66 / 94.75, build 7/7, `pnpm peers check` clean (a single `@stencil/core` 4.45.2 resolution; the inert copy in `boreal-vue` is the same version). Remaining after the commit: `pnpm validate:all` and the push
 **Executor:** @frontend-subagent (investigation and source), @testing-subagent (specs), @qa-subagent (live-browser check)
 **Files:**
 
@@ -276,18 +289,52 @@ git commit -m "build(deps): EOA-20193 upgrade eslint to 10"
 
 Run the check on the pack-based pipeline (`pnpm dev:pack:react` / `dev:pack:vue`), not the live dev server, via @qa-subagent:
 
-- [ ] Given `<bds-file-picker multiple="false">` in a `<form>`, when the page loads, then `multiple` is `false` and form validity matches the 4.45.1 behavior. Pass: no difference, or the difference is the documented decision.
-- [ ] Given the same markup in the React and Vue wrapper apps, when rendered, then behavior matches the raw web component. Pass: no divergence.
+- [x] Given `<bds-file-picker multiple="false">` in a `<form>`, when the page loads, then `multiple` is `false` and form validity matches the 4.45.1 behavior. Pass: no difference, or the difference is the documented decision. _(the difference is the documented decision: `multiple` is `true`)_
+- [x] Given the same markup in the React and Vue wrapper apps, when rendered, then behavior matches the raw web component. Pass: no divergence. _(typed values match; the string form matches the raw component, as `true`)_
 
 **Commit:**
 
 ```bash
-git commit -m "build(deps): EOA-20193 update @stencil/core to a caret range"
+git commit -m "build(deps): EOA-20193 update @stencil/core to ^4.45.2 and adapt tests and docs"
 ```
 
-### Task 6: Add the dependency report script
+### Task 6a: Document the dependency check commands and the stage rules
 
-**Status:** pending
+**Status:** done 2026-11-11, committed `a8d5473e` `docs(scripts): EOA-20193 document dependency check commands` and pushed, confirmed by the user 2026-11-11. `pnpm validate:all` passes on the committed state with a clean tree. Chosen by the user (Option A) after a review with two independent agents, an advocate and a critic. Agreement of both: the exit code needs three states (ok, findings, tool error) and a plain 0/1 reads a failed check as "no findings"; `pnpm audit --prod --audit-level high` already gives the high and critical threshold natively; the trigger for a script is not met because the Jenkins job does not exist. They differed on whether to build a parser (advocate: yes, amended, low priority; critic: no, write the contract). Outcome: write the contract now (this task), build the script later (T6b). Added to `scripts-boreal/README.md`, section "Dependency checks": the three commands, what each exit code means, and four rules for a stage (exit 1 from `pnpm outdated` is expected; moderate and low findings do not fail the stage; an audit exit code of 1 also means the registry could not be reached, told apart by `audit.json` holding `metadata.vulnerabilities` or an `error` object; production dependencies only for the audit). Verified before writing: `pnpm audit --prod --audit-level high` exits 0 with the current single moderate finding while plain `pnpm audit --prod` exits 1; `pnpm outdated -r --format json` exits 1 and returns an object keyed by package name (51 entries; fields `current`, `dependencyType`, `dependentPackages`, `isDeprecated`, `latest`, `wanted`); with an unreachable registry `pnpm audit` retries for over a minute, prints `[ERROR] fetch failed`, exits 1, and its JSON output is `{"error": {"code": "pnpm", "message": "fetch failed"}}` with no `metadata`. Not re-observed today: the exit code 0 of an audit with zero findings (the repository has one moderate finding now).
+**Executor:** main thread (no executor)
+**Files:**
+
+- `scripts-boreal/README.md` (modify)
+
+**Integration research pass (complete before writing acceptance criteria):**
+
+- [x] Call sites: the README is read by contributors and by whoever owns the Jenkins job; the monthly ticket template (`ai-docs/templates/dependency-maintenance-ticket.md`) already lists the same commands for a human. No other file changes.
+- [x] Boundary case: a failed check must not read as a clean one; the README states how to tell them apart.
+- [x] Default state: with no high or critical finding the stage passes whatever the moderate and low counts are.
+
+**Acceptance criteria:**
+
+- The README lists the three commands with their exit codes and the four rules above.
+- Every statement in the section matches the observed output of the commands (checked on 2026-11-11).
+- No ticket IDs, plan references or version history in the README text.
+
+**Manual test _(required — not waiveable)_:**
+
+Non-visual task. Validate by running the documented commands and comparing with the README.
+
+- [x] Given the repository, when the three commands run, then their exit codes and JSON shapes match the table. Pass: exit 0 for `--audit-level high`, exit 1 for the other two, `metadata.vulnerabilities` present, 51 outdated entries keyed by package name.
+
+**Commit (on the user's confirmation of the message):**
+
+```bash
+git commit -m "docs(scripts): EOA-20193 document dependency check commands"
+```
+
+---
+
+### Task 6b: Add the dependency report script (deferred)
+
+**Status:** deferred 2026-11-11 by the user's decision (Option A of the T6 review). Not built now: the Jenkins job does not exist, has no owner and no DevOps agreement, and the deadline is 2026-11-13. It is built only when DevOps confirms that a scheduled stage will call it, in the third PR or later. Until then this task is left out of the deadline scope.
 **Executor:** @release-subagent
 **Files:**
 
@@ -303,6 +350,14 @@ git commit -m "build(deps): EOA-20193 update @stencil/core to a caret range"
 - [ ] Boundary case: `pnpm outdated -r` exits non-zero when anything is outdated, and `pnpm audit` exits non-zero when it finds vulnerabilities; both must be treated as data, not as script failure.
 - [ ] Default state: with no outdated packages and no findings the report prints zero counts and exits 0.
 - [ ] Assumptions A1 and A2 apply: the job wiring is outside the repository, and the exit code is 1 only for unresolved high or critical production findings.
+
+**Amendments agreed in the review (advocate and critic both asked for them):**
+
+- Three exit states: 0 clean, 1 high or critical production findings, 2 the check could not run or its output could not be parsed (registry unreachable, empty output, unexpected shape). A plain 0/1 would read a failed check as "no findings".
+- Read counts from `metadata.vulnerabilities` of `pnpm audit --prod --json`; a result without that block is state 2. Real captured pnpm 11 output is used as fixtures, and one test pins the shape so that the pnpm upgrade in T20 fails loudly instead of reporting zero.
+- `Cmd.run` uses `stdio: 'inherit'` and rethrows on a non-zero exit, so `Cmd` is extended first with a capture method that returns stdout and the exit code without rejecting.
+- Report production and dev outdated entries separately (`pnpm outdated -r --format json` is an object keyed by package name, so workspace duplicates are already merged); count only production findings for the audit.
+- Keep it to the smallest size that satisfies the 80% coverage gate on `lib/**`.
 
 **Acceptance criteria:**
 
@@ -336,11 +391,13 @@ git commit -m "feat(scripts): EOA-20193 add dependency report script"
 
 ### Task 7: Add automated wrapper tests for Vue and React
 
-**Status:** pending
+**Status:** done 2026-11-11, committed `0e4f072e` `test(examples): EOA-20193 add automated vue wrapper tests` and pushed, confirmed by the user 2026-11-12. `pnpm validate:all` passes on the committed state (React and Vue) with a clean tree; the pre-push suite passed (375 suites, 4,810 tests). Decisions by the user 2026-11-11: Part B (React) is dropped under assumption A5 and T7b follows right after T7. Feasibility spike by @testing-subagent (feasible; stubs and data sources recorded below), then the real suite by @testing-subagent: 3 spec files and 12 tests in `examples/vue-testapp/src/__tests__/` plus `setup.ts` (the jsdom stubs) and `settle.ts` (shared wait helper); `vitest.config.ts` gets `test.setupFiles`; `package.json` gets the script `"test": "vitest run"` so turbo's `test` task and the root `pnpm test` run the tests. `component-models.spec.ts` (4 tests) is the data-driven invariant: every tag that declares `valueChange` in `custom-elements.json` must have a wrapper with `modelValue` and `update:modelValue`, and every wrapper with a model must map to a tag that declares `valueChange` or to the one-entry map (`bds-table` to `selectedRowsChange`); adding a component needs no edit. `class-merging.spec.ts` (4 tests) covers the full class sequence on `BdsTextField` (consumer classes, a reactive `:class`, `--disabled`, `--readonly`, `--error`, `hydrated`). `v-model.spec.ts` (4 tests) covers `BdsTextField` (real `input` event, programmatic change flowing back) and `BdsCheckbox` (click true, click false). No toggle assertion exists until T7b. Mutation check: removing `bds-select` from the target's model list and rebuilding made the invariant fail with `BdsSelect (bds-select) declares valueChange but its wrapper has no modelValue prop and update:modelValue emit`; the file was restored and rebuilt. Not proven: the reverse direction (an extra model on a wrapper with no matching event) has no mutation evidence. Verified by me: the new files have no inline comments, ticket IDs, version numbers or `any`; `pnpm test` from the root runs `vue-testapp:test` (3 files) and passes; lint 0 errors (warnings 9 / 50 / 0), `pnpm peers check` clean, build 7/7 (the app's `vue-tsc --build` type-checks the specs); three repeat runs took 1.6 to 1.8 seconds with no flakiness. Open caveat, not verified: turbo's `test` task lists only `src/**` files as inputs, so whether a change that only affects the generated wrapper re-runs the Vue tests depends on the hash of the `build` task it depends on; check this when T7b changes the target list. Remaining after the commit: `pnpm validate:all` and the push
+Spike result: feasible. The real `@pxglobal/boreal-vue` wrappers register, upgrade and render in jsdom 28 with Vitest 4.1; the components are light DOM (no shadow root) and carry Stencil's `hydrated` class. A setup file is needed (registered through `test.setupFiles`; Vitest 4.1's CLI has no `--setupFiles` flag) with these stubs, each needed only by the listed components: `ElementInternals.prototype.setFormValue` (`BdsCheckbox`, `BdsCheckboxButton`, `BdsCheckboxCard`, `BdsCheckboxGroup`), `ElementInternals.prototype.setValidity` (`BdsToggle` on click), `ResizeObserver` (`BdsPagination`, `BdsStepper`, `BdsTable`), `HTMLElement.prototype.showPopover` and `hidePopover` (`BdsToastContainer`). jsdom 28 has no `IntersectionObserver`, `matchMedia`, `CSS`, `DragEvent`, `DataTransfer` or `scrollIntoView`, but no wrapper needed them at mount. All 81 `Bds*` wrappers mount in about 2.2 seconds; an 11-test spike takes about 2.4 seconds with no flakiness over three runs. Mount with `attachTo: document.body`, wait about 50 ms plus `flushPromises()`, clean up with `document.body.innerHTML = ''`; use `defineComponent` with `h()` for parents (the `template` option needs the Vue compiler). Events: setting `input.value` and dispatching a real `input` event gave `update:modelValue [['hello']]` on `BdsTextField`; a click on `BdsCheckbox` gave `[[true]]`. Class merging: on `BdsTextField` the consumer classes, a reactive `:class` and the component's own `--disabled` host class all survived each re-render and a removed consumer class disappeared (`BdsTextField` is the good probe; `BdsToggle` keeps its state classes on an inner element). Data sources for the invariant test: (A) runtime introspection of each wrapper (`'modelValue' in Wrapper.props` and `update:modelValue` in `Wrapper.emits`; 18 wrappers have a model) and (B) `packages/boreal-web-components/custom-elements.json` (tracked in git; the 17 tags that declare `valueChange` equal exactly the 17 `valueChange` entries of `componentModels`; `bds-table` uses `selectedRowsChange`). The generated `packages/boreal-vue/lib/components.ts` is gitignored and needs text parsing; `componentModels` itself is a non-exported literal in `targets/vue-output-target.ts`. Gap found: `vue-testapp` has `test:unit` but no `test` script, so turbo's `test` task and the root `pnpm test` do not run its tests; T7 adds a `test` script.
+Scratch files from the spike, untracked: `examples/vue-testapp/src/__tests__/spike.spec.ts` and `spike.setup.ts` (the basis for the real tests).
 **Executor:** @testing-subagent (tests), @qa-subagent (one browser smoke pass on the packed artifacts)
 **Files:**
 
-- `examples/vue-testapp/` spec files and `vitest.config.ts` (create / modify)
+- `examples/vue-testapp/` spec files, a setup file for the jsdom stubs, `vitest.config.ts` (`test.setupFiles`) and `package.json` (a `test` script, so the root `pnpm test` runs them) (create / modify)
 - `examples/react-testapp/` spec files and test configuration (create — Part B)
 - Root test wiring (modify)
 
@@ -356,11 +413,11 @@ git commit -m "feat(scripts): EOA-20193 add dependency report script"
 
 Part A — Vue:
 
-- A data-driven test reads `custom-elements.json` and fails when a component with a model prop and model event has no `componentModels` entry. Adding a component needs no test edit.
+- A data-driven test compares two sources and fails on any difference, so adding a component needs no test edit: the wrappers that expose a `modelValue` prop and an `update:modelValue` emit (runtime introspection) must equal the tags that declare a `valueChange` event in `custom-elements.json`, plus the other model events in the target list (`bds-table`).
 - A class-merging test mounts a wrapped component that sets its own host class, toggles a consumer `:class` and the component state, and asserts both sets of classes survive each re-render and removed consumer classes disappear.
 - A `v-model` smoke test on a representative component asserts the bound ref updates when the model event fires.
 
-Part B — React (dropped if the user decides, assumption A5):
+Part B — React (DROPPED by the user's decision 2026-11-11; kept here for the record):
 
 - A test asserts every custom event in `custom-elements.json` is exposed as an `on<Event>` prop on the matching wrapper.
 - A `className` test asserts consumer classes and the component's own host classes both survive re-renders.
@@ -372,15 +429,88 @@ Both parts: the root `pnpm test` runs the new tests and they pass. Standard gate
 
 **Manual test _(required — not waiveable)_:**
 
-- [ ] Given the Vue test app, when `pnpm test` runs from the root, then the new specs run and pass. Pass: exit code 0.
-- [ ] Given a deliberately removed `componentModels` entry in a scratch change, when the tests run, then the invariant test fails. Pass: failure names the component. Revert the scratch change.
-- [ ] Given the packed artifacts, when @qa-subagent repeats one class-merging and one `v-model` scenario in a browser, then the result matches the tests. Pass: no divergence.
+- [x] Given the Vue test app, when `pnpm test` runs from the root, then the new specs run and pass. Pass: exit code 0.
+- [x] Given a deliberately removed `componentModels` entry in a scratch change, when the tests run, then the invariant test fails. Pass: failure names the component. Revert the scratch change.
+- [ ] Given the packed artifacts, when @qa-subagent repeats one class-merging and one `v-model` scenario in a browser, then the result matches the tests. Pass: no divergence. _(not run: the browser behavior of the same scenarios was already observed on the packed artifacts during T5, and the suite runs the real components in jsdom; it can be repeated in the T7b browser check, which exercises `v-model` through the pack-based pipeline)_
 
 **Commit:**
 
 ```bash
 git commit -m "test(examples): EOA-20193 add automated wrapper tests"
 ```
+
+### Task 7b: Fix the `bds-toggle` v-model mapping in the Vue wrapper
+
+**Status:** done 2026-11-12, committed `3554eda5` `fix(vue): EOA-20193 map bds-toggle v-model to checked` (the target file and the spec; `examples/vue-testapp/src/App.vue`, the playground, is deliberately NOT committed and stays a local modification by the user's decision) and pushed, confirmed by the user 2026-11-12. `pnpm validate:all` passes on the committed state (React and Vue); the pre-push suite passed (375 suites, 4,810 tests). Why the toggle's `value` is now always `"on"` (question by the user, answered from the source): `value` is documented as the value submitted with the form data when checked, like the `value` attribute of a native checkbox; the component submits `this.isChecked ? this.value : null` through `setFormValue`, restores the checked state in `formStateRestoreCallback` by comparing the saved state with `value`, and puts it in the `bdsChange` payload, while the on or off state lives in `checked`. The old mapping wrote the model into `value`, so a checked toggle would have submitted `"true"` or `"false"` instead of `"on"` and the form restore comparison was confused (the restore path was not exercised in a browser; it follows from the code). A consumer who wants another submitted value sets `value` explicitly and the model no longer overwrites it. Test-driven: two toggle cases were added to `v-model.spec.ts` and failed on the unfixed build (`expected 'false' to be true`; `expected false to be true`), then the fix was applied and all 14 Vue tests pass. Fix: in `packages/boreal-web-components/targets/vue-output-target.ts`, `bds-toggle` leaves the `value` group and gets its own entry `{ elements: ['bds-toggle'], event: 'valueChange', targetAttr: 'checked', eventAttr: 'detail' }`. Verified in the runtime of `@stencil/vue-output-target` 0.14.7 (an incoming `modelValue` is written to the model property; the outgoing value is a dot path on the event, `eventAttr` or `target.<targetAttr>`), and by a cross-check of every `valueChange` payload type against its mapped property: `bds-toggle` was the only mismatch. The generated wrapper is now typed `JSX.BdsToggle["checked"]` (boolean), so `vue-tsc` accepts a boolean binding; the typed wrapper also requires `name` (declared required in the component), which the old `string` model type had been hiding, so the spec's mount helper and the playground pass `name`. Browser evidence on the packed artifacts (Chromium, `dev:pack:vue`, by @qa-subagent, scenarios W0 to W5, both sections on one page): BEFORE, the real wrapper behaved exactly like the hand-wired reproduction: a click changed only the visual switch while the toggle's `checked` stayed `false`, the bound model became the string `"false"` and never changed again, and setting the model to `true` from code left the toggle off (also after a reload); AFTER, in the real wrapper section the model is always a boolean and agrees with the host `checked` and the visual state at every step (click: `true`, click again: `false`, set to `true` from code: checked and blue, also after a reload), `valueChange` still carries a boolean `detail`, 0 console errors or warnings; the hand-wired section still shows the old behavior. Observed side effects: the host `value` is now `"on"` in every state (it no longer echoes the model); the wrapper host still carries a `modelvalue` attribute that follows the model (`"false"` at load, `"true"` when checked), which comes from the generic wrapper runtime, not from this mapping, and is not changed here. Gates: build 7/7 with `vue-tsc` clean, root `pnpm test` runs `vue-testapp:test` (14 tests), lint 0 errors (warnings 9 / 50 / 0), `pnpm peers check` clean, format checks pass. Turbo cache caveat from T7, now checked: changing only the target file changes the hash of `vue-testapp#test` (`8f1c3ad9d8516b75` with the fix, `01399a741490111b` with the old mapping, the first hash again after restoring), so a wrapper-only change does re-run the Vue tests. Release check: the release configs of `boreal-vue` and `boreal-react` include `../boreal-web-components` in their commit paths, so a `fix` touching the target file is releasable for the wrappers. The playground `examples/vue-testapp/src/App.vue` (the user asked for a before-and-after example) is modified and formatted but not part of the commit unless the user decides otherwise. Remaining after the commit: `pnpm validate:all` and the push
+**Executor:** @release-subagent (output target), @testing-subagent (the test), @qa-subagent (browser check on the packed artifacts)
+**Files:**
+
+- `packages/boreal-web-components/targets/vue-output-target.ts` (modify — the `componentModels` entry for `bds-toggle`)
+- `examples/vue-testapp/` spec files from T7 (modify — add the toggle case)
+
+**Integration research pass (complete before writing acceptance criteria):**
+
+- [x] Finding (verified in the source 2026-11-11): `bds-toggle` keeps its state in the readonly prop `checked` (default `false`); `value` is a string (default `'on'`); the `valueChange` event emits the boolean state. The target list maps `bds-toggle` with `event: 'valueChange'` and `targetAttr: 'value'`, so on a click the wrapper reads `target.value` and emits `"on"` instead of `true`; and a bound `modelValue: true` is written to `value`, leaving `checked` at `false`. The spike observed both ends broken.
+- [x] The Vue target supports an `eventAttr` option (`modelUpdateEventAttribute`, default `target.<targetAttr>`); the likely fix is `targetAttr: 'checked'` with `eventAttr: 'detail'`. Confirm against the runtime of `@stencil/vue-output-target` 0.14.7 before editing.
+- [x] Call sites: `bds-checkbox`, `bds-checkbox-button` and `bds-checkbox-card` use `targetAttr: 'checked'` because their `checked` is mutable; confirm no other element has a readonly state prop with the same problem (check each entry of `componentModels` against its `valueChange` payload in `custom-elements.json`).
+- [x] Consumer effect: the fix changes what `v-model` yields on `BdsToggle` (from a string to a boolean, and a bound `true` now checks the toggle); recorded as an item of the housekeeping task for the PR descriptions.
+
+**Acceptance criteria:**
+
+- `v-model` on `BdsToggle` yields a boolean on click and a bound `true` sets the checked state, verified in the T7 test and in a browser on the packed artifacts.
+- No other `componentModels` entry has the same mismatch, or each one found is listed.
+- Standard gates are green, including `pnpm validate:all`.
+
+**Manual test _(required — not waiveable)_:**
+
+- [x] Given a `BdsToggle` bound with `v-model` in the Vue test app (pack-based pipeline), when it is clicked, then the bound ref becomes `true` and clicking again makes it `false`. Pass: booleans, no `"on"`.
+- [x] Given the ref set to `true` from code, when the page updates, then the toggle shows checked. Pass: the host reflects `checked`.
+
+**Commit (on the user's confirmation of the message):**
+
+```bash
+git commit -m "fix(vue): EOA-20193 map bds-toggle v-model to checked"
+```
+
+---
+
+### Task 7c: Document the Vue `v-model` contract
+
+**Status:** done 2026-11-12, committed `992dcbf5` `docs(web-components): EOA-20193 document the vue v-model contract` (the README and the spec messages; `App.vue` stays an uncommitted local change) and pushed, awaiting the user's confirmation. `pnpm validate:all` passes on the committed state (React and Vue); the pre-push suite passed (375 suites, 4,810 tests). Texts approved by the user on 2026-11-12 (E, B, G1, G2, G3 as described; G5 and the optional guideline sentence in `ai-docs/guidelines/stencil-best-practices.md` were NOT applied by the user's decision). Applied: (E) the three failure messages of `examples/vue-testapp/src/__tests__/component-models.spec.ts` now name the file to edit (`packages/boreal-web-components/targets/vue-output-target.ts`), the rebuild command and, for the other-event case, `OTHER_MODEL_EVENTS`; mutation check re-run on rebuilt output in BOTH directions: removing `bds-select` from the list fails the first invariant with `BdsSelect (bds-select) declares valueChange but its wrapper has no modelValue prop and update:modelValue emit. Add 'bds-select' to componentModels in packages/boreal-web-components/targets/vue-output-target.ts with the property that holds its state as targetAttr, then rebuild with pnpm --filter @pxglobal/boreal-web-components build.`, and adding `bds-radio` (it has a `value` property and declares no `valueChange`) fails the second with `BdsRadio (bds-radio) exposes a v-model but the component declares neither valueChange nor a listed model event. If it uses another model event, add it to OTHER_MODEL_EVENTS in this spec; otherwise remove it from componentModels in packages/boreal-web-components/targets/vue-output-target.ts.`; this closes the T7 gap (the reverse direction had no mutation evidence). A first attempt with `bds-button` was invalid because the wrapper build failed (no `value` property), so it is not counted. The target was restored with `git checkout --` and both packages rebuilt; the suite is 14 of 14 again. (B) the subsection "Adding `v-model` to a component (Vue)" in the "Framework Wrappers" section of `packages/boreal-web-components/README.md`: every file, name and command it references was checked against the repository (the target file, both specs, `custom-elements.json`, the git-ignored `packages/boreal-vue/lib/components.ts`, `OTHER_MODEL_EVENTS`, `eventAttr`, the build script and the root `test` script) and the file is Prettier-clean; no versions, tickets or history in the text and no diagram. (G, local only, excluded from git) `vue-vmodel-reads-property-not-event-detail.md` rewritten (default path `target.<targetAttr>`, `eventAttr` reads a path on the event such as `detail`, the earlier "never `event.detail`" was wrong; mapping now 12 on `valueChange`/`value` plus the toggle on `checked` with `eventAttr: 'detail'`; the toggle case; a payload-type audit rule; pointer to the invariant test and the README), `vue-componentmodels-regeneration.md` runtime-contract sentence corrected, `vue-vmodel-modelvalue-attribute-leak.md` corrected (the shim was prototyped, verified and reverted in EOA-19597 T27, is in no git ref, the leak is live and present in 0.14.7 and 0.15.0; design kept for reference), the two index rows updated and a changelog row added. Follow-up by the user's decision on 2026-11-12 (done, local only): the older claim "never `event.detail`" in the per-subagent notes under `.claude/agent-memory/` (`frontend-subagent/vue-model-reads-prop-silent-commits-break.md`, `frontend-subagent/MEMORY.md`, `qa-subagent/bds-search-bar-vue-vmodel-does-not-track-typing.md`) was corrected to "by default the element property, and `eventAttr` can point it at the event", with a pointer to the team note; no copy of the old wording remains there. The user also decided that the playground `examples/vue-testapp/src/App.vue` example stays a local, uncommitted change. Gates: build 7/7, root `pnpm test` runs `vue-testapp:test` (14 tests), lint 0 errors (warnings 9 / 50 / 0), `pnpm peers check` clean, format checks pass. The playground `App.vue` stays an uncommitted local change. Remaining after the commit: `pnpm validate:all` and the push
+**Executor:** @testing-subagent (the failure messages), @documentation-subagent (the README section), @knowledge-keeper (the team memory entry)
+**Files:**
+
+- `examples/vue-testapp/src/__tests__/component-models.spec.ts` (modify — option E)
+- `packages/boreal-web-components/README.md` (modify — option B, section "Framework Wrappers")
+- `.agents/memory/` (a new entry and its index line — option G; excluded from git)
+
+**Integration research pass (complete before writing acceptance criteria):**
+
+- [ ] Facts to state, each verified against the code at the time of writing: the Vue wrapper turns `v-model` into "set the component's state property and listen to its model event"; the pairing is a hand-written list, `componentModels` in `packages/boreal-web-components/targets/vue-output-target.ts`, because the generator cannot guess it; a component missing from the list simply has no `v-model` in Vue; the invariant test compares the tags that declare `valueChange` in `custom-elements.json` with the wrappers that expose `modelValue` and fails naming the component; the one explicit exception is the map for `bds-table` (`selectedRowsChange`), so a component with another model event name must be added there; a component whose state is not in `value` (`checked`, `files`, `selectedRows`) needs a short `v-model` behavior test, because the invariant checks presence, not the mapped property; the React wrapper has no hand-written list. For components with a boolean state, the README text also says what the two properties are for: `checked` holds the on or off state and is what `v-model` binds, while `value` is the string submitted with the form data when checked (default `"on"`), like a native checkbox, so it stays constant and the model must never be mapped onto it.
+- [ ] Call sites: the README section "Framework Wrappers" of `packages/boreal-web-components/README.md` (line 109 at planning time); the failure messages built in `component-models.spec.ts`; the team memory index.
+- [ ] Boundary case: documentation must not name versions, tickets or project history in consumer-facing text; the README is read by contributors, so it states rules, not history. The toggle lesson is written as a rule ("check the mapped property, not only that the component is listed"), not as a story.
+
+**Acceptance criteria:**
+
+- The invariant test's failure messages tell the reader exactly what to do, including the path `packages/boreal-web-components/targets/vue-output-target.ts` and, for the other-event case, where the exception map is; the test still fails in both directions as before (re-run the mutation check).
+- The README section has the three steps, the exception cases and the behavior-test rule, verified against the code, and renders correctly.
+- The team memory entry records the non-obvious facts and links to related entries; the index line is added.
+- The user has approved the texts before they were applied. (Approved 2026-11-12.)
+
+**Manual test _(required — not waiveable)_:**
+
+Non-visual task. Validate by reading and by re-running the mutation check.
+
+- [x] Given the invariant test with one model element removed from the list, when it runs, then the failure message names the component and the file to edit. Pass: both are present.
+- [x] Given the README section, when a contributor follows its steps for a hypothetical new component, then each referenced file and command exists. Pass: every path and command resolves.
+
+**Commit (on the user's confirmation of the message):**
+
+```bash
+git commit -m "docs(web-components): EOA-20193 document the vue v-model contract"
+```
+
+---
 
 ### Task 8: Upgrade TypeScript to 6.0.3
 
@@ -547,6 +677,7 @@ git commit -m "build(deps): EOA-20193 upgrade vite to 8 and the react plugin to 
 - [ ] Call sites: `targets/react-output-target.ts` (`customElementsDir: 'components'`, `outDir: '../boreal-react/lib/components'`). Check the Vue output target as well, since it may add the same requirement.
 - [ ] Boundary case: `components-build/index.d.ts` exists after a build and is the likely type target; confirm it is part of the published `files` and resolves from a consumer install, using the pack-based pipeline.
 - [ ] Release effect: a new export is consumer-visible; the PR description records it.
+- [ ] Observation from 2026-11-11: `pnpm audit --prod` reports 1 moderate finding, `minimatch` (advisory GHSA-g3hv-75wg-m249, patched in `>=11.0.1`), reached through `packages__boreal-react>@stencil/react-output-target>ts-morph>@ts-morph/common>minimatch`. After the output-target bump in this task, re-run `pnpm audit --prod` and record whether the finding is gone; if it remains, the housekeeping task records an accept-or-override decision.
 
 **Acceptance criteria:**
 
@@ -817,7 +948,55 @@ git commit -m "build(deps): EOA-20193 upgrade lint-staged, chalk, execa and npm-
 
 ## Close-out
 
-### Task 20: Housekeeping: holds, template, PR descriptions, index
+### Task 20: Upgrade pnpm 11 to 12
+
+**Status:** pending
+**Executor:** @release-subagent (pin, lockfile, pack validation), main thread (documentation)
+**Files:**
+
+- `package.json` (root — `packageManager`, `engines.pnpm` if it needs to change)
+- `pnpm-workspace.yaml` (modify — replace the `peerDependencyRules` entry with the `:peer` override)
+- `pnpm-lock.yaml` (modify — one-time rewrite, own commit)
+- `README.md` and `ai-docs/guidelines/cicd-dependency-installation.md` (modify)
+
+**Integration research pass (complete before writing acceptance criteria):**
+
+- [ ] Placement: late and deferrable. It changes the lockfile and install behavior for every other task, so it runs after Wave 4's dependency tasks; if the deadline arrives first it goes in the third PR. Added 2026-11-11 at the user's request; the baseline ticket had left it out of scope.
+- [ ] Current state (checked 2026-11-11): `packageManager` is `pnpm@11.28.2+sha512…`; the newest pnpm 11 is 11.28.11 and the newest pnpm 12 is 12.19.0 (1.9 days old on that date; re-check the 1-day delay at execution).
+- [ ] pnpm 12.0.0 changes against this repository (from the 2026-10-27 research): git dependencies on known hosts resolve to HTTPS (no git dependencies here); unrecognized settings in `pnpm-workspace.yaml` fail with `ERR_PNPM_UNRECOGNIZED_WORKSPACE_SETTINGS` (the file has `packages`, `allowBuilds` and, after T4, `peerDependencyRules`; a scratch install on 12.19.0 accepted `allowBuilds` and `peerDependencyRules`); dependency cycles are broken in a fixed order during peer resolution (expect a one-time lockfile rewrite, committed separately); `packageImportMethod: auto` tries hardlinks first on Linux (Jenkins only); `engineStrict` now fails on incompatible optional subtrees (not set here); `--frozen-lockfile false` is unsupported (no occurrence in the repository scripts; the Jenkins job does not exist yet).
+- [ ] Open question: the committed lockfile has an environment section `packageManagerDependencies.pnpm` pinned to 12.4.2 while `packageManager` says 11.28.2. Find out what writes it before the upgrade and record the answer.
+- [ ] Verified while implementing T4: the override `"eslint-plugin-react>eslint:peer"` is rejected by pnpm 11.28.2 and 11.28.11 and accepted by 12.19.0, where `pnpm peers check` is clean.
+- [ ] Call sites: search the repository for the pnpm version (`README.md`, `CONTRIBUTING.md`, `RELEASING.md`, the documents under `ai-docs/guidelines/`, scripts that call `pnpm` with flags) and update each.
+- [ ] Boundary case: Windows. `RELEASING.md` says release commands run on macOS or Linux only, so the Windows check covers the contributor commands (`pnpm install`, `dev:pack:*`, `validate:pack:*`). It cannot be run in this environment; the user or a teammate confirms it.
+
+**Acceptance criteria:**
+
+- `packageManager` is pinned to the newest pnpm 12.x older than the 1-day delay, with its integrity hash.
+- The lockfile rewrite is its own commit, formatted with the web-components Prettier, and the diff reason is recorded in this task's status line.
+- The `peerDependencyRules` entry is replaced by the `:peer` override and `pnpm peers check` is clean.
+- The origin of the `packageManagerDependencies` section is explained in this task's status line.
+- Standard gates are green, `pnpm validate:all` passes, and a release dry run passes (`pnpm release:all --dry-run`).
+- The README and `cicd-dependency-installation.md` state the new version.
+- The user confirms the Windows check.
+
+**Manual test _(required — not waiveable)_:**
+
+Non-visual task. Validate with a clean install and the gates.
+
+- [ ] Given a clean `pnpm install --frozen-lockfile` on pnpm 12, when the gates run, then they pass as on pnpm 11. Pass: same lint, test and coverage numbers.
+- [ ] Given `pnpm release:all --dry-run`, when run, then it completes as before. Pass: no new errors.
+- [ ] Given the Windows check by the user, when `pnpm install` and a pack validation run, then they succeed. Pass: confirmed by the user.
+
+**Commit (two commits, each confirmed by the user):**
+
+```bash
+git commit -m "build(workspace): EOA-20193 upgrade pnpm to 12"
+git commit -m "build(deps): EOA-20193 rewrite lockfile for pnpm 12"
+```
+
+---
+
+### Task 21: Housekeeping: holds, template, PR descriptions, index
 
 **Status:** pending
 **Executor:** main thread (no executor)
@@ -830,9 +1009,12 @@ git commit -m "build(deps): EOA-20193 upgrade lint-staged, chalk, execa and npm-
 
 **Acceptance criteria:**
 
-- Each hold lifted by a task is removed from the template's seed list; holds that remain keep their rows.
+- Each hold lifted by a task is removed from the template's seed list; holds that remain keep their rows. If T20 is not done, the `eslint-plugin-react` workaround from T4 (explicit devDependency plus the `peerDependencyRules` entry) is added as a row, with the removal condition.
 - The Confluence template page (SENG `2469101953`) is brought in line with the local template only after the user agrees, since it is an outward-facing change.
 - The PR descriptions list the tasks included, the consumer-visible changes and the breaking changes, with the merge order (PR 2 into PR 1, then PR 1 into `release/current`).
+- The PR descriptions record the `BdsToggle` `v-model` fix from T7b: the bound value is now a boolean (it was a string), a bound `true` now checks the toggle, the toggle's `value` property is no longer overwritten by the model (this also fixes a form side effect: a checked toggle submitted the model string, `"true"` or `"false"`, instead of its `value`, `"on"` by default), and the generated model type changes from `string` to `boolean`.
+- The PR descriptions record the Stencil 4.45.2 behavior change from T5: on form-associated components the string `"false"` in an attribute now resolves to `true` (typed values and properties are unaffected), with `disabled="false"` now disabling the control and excluding it from form data.
+- The moderate `minimatch` production finding (see T12) has a recorded decision: fixed by the T12 bump, overridden, or accepted with a reason. `pnpm audit --prod --audit-level high` still exits 0.
 - The draft items are marked done in the draft files and this plan's index row is updated.
 
 **Manual test _(required — not waiveable)_:**
@@ -843,7 +1025,7 @@ Non-visual task. Validate by reading the files.
 
 **Commit:** none (all files are outside git except the PR description draft, which is also local).
 
-### Task 21: Deadline checkpoint and merge readiness
+### Task 22: Deadline checkpoint and merge readiness
 
 **Status:** pending
 **Executor:** main thread (no executor)
@@ -853,6 +1035,7 @@ Non-visual task. Validate by reading the files.
 
 - On 2026-11-12 the status of every task is listed for the user: done and green, not started, or unfinished.
 - Unfinished tasks are confirmed as excluded from the working branch (no partial commits).
+- The re-format step from T3 is repeated on the final branch state: `pnpm format:check` in docs and web-components passes, or a formatting-only commit is added.
 - The PR 2 title is confirmed, with `!` if any task is breaking, and the PR descriptions are final.
 - The user merges PR 2 into the PR 1 branch and then PR 1 into `release/current`; after the merge, the user decides on closing EOA-20016 and EOA-20193.
 - If tasks remain, the rebase recipe from the deadline section is run and the user decides on a third PR.

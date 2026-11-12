@@ -20,7 +20,8 @@ Confirmed during EOA-19597 Task 18 (wrapper parity, Chrome, 2026-10-26) on the 1
 Mechanism (both read from source, no speculation):
 
 1. `@stencil/vue-output-target`'s `defineContainer` v-model directive emits `update:modelValue` with
-   `resolvePath(e, 'target.value')` — the element **property**, never `e.detail`.
+   `resolvePath(e, 'target.value')` — by default the element **property**, not `e.detail` (the
+   `bds-search-bar` entry sets no `eventAttr`).
    (`packages/boreal-vue/lib/components.ts` line ~825 passes `'value', 'valueChange'`.)
 2. `bds-search-bar.handleFieldInput` emits `valueChange.emit(newValue)` (typed text) but leaves
    `this.value` at the committed value, so the wrapper hands Vue the stale committed value per keystroke.

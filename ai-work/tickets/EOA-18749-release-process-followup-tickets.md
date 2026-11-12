@@ -25,6 +25,8 @@ These are local drafts kept alongside the release process work. Create a Jira ti
 
 **Acceptance criteria:** build, test, `validate:all` and a release `--dry-run` pass on pnpm 12 on macOS and Windows; docs updated.
 
+Included in plan EOA-20193 as T20 (2026-11-11). It also replaces the `peerDependencyRules` entry added for ESLint 10 with the `"eslint-plugin-react>eslint:peer"` override, which pnpm 11.28.2 and 11.28.11 reject and pnpm 12.19.0 accepts.
+
 ## 3. Evaluate moving Node 22 to Node 24 LTS (was T26)
 
 **Summary:** Move the repository from Node 22 to Node 24 LTS
