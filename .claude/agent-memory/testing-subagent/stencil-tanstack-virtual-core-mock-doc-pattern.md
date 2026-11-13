@@ -5,12 +5,12 @@ metadata:
   type: project
 ---
 
-`@stencil/core/mock-doc` never implements layout metrics: `offsetHeight`/`offsetWidth` are entirely
-absent from `MockHTMLElement` (read as `undefined`), and `getBoundingClientRect()` is hardcoded to
-return an all-zero rect. Without intervention, any `@tanstack/virtual-core` `Virtualizer` mounted
+`@stencil/core/mock-doc` never implements layout metrics: `offsetHeight`/`offsetWidth` and
+`clientHeight`/`clientWidth` are entirely absent from `MockHTMLElement` (read as `undefined`), and
+`getBoundingClientRect()` is hardcoded to return an all-zero rect. Without intervention, any `@tanstack/virtual-core` `Virtualizer` mounted
 inside `newSpecPage` collapses to a zero-height viewport and produces no meaningful window.
 
-**The fix — patch two things at the `HTMLElement.prototype` level, before any `newSpecPage()` call
+**The fix — patch the size properties and `getBoundingClientRect` at the `HTMLElement.prototype` level, before any `newSpecPage()` call
 in the file (top-level `beforeAll`):**
 
 ```ts
@@ -18,6 +18,8 @@ let originalGetBoundingClientRect: typeof HTMLElement.prototype.getBoundingClien
 
 beforeAll(() => {
   originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+  (HTMLElement.prototype as unknown as Record<string, unknown>).clientHeight = VIEWPORT_HEIGHT;
+  (HTMLElement.prototype as unknown as Record<string, unknown>).clientWidth = VIEWPORT_WIDTH;
   (HTMLElement.prototype as unknown as Record<string, unknown>).offsetHeight = VIEWPORT_HEIGHT;
   (HTMLElement.prototype as unknown as Record<string, unknown>).offsetWidth = VIEWPORT_WIDTH;
   HTMLElement.prototype.getBoundingClientRect = (): DOMRect =>
@@ -26,6 +28,8 @@ beforeAll(() => {
 
 afterAll(() => {
   HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+  delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientHeight;
+  delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientWidth;
   delete (HTMLElement.prototype as unknown as Record<string, unknown>).offsetHeight;
   delete (HTMLElement.prototype as unknown as Record<string, unknown>).offsetWidth;
 });
@@ -36,11 +40,14 @@ This works because `global.HTMLElement` inside a Stencil spec file IS mock-doc's
 `HTMLElement.prototype.showPopover` directly) — a prototype patch in one spec file is invisible to
 other spec files since Jest gives each test file its own module registry.
 
-**Why this specific pair is sufficient, and why nothing else (ResizeObserver mocks, scroll
+**Why these properties are sufficient, and why nothing else (ResizeObserver mocks, scroll
 simulation) is needed:**
 
 - The scroll-container viewport size comes from `@tanstack/virtual-core`'s `observeElementRect`,
-  which does `handler(getRect(element))` — a synchronous read of `offsetWidth`/`offsetHeight` —
+  which does `handler(getRect(element))` — a synchronous read of `clientWidth`/`clientHeight` from
+  3.19.6 on (`offsetWidth`/`offsetHeight` up to 3.19.5; keep both defined so the pattern works across
+  versions; with only `offset*` the viewport is `NaN` on 3.19.6+ and the window collapses to its
+  overscan) —
   *before* it ever touches `ResizeObserver`. That one synchronous call is what seeds
   `virtualizer.scrollRect`, and it's all these tests need since none of them scroll or resize.
 - Per-row measured height comes through whatever `measureElement` callback the *consuming

@@ -18,6 +18,8 @@ Hooks are `before|after:<step>` for every plugin, and `before|after:<plugin>:<st
 
 `--dry-run` prints the hook but does not execute it. Test a hook with a real release in a scratch clone (`--no-npm.publish`, throwaway git remote), as in the rehearsal recipe of `RELEASING.md`.
 
+The `before:init` hook is printed with a `!` prefix in a dry run and is NOT run, so a dry run does not prove that the build in the hook works (verified 2026-11-13, EOA-20193). To test only the hook command, run it through `pnpm exec sh -c '<command>'` from the package folder; plain `sh -c` fails with exit 127 because `turbo` is not on `PATH`. The `dist` cleanup this hook performs is explained in [[turbo-cache-hit-keeps-stray-dist-files]].
+
 ## A failing hook before the publish aborts the release safely
 
 Nothing is published or committed. A hook that must never block a release should catch its own errors and exit 0 (see `scripts-boreal/bin/link-changelog-heading.js`).

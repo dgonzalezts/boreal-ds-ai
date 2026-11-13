@@ -2,7 +2,11 @@
 
 Local drafts produced by the major-update planning (`ai-work/research/2026-10-27-EOA-19635-major-updates.md`). Create a Jira ticket from one only when someone picks it up, then record its ID in the plan EOA-19635 row named in each heading. Suggested project: EOA, type: Task. Items 9 to 14 were added on 2026-10-30 when plan tasks 13 to 22 were re-scoped. Runtime upgrades (Node, pnpm) stay in `EOA-18749-release-process-followup-tickets.md` items 2 and 3.
 
+**Update 2026-11-13:** 13 of the 14 drafts were executed in EOA-20193 (`ai-work/plans/EOA-20193-dependency-upgrades-followup.md`): 11 complete and 2 with a remainder (draft 6: TypeScript 7 not adopted; draft 9: the React half was dropped). Draft 2 was deferred. New follow-ups found along the way are drafted in `EOA-20193-follow-up-tickets.md`.
+
 ## 1. Upgrade the Vitest stack to 5 and jsdom to 30 (from Task 4)
+
+**Status 2026-11-13:** done in EOA-20193 T10 (commit `80cc113a`, jsdom 30.1.3 and Vitest 5.1.0; squashed on merge).
 
 **Summary:** Upgrade `vitest`, `@vitest/browser-playwright`, `@vitest/coverage-v8`, `@vitest/ui`, `jsdom` and `@types/jsdom`
 
@@ -18,6 +22,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: small.
 
 ## 2. Migrate the Stencil unit tests from the built-in runner to `@stencil/vitest` (from Tasks 4 and 21)
+
+**Status 2026-11-13:** deferred 2026-11-13 by the user (EOA-20193 T15 to T17): the spike and three measured routes are written up; see draft 8 in `EOA-20193-follow-up-tickets.md`.
 
 **Summary:** Replace Stencil's deprecated built-in Jest/Puppeteer test runner with `@stencil/vitest`
 
@@ -35,6 +41,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 3. Plan and upgrade `@colordx/core` 5 → 7 (from Task 4 reconciliation)
 
+**Status 2026-11-13:** done in EOA-20193 T14 (commit `a02d0704`, `@colordx/core` 7.3.0; 110 characterization tests; an invalid-color guard was needed).
+
 **Summary:** Upgrade the color library used by `bds-color-picker`
 
 **Description:** `@colordx/core` 5.6.0 → 7.3.0 (two majors) is a runtime `dependency` of `boreal-web-components`, so it ships to consumers. Read both changelogs, list the `bds-color-picker` and related usage, and check that color parsing, formatting and alpha handling stay identical.
@@ -46,6 +54,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: to be estimated after reading the changelogs.
 
 ## 4. Upgrade ESLint to 10 with its companions (from Task 5)
+
+**Status 2026-11-13:** done in EOA-20193 T4 (commit `3979e79a`, ESLint 10; the `eslint-plugin-react` peer is handled with an `overrides` `:peer` entry since pnpm 12).
 
 **Summary:** Upgrade `eslint` and `@eslint/js` to 10, plus `globals` 17 and `eslint-plugin-jsdoc` 65
 
@@ -60,6 +70,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: small.
 
 ## 5. Upgrade Vite to 8 with its React plugin (from Task 6)
+
+**Status 2026-11-13:** done in EOA-20193 T11 (commit `30cfc14c`, Vite 8.3.8 and `@vitejs/plugin-react` 6.3.0, React Compiler kept through `@rolldown/plugin-babel`).
 
 **Summary:** Upgrade `vite` to 8, `@vitejs/plugin-react` to 6 and replace the removed Babel option
 
@@ -76,6 +88,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 6. Upgrade TypeScript to 6.0.3, then to 7 side by side (from Task 7)
 
+**Status 2026-11-13:** partly done: TypeScript 6.0.3 in EOA-20193 T8 (commit `553f3be5`); TypeScript 7 (7.0.2) is NOT adopted and stays a hold until Stencil's bundled compiler and `typescript-eslint` support it.
+
 **Summary:** Move the workspaces from TypeScript 5.9.3 to 6.0.3 and prepare TypeScript 7
 
 **Description:** TypeScript 7.0.2 ships no JavaScript API (7.1 is expected to), so the plan is two steps:
@@ -91,6 +105,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 7. Upgrade the Chromatic CLI to 18 and the Storybook addon to 5 (from Task 8)
 
+**Status 2026-11-13:** committed in EOA-20193 T18 (commit `5385a955`, Chromatic 18.14.3 and addon 5.6.0, Storybook refreshed to 10.6.7); the real `pnpm deploy:docs` was run by the token holder on 2026-11-13 and reported successful.
+
 **Summary:** Upgrade `chromatic` 15.2.0 to 18.13.6 and `@chromatic-com/storybook` 4.1.3 to 5.6.0
 
 **Description:** Both live in `boreal-docs`. A trial in a disposable worktree installed both cleanly, built Storybook with the new addon (same addons registered, same single warning) and confirmed that the two CLI flags in use (`--storybook-build-dir`, `--exit-zero-on-changes`) and `CHROMATIC_PROJECT_TOKEN` still exist.
@@ -105,6 +121,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 8. Upgrade the build and hook utilities: lint-staged 17, chalk 6, execa 10, npm-run-all2 9 (from Task 9)
 
+**Status 2026-11-13:** done in EOA-20193 T19 (commits `407b593d`, `6205af1a`; the root `engines.node` is now `^22.22.2 || ^24.15.0 || >=26.0.0`).
+
 **Summary:** Upgrade `lint-staged`, `chalk`, `execa` and `npm-run-all2` to their latest majors and raise the documented Node floor
 
 **Description:** `lint-staged` 16.2.7 to 17.6.0 (root), `chalk` 5.6.2 to 6.0.1 and `execa` 9.6.1 to 10.2.1 (`scripts-boreal`), `npm-run-all2` 8.0.4 to 9.0.4 (`vue-testapp`). A trial in a disposable worktree installed all four cleanly and passed the full build, the Vue app lint, the 38 `scripts-boreal` specs, `pnpm validate:all` and a real `lint-staged` run. None of the breaking changes touches the two `execa` calls, the colour chains or the two `npm-run-all2` scripts.
@@ -117,6 +135,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: small.
 
 ## 9. Add automated wrapper tests for Vue and React (from Task 20)
+
+**Status 2026-11-13:** partly done in EOA-20193 T7, T7b and T7c (commits `3b9d5ba0`, `1c0c4f0e`, `bb6a708b`): the Vue half was built and found the `bds-toggle` `v-model` defect; the React half was dropped by decision.
 
 **Summary:** Add automated tests for the `boreal-vue` and `boreal-react` wrappers in their test apps
 
@@ -133,6 +153,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 10. Understand the Stencil 4.45.2 boolean-attribute change and remove the 4.45.1 pin (from Task 14)
 
+**Status 2026-11-13:** done in EOA-20193 T5 (commit `44c50357`, `@stencil/core` `^4.45.2`; the behavior change is documented in the PR description).
+
 **Summary:** Find out why `multiple="false"` and `error="false"` parse as `true` on form-associated components in Stencil 4.45.2
 
 **Description:** With `@stencil/core` 4.45.2, three `bds-file-picker` tests fail because a string attribute `"false"` is parsed as `true`; 4.45.0 and 4.45.1 pass all 178 file-picker tests. Checked in Chromium on 4.45.1: `"false"` gives `false`. Today `@stencil/core` is pinned to exactly 4.45.1.
@@ -148,6 +170,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 11. Resolve the `@tanstack/virtual-core` 3.19.6+ failures in `bds-search-bar` (from Task 16)
 
+**Status 2026-11-13:** done in EOA-20193 T13 (commit `0f403dd0`; root cause was the test mock, range widened to `>=3.17.1 <3.20.0`, verified in Chromium and WebKit).
+
 **Summary:** Find the cause of 24 `bds-search-bar` items-mode failures with `@tanstack/virtual-core` 3.19.6 and later, and decide the published range
 
 **Description:** A bisect over every stable release from 3.17.1 to 3.19.8 showed 3.19.5 passing all 305 `bds-search-bar` tests and 3.19.6 failing 24, all in items mode (windowed suggestions). The range is capped at `>=3.17.1 <3.19.6`. `virtual-core` is a published runtime dependency declared as `^3.17.1`, so consumers resolve the newest 3.x whatever this repository does.
@@ -161,6 +185,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: medium; this needs the user's decision on the published range.
 
 ## 12. Add a `./components` export and lift the `@stencil/react-output-target` hold (from Task 18)
+
+**Status 2026-11-13:** done in EOA-20193 T12 (commits `2a67a532`, `d375d88f`; `@stencil/react-output-target` `^1.8.1`).
 
 **Summary:** Export `./components` from `boreal-web-components` so `@stencil/react-output-target` 1.5.0 and later can be used
 
@@ -176,6 +202,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 
 ## 13. Clear the `typescript-eslint` 8.59+ type-assertion errors (from Task 13)
 
+**Status 2026-11-13:** done in EOA-20193 T9 (commit `ca1dbe57`, `typescript-eslint` 8.72.2).
+
 **Summary:** Remove or justify 38 unnecessary type assertions and lift the `~8.58.2` cap on `typescript-eslint`
 
 **Description:** `typescript-eslint` 8.59.0 is the first version that raises 38 `@typescript-eslint/no-unnecessary-type-assertion` errors in 17 web-components files; 8.58.2 lints clean. Re-run the bisect at execution time. Check each flagged assertion, for example `(this.el as HTMLElement)` in `bds-text-field.tsx`, before removing it: it may be needed for another TypeScript version or for Stencil's JSX typing. If the TypeScript 6 upgrade (item 6) happens first, redo the count.
@@ -187,6 +215,8 @@ Local drafts produced by the major-update planning (`ai-work/research/2026-10-27
 - Effort: small.
 
 ## 14. Update prettier to 3.9 and reformat the files it changes (from Task 19)
+
+**Status 2026-11-13:** done in EOA-20193 T3 (commits `f9b1c273`, `f3b9400a`; Prettier 3.9.10 and the reformat).
 
 **Summary:** Move the four `prettier` pins to 3.9.x with one formatting-only commit
 

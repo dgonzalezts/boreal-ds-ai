@@ -8,7 +8,7 @@ This document outlines the dependency installation strategy for our CI/CD pipeli
 
 ### Package Manager
 
-- **Tool**: pnpm 11.x, pinned by the `packageManager` field of the root `package.json` and activated by Corepack (`corepack enable`); do not install a different version in CI
+- **Tool**: pnpm 12.x, pinned by the `packageManager` field of the root `package.json` and activated by Corepack (`corepack enable`); do not install a different version in CI
 - **Node.js**: the version in `.node-version` at the repo root (22.23.3 at the time of writing)
 - **Workspace**: Monorepo structure with multiple packages
 
@@ -173,5 +173,5 @@ ignore-scripts=false
 
 ---
 
-**Last Updated**: October 9, 2026 (pnpm 11, Corepack pin, `allowBuilds`)
+**Last Updated**: November 13, 2026 (pnpm 12.18.0, Corepack pin, `allowBuilds`, `:peer` override)
 **Related Issue**: Build script warnings during `pnpm install`

@@ -1,110 +1,229 @@
 # PR Title
 
-fix(deps): EOA-19635 resolve production audit findings and apply dependency updates
+feat(multiple)!: EOA-20193 update dependencies and fix wrapper typings and bds-toggle v-model
 
 ---
 
 # PR Body
 
+## ⚠️ BREAKING CHANGE Notice
+
+**Type:**
+
+- [x] Behavior change (same API, different behavior)
+- [x] Build output change (package structure, exports)
+- [ ] API change (prop/method/event renamed or removed)
+- [ ] Component renamed or removed
+- [ ] Minimum version requirement change (Node.js, browsers, dependencies)
+
+**Impact Level:** **Medium**. It affects a subset of consumers and needs small code changes: Vue code that reads the `BdsToggle` `v-model` as a string, HTML that writes `"false"` as an attribute string on form-associated components, and TypeScript code that calls `focusFromTriggerKey` of `bds-list-menu` with a plain `string`.
+
+**Merge order:** PR #208 (EOA-19635, production audit fixes and minor updates) is already merged. This PR is rebased on the resulting `release/current` and holds the 27 commits of EOA-20193 only. Use **Squash and merge** and keep the title above. Put the `BREAKING CHANGE:` footer from "Merge message" below in the last lines of the merge message, unindented.
+
+---
+
 ## Description
 
-First code delivery of the dependency maintenance baseline (EOA-19635, sub-tasks 1 to 3): it fixes the production audit findings, refreshes the browser data and applies the pending patch and minor updates. Major version updates are out of scope; they are planned separately.
+Second delivery of the dependency maintenance work, continuing EOA-19635: it upgrades the major versions that the baseline left out (TypeScript 6, ESLint 10, Vitest 5, Vite 8, `@colordx/core` 7, Storybook's Chromatic stack, pnpm 12 and others), lifts all six holds recorded at the end of the baseline, and fixes three defects found while doing it (the `bds-toggle` `v-model` mapping in the Vue wrapper, the `@tanstack/virtual-core` test mock, and unresolved names in the published type declarations).
 
-**Why `fix(deps)` and not `chore`:** the PR changes runtime dependencies of the published packages (`dompurify`, `@stencil/vue-output-target`, `@tanstack/virtual-core`). Consumers must receive the security fix, and a `chore` does not release.
+`pnpm outdated -r` went from **83 entries (30 major, 42 minor, 11 patch) to 31 (11 major, 9 minor, 11 patch)**. The production audit stays at 0 high or critical findings; one moderate `minimatch` finding is accepted with a recorded reason (below).
 
----
-
-## Security fixes
-
-`pnpm audit --prod` went from **29 advisories (1 critical, 17 high, 7 moderate, 4 low) to 0** ("No known vulnerabilities found"). All advisories are public GitHub advisories; no coordinated disclosure is needed.
-
-| Package | Advisories | Reached through | Fixed in |
-| --- | --- | --- | --- |
-| `dompurify` | 8 (1 critical `GHSA-cg2g-xh64-v4q7`, 1 high, 2 moderate, 4 low) | `boreal-web-components`, direct runtime dependency (HTML sanitizer) | 3.4.17: range raised to `^3.4.17` |
-| `brace-expansion`, `minimatch`, `picomatch` | 12 (9 high, 3 moderate) | `boreal-react` → `@stencil/react-output-target` → `ts-morph` | lockfile re-resolved within the existing ranges |
-| `nanoid`, `postcss`, `source-map-js`, `@vue/server-renderer` | 9 (7 high, 2 moderate) | `boreal-vue` and `vue-testapp` through `vue` | lockfile re-resolved (`vue` 3.5.44) |
-
-Exposure: `dompurify` is reachable at runtime through the library's sanitizer. The rest are transitive dependencies on tooling and server-rendering paths; they are fixed regardless. Only the `dompurify` range changed in a manifest; no overrides and no major bumps were needed.
+The test runner migration (Jest to `@stencil/vitest`) is **not** included: it was investigated and deferred. See "Not included".
 
 ---
 
-## What changed
+## Justification for the breaking changes
 
-- **Manifests (6 files):** `dompurify` `^3.4.17`; `@stencil/core` exact `4.45.1`; `@stencil/react-output-target` exact `1.4.2` (web-components and `boreal-react`); `@stencil/vue-output-target` `^0.14.7` (web-components and `boreal-vue`); `@tanstack/virtual-core` capped at `>=3.17.1 <3.19.6`; `typescript-eslint` `~8.58.2`; docs, `react-testapp` and `vue-testapp` dev-tool ranges (`oxlint`, `eslint-plugin-oxlint`, `eslint-plugin-vue`, `eslint-plugin-react-refresh`, `prettier` pin).
-- **`pnpm-lock.yaml`:** re-resolved; 42 of the 48 packages with pending minor or patch updates now sit on the latest version (the other 6 are listed below).
-- **`caniuse-lite`** 1.0.30001769 → 1.0.30001819. The Browserslist "9 months old" warning was printed by data bundled inside `@stencil/core`, so the Stencil update is what cleared it (21 warning lines → 0 in the build).
-- **`boreal-web-components/testing.config.ts`:** the generated `bds-flag/helpers/generatedFlags.ts` (542 lazy-import functions) is excluded from coverage. It dropped Functions coverage to 77% on `release/current`; without it the figure is 92.7%.
-- **`release/current` merged twice** (the EOA-19436 and EOA-19597 breaking commits, then the 0.15.0 and 0.16.0 releases and the `prebuild` removal).
+- **`BdsToggle` `v-model` (Vue):** the wrapper mapped the model to the toggle's `value` property, so the bound value was a string and a bound `true` did not check the toggle. A checked toggle also submitted the model string (`"true"` or `"false"`) instead of its `value` (`"on"` by default). The model now binds `checked`, like `bds-checkbox`.
+- **Stencil 4.45.2:** the first baseline pinned Stencil to 4.45.1 because 4.45.2 reads the attribute string `"false"` as `true` on form-associated components. The pin could not stay: Stencil 4.45.2 is the maintained line and Stencil 5 builds on it. The behavior is documented upstream (stenciljs/core pull request 6908).
+- **Type declarations:** the published types failed a strict consumer check (14 errors with `skipLibCheck: false`) and silently typed some names as `any`. Fixing them makes `focusFromTriggerKey` a real type.
 
 ---
 
-## Updates held back (6)
+## Migration path
 
-Each hold was found by testing. The sub-task asked for every pending update, so these deviate from it on purpose; each has a tracked follow-up.
+### Vue: `BdsToggle` with `v-model`
 
-| Package | Now | Latest | Why it is held |
-| --- | --- | --- | --- |
-| `@stencil/core` | 4.45.1 (exact) | 4.45.2 | 4.45.2 parses the string attribute `"false"` as `true` on form-associated components; 3 `bds-file-picker` tests fail. The upstream intent needs confirming. |
-| `@stencil/react-output-target` | 1.4.2 (exact) | 1.6.5 | From 1.5.0 the generated React wrapper imports types from `@pxglobal/boreal-web-components/components`, which the package `exports` map does not provide (`TS2307` in `boreal-react`). |
-| `typescript-eslint` | ~8.58.2 | 8.72.1 | 8.59.0 adds 38 `no-unnecessary-type-assertion` errors in 17 component files. |
-| `@tanstack/virtual-core` | below 3.19.6 | 3.19.8 | 3.19.6 and later fail 24 `bds-search-bar` items-mode tests (3.19.5 passes all 305). |
-| `@vitest/eslint-plugin` | 1.6.27 (lockfile) | 1.6.28 | 1.6.28 raises its optional TypeScript peer to `>=6.0.0`; the repository is on 5.9.3. |
-| `prettier` | 3.8.0 / 3.8.1 | 3.9.10 | 3.9 newly flags 16 files that need reformatting. |
+**Before:** the model was a string (the toggle's `value`) and `true` from code did not check the toggle.
+
+```vue
+<BdsToggle v-model="notifications" name="notifications" label="Notifications" />
+<!-- notifications was "on" or "" after a click; setting it to true did nothing -->
+```
+
+**After:** the model is a boolean bound to `checked`.
+
+```vue
+<BdsToggle v-model="notifications" name="notifications" label="Notifications" />
+<!-- notifications is true or false; setting it to true checks the toggle -->
+```
+
+Check what reads the model: code that compared it to `"on"` or `""` must compare it to `true` or `false`. `name` is now required by the generated wrapper type for `BdsToggle`. The `value` property keeps its meaning (the form value, `"on"` by default).
+
+### All frameworks: `"false"` in an attribute on form-associated components
+
+**Before:** `<bds-checkbox disabled="false">` was enabled.
+
+**After:** the string `"false"` resolves to `true`, so the control is disabled and excluded from form data. Typed values and properties are unaffected.
+
+```html
+<!-- migrate: remove the attribute, or set the property -->
+<bds-checkbox></bds-checkbox>
+<script>
+  document.querySelector("bds-checkbox").disabled = false;
+</script>
+```
+
+In React and Vue bind a boolean (`disabled={false}`, `:disabled="false"`), not the string.
+
+### TypeScript: `focusFromTriggerKey` of `bds-list-menu`
+
+**Before:** the declaration referenced an unresolved name, so the parameter was effectively `any`.
+
+**After:** the parameter is the exported type `ListMenuTriggerKey` (`'ArrowDown' | 'ArrowUp'`). Pass one of those literals; a `string` no longer compiles.
+
+### Types that disappear
+
+The generated duplicate alias `ValidationChangePayload1` is no longer exported from `components.d.ts`. Use `ValidationChangePayload`.
+
+### Unverified
+
+`@stencil/react-output-target` moves from 1.4.2 to 1.8.1, so the generated React wrapper declares more generic arguments for `StencilReactComponent`. The React pack app builds and a wrapper click handler fires exactly like the raw element, but consumers that reference those generics directly were not checked.
 
 ---
 
-## Impact
+## Other consumer-visible changes (not breaking)
 
-- **Not a breaking change** under CONTRIBUTING.md: no public API, token, tag, prop, event or entry point changed, and no component source was edited.
-- **Behaviour-changing in edge cases (upstream fixes):** `dompurify` 3.4.17 sanitization fixes; the Vue runtime (`@stencil/vue-output-target` 0.14.7) rewrites host class merging and no longer intercepts modifier-key clicks on router links; the Stencil 4.45.1 compiler output.
-- **Published dependency ranges changed:** `dompurify` minimum raised, `virtual-core` capped, `@stencil/vue-output-target` raised in `boreal-vue`.
-- **Release effect:** a `fix` touching `boreal-web-components`, `boreal-react` and `boreal-vue` releases those three packages; `boreal-style-guidelines` is untouched.
+- **New export** `@pxglobal/boreal-web-components/components` (types and the custom elements index). Additive.
+- **`@colordx/core` 5.6.0 to 7.3.0** (runtime dependency of `bds-color-picker`). A differential test of the surface the picker uses (26,667 hex strings, 22,695 HSV objects) found identical hex, RGB, HSL and HSV output for every valid input. Three small differences: uppercase or padded `transparent` is now accepted; for a color with saturation of about 0.01 the HSL hue is reported as 0 (the rule that already applied to pure greys); contrast values move by up to 0.02 in about 7.5% of colors, without crossing the swatch threshold in 100,000 random colors. The contrast helper now falls back to black for an invalid color, because v7 throws where v5 returned a value (a consumer-supplied `presetColors` entry would have crashed the render).
+- **`@tanstack/virtual-core`** range widened from `>=3.17.1 <3.19.6` to `>=3.17.1 <3.20.0`. From 3.19.6 the library measures the scroll container with `clientHeight` and `clientWidth`; the 24 failing `bds-search-bar` specs were a gap in the test mock, not in the component. Verified in a real browser (Chromium and WebKit) on 3.19.11: windowing, scrolling, keyboard navigation, resize and filtering of the 1,000-item search bar, and a 5,000-row virtualized table. Consumers now resolve the newest 3.19.x.
+- **Published type declarations:** a strict consumer check (`skipLibCheck: false`, TypeScript 6.0.3, packed tarball installed with its dependencies) went from 14 errors to 0, and no test helper declaration enters a consumer's program any more.
 
----
-
-## Testing
-
-Automated, on this branch:
-
-- `pnpm lint`: 0 errors, same warning counts as before the update.
-- Unit tests: 375 suites, 4,810 tests pass; coverage 93.2% statements, 85.6% branches, 92.7% functions, 94.8% lines (threshold 80%).
-- Builds pass for web-components, Storybook, the React and Vue wrappers and both test apps.
-- `pnpm validate:all` passes (React and Vue pack pipelines) and leaves a clean tree; `pnpm peers check` and `pnpm install --frozen-lockfile` are clean.
-
-Manual, in a real browser (Chromium, packed artifacts through `dev:pack:vue`), Vue wrapper:
-
-- Host class merging held through repeated toggling of a consumer `:class` and the component's own `error` state, with no stale or duplicated classes.
-- `v-model` worked in both directions on `bds-text-field` and `bds-checkbox`.
-- Console: 0 errors.
+Tooling only (no consumer effect): TypeScript 6.0.3, ESLint 10 and its companions, `typescript-eslint` 8.72, Vitest 5.1.0 and jsdom 30, Vite 8.3.8 and `@vitejs/plugin-react` 6, Storybook 10.6.7 with the Chromatic CLI 18 and addon 5, `lint-staged` 17, `chalk` 6, `execa` 10, `npm-run-all2` 9, Prettier 3.9, pnpm 12.18.0, Turborepo `^2.11.10`.
 
 ---
 
-## Notes for reviewers
+## Tasks included
 
-- **The lockfile diff is about 5,400 changed lines, but only resolved-version moves are real.** The rest is pnpm 11 rewriting peer-dependency suffixes such as `(supports-color@8.1.1)` and the quote style. Review the 6 manifests (about 30 changed lines) and the version moves.
-- **Please confirm two choices that reach the published manifests:** the `@tanstack/virtual-core` cap and the exact `@stencil/react-output-target` pin. There are no consumers yet; the follow-ups lift both once the causes are fixed.
-- **Merge message:** keep the title as written; no `BREAKING CHANGE:` footer is needed. Squash and merge.
-- The branch contains two merge commits from `release/current`.
+| Task                        | Commit                                                                 | Notes                                                                                                                                                                              |
+| --------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prettier 3.9                | `f9b1c273`, `f3b9400a`                                                 | The reformat is its own `style` commit                                                                                                                                             |
+| ESLint 10                   | `3979e79a`                                                             | `eslint-plugin-react` peer handled with an override                                                                                                                                |
+| Stencil 4.45.2              | `44c50357`                                                             | The 4.45.1 pin is removed; behavior change documented above                                                                                                                        |
+| Dependency check docs       | `ed5badce`                                                             | `scripts-boreal` README                                                                                                                                                            |
+| Vue wrapper tests           | `3b9d5ba0`                                                             | Compares `custom-elements.json` with the wrappers; the Vue test app has 14 tests today                                                                                             |
+| `bds-toggle` `v-model`      | `1c0c4f0e`                                                             | Breaking, see above                                                                                                                                                                |
+| Vue `v-model` contract docs | `bb6a708b`                                                             | Adds the how-to to the web-components README                                                                                                                                       |
+| TypeScript 6.0.3            | `553f3be5`                                                             |                                                                                                                                                                                    |
+| `typescript-eslint`         | `ca1dbe57`                                                             | Clears the type-assertion errors                                                                                                                                                   |
+| Vitest 5 and jsdom 30       | `80cc113a`                                                             |                                                                                                                                                                                    |
+| Vite 8 and plugin-react 6   | `30cfc14c`                                                             | React Compiler kept through `@rolldown/plugin-babel`                                                                                                                               |
+| `./components` export       | `2a67a532`, `d375d88f`                                                 | Lifts the `@stencil/react-output-target` hold (now `^1.8.1`)                                                                                                                       |
+| `virtual-core` range        | `0f403dd0`                                                             | Mock fix and range                                                                                                                                                                 |
+| `@colordx/core` 7           | `a02d0704`                                                             | 110 new tests written before the upgrade                                                                                                                                           |
+| Chromatic 18 and addon 5    | `5385a955`                                                             | Also refreshes Storybook within its range                                                                                                                                          |
+| Utilities                   | `407b593d`, `6205af1a`                                                 | `lint-staged`, `chalk`, `execa`, `npm-run-all2`; Node floor raised                                                                                                                 |
+| pnpm 12                     | `9db95b87`, `627d705a`                                                 | The lockfile rewrite is its own commit                                                                                                                                             |
+| Housekeeping                | `49f9bf14`, `4d44cee6`, `57716cbb`, `2d53ab1a`, `4f5d25e2`, `4774509f` | Wrapper `dist` clean in the release hooks, `react` declared in the docs app, type declarations, Vue devtools peer overrides, verified Turborepo version, certificate documentation |
+
+All six holds of the baseline are lifted (`@stencil/core`, `@stencil/react-output-target`, `typescript-eslint`, `@tanstack/virtual-core`, `@vitest/eslint-plugin`, `prettier`). The register for the next window is in the maintenance template.
+
+---
+
+## Not included (deferred, with reasons)
+
+- **Test runner migration (Jest to `@stencil/vitest`).** Stencil's built-in runner is deprecated and removed in Stencil 5, and Jest 30 is not supported on Stencil 4, so `jest`, `jest-cli`, `@types/jest` and `puppeteer` stay on their current versions (19 of the 75 findings of a full `pnpm audit` go through them). Three routes were measured: keeping `newSpecPage` under Vitest 5 with a small local transform plugin (352 of 377 spec files green, 97.1% of tests, about 1 to 2 days of work); converting to `render()` with the plugin in source mode (coverage kept, about 6 to 9 days by a rough estimate); and converting on the documented dist route (works only with a dedicated test build, and reports 0% coverage on component source). It blocks the Stencil 5 upgrade (`5.0.0-rc.1` exists; no release date).
+- **Dependency report script** and the **Jenkins job** (no owner, no DevOps agreement).
+- **Follow-up tickets** (drafted by the author, not created in Jira): virtualized `bds-table` Tab focus loss, `bds-table` End/Home and wheel drift, an intermittent date-picker story rejection (`triggerSlot is required`) during the Storybook addon run, color picker details (HEX blur reset, 8-digit input, invalid presets), unit tests for the six style-guidelines generator files, a strict type check of the packed package in the pack pipeline, the test runner migration, and the Stencil 5 upgrade.
+
+---
+
+## Accepted finding
+
+`pnpm audit --prod` reports one moderate `minimatch` advisory (GHSA-g3hv-75wg-m249, vulnerable below 11.0.1) through `boreal-react` > `@stencil/react-output-target` > `ts-morph` > `@ts-morph/common`. The newest published packages of that chain depend on `minimatch ^10`, so no clean fix exists; the published wrapper imports only the `/runtime` entry, which loads no `ts-morph`. `pnpm audit --prod --audit-level high` exits 0.
+
+---
+
+## Testing conducted
+
+**Automated (final state, after rebasing on `release/current`):**
+
+- `pnpm build` 7/7 (including the Storybook build and both test apps); `pnpm lint` 0 errors; `pnpm test` passes (web-components 378 suites and 4,967 tests; style-guidelines 33; `scripts-boreal` 45; Vue test app 14); web-components coverage 93.39 / 85.77 / 92.81 / 94.88 (statements, branches, functions, lines).
+- `pnpm validate:all` (React and Vue pack pipelines) passes; `pnpm peers check` clean; frozen install passes; `pnpm audit --prod --audit-level high` exits 0.
+- Release dry runs of the four packages exit 0 (a dry run prints the `before:init` hook but does not run it).
+- Strict consumer type check of the packed web-components package: 0 errors.
+
+**Manual (Chromium, and WebKit where noted):**
+
+- Dev servers of the React, Vue and Storybook apps on Vite 8; the React Compiler is applied (A/B build).
+- Search bar (1,000 items) and a 5,000-row virtualized table on `virtual-core` 3.19.11, Chromium and WebKit.
+- Color picker: typed colors, drags, alpha and invalid presets against reference values computed with the old library.
+- Pack-based React and Vue apps: wrapper click handlers match the raw element; Vue `v-model` on `BdsToggle`.
+- The wrapper `dist` clean in the release hooks, tested with stray files.
+- Certificate handling of `pnpm` 11.28.2 and 12.18.0 against a local registry with a private authority.
+
+---
+
+## Gates that cannot run here (recorded for the reviewers)
+
+- [ ] **Windows (before contributors adopt pnpm 12):** someone runs `pnpm install`, `dev:pack:*` and `validate:pack:*` on Windows. Releases are not affected (`RELEASING.md`: release commands run on macOS or Linux). The two pnpm 12 commits are the last ones and can be reverted alone.
+- [ ] **Company-network certificate (before the first release with pnpm 12):** pnpm 12 ignores `NODE_EXTRA_CA_CERTS` and reads `cafile` from `~/.npmrc`. On the company network, with the real root certificate and `strict-ssl` not disabled, the check in `RELEASING.md` must pass and a real publish of React and Vue must succeed.
+- [x] **Chromatic upload:** the token holder ran one `pnpm deploy:docs` from this branch and reported that it ran successfully (the exit code, build URL and number of detected changes were not recorded).
+
+---
+
+## Contributor impact
+
+pnpm 12.18.0 is pinned through Corepack and `engines.pnpm` is `>=12`; the root `engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0`. After pulling, run `pnpm install`. If the first `pnpm build` fails with `Property ... does not exist`, delete the generated `packages/boreal-web-components/src/components.d.ts` and rebuild (it also happened after the rebase of this branch).
+
+---
+
+## Merge message
+
+Keep the title as is. Add this as the last lines of the merge message, unindented:
+
+```
+BREAKING CHANGE: In @pxglobal/boreal-vue, BdsToggle v-model now binds the checked state as a boolean (it bound the value string, so a bound true did not check the toggle and a checked toggle submitted the model string instead of its value). On form-associated web components the string "false" in an HTML attribute now resolves to true (Stencil 4.45.2), so disabled="false" disables the control. The focusFromTriggerKey method of bds-list-menu is typed 'ArrowDown' | 'ArrowUp' (it was effectively any), and the duplicate type export ValidationChangePayload1 is removed.
+```
+
+Release effect: each package that changes takes one minor bump (below 1.0); `release/current` already holds another breaking commit (`feat(web-components)!: EOA-19856 tech debt V5`), so the bump level does not change.
 
 ---
 
 ## References
 
-Closes EOA-20014
-Closes EOA-20015
-Refs EOA-20016
-Refs EOA-19635
+Refs EOA-20193 (continues EOA-19635, merged as PR #208)
+The per-task evidence is kept in the author's local plan; the numbers reviewers need are in this description.
 
 ---
 
 ## Checklist
 
-- [x] The audit findings are addressed and `pnpm audit --prod` reports no vulnerabilities
-- [x] No new vulnerabilities introduced
-- [x] All existing tests pass and coverage stays above 80%
-- [x] No component source or public API changed
-- [x] Lint, builds, `validate:all` and the peers check pass
-- [x] Follows the conventional commit format (`fix(deps)`) and includes the ticket
-- [x] Lockfile changes are consistent with the manifests (`--frozen-lockfile` passes)
-- [x] Held-back updates are documented with reasons and tracked follow-ups
-- [ ] Reviewer confirms the `virtual-core` cap and the `@stencil/react-output-target` pin for the published manifests
+### General
+
+- [x] Follows conventional commit format with `!`: `type(scope)!: TICKET description`
+- [x] BREAKING CHANGE footer prepared for the merge message
+- [x] Ticket reference included
+- [x] All tests pass
+- [x] Self-reviewed for correctness
+
+### Breaking Change Management
+
+- [x] Breaking changes documented with before and after
+- [x] Justification provided
+- [x] Impact level assessed (medium)
+- [x] Affected APIs documented
+- [x] Migration path provided with examples
+
+### Communication
+
+- [ ] Reviewers notified of the three manual gates above
+- [ ] Release notes mention the three breaking changes (the merge-message footer carries them)
+- [ ] Consuming Vue teams told about the `BdsToggle` `v-model` change before the release
+
+### Boreal DS Standards
+
+- [x] Design tokens untouched
+- [x] TypeScript types updated (`ListMenuTriggerKey`, relative re-exports, narrower imports)
+- [x] Storybook builds with the upgraded addons
+- [x] Documentation updated (`README.md`, `RELEASING.md`, web-components README)

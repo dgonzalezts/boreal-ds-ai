@@ -6,7 +6,20 @@
 - Copy everything below the `--- paste below ---` line into a new Jira ticket (Task, project EOA), replace each `{placeholder}`, delete the guidance in parentheses, and create sub-tasks only for the steps that apply this month. The pasted text deliberately contains no local file paths.
 - The structure mirrors the baseline ticket EOA-19635. The `create-ticket` command can turn the filled copy into a Jira-ready description.
 - Quarterly (January, April, July, October) also run the runtime review step; skip it in the other months.
-- **Seed the hold register from here the first time** (state at the end of the baseline, 2026-10-30): `@stencil/core` pinned to 4.45.1 (4.45.2 parses a string `"false"` as `true` on form-associated components); `@stencil/react-output-target` pinned to 1.4.2 (from 1.5.0 the generated wrapper imports types from a `/components` path the package does not export); `typescript-eslint` capped at `~8.58.2` (8.59 adds 38 type-assertion errors); `@tanstack/virtual-core` capped below 3.19.6 (3.19.6 fails 24 `bds-search-bar` tests); `@vitest/eslint-plugin` held at 1.6.27 (1.6.28 needs TypeScript 6 or later); `prettier` held at 3.8.x (3.9 reformats 16 files). After the first window, copy the register from the previous ticket instead.
+- **Seed the hold register from here the first time** (state at the end of EOA-20193, 2026-11-13; the six holds of the baseline were all lifted). After the first window, copy the register from the previous ticket instead.
+
+  | Held | At | Latest at the time | Reason | Re-test trigger |
+  | --- | --- | --- | --- | --- |
+  | `typescript` | `~6.0.3` | 7.0.2 | New major; Stencil's bundled compiler and `typescript-eslint` must support it | each window |
+  | `@types/node` | the Node line of each workspace (22, 24, 25) | 26.6.6 | The Node pin is 22.23.3 (target 26, fallback 24) | when the Node pin moves |
+  | `jest`, `jest-cli`, `@types/jest`, `puppeteer` | 29, 29, 29, 24 | 30.5.2, 30.5.2, 30.0.0, 25.17.0 | Jest 30 is not supported on Stencil 4; the test runner migration is deferred | after the test runner migration |
+  | `@stencil/core` | `^4.45.2` | 4.45.3 in range; 5.0.0-rc.1 | Stencil 5 removes the built-in test runner | after the test runner migration |
+  | `@stencil/vue-output-target` | 0.14.7 | 0.15.0 | 0.15.0 still leaks the `modelvalue` attribute (verified) | each window |
+  | `@tanstack/virtual-core` | `<3.20.0` | 3.19.11 | Minors above 3.19 are untested (iOS scroll, ResizeObserver timing) | each window |
+  | `turbo` | `^2.11.10` | 2.11.11 | Its cache and hashing changes need a window of use | next window |
+  | pnpm | 12.18.0 (`latest-12` tag) | 12.20.0 | Newer versions sit on the `next-12` tag | each window |
+
+  Track with the register: the four `:peer` overrides in `pnpm-workspace.yaml` (`eslint-plugin-react>eslint` and the three `vite-*>vite` helpers; remove each when the package declares the newer range) and the accepted moderate `minimatch` production audit finding (`@stencil/react-output-target` > `ts-morph` > `@ts-morph/common`; re-check when they release).
 - When Phase 2 or Phase 3 of the policy arrives (scheduled Jenkins job, Renovate), replace the snapshot and update steps with the automated output and keep the rest.
 
 --- paste below ---
@@ -28,7 +41,7 @@ Keep the Boreal DS dependencies maintained under the policy in [ADR-0016 - Depen
 | Production audit (critical / high / moderate / low) | `pnpm audit --prod` | {c / h / m / l} | {fill} |
 | `caniuse-lite` version | lockfile | {version} | {fill} |
 | Node pin and newest patch of that line | `.node-version`, nodejs.org | {pin / patch} | {fill} |
-| pnpm pin and newest patch of the 11 line | `packageManager` | {pin / patch} | {fill} |
+| pnpm pin and newest patch of the 12 line (`latest-12` tag) | `packageManager` | {pin / patch} | {fill} |
 | Packages on hold (hold register) | previous ticket | {n} | {fill} |
 
 ## Scope
@@ -103,7 +116,7 @@ Acceptance criteria:
 ### 6- Runtime review (quarterly)
 
 - Node: check the release schedule at nodejs.org, the end-of-life date of the pinned line, and the minimum Node of the tools in use. Update `.node-version` and `.nvmrc` to the newest patch of the pinned line when a newer one exists.
-- pnpm: take the newest patch of the 11 line; track the 12 upgrade in its own ticket.
+- pnpm: take the newest version of the 12 line that the `latest-12` tag points to; re-check that the pinned version still accepts the `:peer` overrides.
 
 Acceptance criteria:
 - The pinned versions and the next decision date are recorded.
@@ -118,8 +131,10 @@ Acceptance criteria:
 - Unit tests pass with at least 80% coverage (`pnpm --filter @pxglobal/boreal-web-components test:coverage`).
 - `pnpm build` passes, including the Storybook build, and `pnpm peers check` is clean.
 - Commit the dependency changes **before** `pnpm validate:all`: `validate:pack` restores the wrapper and test-app `package.json` files and the lockfile with `git checkout HEAD --` on exit and discards uncommitted edits to them. If the run is killed, restore those files with `git checkout`.
+- After each commit and before validating or pushing, check that the commit holds the lockfile change (`git show HEAD:pnpm-lock.yaml` contains the new versions) and that `pnpm install --frozen-lockfile` passes; the lockfile was missing from two commits of EOA-20193 and `validate:all` does not catch it.
 - `git status` is clean after the build and after `validate:all`.
-- Majors of published dependencies also need a release-it dry run.
+- Majors of published dependencies also need a release-it dry run. A dry run prints the `before:init` hook (the line that starts with `!`) but does not run it, so it does not prove the build.
+- Record in the PR description any gate that cannot run in CI (for example Windows, or the company-network certificate for publishing) and who confirms it before adoption or release.
 - A change to a wrapper runtime library (`@stencil/vue-output-target`, `@stencil/react-output-target`) gets a browser smoke test of the wrapper before the next release.
 - A Chromatic CLI or addon upgrade gets one real `pnpm deploy:docs` run by the token holder.
 

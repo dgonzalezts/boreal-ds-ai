@@ -10,7 +10,21 @@ Source: the second release attempt from a teammate's machine (2026-10-13).
 | --- | --- | --- |
 | `E403` "Two-factor authentication or granular access token with bypass 2fa enabled is required" | The account had no real 2FA (an emailed login code is not a 2FA factor); the first token also had a personal scope and no bypass | Enable 2FA and use `npm login`, or a token with scope `@pxglobal` and bypass 2FA |
 | `E404` on `PUT` for a version that did not exist yet | npm answers an unauthorized publish with 404. A token created on npmjs.com is not installed on the machine; `~/.npmrc` held a different credential under the registry key | `npm config set //registry.npmjs.org/:_authToken=<token>` |
-| `SELF_SIGNED_CERT_IN_CHAIN` on React | Company proxy re-signs HTTPS. pnpm 11 reads only auth and registry settings from `.npmrc`, so `cafile` is ignored; web-components passed because it publishes through npm | `NODE_EXTRA_CA_CERTS=<company root certificate PEM>` in the shell profile |
+| `SELF_SIGNED_CERT_IN_CHAIN` on React | Company proxy re-signs HTTPS. pnpm 11 ignores `cafile` for `publish` (see the matrix below); web-components passed because it publishes through npm | pnpm 11: `NODE_EXTRA_CA_CERTS=<company root certificate PEM>` in the shell profile. pnpm 12: `cafile` in `.npmrc` instead |
+
+## Which TLS setting each client honors (verified 2026-11-13)
+
+Tested with certificate verification on, against a local HTTPS registry signed by a private CA that stands in for the proxy.
+
+| Client | `view` | `publish` |
+| --- | --- | --- |
+| pnpm 11.28.2 | `NODE_EXTRA_CA_CERTS` and `cafile` | `NODE_EXTRA_CA_CERTS` only; `cafile` fails with `UNABLE_TO_VERIFY_LEAF_SIGNATURE` |
+| pnpm 12.18.0 | `cafile` (project or user `.npmrc`); `NODE_EXTRA_CA_CERTS` is IGNORED (its HTTP client is not Node's; error `invalid peer certificate`) | `cafile` (project or user `.npmrc`) |
+| npm | not tested | honors a user-level `cafile` |
+
+`strict-ssl=false` hides all of this: every check passes with verification off, so a green run proves nothing about the certificate setup. The repository's `RELEASING.md` documents the setting.
+
+Test technique: start a throwaway HTTPS server with a CA made by `openssl`, use a clean `HOME` and run the client with `env -u NODE_EXTRA_CA_CERTS` so no inherited setting masks the result.
 
 ## Facts
 

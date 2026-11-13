@@ -8,9 +8,13 @@ A throwaway spec that imports only `renderItemsPage`/`windowItems` from
 `0px`, on the very first render, before any code under test has run.
 
 Cause: `@tanstack/virtual-core`'s `observeElementRect` measures the scroll
-element with `getBoundingClientRect()`, which mock-doc returns as all-zeros.
-A zero-height viewport yields an empty `getVirtualItems()`, so
+element with `clientWidth`/`clientHeight` (from 3.19.6; 3.19.5 and earlier
+read `offsetWidth`/`offsetHeight`), which mock-doc leaves undefined unless a
+mock defines them. `getBoundingClientRect()`, which mock-doc returns as
+all-zeros, is only used for per-row measurement. A missing or zero-height
+viewport yields an empty `getVirtualItems()`, so
 `VirtualWindow.getItems()` short-circuits to `[]`.
+See `.agents/memory/tanstack-virtual-core-measures-client-size-since-3-19-6.md`.
 
 The real spec files each call this mock set at **module scope** (they are
 `beforeAll`/`afterAll`-based, so they do not work inside `it`):
@@ -25,8 +29,8 @@ setupElementLayoutMock({ viewportHeight: LIST_VIEWPORT_HEIGHT, viewportWidth: 40
 ```
 
 `setupElementLayoutMock` patches `HTMLElement.prototype.getBoundingClientRect`
-(and `offsetHeight`/`offsetWidth`) in `beforeAll`; it is the one that actually
-fixes the empty window. Omitting it produces a *false negative* ("the fix did
+(and `clientHeight`/`clientWidth`, `offsetHeight`/`offsetWidth`) in
+`beforeAll`; it is the one that actually fixes the empty window. Omitting it produces a *false negative* ("the fix did
 nothing") that looks like a component bug.
 
 With the full set, 1000 items at `scrollTop` 14000 mount 18 rows starting at
