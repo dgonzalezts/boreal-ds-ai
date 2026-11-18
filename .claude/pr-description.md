@@ -176,6 +176,16 @@ All six holds of the baseline are lifted (`@stencil/core`, `@stencil/react-outpu
 
 pnpm 12.18.0 is pinned through Corepack and `engines.pnpm` is `>=12`; the root `engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0`. After pulling, run `pnpm install`. If the first `pnpm build` fails with `Property ... does not exist`, delete the generated `packages/boreal-web-components/src/components.d.ts` and rebuild (it also happened after the rebase of this branch).
 
+### Branches still open after this merge
+
+1. Install pnpm 12 once: `corepack enable && corepack prepare pnpm@12.18.0 --activate`.
+2. `git fetch && git rebase origin/release/current`.
+3. If `pnpm-lock.yaml` conflicts, keep your branch's version (`git checkout --theirs pnpm-lock.yaml`; during a rebase, "theirs" is your branch), run `pnpm install`, then `git add pnpm-lock.yaml && git rebase --continue`.
+4. Run `pnpm lint:fix` and `pnpm format` (ESLint 10 and Prettier 3.9 fix most changes automatically).
+5. Fix any remaining TypeScript 6 errors and the unnecessary type assertions that typescript-eslint now reports.
+6. If the build fails with `Property ... does not exist`, delete `packages/boreal-web-components/src/components.d.ts` and rebuild.
+7. Run `pnpm build`, `pnpm lint` and the tests, then push with `--force-with-lease`.
+
 ---
 
 ## Merge message

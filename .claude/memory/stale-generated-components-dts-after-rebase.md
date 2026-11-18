@@ -1,0 +1,1 @@
+../../.agents/memory/stale-generated-components-dts-after-rebase.md

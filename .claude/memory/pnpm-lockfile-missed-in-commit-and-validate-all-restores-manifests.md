@@ -1,0 +1,1 @@
+../../.agents/memory/pnpm-lockfile-missed-in-commit-and-validate-all-restores-manifests.md

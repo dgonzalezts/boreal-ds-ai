@@ -116,6 +116,7 @@ Acceptance criteria:
 ### 6- Runtime review (quarterly)
 
 - Node: check the release schedule at nodejs.org, the end-of-life date of the pinned line, and the minimum Node of the tools in use. Update `.node-version` and `.nvmrc` to the newest patch of the pinned line when a newer one exists.
+- Node target (decision of 2026-11-11): Node 26, with 24 as the fallback. The move itself is outside the monthly window; record when it is scheduled. Facts from the 2026-10-27 research: the pin is 22.23.3, Node 22 ends life on 2027-04-30, Node 24 entered maintenance on 2026-10-20 and Node 26 became Active LTS on 2026-10-28. The root `engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0`, the highest floor among the build and hook utilities; re-check it when those tools change.
 - pnpm: take the newest version of the 12 line that the `latest-12` tag points to; re-check that the pinned version still accepts the `:peer` overrides.
 
 Acceptance criteria:

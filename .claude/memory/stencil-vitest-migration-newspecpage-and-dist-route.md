@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-vitest-migration-newspecpage-and-dist-route.md

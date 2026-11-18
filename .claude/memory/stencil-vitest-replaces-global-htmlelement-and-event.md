@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-vitest-replaces-global-htmlelement-and-event.md

@@ -1,0 +1,1 @@
+../../.agents/memory/tanstack-virtual-core-measures-client-size-since-3-19-6.md

@@ -1,0 +1,1 @@
+../../.agents/memory/agent-shell-zsh-no-wordsplit-and-silent-grep-pipelines.md

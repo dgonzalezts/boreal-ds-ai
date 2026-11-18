@@ -1,0 +1,1 @@
+../../.agents/memory/vitest-vi-fn-not-constructable.md

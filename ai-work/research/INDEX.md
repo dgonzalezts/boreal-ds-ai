@@ -37,6 +37,7 @@
 
 | File | Date | Ticket | Component | Title |
 | ---- | ---- | ------ | --------- | ----- |
+| [2026-11-13-bds-text-editor-engine-spike.md](./2026-11-13-bds-text-editor-engine-spike.md) | 2026-11-13 | EOA-18739 | `bds-text-editor` | bds-text-editor editing engine spike (ProseMirror chosen; emoji picker, fields, counter decisions) |
 | [2026-08-12-bds-date-picker-architecture-spike.md](./2026-08-12-bds-date-picker-architecture-spike.md) | 2026-08-12 | EOA-16692 | `bds-date-picker` | Research Spike: bds-date-picker Architecture |
 | [2026-06-16-bds-table-column-api-spike.md](./2026-06-16-bds-table-column-api-spike.md) | 2026-06-16 | EOA-10576 | `bds-table` | Research Spike: bds-table Column API & Virtualization |
 | [2026-05-28-bds-select-multiselect-extension.md](./2026-05-28-bds-select-multiselect-extension.md) | 2026-05-28 | EOA-13695 | `bds-select` | Research: bds-select Multiselect Extension via bds-tag-field |

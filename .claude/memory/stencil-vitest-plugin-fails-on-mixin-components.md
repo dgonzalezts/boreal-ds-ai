@@ -1,0 +1,1 @@
+../../.agents/memory/stencil-vitest-plugin-fails-on-mixin-components.md
