@@ -1,6 +1,6 @@
-# TBD — bds-text-editor v2
+# EOA-21589 — bds-text-editor v2
 
-**Ticket:** TBD (draft, not in Jira; rename this file with the ID once created)
+**Ticket:** [EOA-21589](https://telesign.atlassian.net/browse/EOA-21589)
 **Status:** Draft
 **Goal:** Complete `bds-text-editor` with an emoji picker, Short URL support and the remaining accessibility work, verified across browsers, frameworks, screen readers and brand themes.
 
@@ -53,4 +53,4 @@
 
 ## Notes
 
-- Plan: `ai-work/plans/TBD-bds-text-editor-v2.md`.
+- Plan: `ai-work/plans/EOA-21589-bds-text-editor-v2.md`.

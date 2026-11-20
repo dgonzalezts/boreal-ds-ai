@@ -10,7 +10,7 @@
 
 - **Summary:** Implement Text Editor v3: rich text and HTML output
 - **Type:** Story
-- **Links:** follows the v2 ticket (`TBD-bds-text-editor-v2.md`)
+- **Links:** follows the v2 ticket (`EOA-21589-bds-text-editor-v2.md`)
 
 ## Proposed scope
 

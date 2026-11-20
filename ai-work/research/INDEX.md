@@ -12,6 +12,7 @@
 
 | File | Date | Ticket | Component | Title |
 | ---- | ---- | ------ | --------- | ----- |
+| [2026-11-19-bds-text-editor-figma-variants.md](./2026-11-19-bds-text-editor-figma-variants.md) | 2026-11-19 | EOA-18739 | `bds-text-editor` | T7 Figma variant research and token map |
 | [2026-06-26-direct-dom-traversal-encapsulation-proposal.md](./2026-06-26-direct-dom-traversal-encapsulation-proposal.md) | 2026-06-26 | EOA-14609 | `bds-text-field` | Direct DOM Traversal & Encapsulation — Proposal |
 | [2026-04-14-floating-options-declarative-api-migration.md](./2026-04-14-floating-options-declarative-api-migration.md) | 2026-04-14 | — | `bds-tooltip` | Migrate floatingOptions to flat declarative props in bds-tooltip and bds-popover |
 | [2026-04-14-imperative-migration.md](./2026-04-14-imperative-migration.md) | 2026-04-14 | — | `bds-tooltip` | floatingOptions Imperative Layer Migration |

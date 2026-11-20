@@ -1,5 +1,5 @@
 ---
-ticket: TBD
+ticket: EOA-21589
 component: bds-text-editor
 status: pending
 created: 2026-11-13
@@ -9,11 +9,9 @@ created: 2026-11-13
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
-> **Ticket ID pending.** Rename this file and `ai-work/tickets/TBD-bds-text-editor-v2.md` with the real Jira ID, and replace `TBD` in every commit message, before starting.
-
 **Goal:** Complete `bds-text-editor` with a reusable `bds-emoji-picker` and the Emoji tool, Short URL support and the remaining accessibility work. Then verify it across browsers, wrappers, assistive technology and all four themes, and close the mutation-testing gate for v1 and v2.
 
-**Ticket brief:** [`ai-work/tickets/TBD-bds-text-editor-v2.md`](../tickets/TBD-bds-text-editor-v2.md) · Previous version: [`EOA-18739-bds-text-editor-v1.md`](./EOA-18739-bds-text-editor-v1.md)
+**Ticket brief:** [`ai-work/tickets/EOA-21589-bds-text-editor-v2.md`](../tickets/EOA-21589-bds-text-editor-v2.md) · Previous version: [`EOA-18739-bds-text-editor-v1.md`](./EOA-18739-bds-text-editor-v1.md)
 
 **Design:** [`ai-work/sessions/2026-11-13-bds-text-editor-design.md`](../sessions/2026-11-13-bds-text-editor-design.md) · Research: [`ai-work/research/2026-11-13-bds-text-editor-engine-spike.md`](../research/2026-11-13-bds-text-editor-engine-spike.md)
 
@@ -118,7 +116,7 @@ Paths are relative to `packages/boreal-web-components/` unless they start with `
 
 **Manual test _(required — not waveable)_:** Pass: build and tests unchanged.
 
-**Commit:** `build(deps): TBD add emojibase-data for the emoji dataset generator`
+**Commit:** `build(deps): EOA-21589 add emojibase-data for the emoji dataset generator`
 
 ### Task 3: Emoji data generator and datasets
 
@@ -136,7 +134,7 @@ Paths are relative to `packages/boreal-web-components/` unless they start with `
 
 **Manual test _(required — not waveable)_:** Pass: two runs produce identical files, and both parse with the expected group count.
 
-**Commit:** `feat(web-components): TBD generate trimmed emoji datasets`
+**Commit:** `feat(web-components): EOA-21589 generate trimmed emoji datasets`
 
 ### Task 4: Picker types and scaffold
 
@@ -156,7 +154,7 @@ Paths are relative to `packages/boreal-web-components/` unless they start with `
 
 **Manual test _(required — not waveable)_:** Pass: the build registers the tag, and `components.d.ts` lists the API.
 
-**Commit:** `feat(web-components): TBD scaffold bds-emoji-picker`
+**Commit:** `feat(web-components): EOA-21589 scaffold bds-emoji-picker`
 
 ### Task 5: Picker logic
 
@@ -190,7 +188,7 @@ Playground: an en picker and an es picker, each logging `bdsEmojiSelect`.
 - [ ] Given a click on an emoji, then the log shows `{ emoji, label }`. Pass: correct.
 - [ ] Given the network tab, then the JSON is requested only when the picker mounts. Pass: lazy.
 
-**Commit:** `feat(web-components): TBD add emoji picker data, search and flag detection`
+**Commit:** `feat(web-components): EOA-21589 add emoji picker data, search and flag detection`
 
 ### Task 6: Picker render
 
@@ -214,7 +212,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - [ ] Given the JSON request blocked in DevTools, then the error and Retry show, and Retry recovers after unblocking. Pass: recovery.
 - [ ] Given the popover scenario, when an emoji is picked, then the host receives `bdsEmojiSelect`. Pass: received.
 
-**Commit:** `feat(web-components): TBD render bds-emoji-picker`
+**Commit:** `feat(web-components): EOA-21589 render bds-emoji-picker`
 
 ### Task 7: Picker SCSS
 
@@ -246,7 +244,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - [ ] Given all four themes, then colours come from tokens. Pass: no hard-coded colours.
 - [ ] Given keyboard navigation, then hover never hides the focus ring. Pass: distinguishable.
 
-**Commit:** `style(web-components): TBD style bds-emoji-picker`
+**Commit:** `style(web-components): EOA-21589 style bds-emoji-picker`
 
 ### Task 8: Picker unit tests
 
@@ -265,7 +263,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test:** N/A. Validated with `pnpm test` and the coverage report.
 
-**Commit:** `test(web-components): TBD cover bds-emoji-picker`
+**Commit:** `test(web-components): EOA-21589 cover bds-emoji-picker`
 
 ### Task 9: Editor Emoji tool
 
@@ -291,7 +289,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - [ ] Given 0 characters left, then the Emoji button is disabled. Pass: disabled.
 - [ ] Given the same scenario through `dev:pack:react` and `dev:pack:vue`, then the behaviour matches. Pass: no divergence.
 
-**Commit:** `feat(web-components): TBD add emoji tool to bds-text-editor`
+**Commit:** `feat(web-components): EOA-21589 add emoji tool to bds-text-editor`
 
 ### Task 10: Editor Short URL (`linkTransform`)
 
@@ -315,7 +313,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - [ ] Given a rejecting transform, then the error and "Insert as is" show; "Insert as is" inserts the original. Pass: both.
 - [ ] Given React and Vue (pack pipelines), then the behaviour matches. Pass: no divergence.
 
-**Commit:** `feat(web-components): TBD add short url support to bds-text-editor`
+**Commit:** `feat(web-components): EOA-21589 add short url support to bds-text-editor`
 
 ### Task 11: Editor accessibility extras
 
@@ -336,7 +334,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - [ ] Given VoiceOver, when crossing 20 characters left, then the message is announced once. Pass: announced once.
 - [ ] Given DevTools forced-colours emulation, then the chip border is visible. Pass: visible.
 
-**Commit:** `feat(web-components): TBD add text editor keyboard and announcement support`
+**Commit:** `feat(web-components): EOA-21589 add text editor keyboard and announcement support`
 
 ### Task 12: IME composition at the limit
 
@@ -353,7 +351,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 **Manual test _(required — not waveable)_:**
 - [ ] Given 2 characters left, when a 4-character Japanese word is composed, then composition completes and the text ends at the limit. Pass: no stuck composition, and the count equals the limit.
 
-**Commit:** `fix(web-components): TBD keep ime composition working at the text editor limit` (only if changed)
+**Commit:** `fix(web-components): EOA-21589 keep ime composition working at the text editor limit` (only if changed)
 
 ### Task 13: Editor unit tests for v2 additions
 
@@ -370,7 +368,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test:** N/A. Validated with `pnpm test` and the coverage report.
 
-**Commit:** `test(web-components): TBD cover text editor emoji, short url and announcements`
+**Commit:** `test(web-components): EOA-21589 cover text editor emoji, short url and announcements`
 
 ### Task 14: JSDoc audit (both components)
 
@@ -387,7 +385,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test _(required — not waveable)_:** Pass: lint is clean, and every member has a description in `custom-elements.json`.
 
-**Commit:** `docs(web-components): TBD audit text editor and emoji picker jsdoc`
+**Commit:** `docs(web-components): EOA-21589 audit text editor and emoji picker jsdoc`
 
 ### Task 15: Complete stories and MDX (both components)
 
@@ -404,7 +402,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test _(required — not waveable)_:** Run `pnpm dev:docs`. Pass: renders without console errors, and the snippets are correct.
 
-**Commit:** `docs(docs): TBD complete text editor and emoji picker docs`
+**Commit:** `docs(docs): EOA-21589 complete text editor and emoji picker docs`
 
 ### Task 16: Full QA — browsers, React/Vue parity, screen readers
 
@@ -456,7 +454,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test _(required — not waveable)_:** Pass: the Chromatic build is approved with no unexplained diffs.
 
-**Commit:** `docs(docs): TBD add brand theme snapshots for text editor and emoji picker` (only if stories changed)
+**Commit:** `docs(docs): EOA-21589 add brand theme snapshots for text editor and emoji picker` (only if stories changed)
 
 ### Task 19: Consolidated mutation testing (v1 and v2 units)
 
@@ -473,4 +471,4 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 
 **Manual test:** N/A. Pass: the reports show ≥ 90% per unit.
 
-**Commit:** `test(web-components): TBD close mutation testing gaps` (only if specs changed)
+**Commit:** `test(web-components): EOA-21589 close mutation testing gaps` (only if specs changed)

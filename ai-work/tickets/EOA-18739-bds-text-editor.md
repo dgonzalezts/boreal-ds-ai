@@ -56,4 +56,4 @@
 ## Notes
 
 - Delivery for this ticket is review-ready (draft PR). Merging follows EOA-20193.
-- Remaining scope continues under the v2 ticket (draft: `TBD-bds-text-editor-v2.md`).
+- Remaining scope continues under the v2 ticket (draft: `EOA-21589-bds-text-editor-v2.md`).
