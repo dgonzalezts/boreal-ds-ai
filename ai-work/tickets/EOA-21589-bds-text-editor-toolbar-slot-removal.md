@@ -1,4 +1,4 @@
-# TBD — bds-text-editor: stale divider after a slotted toolbar tool is removed
+# EOA-21589 — bds-text-editor: stale divider after a slotted toolbar tool is removed
 
 **Ticket:** TBD
 **Status:** Fixed in a9194ada on feature/EOA-18739_text-editor-v1_DG (no separate ticket needed)

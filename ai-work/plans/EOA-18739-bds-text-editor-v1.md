@@ -1,8 +1,9 @@
 ---
 ticket: EOA-18739
 component: bds-text-editor
-status: in progress
+status: done
 created: 2026-11-13
+merged: 2026-11-24 (`55cb2f08` on `release/current`)
 ---
 
 # bds-text-editor v1 (composer core) Implementation Plan
@@ -26,7 +27,9 @@ created: 2026-11-13
 
 **Time box:** 4 days to review-ready (T1–T10). T11 runs after EOA-20193 merges and is outside the time box.
 
-**Branch:** `feature/EOA-18739_text-editor-v1_DG`, stacked on `chore/EOA-20193_dependency-upgrades-followup_DG` at `4774509f`. The PR is a draft against that branch until T11.
+**Branch:** `feature/EOA-18739_text-editor-v1_DG`, stacked on `chore/EOA-20193_dependency-upgrades-followup_DG` at `4774509f`. EOA-20193 merged first (`4096b632`); this branch was then squash-merged to `release/current` as `55cb2f08` on 2026-11-24 (PR 218).
+
+**Closure (2026-11-24):** every deferred task is re-scoped. The shared-component items (T12, T14, T15, T17, T18, T19, T20) are in the local ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md` (no Jira ticket yet). The editor-specific leftovers moved into the v2 plan: T1 (design answers), T13 (`\r\n` component specs) and T16 (browser, wrapper and focus-ring checks).
 
 **Working rules for every task:**
 - Run `fnm use` before Node or pnpm commands.
@@ -77,17 +80,17 @@ Paths are relative to `packages/boreal-web-components/` unless they start with `
 | T7 SCSS — EOA-21469 (07) | done (`14e14297`) |
 | T8 Component unit tests — EOA-21470 (08) | done (`407e1696`; fix `f3e4bce5`) |
 | T9 Vue v-model, Storybook story and basic MDX — EOA-21471 (09) | done (`ecb46d1c` Vue, `e74d66ca` JSDoc, `248a453f` docs) |
-| T10 Review readiness: smoke QA and draft PR — EOA-21472 (10); Definition of Done check — EOA-21474 (11) | done (PR 218 against the EOA-20193 branch; everything pushed, tip `4b0a6064`) |
-| T11 Rebase onto `release/current` after EOA-20193 merges (outside the time box). Also: re-sync EOA-20193 with `release/current` first (`bds-button` loading style and `bds-dropdown` padding changes may need spec updates), then check on Chromium, WebKit and Firefox that the standard focus ring on Fields menu items is not clipped (4px padding, 3px ring; also with a scrolling list) | pending |
-| T12 Localizable validation messages across form components (follow-up, needs its own ADR) | deferred |
+| T10 Review readiness: smoke QA and draft PR — EOA-21472 (10); Definition of Done check — EOA-21474 (11) | done (PR 218 against the EOA-20193 branch; squash-merged to `release/current` as `55cb2f08`, 2026-11-24) |
+| T11 Rebase onto `release/current` after EOA-20193 merges (outside the time box) | done (superseded: squash-merged instead of rebased; focus-ring check moved to v2 T16) |
+| T12 Localizable validation messages across form components (follow-up, needs its own ADR) | re-scoped to the follow-up ticket draft |
 | T13 Fields button display option (`fieldsButton` prop, `labels.fields`) | done (`d8aa8bca`) |
-| T14 `bds-button` accessible-name and empty-text fixes (follow-up) | deferred |
-| T15 Link popover arrow display (review and fix; follow-up) | deferred |
+| T14 `bds-button` accessible-name and empty-text fixes (follow-up) | re-scoped to the follow-up ticket draft |
+| T15 Link popover arrow display (review and fix; follow-up) | re-scoped to the follow-up ticket draft |
 | T16 Tidy `bds-text-editor.scss` (nesting, `$prefix`, shared mixins), after T8 | done (`75809d54`) |
-| T17 Focus on `reportValidity()` and blocked submit (follow-up, shared `useFormField`) | deferred |
-| T18 Dropdown menu keys leak to ancestor roving handlers; vertical group conflict (pre-existing, follow-up) | deferred |
-| T19 `bds-button-group` ignores children added after load (follow-up) | deferred |
-| T20 `bds-toolbar` Tab-stop model: every tool, then one stop after the first arrow key (follow-up) | deferred |
+| T17 Focus on `reportValidity()` and blocked submit (follow-up, shared `useFormField`) | re-scoped to the follow-up ticket draft |
+| T18 Dropdown menu keys leak to ancestor roving handlers; vertical group conflict (pre-existing, follow-up) | re-scoped to the follow-up ticket draft |
+| T19 `bds-button-group` ignores children added after load (follow-up) | re-scoped to the follow-up ticket draft |
+| T20 `bds-toolbar` Tab-stop model: every tool, then one stop after the first arrow key (follow-up) | re-scoped to the follow-up ticket draft |
 
 ---
 
@@ -538,7 +541,7 @@ Playground: T6's scenarios plus an error scenario.
 **Files:** `targets/vue-output-target.ts` (modify); `apps/boreal-docs/src/stories/forms/bds-text-editor/bds-text-editor.stories.ts`, `.mdx` (create)
 
 **Integration research pass:**
-- [ ] Read the current `componentModels` (EOA-20193 moved `bds-toggle` to its own entry). Add `bds-text-editor` to the `valueChange` → `value` entry only.
+- [x] Read the current `componentModels` (EOA-20193 moved `bds-toggle` to its own entry). Add `bds-text-editor` to the `valueChange` → `value` entry only.
 
 **Acceptance criteria:**
 
@@ -558,8 +561,8 @@ Playground: T6's scenarios plus an error scenario.
 - Use ternaries with `nothing` in Lit templates. No version labels in consumer text.
 
 **Manual test _(required — not waveable)_:**
-- [ ] `pnpm dev:pack:vue`: given `v-model` on `BdsTextEditor`, when typing and when setting the model, then both directions update. Pass: two-way.
-- [ ] `pnpm dev:docs` (restart after component changes): given the story and MDX, then they render without console errors and the controls work. Pass: clean.
+- [x] `pnpm dev:pack:vue`: given `v-model` on `BdsTextEditor`, when typing and when setting the model, then both directions update. Pass: two-way.
+- [x] `pnpm dev:docs` (restart after component changes): given the story and MDX, then they render without console errors and the controls work. Pass: clean.
 
 **Commit:** `feat(vue): EOA-18739 map bds-text-editor v-model` and `docs(docs): EOA-18739 add bds-text-editor story and docs` (two commits)
 
@@ -597,7 +600,9 @@ Playground: T6's scenarios plus an error scenario.
 
 **Pushed (2026-11-20):** `c29bc3c0` (bundles), `9587e06a` (dropdown inset focus ring, later reverted: see the T10 decisions), `4b0a6064` `docs(docs): EOA-18739 fix the toolbar divider example` (the MDX example is `toolbar="fields,|,link"`) and `32671e8e` `chore(web-components): EOA-18739 TBD add text editor playground for code review` (the rewritten `src/index.html`). The PR now has 18 commits above the EOA-20193 base.
 
-**Before merging:** `32671e8e` adds the playground to `src/index.html` for code review only, `2963084e` updates its toolbar cases and `0fd57139` its focus ring cases. The squash must not carry any of them: revert the file to the base version (the placeholder playground) and drop the three commits, per the `TBD` flag in their messages.
+**Merged (2026-11-24):** the PR was squash-merged to `release/current` as `55cb2f08`. The playground commits did not reach the squash: `src/index.html` differs from its parent only by a trailing newline, so the "Before merging" revert below was done (checked with `git show --stat`, not by diffing the contents). The last commits before the merge were `8f74427d` (lockfile formatted with Prettier), `19048d14` (observer assertions scoped to the host in specs), `5cb73a68` (release pointer listeners when the editor stops being editable) and `5da61fb9` (playground reset). Gates were not re-run after the squash, and this plan records no post-merge run.
+
+**Before merging (done):** `32671e8e` adds the playground to `src/index.html` for code review only, `2963084e` updates its toolbar cases and `0fd57139` its focus ring cases. The squash must not carry any of them: revert the file to the base version (the placeholder playground) and drop the three commits, per the `TBD` flag in their messages.
 
 **Pushed (2026-11-20, later):** `4654410d`, `a9194ada`, `2963084e` (fast-forward, `03d75044..2963084e`). The PR now has 21 commits above the EOA-20193 base.
 
@@ -616,9 +621,13 @@ Playground: T6's scenarios plus an error scenario.
 
 ### Task 11: Rebase onto `release/current` after EOA-20193 merges (outside the time box)
 
-**Status:** pending (blocked until EOA-20193 squash-merges, after its T24 cut-off sync)
+**Status:** done, superseded (2026-11-24). EOA-20193 merged as `4096b632`, then this branch was squash-merged to `release/current` as `55cb2f08`. No rebase or `--force-with-lease` push took place, and the acceptance criteria below were not run as written.
 **Executor:** main thread (no executor)
 **Files:** none expected
+
+**Moved to v2 (`EOA-21589-bds-text-editor-v2.md` T16):** the focus-ring clipping check on Fields menu items in Chromium, WebKit and Firefox, now possible because `release/current` has the `bds-dropdown` padding change from EOA-18734.
+
+**Not recorded anywhere:** a re-check of the link popover against the merged `bds-text-field` from PR 216, and the post-merge gate run (build, lint, tests, `pnpm validate:all`). Both fall under v2's first full pass; say so in the v2 PR if they are not run before then.
 
 **Acceptance criteria:**
 
@@ -635,7 +644,7 @@ Playground: T6's scenarios plus an error scenario.
 
 ### Task 12: Localizable validation messages across form components
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @knowledge-keeper (ADR), then per-component work in its own plan
 
 Found in T5: `valueMissing` and `tooLong` messages in `bds-text-editor` are English literals, like `bds-text-field`, `bds-color-picker`, `bds-date-picker` and `bds-file-picker`. Consumers localize them today through `errorMessage`, which both validators use as an override (same pattern as `bds-date-picker`).
@@ -657,7 +666,7 @@ Use case: the Fields trigger can be text only. `fieldsButton: 'icon' | 'text' | 
 
 ### Task 14: `bds-button` accessible-name and empty-text fixes (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent
 
 - With `experimentalSlotFixes`, `hasSlotContent(this.el)` in `componentWillLoad` is empty for default-slot text, so a text-only `bds-button` warns "No accessible name found".
@@ -666,7 +675,7 @@ Use case: the Fields trigger can be text only. `fieldsButton: 'icon' | 'text' | 
 
 ### Task 15: Link popover arrow display (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent, @qa-subagent
 
 The link popover hides its arrow (`floatingOptions={ hideArrow: true }`, decided 2026-11-19). With the arrow on, it points to the right of the Link button instead of its centre: `bds-popover.setArrowPosition` hardcodes `left: 20px` for `top-start` and `bottom-start`, ignoring the trigger-centred `arrowData.x` from floating-ui.
@@ -692,14 +701,14 @@ Review prototypes and the compile-and-diff tooling are in the scratchpad `te/` f
 
 ### Task 17: Focus on `reportValidity()` and blocked submit (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent
 
 Found in the T10 smoke QA: native `reportValidity()` and a blocked submit flag the editor but leave focus where it was. `bds-text-field` behaves the same way in Chromium, so a fix belongs in the shared `useFormField` and would affect every form component. Out of scope for this plan; re-scope into its own ticket before this plan is marked done.
 
 ### Task 18: Dropdown menu keys leak to ancestor roving handlers (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent, @qa-subagent
 
 Found while checking the editor's Fields menu (2026-11-20) and confirmed **pre-existing**: it reproduces identically on the EOA-20193 base (`4774509f`) in Chromium, WebKit and Firefox, because no keyboard code changed on this branch.
@@ -710,16 +719,16 @@ Found while checking the editor's Fields menu (2026-11-20) and confirmed **pre-e
 
 ### Task 19: `bds-button-group` ignores children added after load (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent
 
 Pre-existing. Validation, prop propagation and roving setup run once in `componentDidLoad`. A `bds-button` or `bds-dropdown` appended later gets no `size`, `color` or `variant` from the group, is an extra Tab stop (no roving `tabindex`), and a late wrapped child gets no warning. Proposed fix: a `MutationObserver` or `slotchange` handler in `bds-button-group.tsx` that re-runs the three steps. The docs describe the prop limitation (button-group MDX, "Group children"). Out of scope for this plan.
 
 ### Task 20: `bds-toolbar` Tab-stop model (follow-up)
 
-**Status:** deferred
+**Status:** re-scoped (2026-11-24) to the follow-up ticket draft `ai-work/tickets/TBD-bds-text-editor-shared-component-followups.md`, with its own acceptance criteria
 **Executor:** @frontend-subagent
 
 Found by the test plan (F-02). In `bds-toolbar`, every tool is its own Tab stop until the first arrow key is used; afterwards the toolbar is a single Tab stop at the tool last reached. The editor docs describe the real behaviour (commit `2e13b6d1`). Decide the intended model (a single Tab stop with roving tabindex from the start is the usual toolbar pattern) and fix it in the shared `bds-toolbar`. Out of scope for this plan.
 
-**Findings from the test plan, status 2026-11-20:** F-01 (`\r\n` normalised on every value path) fixed in `a3e13b4d`, specs still owed; F-03 (forced-colours chip border, selected chip and focus outline) fixed in `1d3f6cc1`; F-02 docs wording in `2e13b6d1`, behaviour in T20; F-04 (toolbar divider example) in `4b0a6064`; F-05 is T17.
+**Findings from the test plan, status 2026-11-20:** F-01 (`\r\n` normalised on every value path) fixed in `a3e13b4d`, component-level specs moved to v2 T13; F-03 (forced-colours chip border, selected chip and focus outline) fixed in `1d3f6cc1`; F-02 docs wording in `2e13b6d1`, behaviour in T20 (follow-up ticket draft); F-04 (toolbar divider example) in `4b0a6064`; F-05 is T17 (follow-up ticket draft).

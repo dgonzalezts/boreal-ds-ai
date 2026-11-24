@@ -97,6 +97,13 @@ Paths are relative to `packages/boreal-web-components/` unless they start with `
 
 - Record the signed-off picker design: panel size, cell size, column count, tab icons, heading style, empty and error states. If the sign-off is still missing, the user decides whether T7 proceeds on tokens with the production picker as the reference.
 - Pull the editor variants for the three brand themes v1 did not verify. Record any token differences for T18.
+- Carried over from v1 (T7 research results): get design answers on these open points and record each one with its source node.
+  - Plain frames that are Outline copies: only Default empty, Default populated and Disabled populated are specified for Plain. Confirm the intended Hover, Focus, Active and Error looks.
+  - Counter colour: Figma shows it grey when the editor is populated with an error; the component shows it danger-coloured, like `bds-text-field`.
+  - `max-height` of the editable: v1 uses 10 lines (about 212px), unapproved.
+  - `--boreal-text-default-darker`: `#595d64` in the repo against `#131316` in Figma.
+  - Text-only Fields button (`fieldsButton="text"` and `"icon-text"`): no Figma design exists; confirm the look or supply one.
+- If any answer changes the component, log it as a new task in this plan.
 
 **Manual test _(required — not waveable)_:** Non-visual task. Pass: values recorded with their sources.
 
@@ -364,6 +371,7 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
 - **`toolbar`:** the emoji tool renders when listed, inserts at the cursor, closes and refocuses, and is disabled at the limit. `linkTransform` success, pending loading, rejection with "Insert as is", and too-long after the transform.
 - **`a11y`:** `Alt+F10` target; live-region messages at the threshold and the limit, announced once; new `labels` keys (`insertEmoji`, `linkTransformError`, `insertLinkAsIs`, `limitReached`, remaining-characters) override correctly.
 - **`plugins`:** composition handling per T12's outcome.
+- **v1 gap (carried over):** `\r\n` is normalised on every value path at component level. Cover the `value` prop at mount, a later `value` change, `defaultValue`, form reset, `insertText` and paste, each asserting one paragraph break per `\r\n` and the serialised `value` containing `\n` only. The serializer and plugin specs already cover parse and paste in isolation; the component-level paths have no spec.
 - Coverage-phase only (≥ 80%).
 
 **Manual test:** N/A. Validated with `pnpm test` and the coverage report.
@@ -418,6 +426,11 @@ Playground: T5's scenarios plus a picker inside a `bds-popover`.
   - including a real `<form>` submit and `v-model`
 - NVDA (Windows Chrome and Firefox) and VoiceOver (macOS Safari and Chrome): textbox name and description, chips, announcements, picker grid.
 - `:focus-visible` checks use real `Tab` presses.
+- **Carried over from v1 (not verified there):**
+  - The Fields menu: the standard 3px focus ring on menu items is not clipped by the 4px list padding in Chromium, WebKit and Firefox, including with a scrolling list. `release/current` now has the `bds-dropdown` padding change from EOA-18734, so this can be checked on the real base.
+  - The field chip and readonly scenarios in WebKit and Firefox, and the caret after a chip at the end of a line in Firefox.
+  - A real OS or mobile IME and Safari.app (the IME part is T12).
+  - React and Vue wrappers in a browser through the pack pipelines.
 - Defects are logged as new tasks.
 
 **Manual test (required):**
