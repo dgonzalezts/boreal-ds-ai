@@ -1,6 +1,6 @@
 ---
 ticket: EOA-20193
-status: in progress
+status: done
 created: 2026-10-30
 ---
 
@@ -126,9 +126,9 @@ The production audit fixes (29 to 0 vulnerabilities) are already on the PR 1 bra
 | T19 Upgrade lint-staged, chalk, execa and npm-run-all2 | done 2026-11-13 (`407b593d`, `6205af1a`) |
 | T20 Upgrade pnpm 11 to 12 | done 2026-11-13 (`9db95b87`, `627d705a`); Windows check is a pre-adoption gate |
 | T21 Housekeeping: holds, template, PR descriptions, index | done 2026-11-13 (12 items, six commits) |
-| T22 Deadline checkpoint and merge readiness | in progress 2026-11-13; waiting for the second PR's approval and merge |
+| T22 Deadline checkpoint and merge readiness | done 2026-11-23; second PR squash-merged as `4096b632`; gates re-run on `release/current` and green |
 | T23 Sync the Confluence template page after both PRs merge | done 2026-11-13 by the user's decision to update before the merges; template page version 2, ADR page version 6 |
-| T24 Teammate cut-off and single sync pass before the merge | pending; added 2026-11-13 by the user's decision; cut-off at the end of next sprint; blocks the second PR's merge (T22) |
+| T24 Teammate cut-off and single sync pass before the merge | done 2026-11-23; the second PR merged after a sync of `release/current` into the branch (`fdf0b25c`); the stacked text-editor branch rebase is tracked separately |
 
 ---
 
@@ -215,8 +215,8 @@ Non-visual task. Validate by reading the recorded answer in this task's status l
 
 Non-visual task. Validate with each package's `format:check` script and the standard gates.
 
-- [ ] Given the bumped pins, when `format:check` runs in each workspace, then it passes after the reformat commit. Pass: exit code 0 everywhere that passed before.
-- [ ] Given the reformat commit, when `git show --stat` is read, then it contains only the flagged files. Pass: no other file.
+- [x] Given the bumped pins, when `format:check` runs in each workspace, then it passes after the reformat commit. Pass: exit code 0 everywhere that passed before. _(recorded in the status line; repeated on the rebased branch in T22)_
+- [x] Given the reformat commit, when `git show --stat` is read, then it contains only the flagged files. Pass: no other file. _(16 files, formatting only, per the status line)_
 
 **Commit (two commits, each confirmed by the user):**
 
@@ -582,7 +582,7 @@ git commit -m "build(deps): EOA-20193 upgrade typescript to 6.0.3"
 
 Non-visual task. Validate with lint and the unit suite.
 
-- [ ] Given the new `typescript-eslint`, when `pnpm lint` runs, then no assertion errors appear. Pass: 0 errors.
+- [x] Given the new `typescript-eslint`, when `pnpm lint` runs, then no assertion errors appear. Pass: 0 errors. _(0 errors on `release/current`, checked 2026-11-23)_
 
 **Commit:**
 
@@ -617,7 +617,7 @@ git commit -m "build(deps): EOA-20193 update typescript-eslint and clear asserti
 
 Non-visual task. Validate with each workspace's test command and the Storybook vitest addon run.
 
-- [ ] Given Vitest 5, when each workspace's tests run, then the pass counts equal the baseline (scripts-boreal: 45). Pass: no new failures.
+- [x] Given Vitest 5, when each workspace's tests run, then the pass counts equal the baseline (scripts-boreal: 45). Pass: no new failures. _(task confirmed by the user 2026-11-12; the pre-push suite and `validate:all` pass on `release/current`)_
 
 **Commit:**
 
@@ -1042,13 +1042,13 @@ git commit -m "build(deps): EOA-20193 rewrite lockfile for pnpm 12"
 
 Non-visual task. Validate by reading the files.
 
-- [ ] Given the template, when its seed list is read, then it names only the holds still in place. Pass: no lifted hold appears.
+- [x] Given the template, when its seed list is read, then it names only the holds still in place. Pass: no lifted hold appears. _(task done 2026-11-13; the page was re-read in T23)_
 
 **Commit:** none (all files are outside git except the PR description draft, which is also local).
 
 ### Task 22: Deadline checkpoint and merge readiness
 
-**Status:** in progress 2026-11-13. Status of every task (the checkpoint list): done and green: T1 to T5, T6a, T7, T7b, T7c, T8 to T14, T18 (the real `pnpm deploy:docs` was run by the user and reported successful), T19, T20, T21; spike done, migration deferred by the user: T15; deferred by the user: T6b, T16, T17, T23. No unfinished task has a partial commit on the branch. Done so far: PR 1 (#208) squash-merged first (`ef73a750`); this branch rebased onto `release/current` (27 commits, 0 merge commits, 0 conflicts) and force-pushed with a lease; the re-format step repeated (`pnpm format:check` passes in `boreal-web-components` and `boreal-docs`; `react-testapp` keeps its 3 pre-existing flagged files); all gates repeated on the rebased branch; the second PR's title and description are drafted and marked breaking. Still open and owned by the user: open and approve the second PR (two approvals), squash-merge it with the footer in the last lines of the merge message, close EOA-20016 and EOA-20193 after the merges; pre-release or pre-adoption gates: Windows (pnpm 12) and the company-network certificate for publishing with pnpm 12 (the Chromatic deploy gate is closed); RE-SCOPING CONFIRMED by the user on 2026-11-13 (the deferred work is re-scoped as the following mapping; no Jira ticket was created): the ticket drafts in `ai-work/tickets/EOA-20193-follow-up-tickets.md` map as follows: T15 to T17 to draft 8 and its dependent Stencil 5 upgrade to draft 9; T6b to draft 10, with the Jenkins side in draft 7 of `EOA-18749-release-process-followup-tickets.md`; T23 to draft 11, which was done on 2026-11-13 before the merges); the plan stays `in progress` until the second PR is merged and the gates are re-run on `release/current` (the re-scoping condition of the plan rule for deferred tasks is now met; T23 runs after the merges).
+**Status:** done 2026-11-23: the second PR is merged (`4096b632`) and the gates were re-run on `release/current` (see the manual test). Remaining outside the plan: closing EOA-20016 and EOA-20193 in Jira (the user's), and the Windows and certificate pre-adoption gates for pnpm 12. Earlier status, 2026-11-13: in progress. Status of every task (the checkpoint list): done and green: T1 to T5, T6a, T7, T7b, T7c, T8 to T14, T18 (the real `pnpm deploy:docs` was run by the user and reported successful), T19, T20, T21; spike done, migration deferred by the user: T15; deferred by the user: T6b, T16, T17, T23. No unfinished task has a partial commit on the branch. Done so far: PR 1 (#208) squash-merged first (`ef73a750`); this branch rebased onto `release/current` (27 commits, 0 merge commits, 0 conflicts) and force-pushed with a lease; the re-format step repeated (`pnpm format:check` passes in `boreal-web-components` and `boreal-docs`; `react-testapp` keeps its 3 pre-existing flagged files); all gates repeated on the rebased branch; the second PR's title and description are drafted and marked breaking. Still open and owned by the user: open and approve the second PR (two approvals), squash-merge it with the footer in the last lines of the merge message, close EOA-20016 and EOA-20193 after the merges; pre-release or pre-adoption gates: Windows (pnpm 12) and the company-network certificate for publishing with pnpm 12 (the Chromatic deploy gate is closed); RE-SCOPING CONFIRMED by the user on 2026-11-13 (the deferred work is re-scoped as the following mapping; no Jira ticket was created): the ticket drafts in `ai-work/tickets/EOA-20193-follow-up-tickets.md` map as follows: T15 to T17 to draft 8 and its dependent Stencil 5 upgrade to draft 9; T6b to draft 10, with the Jenkins side in draft 7 of `EOA-18749-release-process-followup-tickets.md`; T23 to draft 11, which was done on 2026-11-13 before the merges); the plan stays `in progress` until the second PR is merged and the gates are re-run on `release/current` (the re-scoping condition of the plan rule for deferred tasks is now met; T23 runs after the merges).
 **Executor:** main thread (no executor)
 **Files:** none
 
@@ -1066,7 +1066,7 @@ Non-visual task. Validate by reading the files.
 Non-visual task. Validate with the branch state.
 
 - [x] Given the working branch, when `git log` is read against the second PR's description, then each listed task has the commits the description lists (T3, T12, T19 and T20 have two, T21 has six). Pass: 27 commits, counts match (checked 2026-11-13).
-- [x] Given PR 1 after its merge and this branch after the rebase, when the standard gates and `pnpm validate:all` run on each, then they pass. Pass: all green on the rebased branch (checked 2026-11-13: build 7/7, lint 0 errors, 378 suites and 4,967 tests, `validate:all` passes); to repeat on `release/current` after the second merge.
+- [x] Given PR 1 after its merge and this branch after the rebase, when the standard gates and `pnpm validate:all` run on each, then they pass. Pass: all green on the rebased branch (checked 2026-11-13: build 7/7, lint 0 errors, 378 suites and 4,967 tests, `validate:all` passes). Repeated on `release/current` at `4096b632` on 2026-11-23: frozen install, lint 0 errors (warnings 9 / 50), build with a clean tree, `pnpm peers check`, 384 suites and 5,046 tests, coverage 93.47 / 85.83 / 92.87 statements, branches, functions, and `validate:all` all pass. Lint must run after the build in a fresh checkout, because the generated Stencil types are needed for type-aware rules.
 
 **Commit:** none.
 
@@ -1088,13 +1088,13 @@ Non-visual task. Validate with the branch state.
 
 Non-visual task. Validate by reading the page back.
 
-- [ ] Given the updated page, when it is read with the Confluence tool, then its seed register and gates match the local template. Pass: no stale 11-line or six-hold text remains.
+- [x] Given the updated page, when it is read with the Confluence tool, then its seed register and gates match the local template. Pass: no stale 11-line or six-hold text remains. _(read back 2026-11-13, per the status line)_
 
 **Commit:** none (outside git).
 
 ### Task 24: Teammate cut-off and single sync pass before the merge
 
-**Status:** pending. Added 2026-11-13 by the user's decision. The approval wait is several days and teammates have work in progress, so the merge waits for one agreed cut-off at the end of next sprint instead of merging now (each teammate rebasing alone) or waiting for every WIP branch (an unbounded wait with repeated syncs and re-approvals).
+**Status:** done 2026-11-23 (closed with the merge: the second PR was squash-merged as `4096b632` after `release/current` was merged into the branch, `fdf0b25c`; the manual-test boxes below were not run as written, and the cut-off date and branch list were not recorded; the stacked branch `feature/EOA-18739_text-editor-v1_DG` still contains `4774509f`, so its `git rebase --onto` remains with its own plan). Original status: pending. Added 2026-11-13 by the user's decision. The approval wait is several days and teammates have work in progress, so the merge waits for one agreed cut-off at the end of next sprint instead of merging now (each teammate rebasing alone) or waiting for every WIP branch (an unbounded wait with repeated syncs and re-approvals).
 **Executor:** main thread (no executor)
 **Files:** `pnpm-lock.yaml`, files of the teammate branches merged before the cut-off (lint, format and TypeScript 6 fixes only), `.claude/pr-description.md` (Contributor impact)
 

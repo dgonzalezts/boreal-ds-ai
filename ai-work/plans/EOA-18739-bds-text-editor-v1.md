@@ -409,7 +409,7 @@ Run `pnpm dev:components`:
 - A schemeless URL such as `foo` passes the sanitizer and is inserted. Accepted for v1.
 - Dropdown `bdsChange` detail is an object for a non-selectable dropdown; the handler accepts either.
 - T8: flush animation frames in specs (focus returns after two frames); test the "link longer than the space left" error.
-- Late removal of slotted toolbar content is not detected (observer watches direct children only). Accepted limitation; mention in the PR.
+- Late removal of slotted toolbar content is not detected (observer watches direct children only). Accepted limitation; mention in the PR. **Superseded 2026-11-20:** fixed in `a9194ada` (reported in code review by Laura Cuellar on the "Late slot" playground editor). The observer also watches the `.bds-text-editor__tools` wrapper; the PR no longer lists this as a limitation.
 - The toolbar and each group share the accessible name `labels.toolbar`. Accepted for v1.
 
 ### Task 6a: `bds-button-group` accepts `bds-dropdown`
@@ -470,7 +470,7 @@ Ruling 2026-11-19 (option A): the Fields `bds-dropdown` stays inside the group. 
 - `var(--boreal-*)` only; no `@use` of the token package.
 - Every state × modifier has a rule or a "no difference" note. Modifier blocks override every pseudo-class their base declares.
 - Focus uses `:focus-within` on the container. Disabled suppresses the outline.
-- **Focus highlight scope (user, 2026-11-19):** the focus ring (`Box shadow/focus`, and `Box shadow/active` while pressed) is drawn around the whole bordered container, toolbar included, as in the Figma Focus and Active frames. The browser outline on `.ProseMirror` is removed. Settle with design whether the ring stays while focus is on a toolbar tool and while the link popover is open; the popover sits outside the container, so `:focus-within` alone would drop the ring there while the host `--focused` class stays on.
+- **Focus highlight scope (user, 2026-11-19):** the focus ring (`Box shadow/focus`, and `Box shadow/active` while pressed) is drawn around the whole bordered container, toolbar included, as in the Figma Focus and Active frames. The browser outline on `.ProseMirror` is removed. Settle with design whether the ring stays while focus is on a toolbar tool and while the link popover is open; the popover sits outside the container, so `:focus-within` alone would drop the ring there while the host `--focused` class stays on. **Superseded 2026-11-20 (code review):** the container ring shows only while focus is in the editable (host `--editing` class); on a toolbar tool, in the Fields menu or the link form only that element's own ring shows, so two focus indicators never show at once.
 - **Editable reset:** `white-space: pre-wrap`, `word-wrap: break-word`, `outline: none` on the editable, `p { margin: 0 }`, and font and colour from tokens. Host-page CSS must not reach it.
 - `customWidth` uses the `bds-text-field` mechanism.
 - Host styles use the element selector plus the T6 host classes.
@@ -486,7 +486,7 @@ Playground: T6's scenarios plus an error scenario.
 - [x] Given each state next to its Figma frame (default theme), then border, background, radius, spacing and typography match. Pass: no visible difference at 100%.
 - [x] Given `variant="plain"` next to its Figma frames for Default, Focus, Error and Disabled, then it matches. Pass: no visible difference at 100%.
 - [x] Given a page with global `p { margin: 2em; color: red }`, then the editor text is unaffected. Pass: reset holds.
-- [x] Given focus on the editable, on a toolbar tool and with the link popover open, then the focus ring wraps the whole container as in Figma and no separate outline shows on the editable. Pass: matches the Focus frame in both variants and in the Error state.
+- [x] Given focus on the editable, on a toolbar tool and with the link popover open, then the focus ring wraps the whole container as in Figma and no separate outline shows on the editable. Pass: matches the Focus frame in both variants and in the Error state. (Superseded 2026-11-20: the ring now shows only while focus is in the editable; see the T7 decision.)
 - [x] Given an empty editor in each variant, when it is clicked or reached with Tab, then a blinking caret is visible clear of the border (content padding x `spatial/padding/s`, y `spatial/padding/1xs`, from T1). Pass: caret visible. Re-check with the styled chip: after inserting a field at the end of a line, the editor is one line tall and the caret sits after the chip. Reported 2026-11-19: with no padding the caret is not visible on an empty editor.
 
 **Commit:** `style(web-components): EOA-18739 style bds-text-editor`
@@ -597,12 +597,22 @@ Playground: T6's scenarios plus an error scenario.
 
 **Pushed (2026-11-20):** `c29bc3c0` (bundles), `9587e06a` (dropdown inset focus ring, later reverted: see the T10 decisions), `4b0a6064` `docs(docs): EOA-18739 fix the toolbar divider example` (the MDX example is `toolbar="fields,|,link"`) and `32671e8e` `chore(web-components): EOA-18739 TBD add text editor playground for code review` (the rewritten `src/index.html`). The PR now has 18 commits above the EOA-20193 base.
 
-**Before merging:** `32671e8e` adds the playground to `src/index.html` for code review only. The squash must not carry it: revert the file to the base version (the placeholder playground) and drop the commit, per the `TBD` flag in its message.
+**Before merging:** `32671e8e` adds the playground to `src/index.html` for code review only, `2963084e` updates its toolbar cases and `0fd57139` its focus ring cases. The squash must not carry any of them: revert the file to the base version (the placeholder playground) and drop the three commits, per the `TBD` flag in their messages.
+
+**Pushed (2026-11-20, later):** `4654410d`, `a9194ada`, `2963084e` (fast-forward, `03d75044..2963084e`). The PR now has 21 commits above the EOA-20193 base.
 
 **Decisions made during T10:**
 - Wrapper tree-shaking fixes (PURE annotations and `sideEffects`, from the October review) go in their own branch and PR; not logged as a task here.
 - The dropdown inset focus ring (`9587e06a`) was reverted on 2026-11-20. `release/current` removed `--bds-list-menu-padding: 0` from `bds-dropdown` (EOA-18734, `49938347`), so menu rows get the default 4px list padding again and the standard 3px outer ring fits inside the list. Until T11 brings that change in, this branch still has full-bleed rows and the outer ring is clipped in the Fields menu. The PR no longer asks design about an item focus state.
 - A manual test plan is being drafted at `ai-work/qa/test-plans/EOA-18739-bds-text-editor-test-plan.md` with the playground in `src/index.html` rewritten to match.
+
+**Toolbar fixes after code review (2026-11-20):**
+- `4654410d` `fix(web-components): EOA-18739 keep bds-text-editor toolbar order after runtime updates`. Changing `toolbar` after the first render could render items out of order (for example `fields,link` to `link,|,fields` rendered `divider, fields, link`; `fields,|,link` back to `fields,link` rendered `link, fields`; a tool slotted after mount rendered first). Cause: Stencil's light-DOM slot relocation inserts nodes added next to relocated siblings in the wrong place, in `bds-toolbar` and again inside `bds-button-group`, while the patched `children` still reports the intended order. Not fixed by Stencil 4.45.5 (spiked). Fix: the built-in tools, dividers and toolbar slot render inside one `<div class="bds-text-editor__tools">` (`display: contents`), and each group is keyed `group-${index}-${tools}` so a changed group is rebuilt rather than patched or moved. Side effect: a rebuilt group gets its children at creation, so it also avoids the T19 late-child problem inside the editor.
+- `a9194ada` `fix(web-components): EOA-18739 hide the bds-text-editor slot divider when slotted tools are removed`. Supersedes the accepted "late removal" limitation in the T6 rulings.
+- Specs: `basics.spec` "toolbar order after updates inside bds-toolbar" (registers `BdsToolbar`) and "slotted toolbar tools removed after mount". `bds-button-group` cannot be registered in these specs: Stencil's mock-doc loops forever when it removes a light-DOM slot host nested in another one (reproduced with a stub that renders only `<slot>`), so group-level order is checked in the browser and by group identity in the specs.
+- Playground: `#s7-toolbar` step 3 copy updated, a "Late slot with built-in tools" editor added, and step 6 added for runtime order.
+- `b99213b5` `fix(web-components): EOA-18739 show the bds-text-editor focus ring only while typing` (code review: two focus indicators at once). New host class `--editing` while focus is in the editable; the container ring, the pressed shadow and the forced-colours outline follow it. `--focused`, `bdsFocus`, `bdsBlur`, `bdsChange` and blur validation are unchanged. Docs in `aad757a8`. Verified in Chromium, Firefox and WebKit: exactly one indicator in every state (editable, tool, Fields menu item, link URL field), the ring returns after Escape or an insertion; the plain variant shows only the ring while typing.
+- **PR description:** remove the late-removal limitation and add the three fixes. If the description says anything about the playground's "Late slot" being a known limitation, drop it.
 
 ### Task 11: Rebase onto `release/current` after EOA-20193 merges (outside the time box)
 
